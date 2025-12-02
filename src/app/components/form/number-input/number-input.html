@@ -1,0 +1,33 @@
+<!-- label -->
+@if (label()) {
+  <label class="block text-surface-900 mb-1">
+    {{ label() }}
+    @if (required()) {
+      <span class="text-red-700">*</span>
+    }
+  </label>
+}
+
+<!-- input -->
+<p-iconField>
+  @if (iconName()) {
+    <p-inputIcon [class]="'pi ' + iconName" />
+  }
+
+  <input
+    pInputText
+    [pattern]="pattern"
+    class="w-full h-[44px]"
+    (input)="onInput($event)"
+    [invalid]="!!getErrorMessage"
+    [placeholder]="getPlaceholder"
+    [formControlName]="controlName()"
+    [class.ng-invalid]="!!getErrorMessage"
+    [attr.inputmode]="allowDecimal() ? 'decimal' : 'numeric'"
+  />
+</p-iconField>
+
+<!-- validation -->
+<small class="block invalid-text mt-1 min-h-[24px]" [style.visibility]="getErrorMessage ? 'visible' : 'hidden'">
+  {{ getErrorMessage }}
+</small>

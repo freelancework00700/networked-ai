@@ -1,0 +1,19 @@
+<app-content>
+  <form [formGroup]="loginForm" (ngSubmit)="login()">
+    <!-- email input -->
+    <email-input />
+
+    <!-- password input -->
+    <div class="py-3">
+      <password-input />
+    </div>
+
+    <!-- forgot password -->
+    <div class="flex items-center justify-end mt-2 mb-8">
+      <span class="cursor-pointer text-primary">Forgot password?</span>
+    </div>
+
+    <!-- login button -->
+    <app-button label="Login" (click)="login()" />
+  </form>
+</app-content>

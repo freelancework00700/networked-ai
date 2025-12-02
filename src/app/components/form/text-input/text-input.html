@@ -1,0 +1,30 @@
+<!-- label -->
+@if (label()) {
+  <label class="block text-surface-900 mb-1">
+    {{ label() }}
+    @if (required()) {
+      <span class="text-red-700">*</span>
+    }
+  </label>
+}
+
+<!-- input -->
+<p-iconField>
+  @if (iconName()) {
+    <p-inputIcon [class]="'pi' + iconName" />
+  }
+
+  <input
+    pInputText
+    class="w-full h-[44px]"
+    [invalid]="isControlInvalid"
+    [placeholder]="getPlaceholder"
+    [formControlName]="controlName()"
+    [class.ng-invalid]="isControlInvalid"
+  />
+</p-iconField>
+
+<!-- validation -->
+<small class="block invalid-text mt-1 min-h-[24px]" [style.visibility]="isControlInvalid ? 'visible' : 'hidden'">
+  Please enter the {{ label().toLowerCase() }}.
+</small>

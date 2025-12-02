@@ -1,0 +1,53 @@
+::ng-deep {
+    .iti--inline-dropdown .iti__dropdown-content {
+      box-shadow: none !important;
+    }
+  
+    // light theme
+    .iti {
+      --iti-arrow-color: #6b7280;
+      --iti-dropdown-bg: var(--p-surface-0);
+      --iti-text-color: var(--p-surface-900);
+      --iti-selected-bg: var(--p-surface-50);
+      --iti-hover-color: var(--p-surface-100);
+      --iti-border-color: var(--p-surface-300);
+      --iti-dialcode-color: var(--p-surface-600);
+    }
+  
+    // dark theme
+    .app-dark .iti {
+      --iti-arrow-color: #9ca3af;
+      --iti-text-color: var(--p-surface-0);
+      --iti-dropdown-bg: var(--p-surface-800);
+      --iti-selected-bg: var(--p-surface-700);
+      --iti-hover-color: var(--p-surface-700);
+      --iti-border-color: var(--p-surface-600);
+      --iti-dialcode-color: var(--p-surface-400);
+    }
+  
+    .iti.iti--allow-dropdown {
+      width: 100% !important;
+    }
+  
+    &:focus-visible {
+      outline: none !important;
+    }
+  
+    &::-webkit-scrollbar {
+      display: none !important;
+    }
+  
+    .iti__search-input {
+      padding: 0.9rem 2.4rem !important;
+      background: transparent !important;
+    }
+  
+    .iti__dropdown-content {
+      z-index: 99 !important;
+      border-radius: 8px !important;
+    }
+  
+    .iti__selected-country-primary {
+      background-color: transparent !important;
+    }
+  }
