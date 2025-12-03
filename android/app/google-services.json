@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1043598535728",
+    "firebase_url": "https://networked-6f29b-default-rtdb.firebaseio.com",
+    "project_id": "networked-6f29b",
+    "storage_bucket": "networked-6f29b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1043598535728:android:e47d94028075efe99a91f5",
+        "android_client_info": {
+          "package_name": "app.networked.ai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1043598535728-cof4gv7amh500vmmfmndkc1cmg1m82h6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrJNTJVCiPw6e6hJ-DsTOVeSYyqqfuh0Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1043598535728-38lpkdjfpehh1aq61qoja4jupss3sabl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1043598535728-kgi3urg81jc8oe8lbq6c5pqr05ogkb3k.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "ai.net-worked",
+                "app_store_id": "6471849642"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
