@@ -1,10 +1,10 @@
 <!-- label -->
 @if (label()) {
-  <label class="block text-surface-900 mb-1">
+  <label class="block neutral-02 body-14M mb-1">
     {{ label() }}
-    @if (required()) {
+    <!-- @if (required()) {
       <span class="text-red-700">*</span>
-    }
+    } -->
   </label>
 }
 
@@ -13,6 +13,7 @@
   @if (showIcon()) {
     <p-inputIcon class="pi pi-envelope" />
   }
+  <!-- <img src="../../../../assets/svg/email.svg" /> -->
 
   <input
     pInputText
@@ -28,6 +29,6 @@
 </p-iconField>
 
 <!-- validation -->
-<small class="block invalid-text mt-1 min-h-[24px]" [style.visibility]="isControlInvalid ? 'visible' : 'hidden'">
-  Please enter the valid {{ label().toLowerCase() }}.
-</small>
+@if (isControlInvalid) {
+  <div class="accent-red pt-2 body-12M">Please enter the valid {{ label().toLowerCase() }}.</div>
+}

@@ -1,0 +1,45 @@
+::ng-deep {
+  ng-otp-input {
+    width: 100%;
+    display: block;
+
+    > div,
+    .otp-input {
+      gap: 4px;
+      width: 100% !important;
+      display: flex !important;
+      justify-content: space-between;
+    }
+
+    input {
+      height: 72px !important;
+      font-size: 20px !important;
+      min-height: 72px !important;
+      max-height: 72px !important;
+      line-height: 80px !important;
+      font-weight: bold !important;
+      color: #513405 !important;
+      background: white !important;
+      border-radius: var(--p-inputtext-border-radius) !important;
+      border: 1px solid #dbdbdb !important;
+      font-size: 32px !important;
+      line-height: 40px !important;
+      font-weight: 600 !important;
+      font-family: 'Manrope', sans-serif !important;
+
+      &::placeholder {
+        color: var(--p-inputtext-placeholder-color) !important;
+      }
+
+      &:focus {
+        outline: none !important;
+        border: 1px solid #f5bc61 !important;
+        background: #fef7ec !important;
+      }
+    }
+    .ng-dirty {
+      border: 1px solid #f5bc61 !important;
+      background: #fef7ec !important;
+    }
+  }
+}
