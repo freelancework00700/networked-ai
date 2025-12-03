@@ -3,7 +3,6 @@
 @use './layout/layout.scss';
 @use 'primeicons/primeicons.css';
 
-
 /*
  * App Global CSS
  * ----------------------------------------------------------------------------
@@ -16,20 +15,20 @@
  */
 
 /* Core CSS required for Ionic components to work properly */
-@import "@ionic/angular/css/core.css";
+@import '@ionic/angular/css/core.css';
 
 /* Basic CSS for apps built with Ionic */
-@import "@ionic/angular/css/normalize.css";
-@import "@ionic/angular/css/structure.css";
-@import "@ionic/angular/css/typography.css";
-@import "@ionic/angular/css/display.css";
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/display.css';
 
 /* Optional CSS utils that can be commented out */
-@import "@ionic/angular/css/padding.css";
-@import "@ionic/angular/css/float-elements.css";
-@import "@ionic/angular/css/text-alignment.css";
-@import "@ionic/angular/css/text-transformation.css";
-@import "@ionic/angular/css/flex-utils.css";
+@import '@ionic/angular/css/padding.css';
+@import '@ionic/angular/css/float-elements.css';
+@import '@ionic/angular/css/text-alignment.css';
+@import '@ionic/angular/css/text-transformation.css';
+@import '@ionic/angular/css/flex-utils.css';
 
 /**
  * Ionic Dark Mode
@@ -42,22 +41,59 @@
 // @import "@ionic/angular/css/palettes/dark.class.css";
 @import '@ionic/angular/css/palettes/dark.system.css';
 
-
 // For information on how to create your own theme, please see:
 // http://ionicframework.com/docs/theming/
 :root {
-    --ion-color-primary: #F5BC61;
-    --ion-color-primary-tint: #f6c371;
-    --ion-color-primary-shade: #d8a555;
-    --ion-color-primary-rgb: 245, 188, 97;
-    --ion-color-primary-contrast: #000000;
-    --ion-color-primary-contrast-rgb: 0, 0, 0;
+  --ion-color-primary: #f5bc61;
+  --ion-color-primary-tint: #f6c371;
+  --ion-color-primary-shade: #d8a555;
+  --ion-color-primary-rgb: 245, 188, 97;
+  --ion-color-primary-contrast: #000000;
+  --ion-color-primary-contrast-rgb: 0, 0, 0;
 }
+
+// ============================================================
+// IONIC TOASTER STYLES
+// ============================================================
+
+.error-toast,
+.success-toast,
+.warning-toast {
+  --box-shadow: none;
+}
+
+.success-toast::part(icon) {
+  color: var(--ion-color-success);
+}
+
+.warning-toast::part(icon) {
+  color: var(--ion-color-warning);
+}
+
+.error-toast::part(icon) {
+  color: var(--ion-color-danger);
+}
+
+// ============================================================
+// IONIC COMPONENT STYLES
+// ============================================================
 
 ion-content {
-    --background: var(--surface-ground);
+  --background: var(--surface-ground);
 }
 
+ion-footer,
+ion-header {
+  box-shadow: none !important;
+
+  ion-toolbar {
+    --background: var(--surface-ground);
+  }
+}
+
+// ============================================================
+// FORM FIELD COMPONENT STYLES
+// ============================================================
 .invalid-text {
-    color: var(--p-inputtext-invalid-border-color);
+  color: var(--p-inputtext-invalid-border-color);
 }
