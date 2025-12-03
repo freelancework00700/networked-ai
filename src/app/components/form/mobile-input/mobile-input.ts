@@ -53,9 +53,9 @@ export class MobileInput implements OnInit {
     if (!control.touched) return null;
 
     if (control.errors?.['required']) {
-      return '*Please enter your mobile number.';
+      return 'Please enter your mobile number.';
     } else if (!this.iti?.isValidNumber()) {
-      return '*Please enter a valid mobile number.';
+      return 'Please enter a valid mobile number.';
     } else {
       return null;
     }

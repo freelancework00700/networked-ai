@@ -39,6 +39,7 @@
     "firebase": "^11.10.0",
     "intl-tel-input": "^25.3.2",
     "ionicons": "^8.0.13",
+    "ng-otp-input": "^2.0.9",
     "primeclt": "^0.1.5",
     "primeicons": "^7.0.0",
     "primeng": "^20",

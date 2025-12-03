@@ -38,8 +38,8 @@
  */
 
 // @import "@ionic/angular/css/palettes/dark.always.css";
-// @import "@ionic/angular/css/palettes/dark.class.css";
-@import '@ionic/angular/css/palettes/dark.system.css';
+@import "@ionic/angular/css/palettes/dark.class.css";
+// @import '@ionic/angular/css/palettes/dark.system.css';
 
 // For information on how to create your own theme, please see:
 // http://ionicframework.com/docs/theming/
@@ -79,7 +79,7 @@
 // ============================================================
 
 ion-content {
-  --background: var(--surface-ground);
+  --background: var(--neutral-07);
 }
 
 ion-footer,

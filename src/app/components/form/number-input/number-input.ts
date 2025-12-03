@@ -61,13 +61,13 @@ export class NumberInput {
     if (!errors) return null;
 
     if (errors['required']) {
-      return '*Please enter a value.';
+      return 'Please enter a value.';
     } else if (errors['pattern']) {
-      return this.allowDecimal() ? '*Only numeric or decimal values are allowed.' : '*Only numeric values are allowed.';
+      return this.allowDecimal() ? 'Only numeric or decimal values are allowed.' : 'Only numeric values are allowed.';
     } else if (errors['min']) {
-      return `*Value should be at least ${this.min()}.`;
+      return `Value should be at least ${this.min()}.`;
     } else if (errors['max']) {
-      return `*Value should not exceed ${this.max()}.`;
+      return `Value should not exceed ${this.max()}.`;
     } else {
       return null;
     }
