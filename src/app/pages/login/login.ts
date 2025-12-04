@@ -1,4 +1,3 @@
-import { Content } from '@/layout/content';
 import { Button } from '@/components/form/button';
 import { NgOtpInputComponent } from 'ng-otp-input';
 import { AuthService } from '@/services/auth.service';
@@ -7,6 +6,8 @@ import { EmailInput } from '@/components/form/email-input';
 import { MobileInput } from '@/components/form/mobile-input';
 import { PasswordInput } from '@/components/form/password-input';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { IonContent, IonModal, IonFooter, IonToolbar, IonSpinner } from '@ionic/angular/standalone';
+import { Router } from '@angular/router';
 
 interface LoginForm {
   phone_number?: FormControl<string | null>;
@@ -18,18 +19,21 @@ interface LoginForm {
   selector: 'login',
   styleUrl: './login.scss',
   templateUrl: './login.html',
-  imports: [Button, Content, EmailInput, MobileInput, PasswordInput, ReactiveFormsModule, NgOtpInputComponent]
+  imports: [Button, IonContent, IonModal, IonFooter, IonToolbar, IonSpinner, EmailInput, MobileInput, PasswordInput, ReactiveFormsModule, NgOtpInputComponent]
 })
 export class Login {
   // services
   fb = inject(FormBuilder);
   authService = inject(AuthService);
+  router = inject(Router);
 
   // signals
   otp = signal<string | null>(null);
   isSubmitted = signal<boolean>(false);
   activeTab = signal<'email' | 'mobile'>('email');
   loginForm = signal<FormGroup<LoginForm>>(this.fb.group({}));
+  isModalOpen = signal<boolean>(false);
+  isLoading = signal<boolean>(false);
 
   // variables
   otpConfig = {
@@ -41,8 +45,30 @@ export class Login {
   async login() {
     this.isSubmitted.set(true);
     console.log('form', this.loginForm().value);
-    // const result = await this.authService.signInWithEmailAndPassword('ravi.disolutions@gmail.com', 'Test@123');
-    // console.log('result', result);
+    
+    // If on mobile tab, show verification modal
+    if (this.activeTab() === 'mobile') {
+      this.isLoading.set(true);
+      this.isModalOpen.set(true);
+      
+      // Simulate loading, then show success
+      setTimeout(() => {
+        this.isLoading.set(false);
+      }, 1000);
+    } else {
+      // const result = await this.authService.signInWithEmailAndPassword('ravi.disolutions@gmail.com', 'Test@123');
+      // console.log('result', result);
+    }
+  }
+  
+  closeModal() {
+    this.isModalOpen.set(false);
+  }
+  
+  navigateToLogin() {
+    this.closeModal();
+    // Navigate to login or handle post-verification logic
+    console.log('Navigate to login after verification');
   }
 
   async loginWithGoogle() {
@@ -88,5 +114,10 @@ export class Login {
   openPrivacyPolicy(event: Event) {
     event.preventDefault();
     console.log('Open privacy policy');
+  }
+
+  navigateToForgotPassword(event: Event) {
+    event.preventDefault();
+    this.router.navigate(['/forgot-password']);
   }
 }

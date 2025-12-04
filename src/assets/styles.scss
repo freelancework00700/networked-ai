@@ -38,7 +38,7 @@
  */
 
 // @import "@ionic/angular/css/palettes/dark.always.css";
-@import "@ionic/angular/css/palettes/dark.class.css";
+@import '@ionic/angular/css/palettes/dark.class.css';
 // @import '@ionic/angular/css/palettes/dark.system.css';
 
 // For information on how to create your own theme, please see:
@@ -87,7 +87,7 @@ ion-header {
   box-shadow: none !important;
 
   ion-toolbar {
-    --background: var(--surface-ground);
+    --background: var(--neutral-07);
   }
 }
 

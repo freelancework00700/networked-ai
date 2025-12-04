@@ -1,4 +1,3 @@
-import { Content } from '@/layout/content';
 import { CommonModule } from '@angular/common';
 import { Header } from '@/layout/header/header';
 import { Footer } from '@/layout/footer/footer';
@@ -18,6 +17,7 @@ import { TextAreaInput } from '@/components/form/text-area-input';
 import { IncognitoModeInput } from '@/components/form/incognito-mode-input';
 import { SelectOption } from '@/components/form/select-input/select-modal';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { IonContent } from '@ionic/angular/standalone';
 
 interface ProfileForm {
   // Step 1 fields
@@ -59,7 +59,7 @@ interface NetworkSuggestion {
     Header,
     Button,
     Footer,
-    Content,
+    IonContent,
     DateInput,
     EmailInput,
     TextInput,

@@ -1,144 +1,206 @@
-<app-content>
-  <div class="flex flex-col gap-5">
-    <div class="text-center">
-      <div class="flex justify-center">
-        <img src="assets/svg/logo.svg" />
-      </div>
-      <div class="text-[10px] font-semibold pt-1">Networked AI</div>
-    </div>
-
-    <div class="text-center heading-h1 neutral-01">
-      <div class="">Get out,</div>
-      <div>
-        Get <span class="bg-[linear-gradient(170deg,rgba(245,188,97,1)_0%,rgba(158,102,10,1)_94%)] bg-clip-text text-transparent">Networked.</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- social login buttons -->
-  <div class="flex gap-3 mt-6 mb-8">
-    <!-- google login button -->
-    <button
-      (click)="loginWithGoogle()"
-      class="flex-1 flex items-center justify-center bg-neutral-06 hover:bg-neutral-06 !rounded-lg py-3 px-4 duration-200 h-[48px]"
-    >
-      <img src="assets/svg/social_google.svg" class="w-6 h-6" />
-    </button>
-
-    <!-- apple login button -->
-    <button
-      (click)="loginWithApple()"
-      class="flex-1 flex items-center justify-center bg-gray-100 hover:bg-neutral-06 !rounded-lg py-3 px-4 transition-colors duration-200"
-    >
-      <img src="assets/svg/social_apple.svg" class="w-6 h-6" />
-    </button>
-
-    <!-- facebook login button -->
-    <button
-      (click)="loginWithFacebook()"
-      class="flex-1 flex items-center justify-center bg-gray-100 hover:bg-neutral-06 !rounded-lg py-3 px-4 transition-colors duration-200"
-    >
-      <img src="../../../assets/svg/social_facebook.svg" alt="Facebook" class="!w-6 !h-6" />
-    </button>
-  </div>
-
-  <!-- or separator -->
-  <div class="flex items-center gap-3 my-4">
-    <div class="flex-1 h-px bg-neutral-05"></div>
-    <span class="neutral-03 body-14M">or</span>
-    <div class="flex-1 h-px bg-neutral-05"></div>
-  </div>
-
-  <!-- sign in header -->
-  <div class="text-center mb-6">
-    <h2 class="body-16SB neutral-01">Sign in to continue.</h2>
-  </div>
-
-  <!-- email/mobile tabs -->
-  <div class="flex items-center justify-center mb-6 border-b border-[#DBDBDB]">
-    <!-- Email tab -->
-    <button (click)="setActiveTab('email')" class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full">
-      <div class="flex items-center gap-2">
-        <img [src]="activeTab() === 'email' ? 'assets/svg/email-theme.svg' : 'assets/svg/email.svg'" class="w-5 h-5" />
-        <span class="text-base font-medium" [class.brand-02]="activeTab() === 'email'" [class.neutral-03]="activeTab() !== 'email'">Email</span>
-      </div>
-
-      <div
-        [class.bg-brand-03]="activeTab() === 'email'"
-        [class.bg-transparent]="activeTab() !== 'email'"
-        class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
-      ></div>
-    </button>
-
-    <!-- Mobile tab -->
-    <button (click)="setActiveTab('mobile')" class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full">
-      <div class="flex items-center gap-2">
-        <img [src]="activeTab() === 'mobile' ? 'assets/svg/call-theme.svg' : 'assets/svg/call.svg'" class="w-5 h-5" />
-        <span class="text-base font-medium" [class.brand-02]="activeTab() === 'mobile'" [class.neutral-03]="activeTab() !== 'mobile'">Mobile</span>
-      </div>
-
-      <div
-        [class.bg-brand-03]="activeTab() === 'mobile'"
-        [class.bg-transparent]="activeTab() !== 'mobile'"
-        class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
-      ></div>
-    </button>
-  </div>
-
-  <form [formGroup]="loginForm()" (ngSubmit)="login()">
-    @if (activeTab() === 'email') {
-      <!-- email input -->
-      <email-input [showIcon]="true" [isSubmitted]="isSubmitted()" />
-
-      <!-- password input -->
-      <div class="pt-4">
-        <password-input [showIcon]="true" [isSubmitted]="isSubmitted()" />
-      </div>
-
-      <!-- forgot password -->
-      <div class="flex items-center justify-end mb-8">
-        <span class="body-14SB brand-02 cursor-pointer">Forgot password?</span>
-      </div>
-    } @else {
-      <div class="min-h-[224px]">
-        <mobile-input [label]="'Mobile'" />
-
-        <!-- otp input -->
-        <div>
-          <div class="text-center mb-4">
-            <p class="body-14M neutral-03">Enter verification code sent to</p>
-            <p class="body-16SB neutral-01">08***998</p>
+<ion-content [fullscreen]="true">
+  <div class="min-h-full">
+    <div class="w-full p-6 max-w-[672px] mx-auto">
+      <div class="flex flex-col gap-5">
+        <div class="text-center">
+          <div class="flex justify-center">
+            <img src="assets/svg/logo.svg" />
           </div>
+          <div class="text-[10px] font-semibold pt-1">Networked AI</div>
+        </div>
 
-          <div class="flex justify-center gap-3 mb-4">
-            <ng-otp-input (onInputChange)="otp.set($event)" [config]="otpConfig" />
-          </div>
-
-          <div class="text-center body-12R neutral-03">
-            <span>Didn't receive the code? </span>
-            <button type="button" class="body-12SB brand-02">Resend code</button>
+        <div class="text-center heading-h1 neutral-01">
+          <div class="">Get out,</div>
+          <div>
+            Get
+            <span class="bg-[linear-gradient(170deg,rgba(245,188,97,1)_0%,rgba(158,102,10,1)_94%)] bg-clip-text text-transparent">Networked.</span>
           </div>
         </div>
       </div>
-    }
 
-    <!-- login button -->
-    <app-button label="Sign In" (click)="login()" />
-  </form>
+      <!-- social login buttons -->
+      <div class="flex gap-3 mt-6 mb-8">
+        <!-- google login button -->
+        <button
+          (click)="loginWithGoogle()"
+          class="flex-1 flex items-center justify-center bg-neutral-06 hover:bg-neutral-06 !rounded-lg py-3 px-4 duration-200 h-[48px]"
+        >
+          <img src="assets/svg/social_google.svg" class="w-6 h-6" />
+        </button>
 
-  <!-- footer links -->
-  <div class="flex flex-col items-center gap-4 mt-4">
-    <!-- create account link -->
-    <div class="text-center text-sm p-3">
-      <span class="neutral-03 body-14M">Don't have an account? </span>
-      <a href="#" class="body-14SB brand-02 cursor-pointer" (click)="navigateToSignUp($event)"> Create one here </a>
-    </div>
+        <!-- apple login button -->
+        <button
+          (click)="loginWithApple()"
+          class="flex-1 flex items-center justify-center bg-gray-100 hover:bg-neutral-06 !rounded-lg py-3 px-4 transition-colors duration-200"
+        >
+          <img src="assets/svg/social_apple.svg" class="w-6 h-6" />
+        </button>
 
-    <!-- terms and privacy policy -->
-    <div class="text-center text-sm">
-      <span class="neutral-03 body-14R">By continuing, I agree to the </span>
-      <a href="#" class="body-14SB neutral-02 !underline cursor-pointer" (click)="openPrivacyPolicy($event)"> terms of service </a>and
-      <a href="#" class="body-14SB neutral-02 !underline cursor-pointer" (click)="openPrivacyPolicy($event)"> privacy policy. </a>
+        <!-- facebook login button -->
+        <button
+          (click)="loginWithFacebook()"
+          class="flex-1 flex items-center justify-center bg-gray-100 hover:bg-neutral-06 !rounded-lg py-3 px-4 transition-colors duration-200"
+        >
+          <img src="../../../assets/svg/social_facebook.svg" alt="Facebook" class="!w-6 !h-6" />
+        </button>
+      </div>
+
+      <!-- or separator -->
+      <div class="flex items-center gap-3 my-4">
+        <div class="flex-1 h-px bg-neutral-05"></div>
+        <span class="neutral-03 body-14M">or</span>
+        <div class="flex-1 h-px bg-neutral-05"></div>
+      </div>
+
+      <!-- sign in header -->
+      <div class="text-center mb-6">
+        <h2 class="body-16SB neutral-01">Sign in to continue.</h2>
+      </div>
+
+      <!-- email/mobile tabs -->
+      <div class="flex items-center justify-center mb-6">
+        <!-- Email tab -->
+        <button (click)="setActiveTab('email')" class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full">
+          <div class="flex items-center gap-2">
+            <img [src]="activeTab() === 'email' ? 'assets/svg/email-theme.svg' : 'assets/svg/email.svg'" class="w-5 h-5" />
+            <span class="text-base font-medium" [class.brand-02]="activeTab() === 'email'" [class.neutral-03]="activeTab() !== 'email'">Email</span>
+          </div>
+
+          <div
+            [class.bg-brand-03]="activeTab() === 'email'"
+            [class.bg-neutral-05]="activeTab() !== 'email'"
+            class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
+          ></div>
+        </button>
+
+        <!-- Mobile tab -->
+        <button (click)="setActiveTab('mobile')" class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full">
+          <div class="flex items-center gap-2">
+            <img [src]="activeTab() === 'mobile' ? 'assets/svg/call-theme.svg' : 'assets/svg/call.svg'" class="w-5 h-5" />
+            <span class="text-base font-medium" [class.brand-02]="activeTab() === 'mobile'" [class.neutral-03]="activeTab() !== 'mobile'"
+              >Mobile</span
+            >
+          </div>
+
+          <div
+            [class.bg-brand-03]="activeTab() === 'mobile'"
+            [class.bg-neutral-05]="activeTab() !== 'mobile'"
+            class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
+          ></div>
+        </button>
+      </div>
+
+      <form [formGroup]="loginForm()" (ngSubmit)="login()">
+        @if (activeTab() === 'email') {
+          <!-- email input -->
+          <email-input [showIcon]="true" [isSubmitted]="isSubmitted()" />
+
+          <!-- password input -->
+          <div class="pt-4">
+            <password-input [showIcon]="true" [isSubmitted]="isSubmitted()" />
+          </div>
+
+          <!-- forgot password -->
+          <div class="flex items-center justify-end mb-8 py-3">
+            <div class="body-14SB brand-02 cursor-pointer" (click)="navigateToForgotPassword($event)">Forgot password?</div>
+          </div>
+        } @else {
+          <div class="min-h-[224px]">
+            <mobile-input [label]="'Mobile'" />
+
+            <!-- otp input -->
+            <div>
+              <div class="text-center pb-4 pt-6">
+                <div class="body-14M neutral-03">Enter verification code sent to</div>
+                <div class="body-14M neutral-03">08***998</div>
+              </div>
+
+              <div class="flex justify-center gap-3 mb-4">
+                <ng-otp-input (onInputChange)="otp.set($event)" [config]="otpConfig" />
+              </div>
+
+              <div class="text-center body-12R neutral-03 pb-9 pt-7">
+                <span>Didn't receive the code? </span>
+                <button type="button" class="body-12SB brand-02">Resend code</button>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (activeTab() === 'email') {
+          <!-- login button -->
+          <app-button label="Sign In" (click)="login()" />
+        } @else {
+          <app-button label="Verify" (click)="login()" />
+        }
+      </form>
+
+      <!-- footer links -->
+      <div class="flex flex-col items-center gap-4 mt-4">
+        <!-- create account link -->
+        <div class="text-center text-sm p-3">
+          <span class="neutral-03 body-14M">Don't have an account? </span>
+          <a href="#" class="body-14SB brand-02 cursor-pointer" (click)="navigateToSignUp($event)"> Create one here </a>
+        </div>
+
+        <!-- terms and privacy policy -->
+        <div class="text-center text-sm">
+          <span class="neutral-03 body-14R">By continuing, I agree to the </span>
+          <a href="#" class="body-14SB neutral-02 !underline cursor-pointer" (click)="openPrivacyPolicy($event)"> terms of service </a>and
+          <a href="#" class="body-14SB neutral-02 !underline cursor-pointer" (click)="openPrivacyPolicy($event)"> privacy policy. </a>
+        </div>
+      </div>
     </div>
   </div>
-</app-content>
+</ion-content>
+<!-- Loading Modal -->
+<ion-modal
+  [isOpen]="isModalOpen()"
+  [initialBreakpoint]="1"
+  [breakpoints]="[0, 1]"
+  [backdropBreakpoint]="0.5"
+  (willDismiss)="closeModal()"
+  [canDismiss]="true"
+  class="phoneNumber-verify-modal"
+>
+  <ng-template>
+    @if (isLoading()) {
+      <!-- Loading State -->
+      <ion-content class="flex items-center justify-center bg-white">
+        <div class="flex flex-col items-center justify-center gap-4 w-full h-full">
+          <ion-spinner name="crescent" class="w-8 h-8"></ion-spinner>
+          <div class="body-14M neutral-01">Creating your account...</div>
+        </div>
+      </ion-content>
+    } @else {
+      <!-- Verify Phone Number State -->
+      <ion-content class="flex items-center justify-center bg-neutral-07">
+        <div class="px-4 pt-11">
+          <div class="flex justify-center">
+            <div class="bg-neutral-07 rounded-[24px] p-3 shadow-[0px_16px_32px_0px_rgba(7,40,70,0.1)]">
+              <div
+                class="linear-7-gradient h-12 w-12 !rounded-[12px] overflow-hidden shadow-[0px_12px_24px_0px_rgba(9,70,103,0.3)] flex justify-center items-center"
+              >
+                <div class="pi pi-check neutral-07"></div>
+              </div>
+            </div>
+          </div>
+          <div class="my-6 flex flex-col gap-3 justify-center">
+            <div class="heading-h3 neutral-01 text-center">Phone Number Verified</div>
+            <div class="body-14R neutral-03 text-center">
+              You've verified your mobile phone number.<br />
+              Use this for quick login next time.
+            </div>
+          </div>
+        </div>
+      </ion-content>
+      <ion-footer>
+        <ion-toolbar>
+          <div class="px-4 pb-8 pt-2">
+            <app-button label="Proceed and Create My Account" (click)="navigateToLogin()" />
+          </div>
+        </ion-toolbar>
+      </ion-footer>
+    }
+  </ng-template>
+</ion-modal>

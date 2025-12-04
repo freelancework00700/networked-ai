@@ -1,7 +1,9 @@
 <p-button
-  [loading]="isLoading()"
   [label]="label()"
-  styleClass="w-full h-[44px] body-14SB neutral-01"
-  (click)="onClick($event)"
   [variant]="variant()"
+  [iconPos]="iconPos()"
+  [loading]="isLoading()"
+  (click)="onClick($event)"
+  [icon]="'pi ' + iconName()"
+  styleClass="w-full h-[44px] body-14SB neutral-01"
 />
