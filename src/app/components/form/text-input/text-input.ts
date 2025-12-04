@@ -1,6 +1,7 @@
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
+import { IonIcon } from '@ionic/angular/standalone';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { input, OnInit, inject, Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
@@ -10,7 +11,7 @@ import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, 
   styleUrl: './text-input.scss',
   templateUrl: './text-input.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconField, InputIcon, InputTextModule, ReactiveFormsModule],
+  imports: [IonIcon, IconField, InputIcon, InputTextModule, ReactiveFormsModule],
   viewProviders: [
     {
       provide: ControlContainer,

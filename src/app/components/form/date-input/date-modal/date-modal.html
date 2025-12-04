@@ -1,0 +1,15 @@
+<div class="p-4">
+  <div class="flex items-center justify-center text-center">
+    <h4>{{ title }}</h4>
+  </div>
+  <!-- date input -->
+  <ion-datetime
+    [value]="selectedDate()"
+    (ionChange)="onDateChange($event)"
+    presentation="date"
+    [preferWheel]="true"
+    [showDefaultButtons]="false"
+  ></ion-datetime>
+
+  <app-button label="Confirm" (click)="confirm()" />
+</div>

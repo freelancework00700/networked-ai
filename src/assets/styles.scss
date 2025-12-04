@@ -97,3 +97,22 @@ ion-header {
 .invalid-text {
   color: var(--p-inputtext-invalid-border-color);
 }
+
+.auto-hight-modal {
+  --height: auto;
+  align-items: flex-end;
+  --border-radius: 16px 16px 0px 0px;
+
+  .ion-page {
+    display: block;
+    contain: content;
+    position: relative;
+
+    .inner-content {
+      overflow: auto;
+      max-height: 80vh;
+      min-height: 150px;
+      background: var(--surface-ground);
+    }
+  }
+}

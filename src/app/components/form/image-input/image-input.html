@@ -1,0 +1,49 @@
+<div class="flex flex-col items-center gap-3">
+  <!-- When image exists -->
+  @if (imagePreview()) {
+    <div class="relative">
+      <!-- Image preview -->
+      <img
+        [src]="imagePreview()!"
+        alt="Profile Picture"
+        class="w-32 h-32 rounded-full object-cover shadow-md border-4 border-white"
+        (click)="fileInput.click()"
+      />
+
+      <!-- Replace button -->
+      <button
+        type="button"
+        (click)="fileInput.click(); $event.stopPropagation()"
+        class="absolute -bottom-1 -right-1 bg-[#F7C860] text-black rounded-xl w-8 h-8 flex items-center justify-center shadow hover:brightness-95 transition-all"
+      >
+        <i class="pi pi-plus text-base"></i>
+      </button>
+    </div>
+  }
+
+  <!-- When no image -->
+  @else {
+    <div class="relative cursor-pointer" (click)="fileInput.click()">
+      <!-- Placeholder circle -->
+      <div class="w-32 h-32 rounded-full bg-surface-200 flex items-center justify-center text-surface-500 text-5xl shadow-md border-4 border-white">
+        <i class="pi pi-user"></i>
+      </div>
+
+      <!-- Add button -->
+      <button
+        type="button"
+        class="absolute -bottom-1 -right-1 bg-[#F7C860] text-black rounded-xl w-8 h-8 flex items-center justify-center shadow hover:brightness-95 transition-all"
+      >
+        <i class="pi pi-plus text-base"></i>
+      </button>
+    </div>
+  }
+
+  <!-- Hidden input -->
+  <input #fileInput type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" />
+</div>
+
+<!-- Validation text -->
+@if (isControlInvalid) {
+  <div class="accent-red pt-2 body-12M">Please upload a {{ label().toLowerCase() || 'picture' }}.</div>
+}

@@ -1,0 +1,28 @@
+<div class="p-6 flex flex-col items-center gap-6 min-h-[400px] relative">
+  <!-- X Close Button -->
+  <button
+    type="button"
+    (click)="close()"
+    class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-surface-600 hover:text-surface-900 transition-colors z-10"
+  >
+    <i class="pi pi-times text-xl"></i>
+  </button>
+
+  <!-- Title -->
+  <div class="flex items-center justify-center text-center w-full mt-2">
+    <h4 class="text-xl font-semibold">Confirm Photo</h4>
+  </div>
+
+  <!-- Image Preview -->
+  <div class="flex-1 flex items-center justify-center">
+    <div class="w-64 h-64 rounded-full overflow-hidden border-4 border-surface-200 shadow-lg">
+      <img [src]="imageDataUrl" alt="Profile preview" class="w-full h-full object-cover" />
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="flex gap-3 justify-center">
+    <app-button label="Retake" (click)="retake()" variant="outlined" />
+    <app-button label="Confirm" (click)="confirm()" />
+  </div>
+</div>

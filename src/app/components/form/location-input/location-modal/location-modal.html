@@ -1,0 +1,31 @@
+<div class="p-4">
+  <!-- title -->
+  <div class="flex items-center justify-center mb-4 text-center">
+    <h3>{{ title }}</h3>
+  </div>
+
+  <!-- location search input -->
+  <div class="mb-4">
+    <p-iconfield>
+      <p-inputicon class="pi pi-map-marker" />
+      <input
+        pInputText
+        #searchInput
+        class="w-full h-[44px]"
+        [value]="selectedLocation()"
+        (input)="selectedLocation.set($any($event.target).value)"
+        placeholder="Search for a location..."
+      />
+    </p-iconfield>
+  </div>
+
+  <!-- selected location display -->
+  @if (selectedLocation()) {
+    <div class="mb-4 p-3 bg-surface-50 rounded-md">
+      <p class="text-sm text-surface-600 mb-1">Selected Location:</p>
+      <p class="text-surface-900">{{ selectedLocation() }}</p>
+    </div>
+  }
+
+  <app-button label="Confirm" (click)="confirm()" />
+</div>

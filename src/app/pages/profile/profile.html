@@ -1,0 +1,147 @@
+<app-header>
+  <div class="relative flex items-center justify-center w-full">
+    <!-- Back Button (left) -->
+    <button class="absolute left-3 flex items-center gap-1 text-primary" (click)="previousStep()">
+      <i class="pi pi-arrow-left text-lg"></i>
+    </button>
+
+    <!-- Center Title -->
+    <h5 class="text-xl font-semibold">Set up Profile</h5>
+  </div>
+</app-header>
+
+<app-content>
+  <form [formGroup]="profileForm()" (ngSubmit)="update()">
+    <!-- Step 1: Personal Information -->
+    @if (currentStep() === 1) {
+      <div class="space-y-4 flex flex-col gap-4">
+        <h3 class="text-lg font-semibold">Personal Details</h3>
+        <!-- title input -->
+        <select-input controlName="title" label="Title" [options]="titleOptions" />
+
+        <!-- name input -->
+        <div class="flex items-center gap-2 w-full">
+          <text-input controlName="first_name" label="First Name" class="w-full" />
+          <text-input controlName="last_name" label="Last Name" class="w-full" />
+        </div>
+
+        <!-- email input -->
+        <email-input />
+
+        <!-- phone input -->
+        <mobile-input />
+
+        <!-- username input -->
+        <username-input (verificationStateChange)="usernameVerified.set($event)" />
+
+        <!-- birthdate input -->
+        <date-input controlName="birthdate" label="Birthdate" />
+
+        <!-- account type input -->
+        <select-input controlName="account_type" label="Account Type" [options]="accountTypeOptions" />
+
+        <!-- Location & Location Settings -->
+        <div class="flex flex-col gap-4">
+          <h5 class="text-lg font-semibold">Location & Location Settings</h5>
+
+          <!-- City/Location input -->
+          <location-input controlName="location" label="City/Location" iconName=" pi-map-marker" placeholder="Enter Location here" />
+
+          <!-- Incognito Mode Toggle -->
+          <incognito-mode-input />
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Additional Information -->
+    @if (currentStep() === 2) {
+      <div class="space-y-4 flex flex-col gap-4">
+        <h3 class="text-lg font-semibold">More About You</h3>
+        <!-- college/university input -->
+        <text-input controlName="college_university" label="College/University" [required]="false" />
+
+        <!-- company input -->
+        <text-input controlName="company" label="Company" [required]="false" />
+
+        <!-- about input -->
+        <text-area-input label="About Me" controlName="aboutMe" [required]="false" placeholder="Write description here" />
+
+        <!-- sites & socials -->
+        <social-input />
+      </div>
+    }
+
+    <!-- Step 3: Profile Image -->
+    @if (currentStep() === 3) {
+      <div class="flex flex-col items-center justify-center">
+        <h3 class="text-lg font-semibold mb-4 text-center">Upload Photo</h3>
+        <image-input controlName="profile_image" label="Profile Picture" [required]="false" (skipped)="nextStep()" />
+        <button type="button" (click)="nextStep()" class="text-surface-600 hover:text-surface-900 transition-colors">Skip Now</button>
+      </div>
+    }
+
+    <!-- Step 4: Network Suggestions -->
+    @if (currentStep() === 4) {
+      <div class="space-y-4">
+        <h3 class="text-lg font-semibold mb-4">Network Suggestion</h3>
+
+        <!-- Network Suggestions List -->
+        <div class="space-y-3">
+          @for (suggestion of networkSuggestions; track suggestion.id) {
+            <div class="flex items-center gap-3 p-3 bg-surface-0 rounded-lg border border-surface-200">
+              <!-- Profile Picture -->
+              <div class="w-12 h-12 rounded-full bg-surface-100 border-2 border-surface-200 flex items-center justify-center flex-shrink-0">
+                <i class="pi pi-user text-surface-400 text-xl"></i>
+              </div>
+
+              <!-- Name and Details -->
+              <div class="flex-1">
+                <div class="flex gap-2">
+                  <h5 class="font-semibold text-surface-900 truncate">{{ suggestion.name }}</h5>
+                  <div class="flex items-center gap-1 border border-surface-200 rounded-full px-2 py-0">
+                    <img src="assets/svg/diamondYellow.svg" alt="diamond" class="h-4 w-auto" />
+                    <span class="text-sm font-medium">{{ suggestion.value }}</span>
+                  </div>
+                </div>
+                <p class="text-sm text-surface-600 truncate">{{ suggestion.jobTitle }}, {{ suggestion.company }}</p>
+              </div>
+
+              <!-- Add Button -->
+              <app-button
+                [label]="isSelected(suggestion.id) ? 'Added' : 'Add'"
+                [variant]="isSelected(suggestion.id) ? undefined : 'outlined'"
+                (click)="addSuggestion(suggestion.id)"
+              >
+              </app-button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </form>
+</app-content>
+
+<app-footer>
+  <div class="flex items-center justify-between w-full px-4 py-3">
+    <!-- Steps -->
+    <div class="flex items-center gap-2">
+      @for (step of steps(); track step) {
+        <div
+          class="rounded-full transition-all duration-200"
+          [ngClass]="step === currentStep() ? 'w-6 h-2 bg-black' : step < currentStep() ? 'w-2 h-2 bg-black' : 'w-2 h-2 bg-gray-300'"
+        ></div>
+      }
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="flex items-center gap-2">
+      @if (currentStep() === 4) {
+        <app-button label="Finish" (click)="update()" />
+      } @else if (currentStep() < steps().length) {
+        <app-button label="Next" (click)="nextStep()" />
+      } @else {
+        <app-button label="Submit" (click)="update()" />
+      }
+    </div>
+  </div>
+</app-footer>

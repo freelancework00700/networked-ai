@@ -11,7 +11,14 @@ export class Button {
   // inputs
   label = input<string>('');
   isLoading = input<boolean>(false);
+  variant = input<'outlined' | 'text' | undefined>(undefined);
 
   // outputs
   click = output<void>();
+
+  onClick(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.click.emit();
+  }
 }

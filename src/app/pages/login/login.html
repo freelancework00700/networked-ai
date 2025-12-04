@@ -35,7 +35,7 @@
 
     <!-- facebook login button -->
     <button
-    (click)="loginWithFacebook()"
+      (click)="loginWithFacebook()"
       class="flex-1 flex items-center justify-center bg-gray-100 hover:bg-neutral-06 !rounded-lg py-3 px-4 transition-colors duration-200"
     >
       <img src="../../../assets/svg/social_facebook.svg" alt="Facebook" class="!w-6 !h-6" />
@@ -57,36 +57,30 @@
   <!-- email/mobile tabs -->
   <div class="flex items-center justify-center mb-6 border-b border-[#DBDBDB]">
     <!-- Email tab -->
-    <button
-      (click)="setActiveTab('email')"
-      class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full"
-    >
+    <button (click)="setActiveTab('email')" class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full">
       <div class="flex items-center gap-2">
         <img [src]="activeTab() === 'email' ? 'assets/svg/email-theme.svg' : 'assets/svg/email.svg'" class="w-5 h-5" />
         <span class="text-base font-medium" [class.brand-02]="activeTab() === 'email'" [class.neutral-03]="activeTab() !== 'email'">Email</span>
       </div>
 
       <div
-      [class.bg-brand-03]="activeTab() === 'email'"
-      [class.bg-transparent]="activeTab() !== 'email'"
-      class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
+        [class.bg-brand-03]="activeTab() === 'email'"
+        [class.bg-transparent]="activeTab() !== 'email'"
+        class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
       ></div>
     </button>
 
     <!-- Mobile tab -->
-    <button
-      (click)="setActiveTab('mobile')"
-      class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full"
-    >
+    <button (click)="setActiveTab('mobile')" class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full">
       <div class="flex items-center gap-2">
         <img [src]="activeTab() === 'mobile' ? 'assets/svg/call-theme.svg' : 'assets/svg/call.svg'" class="w-5 h-5" />
         <span class="text-base font-medium" [class.brand-02]="activeTab() === 'mobile'" [class.neutral-03]="activeTab() !== 'mobile'">Mobile</span>
       </div>
 
       <div
-      [class.bg-brand-03]="activeTab() === 'mobile'"
-      [class.bg-transparent]="activeTab() !== 'mobile'"
-      class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
+        [class.bg-brand-03]="activeTab() === 'mobile'"
+        [class.bg-transparent]="activeTab() !== 'mobile'"
+        class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
       ></div>
     </button>
   </div>
@@ -95,7 +89,7 @@
     @if (activeTab() === 'email') {
       <!-- email input -->
       <email-input [showIcon]="true" [isSubmitted]="isSubmitted()" />
-      
+
       <!-- password input -->
       <div class="pt-4">
         <password-input [showIcon]="true" [isSubmitted]="isSubmitted()" />
@@ -131,7 +125,7 @@
     <!-- login button -->
     <app-button label="Sign In" (click)="login()" />
   </form>
-  
+
   <!-- footer links -->
   <div class="flex flex-col items-center gap-4 mt-4">
     <!-- create account link -->

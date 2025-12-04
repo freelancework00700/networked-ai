@@ -18,27 +18,19 @@ interface LoginForm {
   selector: 'login',
   styleUrl: './login.scss',
   templateUrl: './login.html',
-  imports: [
-    Button, 
-    Content, 
-    EmailInput, 
-    MobileInput, 
-    PasswordInput, 
-    ReactiveFormsModule, 
-    NgOtpInputComponent
-  ]
+  imports: [Button, Content, EmailInput, MobileInput, PasswordInput, ReactiveFormsModule, NgOtpInputComponent]
 })
 export class Login {
   // services
   fb = inject(FormBuilder);
   authService = inject(AuthService);
-  
+
   // signals
   otp = signal<string | null>(null);
   isSubmitted = signal<boolean>(false);
   activeTab = signal<'email' | 'mobile'>('email');
   loginForm = signal<FormGroup<LoginForm>>(this.fb.group({}));
-  
+
   // variables
   otpConfig = {
     length: 6,

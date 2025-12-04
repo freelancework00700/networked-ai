@@ -1,0 +1,30 @@
+<!-- label -->
+@if (label()) {
+  <label class="block neutral-02 body-14M mb-1">
+    {{ label() }}
+  </label>
+}
+
+<div class="relative">
+  <p-iconfield>
+    <p-inputicon class="pi pi-map-marker" />
+
+    <input
+      readonly
+      pInputText
+      class="w-full h-[44px]"
+      [value]="displayLocation"
+      [invalid]="isControlInvalid"
+      (click)="openLocationModal()"
+      [placeholder]="getPlaceholder"
+      [formControlName]="controlName()"
+      [class.ng-invalid]="isControlInvalid"
+    />
+  </p-iconfield>
+</div>
+
+<!-- validation -->
+<!-- validation -->
+@if (isControlInvalid) {
+  <div class="accent-red pt-2 body-12M">Please enter the valid {{ label().toLowerCase() }}.</div>
+}

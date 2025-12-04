@@ -1,0 +1,17 @@
+<div class="flex flex-col gap-2 w-full">
+  <div class="flex items-center justify-between text-surface-900 mb-1">
+    <label class="neutral-02 body-14M">
+      {{ label() }}
+      @if (required()) {
+        <span class="accent-red">*</span>
+      }
+    </label>
+    @if (!required()) {
+      <span class="text-surface-400 text-sm">Optional</span>
+    }
+  </div>
+  <textarea rows="4" cols="30" pTextarea class="p-2 border rounded-md" [formControlName]="controlName()" [placeholder]="placeholder()"></textarea>
+  @if (isControlInvalid) {
+    <small class="text-red-500 text-sm mb-1">*{{ label() }} is required.</small>
+  }
+</div>
