@@ -6,18 +6,17 @@
       <img
         [src]="imagePreview()!"
         alt="Profile Picture"
-        class="w-32 h-32 rounded-full object-cover shadow-md border-4 border-white"
+        class="w-32 h-32 rounded-full bg-neutral-04 flex items-center justify-center shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-4 border-white"
         (click)="fileInput.click()"
       />
 
       <!-- Replace button -->
-      <button
-        type="button"
+      <div
         (click)="fileInput.click(); $event.stopPropagation()"
-        class="absolute -bottom-1 -right-1 bg-[#F7C860] text-black rounded-xl w-8 h-8 flex items-center justify-center shadow hover:brightness-95 transition-all"
+        class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-4 border-white !rounded-[12px] w-10 h-10 flex items-center justify-center hover:brightness-95 transition-all"
       >
-        <i class="pi pi-plus text-base"></i>
-      </button>
+        <i class="pi pi-plus !text-[14px]"></i>
+      </div>
     </div>
   }
 
@@ -25,17 +24,18 @@
   @else {
     <div class="relative cursor-pointer" (click)="fileInput.click()">
       <!-- Placeholder circle -->
-      <div class="w-32 h-32 rounded-full bg-surface-200 flex items-center justify-center text-surface-500 text-5xl shadow-md border-4 border-white">
-        <i class="pi pi-user"></i>
+      <div
+        class="w-32 h-32 rounded-full bg-neutral-04 flex items-center justify-center shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-4 border-white"
+      >
+        <i class="pi pi-user neutral-07 !text-[40px]"></i>
       </div>
 
       <!-- Add button -->
-      <button
-        type="button"
-        class="absolute -bottom-1 -right-1 bg-[#F7C860] text-black rounded-xl w-8 h-8 flex items-center justify-center shadow hover:brightness-95 transition-all"
+      <div
+        class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-4 border-white !rounded-[12px] w-10 h-10 flex items-center justify-center hover:brightness-95 transition-all"
       >
-        <i class="pi pi-plus text-base"></i>
-      </button>
+        <i class="pi pi-plus !text-[14px]"></i>
+      </div>
     </div>
   }
 

@@ -9,10 +9,13 @@ import { input, output, Component } from '@angular/core';
 })
 export class Button {
   // inputs
+  width = input('100%');
+  height = input('unset');
   label = input<string>('');
   iconName = input<string>('');
   isLoading = input<boolean>(false);
   iconPos = input<'right' | 'left'>('left');
+  color = input<'secondary' | 'primary'>('primary');
   variant = input<'outlined' | 'text' | undefined>(undefined);
 
   // outputs

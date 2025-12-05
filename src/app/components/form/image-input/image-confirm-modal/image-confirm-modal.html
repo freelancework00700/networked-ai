@@ -1,4 +1,4 @@
-<div class="p-6 flex flex-col items-center gap-6 min-h-[400px] relative">
+<div class="p-6 flex flex-col items-center min-h-[385px] relative">
   <!-- X Close Button -->
   <button
     type="button"
@@ -9,20 +9,20 @@
   </button>
 
   <!-- Title -->
-  <div class="flex items-center justify-center text-center w-full mt-2">
-    <h4 class="text-xl font-semibold">Confirm Photo</h4>
+  <div class="flex items-center w-full mt-2">
+    <div class="theading-h3 neutral-01">Confirm Profile Picture</div>
   </div>
 
   <!-- Image Preview -->
   <div class="flex-1 flex items-center justify-center">
-    <div class="w-64 h-64 rounded-full overflow-hidden border-4 border-surface-200 shadow-lg">
+    <div class="w-44 h-44 rounded-full overflow-hidden shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-4 border-white">
       <img [src]="imageDataUrl" alt="Profile preview" class="w-full h-full object-cover" />
     </div>
   </div>
 
   <!-- Action Buttons -->
-  <div class="flex gap-3 justify-center">
-    <app-button label="Retake" (click)="retake()" variant="outlined" />
-    <app-button label="Confirm" (click)="confirm()" />
+  <div class="flex w-full gap-2">
+    <app-button label="Choose Another" color="secondary" (click)="retake()" class="w-full !bg-neutral-06" />
+    <app-button label="Confirm" (click)="confirm()" class="w-full" />
   </div>
 </div>

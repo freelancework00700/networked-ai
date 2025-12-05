@@ -8,6 +8,7 @@ import { PasswordInput } from '@/components/form/password-input';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { IonContent, IonModal, IonFooter, IonToolbar, IonSpinner } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
+import { Content } from "@/layout/content";
 
 interface LoginForm {
   phone_number?: FormControl<string | null>;
@@ -19,7 +20,7 @@ interface LoginForm {
   selector: 'login',
   styleUrl: './login.scss',
   templateUrl: './login.html',
-  imports: [Button, IonContent, IonModal, IonFooter, IonToolbar, IonSpinner, EmailInput, MobileInput, PasswordInput, ReactiveFormsModule, NgOtpInputComponent]
+  imports: [Button, IonContent, IonModal, IonFooter, IonToolbar, IonSpinner, EmailInput, MobileInput, PasswordInput, ReactiveFormsModule, NgOtpInputComponent, Content]
 })
 export class Login {
   // services

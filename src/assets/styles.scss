@@ -90,6 +90,10 @@ ion-header {
     --background: var(--neutral-07);
   }
 }
+.header-ios ion-toolbar:last-of-type,
+ion-footer.footer-toolbar-padding ion-toolbar:last-of-type {
+  --border-width: 0 0 0;
+}
 
 // ============================================================
 // FORM FIELD COMPONENT STYLES
@@ -115,4 +119,7 @@ ion-header {
       background: var(--surface-ground);
     }
   }
+}
+.p-toggleswitch-handle {
+  background: var(--neutral-07) !important;
 }

@@ -17,7 +17,8 @@ import { TextAreaInput } from '@/components/form/text-area-input';
 import { IncognitoModeInput } from '@/components/form/incognito-mode-input';
 import { SelectOption } from '@/components/form/select-input/select-modal';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { IonContent } from '@ionic/angular/standalone';
+import { IonContent, IonTitle, IonHeader, IonToolbar, IonFooter } from '@ionic/angular/standalone';
+import { Content } from "@/layout/content";
 
 interface ProfileForm {
   // Step 1 fields
@@ -56,6 +57,10 @@ interface NetworkSuggestion {
   templateUrl: './profile.html',
   styleUrls: ['./profile.scss'],
   imports: [
+    IonFooter,
+    IonToolbar,
+    IonHeader,
+    IonTitle,
     Header,
     Button,
     Footer,
@@ -72,8 +77,9 @@ interface NetworkSuggestion {
     TextAreaInput,
     UsernameInput,
     IncognitoModeInput,
-    ReactiveFormsModule
-  ]
+    ReactiveFormsModule,
+    Content
+]
 })
 export class Profile implements OnInit {
   // services
