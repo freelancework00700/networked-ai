@@ -7,9 +7,9 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div class="min-h-full h-full">
-    <div class="w-full max-w-[672px] mx-auto h-full">
+<ion-content [fullscreen]="true">
+  <div class="min-h-full">
+    <div class="w-full p-6 max-w-[672px] mx-auto">
       <form [formGroup]="profileForm()" (ngSubmit)="update()" class="h-full">
         <!-- Step 1: Personal Information -->
         @if (currentStep() === 1) {
@@ -17,7 +17,7 @@
             <div class="heading-h2 neutral-01">Personal Details</div>
             <div class="flex flex-col gap-4">
               <!-- title input -->
-              <select-input controlName="title" label="Title" [options]="titleOptions" />
+              <modal-input controlName="title" label="Title" placeholder="Select title" type="select" [options]="titleOptions" />
 
               <!-- name input -->
               <div class="flex items-center gap-2 w-full">
@@ -35,17 +35,23 @@
               <username-input (verificationStateChange)="usernameVerified.set($event)" />
 
               <!-- birthdate input -->
-              <date-input controlName="birthdate" label="Birthdate" />
+              <modal-input controlName="birthdate" label="Birthdate" placeholder="Select birthdate" type="date" iconName="pi pi-calendar" />
 
               <!-- account type input -->
-              <select-input controlName="account_type" label="Account Type" [options]="accountTypeOptions" />
+              <modal-input
+                type="select"
+                label="Account Type"
+                controlName="account_type"
+                placeholder="Select account type"
+                [options]="accountTypeOptions"
+              />
 
               <!-- Location & Location Settings -->
               <div class="flex flex-col gap-4">
                 <h5 class="text-lg font-semibold">Location & Location Settings</h5>
 
                 <!-- City/Location input -->
-                <location-input controlName="location" label="City/Location" iconName=" pi-map-marker" placeholder="Enter Location here" />
+                <modal-input controlName="location" label="City/Location" placeholder="Select location" type="location" iconName="pi pi-map-marker" />
 
                 <!-- Incognito Mode Toggle -->
                 <incognito-mode-input />

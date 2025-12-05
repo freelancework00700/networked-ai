@@ -2,6 +2,7 @@
 @use './tailwind.css';
 @use './layout/layout.scss';
 @use 'primeicons/primeicons.css';
+@import './layout/variables/_common.scss';
 
 /*
  * App Global CSS
@@ -77,7 +78,9 @@
 // ============================================================
 // IONIC COMPONENT STYLES
 // ============================================================
-
+*{
+  font-family: 'Manrope', sans-serif;
+}
 ion-content {
   --background: var(--neutral-07);
 }

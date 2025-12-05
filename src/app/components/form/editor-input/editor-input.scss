@@ -1,0 +1,20 @@
+::ng-deep {
+  .invalid-editor {
+    .p-editor-toolbar {
+      border: 1px solid var(--p-inputtext-invalid-border-color) !important;
+    }
+
+    .ql-editor {
+      border: 1px solid var(--p-inputtext-invalid-border-color) !important;
+    }
+  }
+  .valid-editor {
+    .p-editor-toolbar {
+      border: 1px solid var(--p-inputtext-border-color) !important;
+    }
+
+    .ql-editor {
+      border: 1px solid var(--p-inputtext-border-color) !important;
+    }
+  }
+}

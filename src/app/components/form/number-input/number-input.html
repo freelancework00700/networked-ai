@@ -1,13 +1,20 @@
 @if (label()) {
-  <label class="block neutral-02 body-14M mb-1">
-    {{ label() }}
-  </label>
+  <div class="flex items-center justify-between text-surface-900 mb-1">
+    <label class="block neutral-02 body-14M mb-1">
+      {{ label() }}
+    </label>
+    @if (!required()) {
+      <span class="text-surface-400 text-sm">Optional</span>
+    }
+  </div>
 }
 
 <!-- input -->
 <p-iconField>
   @if (iconName()) {
-    <p-inputIcon [class]="'pi ' + iconName" />
+    @if (position() === 'left') {
+      <p-inputIcon [class]="'pi ' + iconName()" />
+    }
   }
 
   <input
@@ -21,6 +28,9 @@
     [class.ng-invalid]="!!getErrorMessage"
     [attr.inputmode]="allowDecimal() ? 'decimal' : 'numeric'"
   />
+  @if (position() === 'right') {
+    <p-inputIcon [class]="'pi ' + iconName()" />
+  }
 </p-iconField>
 
 <!-- validation -->

@@ -21,11 +21,12 @@ import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, 
 export class NumberInput {
   // inputs
   label = input('');
-  iconName = input('');
+  iconName = input<string>('');
   required = input(true);
   placeholder = input('');
   isSubmitted = input(true);
   allowDecimal = input(false);
+  position = input<'left' | 'right'>('left');
   controlName = input.required<string>();
   max = input<number | undefined>(undefined);
   min = input<number | undefined>(undefined);

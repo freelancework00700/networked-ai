@@ -1,0 +1,51 @@
+import { CommonModule } from '@angular/common';
+import { ModalController } from '@ionic/angular/standalone';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { TicketTypeItem } from '../ticket-type-item';
+
+export interface TicketTypeOption {
+  type: 'standard' | 'early-bird' | 'sponsor';
+  label: string;
+  description: string;
+  icon: string;
+}
+
+@Component({
+  selector: 'ticket-type-modal',
+  templateUrl: './ticket-type-modal.html',
+  styleUrl: './ticket-type-modal.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, TicketTypeItem]
+})
+export class TicketTypeModal {
+  private modalCtrl = inject(ModalController);
+
+  ticketTypes: TicketTypeOption[] = [
+    {
+      type: 'standard',
+      label: 'Standard Paid Ticket',
+      description: 'Create a standard paid ticket.',
+      icon: 'assets/svg/paidTicketIcon.svg'
+    },
+    {
+      type: 'early-bird',
+      label: 'Early Bird Ticket',
+      description: 'Allow early access for a special price.',
+      icon: 'assets/svg/earlybirdIcon.svg'
+    },
+    {
+      type: 'sponsor',
+      label: 'Sponsor Ticket',
+      description: 'Allow people to become sponsors.',
+      icon: 'assets/svg/sponsorIcon.svg'
+    }
+  ];
+
+  selectTicketType(type: 'standard' | 'early-bird' | 'sponsor'): void {
+    this.modalCtrl.dismiss(type, 'select');
+  }
+
+  close(): void {
+    this.modalCtrl.dismiss(null, 'cancel');
+  }
+}

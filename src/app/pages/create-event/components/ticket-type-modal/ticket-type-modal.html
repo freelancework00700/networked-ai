@@ -1,0 +1,11 @@
+<!-- Ticket Type Options -->
+<div class="flex flex-col gap-4 p-6">
+  @for (ticketType of ticketTypes; track ticketType.type) {
+    <ticket-type-item
+      [icon]="ticketType.icon"
+      [label]="ticketType.label"
+      [description]="ticketType.description"
+      (click)="selectTicketType(ticketType.type)"
+    />
+  }
+</div>

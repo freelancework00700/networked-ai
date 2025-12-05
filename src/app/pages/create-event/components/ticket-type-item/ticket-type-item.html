@@ -1,0 +1,10 @@
+<div class="flex items-center gap-4 border border-surface-300 rounded-lg p-3" (click)="onClick($event)">
+  <img [src]="icon()" class="w-12 h-12 flex-shrink-0" />
+  <div class="ticket-type-info flex-1">
+    <div class="ticket-type-name text-base font-semibold text-gray-900">{{ label() }}</div>
+    <div class="ticket-type-description text-sm text-gray-600">
+      {{ description() }}
+    </div>
+  </div>
+  <i class="pi pi-chevron-right text-gray-400 text-xl"></i>
+</div>

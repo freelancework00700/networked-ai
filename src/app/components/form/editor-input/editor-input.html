@@ -1,0 +1,32 @@
+<!-- label -->
+@if (label()) {
+  <div class="flex items-center justify-between mb-1">
+    <label class="block neutral-02 body-14M">
+      {{ label() }}
+    </label>
+    @if (showGenerateButton()) {
+      <button
+        type="button"
+        class="flex items-center gap-1.5 brand-02 body-14M hover:opacity-80 transition-opacity cursor-pointer"
+        (click)="onGenerateClick()?.()"
+      >
+        {{ isCustomize() ? 'Customize' : 'Generate' }}
+        <img src="assets/svg/generateIcon.svg" alt="Generate" class="w-5 h-5" />
+      </button>
+    }
+  </div>
+}
+
+<!-- editor -->
+<p-editor
+  [formControlName]="controlName()"
+  [style]="{ height: '200px' }"
+  [class.invalid-editor]="isControlInvalid"
+  [class.valid-editor]="!isControlInvalid"
+  placeholder="Enter description  ..."
+/>
+
+<!-- validation -->
+@if (isControlInvalid) {
+  <div class="accent-red pt-2 body-12M">Please enter the valid {{ label().toLowerCase() }}.</div>
+}

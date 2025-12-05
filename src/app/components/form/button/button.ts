@@ -13,6 +13,7 @@ export class Button {
   height = input('unset');
   label = input<string>('');
   iconName = input<string>('');
+  disabled = input<boolean>(false);
   isLoading = input<boolean>(false);
   iconPos = input<'right' | 'left'>('left');
   color = input<'secondary' | 'primary'>('primary');

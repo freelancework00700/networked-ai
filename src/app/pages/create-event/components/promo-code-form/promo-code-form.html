@@ -1,0 +1,94 @@
+<!-- Header -->
+<div class="flex items-center justify-between p-4">
+  <div class="body-16SB">Create New Promo Code</div>
+  <button (click)="close()" class="text-surface-500 hover:text-surface-900">
+    <i class="pi pi-times text-lg"></i>
+  </button>
+</div>
+
+<!-- Form Content -->
+<div class="p-4">
+  <form [formGroup]="promoForm()" class="flex flex-col gap-4">
+    <!-- Promo Code Name -->
+    <text-input controlName="promoCode" label="Promo Code" placeholder="Promo Code Name" />
+
+    <!-- Promotion Type -->
+    <div class="w-full">
+      <label class="neutral-02 body-14M">Promotion Type</label>
+      <div class="w-full">
+        <div class="chip-container flex gap-2 mt-1">
+          <!-- Percentage Chip -->
+          <ion-chip
+            outline="true"
+            [color]="promotionType() === 'percentage' ? 'lgold' : ''"
+            [style.background-color]="promotionType() === 'percentage' ? '#FEF7EC' : ''"
+            class="promo-chip"
+            (click)="setPromotionType('percentage')"
+          >
+            <div class="chip-inner body-14R">
+              <span>Percentage Off</span>
+              <span>%</span>
+            </div>
+          </ion-chip>
+
+          <!-- Fixed Chip -->
+          <ion-chip
+            outline="true"
+            [color]="promotionType() === 'fixed' ? 'lgold' : ''"
+            [style.background-color]="promotionType() === 'fixed' ? '#FEF7EC' : ''"
+            class="promo-chip"
+            (click)="setPromotionType('fixed')"
+          >
+            <div class="chip-inner body-14R">
+              <span>Fixed Amount Off</span>
+              <span>$</span>
+            </div>
+          </ion-chip>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discount Amount Section (Dynamic Based on Promotion Type) -->
+    <div>
+      <!-- If PERCENTAGE -->
+      @if (promotionType() === 'percentage') {
+        <div class="flex gap-3">
+          <number-input
+            label="Discount Amount"
+            controlName="promoPresent"
+            placeholder="10"
+            class="w-full"
+            [iconName]="'pi-percentage'"
+            [position]="'right'"
+          />
+          <number-input
+            label="Capped at"
+            controlName="capped_amount"
+            placeholder="0.00"
+            [required]="false"
+            class="w-full"
+            [allowDecimal]="true"
+            [iconName]="'pi-dollar'"
+          />
+        </div>
+      }
+
+      <!-- If FIXED AMOUNT -->
+      @if (promotionType() === 'fixed') {
+        <number-input label="Discount Amount" controlName="promoPresent" placeholder="0.00" [allowDecimal]="true" [iconName]="'pi-dollar'" />
+      }
+    </div>
+
+    <!-- Redemption Limit -->
+    <number-input label="Redemption Limit" controlName="redemption_limit" placeholder="400" [required]="false" />
+
+    <!-- Max use(s) per user -->
+    <number-input label="Max use(s) per user" controlName="max_use_per_user" placeholder="1" [required]="false" />
+  </form>
+</div>
+
+<!-- Footer -->
+<div class="p-4 flex gap-3">
+  <app-button label="Cancel" (click)="close()" color="secondary" class="flex-1" />
+  <app-button label="Save" (click)="savePromoCode()" color="primary" class="flex-1" />
+</div>

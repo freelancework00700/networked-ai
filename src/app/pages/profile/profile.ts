@@ -1,24 +1,19 @@
 import { CommonModule } from '@angular/common';
-import { Header } from '@/layout/header/header';
-import { Footer } from '@/layout/footer/footer';
 import { Button } from '@/components/form/button';
 import { AuthService } from '@/services/auth.service';
-import { DateInput } from '@/components/form/date-input';
 import { TextInput } from '@/components/form/text-input';
 import { EmailInput } from '@/components/form/email-input';
 import { ImageInput } from '@/components/form/image-input';
+import { ModalInput } from '@/components/form/modal-input';
 import { MobileInput } from '@/components/form/mobile-input';
-import { SelectInput } from '@/components/form/select-input';
 import { SocialInput } from '@/components/form/social-input';
-import { LocationInput } from '@/components/form/location-input';
 import { UsernameInput } from '@/components/form/username-input';
 import { signal, inject, Component, OnInit } from '@angular/core';
 import { TextAreaInput } from '@/components/form/text-area-input';
 import { IncognitoModeInput } from '@/components/form/incognito-mode-input';
-import { SelectOption } from '@/components/form/select-input/select-modal';
+import { SelectOption } from '@/components/modal/select-modal/select-modal';
+import { IonContent, IonFooter, IonToolbar, IonHeader } from '@ionic/angular/standalone';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { IonContent, IonTitle, IonHeader, IonToolbar, IonFooter } from '@ionic/angular/standalone';
-import { Content } from "@/layout/content";
 
 interface ProfileForm {
   // Step 1 fields
@@ -55,31 +50,24 @@ interface NetworkSuggestion {
 @Component({
   selector: 'profile',
   templateUrl: './profile.html',
-  styleUrls: ['./profile.scss'],
   imports: [
+    Button,
+    IonHeader,
+    TextInput,
     IonFooter,
     IonToolbar,
-    IonHeader,
-    IonTitle,
-    Header,
-    Button,
-    Footer,
+    ModalInput,
     IonContent,
-    DateInput,
     EmailInput,
-    TextInput,
     MobileInput,
     SocialInput,
     ImageInput,
-    SelectInput,
     CommonModule,
-    LocationInput,
     TextAreaInput,
     UsernameInput,
     IncognitoModeInput,
-    ReactiveFormsModule,
-    Content
-]
+    ReactiveFormsModule
+  ]
 })
 export class Profile implements OnInit {
   // services

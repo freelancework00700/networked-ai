@@ -1,0 +1,117 @@
+<!-- Header -->
+<div class="flex items-center justify-between p-4">
+  <button (click)="close()">
+    <i class="pi pi-arrow-left"></i>
+  </button>
+  <div class="body-16SB">{{ getTitle() }}</div>
+  <button (click)="close()">
+    <i class="pi pi-times"></i>
+  </button>
+</div>
+
+<!-- Form Content -->
+<div class="p-4">
+  <form [formGroup]="ticketForm()" class="flex flex-col gap-4">
+    <!-- Ticket Name -->
+    <text-input controlName="name" label="Ticket Name" placeholder="Enter ticket name" />
+    <div class="flex gap-2">
+      <!-- Ticket Price -->
+      <number-input
+        controlName="price"
+        label="Ticket Price"
+        placeholder="Enter ticket price"
+        class="w-full"
+        [allowDecimal]="true"
+        [iconName]="'pi-dollar'"
+      />
+      <!-- Available Quantity -->
+      <number-input controlName="quantity" label="Available Quantity" placeholder="Enter available quantity" class="w-full" />
+    </div>
+
+    <!-- Free for Subscribers (only for paid tickets) -->
+    @if (!isFreeTicket()) {
+      <div class="flex items-center gap-2">
+        <ion-checkbox formControlName="free_for_subscribers"></ion-checkbox>
+        <label class="text-sm text-gray-700 cursor-pointer">Free for Subscribers</label>
+      </div>
+    }
+
+    <!-- Description -->
+    <div>
+      <text-area-input controlName="description" label="Description" placeholder="Enter description" [required]="false" />
+      <div class="flex justify-end pt-1">
+        <button
+          type="button"
+          class="flex items-center gap-1.5 brand-02 body-14M hover:opacity-80 transition-opacity cursor-pointer"
+          (click)="handleGenerateClick()"
+        >
+          {{ isCustomize() ? 'Customize' : 'Generate' }}
+          <img src="assets/svg/generateIcon.svg" alt="Generate" class="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Sales Start -->
+    <div>
+      <label class="block neutral-02 body-14M pb-1">Sales Start</label>
+      <div class="flex items-center gap-2 w-full">
+        <modal-input
+          controlName="sales_start_date"
+          label="Date"
+          placeholder="Select date"
+          [type]="'date'"
+          [showLabel]="false"
+          iconName="pi pi-calendar"
+          class="w-full"
+        />
+        <modal-input
+          controlName="sales_start_time"
+          label="Time"
+          placeholder="Select time"
+          [type]="'time'"
+          [showLabel]="false"
+          iconName="pi pi-clock"
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <!-- End sale when event starts -->
+    <div class="flex items-center gap-2">
+      <ion-checkbox formControlName="end_sale_on_event_start"></ion-checkbox>
+      <label class="text-sm text-gray-700 cursor-pointer">End sale when event starts</label>
+    </div>
+
+    <!-- Sales End (shown when end_sale_on_event_start is false) -->
+    @if (showEndSaleInputs()) {
+      <div class="flex flex-col gap-1">
+        <label class="block neutral-02 body-14M">Sales End</label>
+        <div class="flex items-center gap-2 w-full">
+          <modal-input
+            controlName="sales_end_date"
+            label="Date"
+            placeholder="Select date"
+            [type]="'date'"
+            [showLabel]="false"
+            iconName="pi pi-calendar"
+            class="w-full"
+          />
+          <modal-input
+            controlName="sales_end_time"
+            label="Time"
+            placeholder="Select time"
+            [type]="'time'"
+            [showLabel]="false"
+            iconName="pi pi-clock"
+            class="w-full"
+          />
+        </div>
+      </div>
+    }
+  </form>
+</div>
+
+<!-- Footer -->
+<div class="p-4 border-t border-gray-200">
+  <app-button label="Save Ticket" (click)="saveTicket()" color="primary" />
+</div>

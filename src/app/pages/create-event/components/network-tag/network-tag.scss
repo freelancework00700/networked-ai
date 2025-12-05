@@ -1,0 +1,52 @@
+.tag-col {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tag-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--surface-300);
+  background-color: var(--surface-0);
+  color: var(--surface-700);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: fit-content;
+
+  &:hover {
+    background-color: var(--surface-100);
+  }
+
+  &.active {
+    background-color: #000000;
+    color: #ffffff;
+    border-color: #000000;
+  }
+}
+
+.tag-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tag-close-icon {
+  margin-left: 0.5rem;
+  font-size: 1rem;
+}
+
+ion-grid {
+  padding: 1rem;
+}
+
+ion-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+

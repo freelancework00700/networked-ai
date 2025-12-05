@@ -1,5 +1,5 @@
-import { Button } from '../../button';
 import { CommonModule } from '@angular/common';
+import { Button } from '@/components/form/button';
 import { ModalController } from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy, Input } from '@angular/core';
 

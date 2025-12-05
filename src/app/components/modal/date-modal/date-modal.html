@@ -1,0 +1,25 @@
+<div class="p-4">
+  <div class="flex items-center justify-center text-center">
+    <h4>{{ title }}</h4>
+  </div>
+  <!-- date/time input -->
+  @if (type === 'time') {
+    <ion-datetime
+      [value]="getDateTimeValue()"
+      (ionChange)="onDateChange($event)"
+      presentation="time"
+      [preferWheel]="true"
+      [showDefaultButtons]="false"
+    ></ion-datetime>
+  } @else {
+    <ion-datetime
+      [value]="selectedDate()"
+      (ionChange)="onDateChange($event)"
+      presentation="date"
+      [preferWheel]="true"
+      [showDefaultButtons]="false"
+    ></ion-datetime>
+  }
+
+  <app-button label="Confirm" (click)="confirm()" />
+</div>

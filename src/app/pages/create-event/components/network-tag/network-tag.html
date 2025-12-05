@@ -1,0 +1,25 @@
+<div class="p-4">
+  <div class="text-center mb-4">
+    <p class="text-sm text-surface-600">{{ subtitle }}</p>
+  </div>
+
+  <ion-grid class="ion-padding-horizontal ion-padding-top">
+    <ion-row>
+      @for (tag of tags; track tag.value) {
+        <div class="tag-col">
+          <button type="button" class="tag-button" [class.active]="isTagSelected(tag.value)" (click)="toggleTag(tag.value)">
+            <div class="tag-content">
+              <span [innerHTML]="tag.icon"></span>
+              <span>{{ tag.name }}</span>
+            </div>
+            @if (isTagSelected(tag.value)) {
+              <i class="pi pi-times text-lg pl-2"></i>
+            }
+          </button>
+        </div>
+      }
+    </ion-row>
+  </ion-grid>
+
+  <app-button label="Confirm" (click)="confirm()" />
+</div>

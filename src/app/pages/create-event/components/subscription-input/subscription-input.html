@@ -1,0 +1,38 @@
+<!-- Header: Toggle Switch -->
+<div class="flex items-center justify-between mb-4">
+  <div class="body-medium-16 natural-01">Include as Part of Subscription</div>
+  <div class="flex items-center">
+    <p-toggleSwitch [formControlName]="controlName" />
+  </div>
+</div>
+
+<!-- Content: Subscription Select or Create Button -->
+@if (isEnabled) {
+  @if (hasPlans()) {
+    <!-- Subscription Select Dropdown -->
+    <div class="flex flex-col gap-2">
+      <div
+        class="flex items-center justify-between px-3 py-3 border border-neutral-300 rounded-lg bg-neutral-07 cursor-pointer transition-colors"
+        (click)="openSubscriptionSelect()"
+      >
+        <span [class.text-surface-500]="!selectedPlanName" [class.text-surface-900]="selectedPlanName" class="text-sm">
+          {{ selectedPlanName || 'Select Subscription' }}
+        </span>
+        <i class="pi pi-chevron-right text-surface-400 text-sm"></i>
+      </div>
+      <div class="text-xs text-surface-600">Subscribers of this plan will be able to RSVP at no cost.</div>
+    </div>
+  } @else {
+    <!-- Create Subscription Card -->
+    <div class="flex items-center justify-between p-4 bg-neutral-07 border border-neutral-300 rounded-2xl gap-4">
+      <div class="flex items-start gap-3 flex-1">
+        <img src="assets/svg/subscription.svg" alt="Subscription" class="w-8 h-8" />
+        <div class="flex flex-col">
+          <div class="body-16M">Create a Subscription</div>
+          <div class="text-xs text-surface-600">Let members pay monthly for a more premium experience.</div>
+        </div>
+      </div>
+      <app-button (click)="handleCreateSubscription()" iconName="pi pi-arrow-right" width="40px" height="40px" />
+    </div>
+  }
+}

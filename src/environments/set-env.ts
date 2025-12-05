@@ -10,6 +10,7 @@ const setEnv = () => {
   // `environment.ts` file structure
   const envConfigFile = `export const environment = {
     apiUrl: '${process.env['API_URL']}',
+    openai: '${process.env['OPEN_AI_API_KEY']}',
     firebaseConfig: {
       appId: '${process.env['FIREBASE_APP_ID']}',
       apiKey: '${process.env['FIREBASE_API_KEY']}',

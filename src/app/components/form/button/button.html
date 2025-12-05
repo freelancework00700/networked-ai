@@ -4,6 +4,7 @@
   [variant]="variant()"
   [iconPos]="iconPos()"
   [loading]="isLoading()"
+  [disabled]="disabled()"
   (click)="onClick($event)"
   [icon]="iconName() ? 'pi ' + iconName() : ''"
   [style]="{ width: width(), height: height() }"
