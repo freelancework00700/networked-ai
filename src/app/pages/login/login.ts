@@ -1,40 +1,52 @@
+import { maskPhoneNumber } from '@/utils/helper';
 import { Button } from '@/components/form/button';
 import { NgOtpInputComponent } from 'ng-otp-input';
 import { AuthService } from '@/services/auth.service';
-import { signal, inject, Component } from '@angular/core';
+import { ModalService } from '@/services/modal.service';
+import { validateFields } from '@/utils/form-validation';
 import { EmailInput } from '@/components/form/email-input';
+import { ToasterService } from '@/services/toaster.service';
 import { MobileInput } from '@/components/form/mobile-input';
 import { PasswordInput } from '@/components/form/password-input';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { IonContent, IonModal, IonFooter, IonToolbar, IonSpinner } from '@ionic/angular/standalone';
-import { Router } from '@angular/router';
-import { Content } from "@/layout/content";
+import { signal, inject, Component, ViewChild } from '@angular/core';
+import { SocialLoginButtons } from '@/components/common/social-login-buttons';
+import { IonContent, NavController, ModalController } from '@ionic/angular/standalone';
+import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 
 interface LoginForm {
-  phone_number?: FormControl<string | null>;
   email?: FormControl<string | null>;
   password?: FormControl<string | null>;
+  phone_number?: FormControl<string | null>;
 }
 
 @Component({
   selector: 'login',
   styleUrl: './login.scss',
   templateUrl: './login.html',
-  imports: [Button, IonContent, IonModal, IonFooter, IonToolbar, IonSpinner, EmailInput, MobileInput, PasswordInput, ReactiveFormsModule, NgOtpInputComponent, Content]
+  imports: [Button, IonContent, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, NgOtpInputComponent, ReactiveFormsModule]
 })
 export class Login {
   // services
   fb = inject(FormBuilder);
+  navCtrl = inject(NavController);
   authService = inject(AuthService);
-  router = inject(Router);
+  modalCtrl = inject(ModalController);
+  modalService = inject(ModalService);
+  toasterService = inject(ToasterService);
+
+  // view child
+  @ViewChild(MobileInput) mobileInput?: MobileInput;
 
   // signals
+  otpSent = signal<boolean>(false);
+  phoneNumber = signal<string>('');
   otp = signal<string | null>(null);
-  isSubmitted = signal<boolean>(false);
-  activeTab = signal<'email' | 'mobile'>('email');
-  loginForm = signal<FormGroup<LoginForm>>(this.fb.group({}));
-  isModalOpen = signal<boolean>(false);
   isLoading = signal<boolean>(false);
+  isSubmitted = signal<boolean>(false);
+  isModalOpen = signal<boolean>(false);
+  maskedPhoneNumber = signal<string>('');
+  activeTab = signal<'email' | 'mobile'>('email');
+  loginForm = signal<FormGroup<LoginForm>>(this.fb.group<LoginForm>({}));
 
   // variables
   otpConfig = {
@@ -45,80 +57,132 @@ export class Login {
 
   async login() {
     this.isSubmitted.set(true);
-    console.log('form', this.loginForm().value);
-    
-    // If on mobile tab, show verification modal
-    if (this.activeTab() === 'mobile') {
-      this.isLoading.set(true);
-      this.isModalOpen.set(true);
-      
-      // Simulate loading, then show success
-      setTimeout(() => {
-        this.isLoading.set(false);
-      }, 1000);
+
+    if (this.activeTab() === 'email') {
+      await this.loginWithEmail();
     } else {
-      // const result = await this.authService.signInWithEmailAndPassword('ravi.disolutions@gmail.com', 'Test@123');
-      // console.log('result', result);
+      if (!this.otpSent()) {
+        await this.sendOtp();
+      } else {
+        await this.verifyOtp();
+      }
     }
   }
-  
-  closeModal() {
-    this.isModalOpen.set(false);
-  }
-  
-  navigateToLogin() {
-    this.closeModal();
-    // Navigate to login or handle post-verification logic
-    console.log('Navigate to login after verification');
-  }
 
-  async loginWithGoogle() {
+  private async loginWithEmail() {
     try {
-      const result = await this.authService.signInWithGoogle();
-      console.log('Google login result', result);
-    } catch (error) {
-      console.error('Google login error', error);
+      // validate email login form fields
+      const fields = ['email', 'password'];
+      if (!validateFields(this.loginForm(), fields)) {
+        this.toasterService.showError('Please enter the email and password.');
+        return;
+      }
+
+      // set loading state
+      this.isLoading.set(true);
+      await this.modalService.openLoadingModal('Signing you in...');
+
+      // login with email and password
+      const { email, password } = this.loginForm().value;
+      const { user, isNewUser } = await this.authService.signInWithEmailAndPassword(email!, password!);
+
+      // new user -> profile page
+      // existing user -> home page
+      if (isNewUser) {
+        this.navCtrl.navigateForward('/profile', { state: { user: JSON.parse(JSON.stringify(user)) } });
+      } else {
+        this.navCtrl.navigateForward('/');
+      }
+    } catch (error: any) {
+      console.error(error);
+      this.toasterService.showError(error.message || 'Login failed. Please try again.');
+    } finally {
+      this.isLoading.set(false);
+      await this.modalService.close();
     }
   }
 
-  async loginWithApple() {
+  private async sendOtp() {
+    // get full phone number with country code from mobile input
+    const fullPhoneNumber = this.mobileInput?.getPhoneNumber();
+
+    // validate phone number step-1 fields
+    if (!validateFields(this.loginForm(), ['phone_number']) || !fullPhoneNumber) {
+      this.toasterService.showError('Please enter a valid phone number.');
+      return;
+    }
+
     try {
-      console.log('Apple login - to be implemented');
-    } catch (error) {
-      console.error('Apple login error', error);
+      this.isLoading.set(true);
+      await this.authService.sendOtpForPhoneLogin(fullPhoneNumber);
+
+      // store phone number and create masked version
+      this.phoneNumber.set(fullPhoneNumber);
+      this.maskedPhoneNumber.set(maskPhoneNumber(fullPhoneNumber));
+      this.otpSent.set(true);
+      this.isSubmitted.set(false); // reset submission state for otp input
+    } catch (error: any) {
+      console.error(error);
+      this.toasterService.showError(error.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
-  async loginWithFacebook() {
+  private async verifyOtp() {
+    // validate otp step-2 fields
+    const otp = this.otp();
+    if (!otp || otp.length !== 6) {
+      this.toasterService.showError('Please enter a valid 6-digit OTP');
+      return;
+    }
+
     try {
-      const result = await this.authService.signInWithFacebook();
-      console.log('Facebook login result', result);
-    } catch (error) {
-      console.error('Facebook login error', error);
+      this.isLoading.set(true);
+      await this.modalService.openLoadingModal('Signing you in...');
+
+      // verify otp
+      const { user, isNewUser } = await this.authService.verifyOTP(otp);
+
+      // new user -> profile page
+      // existing user -> home page
+      if (isNewUser) {
+        this.navCtrl.navigateForward('/profile', { state: { user: JSON.parse(JSON.stringify(user)) } });
+      } else {
+        this.navCtrl.navigateForward('/');
+      }
+    } catch (error: any) {
+      console.error('OTP verification error:', error);
+      this.toasterService.showError(error.message || 'Invalid OTP. Please try again.');
+    } finally {
+      this.isLoading.set(false);
+      await this.modalService.close();
     }
   }
 
-  setActiveTab(tab: 'email' | 'mobile') {
-    this.activeTab.set(tab);
+  async resendOtp() {
+    if (!this.phoneNumber()) {
+      return;
+    }
+
+    try {
+      this.isLoading.set(true);
+      await this.authService.sendOtpForPhoneLogin(this.phoneNumber());
+      this.toasterService.showSuccess('OTP resent successfully');
+    } catch (error: any) {
+      console.error('Resend OTP error:', error);
+      this.toasterService.showError(error.message || 'Failed to resend OTP. Please try again.');
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 
-  navigateToSignUp(event: Event) {
-    event.preventDefault();
-    console.log('Navigate to sign up');
-  }
-
-  openTermsOfService(event: Event) {
-    event.preventDefault();
-    console.log('Open terms of service');
-  }
-
-  openPrivacyPolicy(event: Event) {
-    event.preventDefault();
-    console.log('Open privacy policy');
-  }
-
-  navigateToForgotPassword(event: Event) {
-    event.preventDefault();
-    this.router.navigate(['/forgot-password']);
+  switchToPhoneInput() {
+    // reset otp state when switching back to phone input
+    this.otp.set(null);
+    this.otpSent.set(false);
+    this.phoneNumber.set('');
+    this.isSubmitted.set(false);
+    this.maskedPhoneNumber.set('');
   }
 }

@@ -44,19 +44,3 @@
     }
   }
 }
-.phoneNumber-verify-modal {
-  --height: 341px;
-  --max-height: 341px;
- 
-  
-  &::part(content) {
-    max-height: 341px !important;
-    height: 341px !important;
-    border-radius: 32px 32px 0 0;
-  }
-  
-  ion-content {
-    max-height: 341px;
-    height: 100%;
-  }
-}

@@ -19,7 +19,6 @@ import { User, FirebaseAuthentication } from '@capacitor-firebase/authentication
 export class AuthService {
   // services
   private router = inject(Router);
-  private navCtrl = inject(NavController);
   private firebaseService = inject(FirebaseService);
 
   // variables
@@ -182,6 +181,16 @@ export class AuthService {
     }
   }
 
+  async signInWithApple(): Promise<{ user: User; isNewUser: boolean }> {
+    try {
+      const nativeResult = await FirebaseAuthentication.signInWithApple();
+      return { user: nativeResult.user!, isNewUser: nativeResult?.additionalUserInfo?.isNewUser || false };
+    } catch (error) {
+      console.error('error: ', error);
+      throw new Error(FirebaseAuthError(error));
+    }
+  }
+
   async linkEmailToAccount(email: string): Promise<void> {
     try {
       // link email/password to current user
@@ -198,12 +207,21 @@ export class AuthService {
     }
   }
 
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    try {
+      await FirebaseAuthentication.sendPasswordResetEmail({ email });
+    } catch (error) {
+      console.error('error: ', error);
+      throw new Error(FirebaseAuthError(error));
+    }
+  }
+
   async deleteAccount(): Promise<void> {
     try {
       await deleteUser(this.firebaseService.auth.currentUser!);
-      this.navCtrl.navigateRoot('/login');
-    } catch (err) {
-      console.warn('Failed to delete user from DB (ignored):', err);
+    } catch (error) {
+      console.error('Error deleting account: ', error);
+      throw new Error(FirebaseAuthError(error));
     }
   }
 }

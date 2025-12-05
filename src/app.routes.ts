@@ -5,20 +5,22 @@ import { NotFound } from '@/pages/not-found';
 import { TabLayout } from '@/layout/tab-layout';
 import { Onboarding } from '@/pages/onboarding';
 import { Profile } from '@/pages/profile/profile';
-import { ForgotPassword } from '@/pages/forgotPassword';
-import { CreateEvent } from '@/pages/create-event/create-event';
+import { CreateEvent } from '@/pages/create-event';
+import { ForgotPassword } from '@/pages/forgot-password';
+import { onboardingGuard } from '@/guards/onboarding.guard';
 
 export const appRoutes: Routes = [
   {
     path: '',
     component: TabLayout,
+    canActivate: [onboardingGuard],
     children: [{ path: '', component: Home }]
   },
-  { path: 'login', component: Login },
-  { path: 'forgot-password', component: ForgotPassword },
-  { path: 'onboarding', component: Onboarding },
   { path: 'profile', component: Profile },
-  { path: 'create-event', component: CreateEvent },
   { path: 'not-found', component: NotFound },
+  { path: 'create-event', component: CreateEvent },
+  { path: 'forgot-password', component: ForgotPassword },
+  { path: 'login', component: Login, canActivate: [onboardingGuard] },
+  { path: 'onboarding', component: Onboarding, canActivate: [onboardingGuard] },
   { path: '**', redirectTo: '/not-found' }
 ];

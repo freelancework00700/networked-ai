@@ -1,31 +1,26 @@
-import { Component, ViewChild, ElementRef, AfterViewInit, inject } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-import { NgIf } from '@angular/common';
-import { IonContent, IonFooter, IonToolbar } from '@ionic/angular/standalone';
 import { Button } from '@/components/form/button';
+import { IonContent, NavController } from '@ionic/angular/standalone';
+import { signal, inject, Component, ViewChild, ElementRef } from '@angular/core';
 
 @Component({
   selector: 'onboarding',
+  imports: [IonContent, Button],
   styleUrl: './onboarding.scss',
-  templateUrl: './onboarding.html',
-  imports: [NgIf, IonToolbar, IonFooter, IonContent, RouterModule, Button]
+  templateUrl: './onboarding.html'
 })
-export class Onboarding implements AfterViewInit {
+export class Onboarding {
+  // services
+  navCtrl = inject(NavController);
+
+  // signals
+  currentSlide = signal(0);
+
+  // view child
   @ViewChild('swiperContainer') swiperContainer?: ElementRef<HTMLDivElement>;
-  router = inject(Router);
-  currentSlide = 0;
-
-  ngAfterViewInit() {
-    // Swipe handlers disabled
-  }
-
-  onScroll(event: any) {
-    // Optional: Update slide based on scroll position if needed
-  }
 
   goToSlide(index: number) {
     if (index >= 0 && index <= 2 && this.swiperContainer?.nativeElement) {
-      this.currentSlide = index;
+      this.currentSlide.set(index);
       const container = this.swiperContainer.nativeElement;
       const slideWidth = container.clientWidth;
       container.scrollTo({
@@ -35,11 +30,11 @@ export class Onboarding implements AfterViewInit {
     }
   }
 
-  skipOnboarding() {
-    this.goToSlide(2);
-  }
-
   completeOnboarding() {
-    this.router.navigate(['/login']);
+    // set onboarded flag in localStorage
+    localStorage.setItem('onboarded', 'true');
+
+    // navigate to login page
+    this.navCtrl.navigateForward('/login');
   }
 }

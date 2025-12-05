@@ -4,4 +4,9 @@
     <string name="title_activity_main">Networked AI</string>
     <string name="package_name">app.networked.ai</string>
     <string name="custom_url_scheme">app.networked.ai</string>
+
+    <!-- facebook login credentials -->
+    <string name="facebook_app_id">798132449168165</string>
+    <string name="fb_login_protocol_scheme">fb798132449168165</string>
+    <string name="facebook_client_token">f7fc6fbac1a5fa1ece706087a526f6db</string>
 </resources>

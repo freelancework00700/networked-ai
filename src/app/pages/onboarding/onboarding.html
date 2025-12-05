@@ -1,58 +1,75 @@
-<ion-content [fullscreen]="true" class="onboarding-content" (ionScroll)="onScroll($event)">
+<ion-content [fullscreen]="true" class="onboarding-content">
   <div class="onboarding-container max-w-[672px]">
-    <!-- Skip Button -->
-    <div class="skip-button" *ngIf="currentSlide < 2">
-      <button (click)="skipOnboarding()" class="skip-btn body-16SB neutral-05">Skip</button>
-    </div>
+    <!-- skip button -->
+    @if (currentSlide() < 2) {
+      <div class="skip-button">
+        <button (click)="goToSlide(2)" class="skip-btn body-16SB neutral-05">Skip</button>
+      </div>
+    }
 
-    <!-- Progress Bar -->
+    <!-- progress bar -->
     <div class="progress-bar mx-auto">
-      <div class="progress-segment" [class.active]="currentSlide >= 0"></div>
-      <div class="progress-segment" [class.active]="currentSlide >= 1"></div>
-      <div class="progress-segment" [class.active]="currentSlide >= 2"></div>
+      <div class="progress-segment" [class.active]="currentSlide() >= 0"></div>
+      <div class="progress-segment" [class.active]="currentSlide() >= 1"></div>
+      <div class="progress-segment" [class.active]="currentSlide() >= 2"></div>
     </div>
 
-    <!-- Swiper Container -->
+    <!-- swiper container -->
     <div class="swiper-container" #swiperContainer>
-      <!-- Screen 1: Host and Share -->
-      <div class="swiper-slide" [class.active]="currentSlide === 0">
+      <!-- screen 1: host and share -->
+      <div class="swiper-slide" [class.active]="currentSlide() === 0">
         <div class="slide-content">
+          <!-- image -->
           <div class="slide-image">
-            <img src="assets/svg/onBoarding-1.svg" alt="Host and Share" />
+            <img src="assets/svg/onBoarding-1.svg" />
           </div>
+
+          <!-- title -->
           <div class="text-left">
             <h2 class="heading-h1 neutral-07 font-medium">Host and Share Channels, Groups, and Events.</h2>
           </div>
+
+          <!-- button -->
           <div class="slide-button">
             <app-button label="Next" (click)="goToSlide(1)" iconPos="right" iconName="pi-arrow-right" class="w-full" />
           </div>
         </div>
       </div>
 
-      <!-- Screen 2: Find Events -->
-      <div class="swiper-slide" [class.active]="currentSlide === 1">
+      <!-- screen 2: find events -->
+      <div class="swiper-slide" [class.active]="currentSlide() === 1">
         <div class="slide-content">
+          <!-- image -->
           <div class="slide-image">
-            <img src="assets/svg/onBoarding-2.svg" alt="Find Events" />
+            <img src="assets/svg/onBoarding-2.svg" />
           </div>
+
+          <!-- content -->
           <div class="text-left">
             <h2 class="heading-h1 neutral-07 font-medium">Find Events and Get Tickets with Ease.</h2>
           </div>
+
+          <!-- button -->
           <div class="slide-button">
             <app-button label="Next" (click)="goToSlide(2)" iconPos="right" iconName="pi-arrow-right" class="w-full" />
           </div>
         </div>
       </div>
 
-      <!-- Screen 3: Grow Connections -->
-      <div class="swiper-slide" [class.active]="currentSlide === 2">
+      <!-- screen 3: grow connections -->
+      <div class="swiper-slide" [class.active]="currentSlide() === 2">
         <div class="slide-content">
+          <!-- image -->
           <div class="slide-image">
-            <img src="assets/svg/onBoarding-3.svg" alt="Grow Connections" />
+            <img src="assets/svg/onBoarding-3.svg" />
           </div>
+
+          <!-- title -->
           <div class="text-left">
             <h2 class="heading-h1 neutral-07 font-medium">Grow Your Connections and Networks in your Area!</h2>
           </div>
+
+          <!-- button -->
           <div class="slide-button">
             <app-button label="Get Networked" (click)="completeOnboarding()" iconPos="right" iconName="pi-arrow-right" class="w-full" />
           </div>

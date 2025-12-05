@@ -81,6 +81,7 @@
 *{
   font-family: 'Manrope', sans-serif;
 }
+
 ion-content {
   --background: var(--neutral-07);
 }
@@ -108,7 +109,7 @@ ion-footer.footer-toolbar-padding ion-toolbar:last-of-type {
 .auto-hight-modal {
   --height: auto;
   align-items: flex-end;
-  --border-radius: 16px 16px 0px 0px;
+  --border-radius: 32px 32px 0px 0px;
 
   .ion-page {
     display: block;
@@ -118,11 +119,12 @@ ion-footer.footer-toolbar-padding ion-toolbar:last-of-type {
     .inner-content {
       overflow: auto;
       max-height: 80vh;
-      min-height: 150px;
-      background: var(--surface-ground);
+      min-height: 200px;
+      background: var(--neutral-07);
     }
   }
 }
+
 .p-toggleswitch-handle {
   background: var(--neutral-07) !important;
 }

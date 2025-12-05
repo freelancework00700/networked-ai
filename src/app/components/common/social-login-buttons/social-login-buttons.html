@@ -1,0 +1,25 @@
+<div class="flex gap-3 mt-6 mb-8">
+  <!-- google login button -->
+  <button
+    (click)="loginWithGoogle()"
+    class="flex-1 flex items-center justify-center bg-neutral-06 hover:bg-neutral-06 !rounded-lg py-3 px-4 duration-200 h-[48px]"
+  >
+    <img src="assets/svg/social_google.svg" class="w-6 h-6" />
+  </button>
+
+  <!-- apple login button -->
+  <button
+    (click)="loginWithApple()"
+    class="flex-1 flex items-center justify-center bg-gray-100 hover:bg-neutral-06 !rounded-lg py-3 px-4 transition-colors duration-200"
+  >
+    <img src="assets/svg/social_apple.svg" class="w-6 h-6" />
+  </button>
+
+  <!-- facebook login button -->
+  <button
+    (click)="loginWithFacebook()"
+    class="flex-1 flex items-center justify-center bg-gray-100 hover:bg-neutral-06 !rounded-lg py-3 px-4 transition-colors duration-200"
+  >
+    <img src="assets/svg/social_facebook.svg" class="!w-6 !h-6" />
+  </button>
+</div>
