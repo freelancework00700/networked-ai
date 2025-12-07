@@ -1,5 +1,5 @@
 import { Observable, of } from 'rxjs';
-import { debounceTime, switchMap, catchError, map } from 'rxjs/operators';
+import { switchMap, catchError, debounceTime } from 'rxjs/operators';
 import { AbstractControl, ValidationErrors, AsyncValidatorFn } from '@angular/forms';
 
 export function usernameValidator(): AsyncValidatorFn {
@@ -11,16 +11,10 @@ export function usernameValidator(): AsyncValidatorFn {
     return of(control.value).pipe(
       debounceTime(300),
       switchMap((username) => {
-        // Static mock implementation
+        // static mock implementation
         const takenUsernames = ['testuser1'];
         const isTaken = takenUsernames.includes(username.toLowerCase());
-
-        return new Observable<ValidationErrors | null>((observer) => {
-          setTimeout(() => {
-            observer.next(isTaken ? { usernameTaken: true } : null);
-            observer.complete();
-          }, 500);
-        });
+        return of(isTaken ? { usernameTaken: true } : null);
       }),
       catchError(() => of(null))
     );

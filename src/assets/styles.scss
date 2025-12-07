@@ -1,8 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
+@use 'swiper/css';
 @use './tailwind.css';
 @use './layout/layout.scss';
 @use 'primeicons/primeicons.css';
-@import './layout/variables/_common.scss';
 
 /*
  * App Global CSS
@@ -78,7 +78,7 @@
 // ============================================================
 // IONIC COMPONENT STYLES
 // ============================================================
-*{
+* {
   font-family: 'Manrope', sans-serif;
 }
 
@@ -94,6 +94,7 @@ ion-header {
     --background: var(--neutral-07);
   }
 }
+
 .header-ios ion-toolbar:last-of-type,
 ion-footer.footer-toolbar-padding ion-toolbar:last-of-type {
   --border-width: 0 0 0;
@@ -108,8 +109,9 @@ ion-footer.footer-toolbar-padding ion-toolbar:last-of-type {
 
 .auto-hight-modal {
   --height: auto;
+  --max-width: 672px;
   align-items: flex-end;
-  --border-radius: 32px 32px 0px 0px;
+  --border-radius: 32px;
 
   .ion-page {
     display: block;

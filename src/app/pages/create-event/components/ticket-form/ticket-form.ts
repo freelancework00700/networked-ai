@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
+import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
-import { ModalInput } from '@/components/form/modal-input';
 import { NumberInput } from '@/components/form/number-input';
 import { TextAreaInput } from '@/components/form/text-area-input';
 import { ModalController, IonCheckbox } from '@ionic/angular/standalone';
@@ -28,11 +28,12 @@ export interface TicketFormData {
   styleUrl: './ticket-form.scss',
   templateUrl: './ticket-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, Button, TextInput, ModalInput, IonCheckbox, NumberInput, TextAreaInput]
+  imports: [CommonModule, ReactiveFormsModule, Button, TextInput, IonCheckbox, NumberInput, TextAreaInput]
 })
 export class TicketForm implements OnInit {
   private fb = inject(FormBuilder);
   private modalCtrl = inject(ModalController);
+  private modalService = inject(ModalService);
 
   @Input() ticketType: 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard' = 'free';
   @Input() initialData?: Partial<TicketFormData> | null;
@@ -180,6 +181,20 @@ export class TicketForm implements OnInit {
     }
 
     this.modalCtrl.dismiss(form.value, 'save');
+  }
+
+  async openDateModal(): Promise<void> {
+    const date = await this.modalService.openDateTimeModal('date');
+    this.ticketForm().patchValue({ sales_start_date: date });
+  }
+
+  async openTimeModal(type: 'sales_start_time' | 'sales_end_time'): Promise<void> {
+    const time = await this.modalService.openDateTimeModal('time');
+    if (type === 'sales_start_time') {
+      this.ticketForm().patchValue({ sales_start_time: time });
+    } else {
+      this.ticketForm().patchValue({ sales_end_time: time });
+    }
   }
 
   close(): void {

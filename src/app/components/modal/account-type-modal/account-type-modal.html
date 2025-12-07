@@ -1,0 +1,17 @@
+<div class="p-6 max-w-[672px] mx-auto">
+  <div class="text-center">
+    <div class="heading-h3 neutral-01">Account Type</div>
+  </div>
+
+  <ion-picker (ionChange)="value = $any($event).detail.value">
+    <ion-picker-column name="column" [value]="value">
+      @for (option of options(); track option.value) {
+        <ion-picker-column-option [value]="option.value">
+          {{ option.label }}
+        </ion-picker-column-option>
+      }
+    </ion-picker-column>
+  </ion-picker>
+
+  <app-button label="Confirm" (click)="dismiss()" />
+</div>

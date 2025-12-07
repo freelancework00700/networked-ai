@@ -36,7 +36,7 @@
                   <span class="body-16M text-primary">Browse files</span>
                   <div class="text-sm text-surface-500">JPG or PNG <span class="text-surface-300 text-lg">|</span> Max 10 photos, 5MB total</div>
                 </div>
-                <input type="file" multiple accept="image/jpeg,image/png" class="hidden" id="file-upload"/>
+                <input type="file" multiple accept="image/jpeg,image/png" class="hidden" id="file-upload" />
               </div>
               <div class="flex items-center gap-3 my-2">
                 <div class="flex-1 border-t border-surface-300"></div>
@@ -54,21 +54,38 @@
             <text-input controlName="title" label="Event Title" placeholder="Select title" />
 
             <!-- Date -->
-            <modal-input controlName="date" label="Date" placeholder="Select date" [type]="'date'" iconName="pi pi-calendar" />
+            <text-input
+              label="Date"
+              [readonly]="true"
+              controlName="date"
+              iconName="pi-calendar"
+              (click)="openDateModal()"
+              placeholder="Select date"
+            />
 
             <!-- Duration -->
             <div class="flex flex-col gap-3">
               <label class="block neutral-02 body-14M">Duration</label>
               <div class="flex items-center gap-2 w-full">
-                <modal-input
-                  controlName="start_time"
-                  label="Event Starts"
+                <!-- start time -->
+                <text-input
+                  [readonly]="true"
                   placeholder="Start"
-                  [type]="'time'"
-                  [showLabel]="false"
-                  iconName="pi pi-clock"
+                  iconName="pi-clock"
+                  label="Event Starts"
+                  controlName="start_time"
+                  (click)="openTimeModal('start_time')"
                 />
-                <modal-input controlName="end_time" label="Event Ends" placeholder="End" [type]="'time'" [showLabel]="false" iconName="pi pi-clock" />
+
+                <!-- end time -->
+                <text-input
+                  [readonly]="true"
+                  placeholder="End"
+                  label="Event Ends"
+                  iconName="pi-clock"
+                  controlName="end_time"
+                  (click)="openTimeModal('end_time')"
+                />
               </div>
               <div class="flex items-center gap-2">
                 <p-checkbox inputId="until_finished" formControlName="until_finished" [binary]="true" />
@@ -77,10 +94,24 @@
             </div>
 
             <!-- address -->
-            <modal-input controlName="address" label="address" iconName="pi pi-map-marker" placeholder="Search location" [type]="'location'" />
+            <text-input
+              label="Address"
+              [readonly]="true"
+              controlName="address"
+              iconName="pi-map-marker"
+              placeholder="Search location"
+              (click)="openLocationModal()"
+            />
 
             <!-- Event Category -->
-            <modal-input controlName="category" label="Event Category" [options]="categoryOptions" [type]="'select'" />
+            <text-input
+              [readonly]="true"
+              iconName="pi-tag"
+              controlName="category"
+              label="Event Category"
+              placeholder="Select category"
+              (click)="openEventCategoryModal()"
+            />
 
             <!-- Networked Meta tags -->
             <div class="flex flex-col gap-2">

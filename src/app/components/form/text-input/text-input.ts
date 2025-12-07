@@ -25,6 +25,9 @@ export class TextInput implements OnInit {
   iconName = input('');
   required = input(true);
   placeholder = input('');
+  endIconName = input('');
+  readonly = input(false);
+  initialValue = input('');
   isSubmitted = input(true);
   controlName = input.required<string>();
 
@@ -51,7 +54,7 @@ export class TextInput implements OnInit {
 
   ngOnInit(): void {
     const validators = this.required() ? [Validators.required] : [];
-    this.parentFormGroup.addControl(this.controlName(), this.fb.control('', validators));
+    this.parentFormGroup.addControl(this.controlName(), this.fb.control(this.initialValue(), validators));
 
     // check validation if there's an value (edit scenario)
     const subscription = this.control.valueChanges.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {

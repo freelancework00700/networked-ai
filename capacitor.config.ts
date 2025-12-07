@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     FirebaseAuthentication: {
       skipNativeAuth: false,
       authDomain: 'app.net-worked.ai',
-      providers: ["google.com", "apple.com", "phone", "facebook.com"],
+      providers: ['google.com', 'apple.com', 'phone', 'facebook.com']
     },
     SplashScreen: {
       launchAutoHide: false

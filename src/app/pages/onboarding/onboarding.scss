@@ -3,6 +3,7 @@
   --color: var(--neutral-07);
   --background: radial-gradient(circle, rgba(61, 61, 61, 1) 0%, rgba(36, 36, 36, 1) 100%);
 }
+
 .onboarding-container {
   padding: 0;
   width: 100%;
@@ -46,33 +47,21 @@
   }
 }
 
-.swiper-container {
+.swiper {
   width: 100%;
   height: 100%;
-  display: flex;
-  user-select: none;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  touch-action: none;
-  -webkit-user-select: none;
-  scrollbar-width: none; // firefox
-  -ms-overflow-style: none; // ie and edge
+}
 
-  &::-webkit-scrollbar {
-    display: none; // chrome, safari, opera
-  }
+.swiper-wrapper {
+  height: 100%;
 }
 
 .swiper-slide {
   width: 100%;
   height: 100%;
   display: flex;
-  flex-shrink: 0;
-  min-width: 100%;
   align-items: center;
   justify-content: center;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 .slide-content {

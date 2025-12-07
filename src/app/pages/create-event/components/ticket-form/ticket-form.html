@@ -55,23 +55,13 @@
     <div>
       <label class="block neutral-02 body-14M pb-1">Sales Start</label>
       <div class="flex items-center gap-2 w-full">
-        <modal-input
-          controlName="sales_start_date"
-          label="Date"
-          placeholder="Select date"
-          [type]="'date'"
-          [showLabel]="false"
-          iconName="pi pi-calendar"
-          class="w-full"
-        />
-        <modal-input
-          controlName="sales_start_time"
+        <text-input label="Date" iconName="pi-calendar" placeholder="Select date" (click)="openDateModal()" controlName="sales_start_date" />
+        <text-input
           label="Time"
+          iconName="pi-clock"
           placeholder="Select time"
-          [type]="'time'"
-          [showLabel]="false"
-          iconName="pi pi-clock"
-          class="w-full"
+          controlName="sales_start_time"
+          (click)="openTimeModal('sales_start_time')"
         />
       </div>
     </div>
@@ -87,23 +77,13 @@
       <div class="flex flex-col gap-1">
         <label class="block neutral-02 body-14M">Sales End</label>
         <div class="flex items-center gap-2 w-full">
-          <modal-input
-            controlName="sales_end_date"
-            label="Date"
-            placeholder="Select date"
-            [type]="'date'"
-            [showLabel]="false"
-            iconName="pi pi-calendar"
-            class="w-full"
-          />
-          <modal-input
-            controlName="sales_end_time"
+          <text-input label="Date" iconName="pi-calendar" (click)="openDateModal()" placeholder="Select date" controlName="sales_end_date" />
+          <text-input
             label="Time"
+            iconName="pi-clock"
             placeholder="Select time"
-            [type]="'time'"
-            [showLabel]="false"
-            iconName="pi pi-clock"
-            class="w-full"
+            controlName="sales_end_time"
+            (click)="openTimeModal('sales_end_time')"
           />
         </div>
       </div>

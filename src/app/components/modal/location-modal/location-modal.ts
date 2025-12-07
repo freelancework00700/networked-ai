@@ -57,9 +57,9 @@ export class LocationModal implements OnInit, AfterViewInit {
   confirm(): void {
     if (this.selectedLocation()) {
       this.modalCtrl.dismiss({
-        address: this.selectedLocation(),
-        lat: this.selectedLat(),
-        lng: this.selectedLng()
+        latitude: this.selectedLat(),
+        longitude: this.selectedLng(),
+        address: this.selectedLocation()
       });
     } else {
       this.modalCtrl.dismiss(null);

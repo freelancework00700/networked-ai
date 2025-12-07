@@ -8,7 +8,7 @@ describe('LoadingModal', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ LoadingModal ],
+      declarations: [LoadingModal],
       imports: [IonicModule.forRoot()]
     }).compileComponents();
 

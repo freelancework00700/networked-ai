@@ -14,7 +14,7 @@
   @if (iconName()) {
     @if (iconName() === 'pi-snapchat') {
       <p-inputicon>
-        <ion-icon name="logo-snapchat" class="text-xl"></ion-icon>
+        <ion-icon name="logo-snapchat" class="text-xl" />
       </p-inputicon>
     } @else {
       <p-inputIcon [class]="'pi ' + iconName()" />
@@ -24,11 +24,16 @@
   <input
     pInputText
     class="w-full h-[44px]"
+    [readonly]="readonly()"
     [invalid]="isControlInvalid"
     [placeholder]="getPlaceholder"
     [formControlName]="controlName()"
     [class.ng-invalid]="isControlInvalid"
   />
+
+  @if (endIconName()) {
+    <p-inputIcon [class]="'pi ' + endIconName()" />
+  }
 </p-iconField>
 
 <!-- validation -->

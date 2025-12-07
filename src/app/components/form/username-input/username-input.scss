@@ -1,25 +1,5 @@
-.spinner-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 44px;
-  width: 44px;
-  flex-shrink: 0;
-
-  i {
-    font-size: 20px;
-    color: #6b7280;
-  }
-}
-
-.verify-icon {
-  width: 20px;
-  height: 20px;
-  display: block;
-}
-
 .verified,
 input.verified:focus {
-  border: 1px solid #34c759;
-  background-color: #e3f8e8;
+  border: 1px solid #34c759 !important;
+  background-color: #e3f8e8 !important;
 }

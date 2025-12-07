@@ -1,7 +1,6 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
-
 import { IncognitoModeInput } from './incognito-mode-input';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 describe('IncognitoModeInputComponent', () => {
   let component: IncognitoModeInput;

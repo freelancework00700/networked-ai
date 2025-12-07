@@ -8,7 +8,7 @@ describe('SocialLoginButtons', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ SocialLoginButtons ],
+      declarations: [SocialLoginButtons],
       imports: [IonicModule.forRoot()]
     }).compileComponents();
 

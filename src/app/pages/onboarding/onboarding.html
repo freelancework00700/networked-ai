@@ -15,63 +15,65 @@
     </div>
 
     <!-- swiper container -->
-    <div class="swiper-container" #swiperContainer>
-      <!-- screen 1: host and share -->
-      <div class="swiper-slide" [class.active]="currentSlide() === 0">
-        <div class="slide-content">
-          <!-- image -->
-          <div class="slide-image">
-            <img src="assets/svg/onBoarding-1.svg" />
-          </div>
+    <div class="swiper" #swiperContainer>
+      <div class="swiper-wrapper">
+        <!-- screen 1: host and share -->
+        <div class="swiper-slide">
+          <div class="slide-content">
+            <!-- image -->
+            <div class="slide-image">
+              <img src="assets/svg/onBoarding-1.svg" />
+            </div>
 
-          <!-- title -->
-          <div class="text-left">
-            <h2 class="heading-h1 neutral-07 font-medium">Host and Share Channels, Groups, and Events.</h2>
-          </div>
+            <!-- title -->
+            <div class="text-left">
+              <h2 class="heading-h1 neutral-07 font-medium">Host and Share Channels, Groups, and Events.</h2>
+            </div>
 
-          <!-- button -->
-          <div class="slide-button">
-            <app-button label="Next" (click)="goToSlide(1)" iconPos="right" iconName="pi-arrow-right" class="w-full" />
-          </div>
-        </div>
-      </div>
-
-      <!-- screen 2: find events -->
-      <div class="swiper-slide" [class.active]="currentSlide() === 1">
-        <div class="slide-content">
-          <!-- image -->
-          <div class="slide-image">
-            <img src="assets/svg/onBoarding-2.svg" />
-          </div>
-
-          <!-- content -->
-          <div class="text-left">
-            <h2 class="heading-h1 neutral-07 font-medium">Find Events and Get Tickets with Ease.</h2>
-          </div>
-
-          <!-- button -->
-          <div class="slide-button">
-            <app-button label="Next" (click)="goToSlide(2)" iconPos="right" iconName="pi-arrow-right" class="w-full" />
+            <!-- button -->
+            <div class="slide-button">
+              <app-button label="Next" (click)="goToSlide(1)" iconPos="right" iconName="pi-arrow-right" class="w-full" />
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- screen 3: grow connections -->
-      <div class="swiper-slide" [class.active]="currentSlide() === 2">
-        <div class="slide-content">
-          <!-- image -->
-          <div class="slide-image">
-            <img src="assets/svg/onBoarding-3.svg" />
+        <!-- screen 2: find events -->
+        <div class="swiper-slide">
+          <div class="slide-content">
+            <!-- image -->
+            <div class="slide-image">
+              <img src="assets/svg/onBoarding-2.svg" />
+            </div>
+
+            <!-- content -->
+            <div class="text-left">
+              <h2 class="heading-h1 neutral-07 font-medium">Find Events and Get Tickets with Ease.</h2>
+            </div>
+
+            <!-- button -->
+            <div class="slide-button">
+              <app-button label="Next" (click)="goToSlide(2)" iconPos="right" iconName="pi-arrow-right" class="w-full" />
+            </div>
           </div>
+        </div>
 
-          <!-- title -->
-          <div class="text-left">
-            <h2 class="heading-h1 neutral-07 font-medium">Grow Your Connections and Networks in your Area!</h2>
-          </div>
+        <!-- screen 3: grow connections -->
+        <div class="swiper-slide">
+          <div class="slide-content">
+            <!-- image -->
+            <div class="slide-image">
+              <img src="assets/svg/onBoarding-3.svg" />
+            </div>
 
-          <!-- button -->
-          <div class="slide-button">
-            <app-button label="Get Networked" (click)="completeOnboarding()" iconPos="right" iconName="pi-arrow-right" class="w-full" />
+            <!-- title -->
+            <div class="text-left">
+              <h2 class="heading-h1 neutral-07 font-medium">Grow Your Connections and Networks in your Area!</h2>
+            </div>
+
+            <!-- button -->
+            <div class="slide-button">
+              <app-button label="Get Networked" (click)="completeOnboarding()" iconPos="right" iconName="pi-arrow-right" class="w-full" />
+            </div>
           </div>
         </div>
       </div>

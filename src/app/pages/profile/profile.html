@@ -1,143 +1,166 @@
 <ion-header>
   <ion-toolbar>
-    <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto" (click)="previousStep()">
-      <div class="pi pi-arrow-left"></div>
+    <div class="flex items-center p-6 max-w-[672px] mx-auto">
+      <div class="pi pi-arrow-left cursor-pointer" (click)="goBack()"></div>
       <div class="body-14M neutral-02 text-center w-full">Setup Your Profile</div>
     </div>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <div class="min-h-full">
-    <div class="w-full p-6 max-w-[672px] mx-auto">
-      <form [formGroup]="profileForm()" (ngSubmit)="update()" class="h-full">
-        <!-- Step 1: Personal Information -->
-        @if (currentStep() === 1) {
-          <div class="flex flex-col gap-6">
-            <div class="heading-h2 neutral-01">Personal Details</div>
-            <div class="flex flex-col gap-4">
-              <!-- title input -->
-              <modal-input controlName="title" label="Title" placeholder="Select title" type="select" [options]="titleOptions" />
+  <div class="w-full p-6 max-w-[672px] mx-auto">
+    <form [formGroup]="profileForm()" class="h-full">
+      <!-- step 1: personal information -->
+      <div [hidden]="currentStep() !== 1" class="flex flex-col gap-6">
+        <div class="heading-h2 neutral-01">Personal Details</div>
+        <div class="flex flex-col gap-4">
+          <!-- title input -->
+          <text-input
+            label="Title"
+            [readonly]="true"
+            initialValue="Mr."
+            controlName="title"
+            placeholder="Select title"
+            (click)="openTitleModal()"
+            [isSubmitted]="isSubmitted()"
+            endIconName="pi-chevron-right"
+          />
 
-              <!-- name input -->
-              <div class="flex items-center gap-2 w-full">
-                <text-input controlName="first_name" label="First Name" class="w-full" />
-                <text-input controlName="last_name" label="Last Name" class="w-full" />
-              </div>
+          <!-- name input -->
+          <div class="flex items-stretch gap-2 w-full">
+            <!-- first name input -->
+            <div class="flex-1">
+              <text-input label="First Name" class="w-full h-full" controlName="first_name" [isSubmitted]="isSubmitted()" />
+            </div>
 
-              <!-- email input -->
-              <email-input />
-
-              <!-- phone input -->
-              <mobile-input />
-
-              <!-- username input -->
-              <username-input (verificationStateChange)="usernameVerified.set($event)" />
-
-              <!-- birthdate input -->
-              <modal-input controlName="birthdate" label="Birthdate" placeholder="Select birthdate" type="date" iconName="pi pi-calendar" />
-
-              <!-- account type input -->
-              <modal-input
-                type="select"
-                label="Account Type"
-                controlName="account_type"
-                placeholder="Select account type"
-                [options]="accountTypeOptions"
-              />
-
-              <!-- Location & Location Settings -->
-              <div class="flex flex-col gap-4">
-                <h5 class="text-lg font-semibold">Location & Location Settings</h5>
-
-                <!-- City/Location input -->
-                <modal-input controlName="location" label="City/Location" placeholder="Select location" type="location" iconName="pi pi-map-marker" />
-
-                <!-- Incognito Mode Toggle -->
-                <incognito-mode-input />
-              </div>
+            <!-- last name input -->
+            <div class="flex-1">
+              <text-input label="Last Name" class="w-full h-full" controlName="last_name" [isSubmitted]="isSubmitted()" />
             </div>
           </div>
-        }
 
-        <!-- Step 2: Additional Information -->
-        @if (currentStep() === 2) {
-          <div class="space-y-4 flex flex-col gap-4">
-            <div class="heading-h2 neutral-01">More About You</div>
-            <!-- college/university input -->
-            <text-input controlName="college_university" label="College/University" [required]="false" />
+          <!-- email input -->
+          <email-input />
 
-            <!-- company input -->
-            <text-input controlName="company" label="Company" [required]="false" />
+          <!-- phone input -->
+          <mobile-input />
 
-            <!-- about input -->
-            <text-area-input label="About Me" controlName="aboutMe" [required]="false" placeholder="Write description here" />
+          <!-- username input -->
+          <username-input />
 
-            <!-- sites & socials -->
-            <social-input />
-          </div>
-        }
+          <!-- birthdate input -->
+          <text-input
+            [readonly]="true"
+            label="Birthdate"
+            controlName="birthdate"
+            (click)="openDateModal()"
+            [isSubmitted]="isSubmitted()"
+            endIconName="pi-chevron-right"
+            placeholder="Select birthdate"
+          />
 
-        <!-- Step 3: Profile Image -->
-        @if (currentStep() === 3) {
-          <div class="h-full flex items-center justify-center">
-            <div class="flex flex-col items-center justify-center">
-              <div class="heading-h2 neutral-01 mb-8">Upload Photo</div>
-              <image-input controlName="profile_image" label="Profile Picture" [required]="false" (skipped)="nextStep()" />
-              <button type="button" (click)="nextStep()" class="body-14M neutral-03 mt-6">Skip Now</button>
-            </div>
-          </div>
-        }
+          <!-- account type input -->
+          <text-input
+            [readonly]="true"
+            label="Account Type"
+            initialValue="individual"
+            controlName="account_type"
+            endIconName="pi-chevron-right"
+            placeholder="Select account type"
+            (click)="openAccountTypeModal()"
+          />
 
-        <!-- Step 4: Network Suggestions -->
-        @if (currentStep() === 4) {
+          <!-- location & location setting -->
           <div class="flex flex-col gap-4">
-            <div class="heading-h2 neutral-01">Network Suggestion</div>
+            <h5 class="text-lg font-semibold">Location & Location Settings</h5>
 
-            <!-- Network Suggestions List -->
-            <div class="mb-4">
-              @for (suggestion of networkSuggestions; track suggestion.id) {
-                <div class="flex items-center gap-3 bg-surface-0 py-4">
-                  <!-- Profile Picture -->
-                  <div class="w-12 h-12 rounded-full bg-surface-100 border-2 border-surface-200 flex items-center justify-center flex-shrink-0">
-                    <i class="pi pi-user text-surface-400 text-xl"></i>
-                  </div>
+            <!-- location input -->
+            <text-input
+              [readonly]="true"
+              label="City/Location"
+              controlName="location"
+              iconName="pi pi-map-marker"
+              [isSubmitted]="isSubmitted()"
+              placeholder="Select location"
+              (click)="openLocationModal()"
+            />
 
-                  <!-- Name and Details -->
-                  <div class="flex-1 flex flex-col gap-1">
-                    <div class="flex items-center gap-2">
-                      <div class="body-14SB neutral-01 truncate">{{ suggestion.name }}</div>
-                      <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full py-0 h-[20px]">
-                        <img src="assets/svg/diamondYellow.svg" alt="diamond" class="h-4 w-auto ml-1.5" />
-                        <span class="text-sm font-medium pr-2">{{ suggestion.value }}</span>
-                      </div>
-                    </div>
-                    <p class="body-12 neutral-03">{{ suggestion.jobTitle }}, {{ suggestion.company }}</p>
-                  </div>
-
-                  <!-- Add Button -->
-                  <app-button
-                    [label]="isSelected(suggestion.id) ? 'Added' : 'Add'"
-                    (click)="addSuggestion(suggestion.id)"
-                    color="secondary"
-                    width="60px"
-                    height="32px"
-                  >
-                  </app-button>
-                </div>
-              }
-            </div>
+            <!-- incognito mode toggle -->
+            <incognito-mode-input />
           </div>
-        }
-      </form>
-    </div>
+        </div>
+      </div>
+
+      <!-- step 2: additional information -->
+      <div [hidden]="currentStep() !== 2" class="space-y-4 flex flex-col gap-4">
+        <div class="heading-h2 neutral-01">More About You</div>
+        <!-- college/university input -->
+        <text-input controlName="college_university" label="College/University" [required]="false" />
+
+        <!-- company input -->
+        <text-input controlName="company" label="Company" [required]="false" />
+
+        <!-- about input -->
+        <text-area-input label="About Me" controlName="aboutMe" [required]="false" placeholder="Write description here" />
+
+        <!-- sites & socials -->
+        <social-input />
+      </div>
+
+      <!-- step 3: profile image -->
+      <div [hidden]="currentStep() !== 3" class="h-full flex items-center justify-center">
+        <div class="flex flex-col items-center justify-center">
+          <div class="heading-h2 neutral-01 mb-8">Upload Photo</div>
+          <image-input controlName="profile_image" label="Profile Picture" [required]="false" (skipped)="save()" />
+          <button type="button" (click)="save()" class="body-14M neutral-03 mt-6">Skip Now</button>
+        </div>
+      </div>
+
+      <!-- step 4: network suggestions -->
+      <div [hidden]="currentStep() !== 4" class="flex flex-col gap-4">
+        <div class="heading-h2 neutral-01">Network Suggestion</div>
+
+        <!-- network suggestions list -->
+        <div class="mb-4">
+          @for (suggestion of networkSuggestions; track suggestion.id) {
+            <div class="flex items-center gap-3 bg-surface-0 py-4">
+              <!-- profile picture -->
+              <div class="w-12 h-12 rounded-full bg-surface-100 border-2 border-surface-200 flex items-center justify-center flex-shrink-0">
+                <i class="pi pi-user text-surface-400 text-xl"></i>
+              </div>
+
+              <!-- name and details -->
+              <div class="flex-1 flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                  <div class="body-14SB neutral-01 truncate">{{ suggestion.name }}</div>
+                  <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full py-0 h-[20px]">
+                    <img src="assets/svg/diamondYellow.svg" alt="diamond" class="h-4 w-auto ml-1.5" />
+                    <span class="text-sm font-medium pr-2">{{ suggestion.value }}</span>
+                  </div>
+                </div>
+                <p class="body-12 neutral-03">{{ suggestion.jobTitle }}, {{ suggestion.company }}</p>
+              </div>
+
+              <!-- add button -->
+              <app-button
+                width="60px"
+                height="32px"
+                color="secondary"
+                (click)="addSuggestion(suggestion.id)"
+                [label]="isSelected(suggestion.id) ? 'Added' : 'Add'"
+              />
+            </div>
+          }
+        </div>
+      </div>
+    </form>
   </div>
 </ion-content>
 
 <ion-footer>
   <ion-toolbar>
-    <div class="flex items-center justify-between w-full max-sm:px-4 max-sm:pb-8 pb-4 pt-2 max-w-[672px] mx-auto">
-      <!-- Steps -->
+    <div class="flex items-center justify-between p-6 max-w-[672px] mx-auto">
+      <!-- steps -->
       <div class="flex items-center gap-1">
         @for (step of steps(); track step) {
           <div
@@ -146,14 +169,14 @@
           ></div>
         }
       </div>
-      <!-- Navigation Buttons -->
+      <!-- navigation buttons -->
       <div class="flex items-center gap-2">
         @if (currentStep() === 4) {
-          <app-button label="Finish" width="96px" height="48px" (click)="update()" />
+          <app-button label="Finish" width="96px" height="48px" (click)="save()" />
         } @else if (currentStep() < steps().length) {
-          <app-button label="Next" width="96px" height="48px" (click)="nextStep()" />
+          <app-button label="Next" width="96px" height="48px" (click)="save()" />
         } @else {
-          <app-button label="Submit" width="96px" height="48px" (click)="update()" />
+          <app-button label="Submit" width="96px" height="48px" (click)="save()" />
         }
       </div>
     </div>

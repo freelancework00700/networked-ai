@@ -1,16 +1,16 @@
-import { ModalInput } from './modal-input';
+import { AccountTypeModal } from './account-type-modal';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-describe('ModalInput', () => {
-  let component: ModalInput;
-  let fixture: ComponentFixture<ModalInput>;
+describe('AccountTypeModal', () => {
+  let component: AccountTypeModal;
+  let fixture: ComponentFixture<AccountTypeModal>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ModalInput]
+      imports: [AccountTypeModal]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ModalInput);
+    fixture = TestBed.createComponent(AccountTypeModal);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

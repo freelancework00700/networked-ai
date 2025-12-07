@@ -8,7 +8,7 @@ describe('PhoneEmailVerifiedModal', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PhoneEmailVerifiedModal ],
+      declarations: [PhoneEmailVerifiedModal],
       imports: [IonicModule.forRoot()]
     }).compileComponents();
 

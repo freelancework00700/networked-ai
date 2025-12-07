@@ -1,55 +1,37 @@
+<!-- label -->
 @if (label()) {
   <label class="block neutral-02 body-14M mb-1">
     {{ label() }}
   </label>
 }
 
-<!-- input container with flex layout -->
-<div class="flex items-center gap-2">
-  <p-iconfield class="flex-1">
-    <input
-      pInputText
-      class="w-full h-[44px]"
-      (input)="trim()"
-      placeholder="ethan_cortazzo"
-      [formControlName]="controlName()"
-      [class.ng-invalid]="hasError"
-      [class.verified]="isVerified"
-      oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9._]/g, '')"
-      [invalid]="hasError"
-    />
+<!-- input -->
+<p-iconfield>
+  <input
+    pInputText
+    class="w-full h-[44px]"
+    [placeholder]="placeholder()"
+    [invalid]="!!getErrorMessage"
+    [formControlName]="controlName()"
+    [class.ng-invalid]="!!getErrorMessage"
+    [class.verified]="isUsernameValid && !isChecking()"
+    oninput="this.value = this.value = this.value.toLowerCase()"
+  />
 
-    <!-- Verify icon (Verified state) - Inside input -->
-    @if (isVerified && !isCheckingUserName && !hasError) {
-      <p-inputicon>
-        <img src="assets/svg/verify.svg" alt="Verified" class="verify-icon" />
-      </p-inputicon>
-    }
-
-    <!-- X icon (Error states) - Inside input -->
-    @if (hasError && !isCheckingUserName) {
-      <p-inputicon>
-        <i class="pi pi-times-circle accent-red"></i>
-      </p-inputicon>
-    }
-  </p-iconfield>
-
-  <!-- Confirm button (Typed state) - Outside input -->
-  @if (showConfirmButton) {
-    <app-button [label]="'Confirm'" (click)="confirmUsername()" />
+  <!-- loader when checking username -->
+  @if (isChecking()) {
+    <p-inputicon class="pi pi-spin pi-spinner" />
   }
 
-  <!-- Spinner (Analysing state) - Outside input -->
-  @if (isCheckingUserName) {
-    <div class="spinner-container">
-      <i class="pi pi-spin pi-spinner"></i>
-    </div>
+  <!-- verify icon when username is valid and filled -->
+  @if (isUsernameValid && !isChecking()) {
+    <p-inputicon>
+      <img src="assets/svg/verify.svg" />
+    </p-inputicon>
   }
-</div>
+</p-iconfield>
 
 <!-- validation -->
-@if (hasError) {
-  <div class="accent-red pt-2 body-12M">
-    {{ getUsernameErrorMessage }}
-  </div>
+@if (!!getErrorMessage) {
+  <div class="accent-red pt-2 body-12M">{{ getErrorMessage }}</div>
 }

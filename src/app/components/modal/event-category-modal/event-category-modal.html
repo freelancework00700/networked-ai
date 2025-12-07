@@ -1,0 +1,17 @@
+<div class="p-6">
+  <div class="flex items-center justify-center text-center">
+    <div class="heading-h3 neutral-01">Title</div>
+  </div>
+
+  <ion-picker (ionChange)="onPickerChange($any($event))">
+    <ion-picker-column name="column" [value]="selectedValue()">
+      @for (option of options(); track option.value) {
+        <ion-picker-column-option [value]="option.value">
+          {{ option.label }}
+        </ion-picker-column-option>
+      }
+    </ion-picker-column>
+  </ion-picker>
+
+  <app-button label="Confirm" (click)="dismiss()" />
+</div>

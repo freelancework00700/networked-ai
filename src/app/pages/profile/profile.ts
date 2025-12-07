@@ -1,50 +1,65 @@
-import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { NgClass } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { AuthService } from '@/services/auth.service';
+import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
+import { validateFields } from '@/utils/form-validation';
+import { User } from '@capacitor-firebase/authentication';
 import { EmailInput } from '@/components/form/email-input';
 import { ImageInput } from '@/components/form/image-input';
-import { ModalInput } from '@/components/form/modal-input';
+import { ToasterService } from '@/services/toaster.service';
 import { MobileInput } from '@/components/form/mobile-input';
 import { SocialInput } from '@/components/form/social-input';
 import { UsernameInput } from '@/components/form/username-input';
-import { signal, inject, Component, OnInit } from '@angular/core';
 import { TextAreaInput } from '@/components/form/text-area-input';
 import { IncognitoModeInput } from '@/components/form/incognito-mode-input';
-import { SelectOption } from '@/components/modal/select-modal/select-modal';
-import { IonContent, IonFooter, IonToolbar, IonHeader } from '@ionic/angular/standalone';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { signal, OnInit, inject, Component, AfterViewInit } from '@angular/core';
+import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { IonFooter, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 
 interface ProfileForm {
-  // Step 1 fields
+  // step 1 fields
   title?: FormControl<string | null>;
-  first_name?: FormControl<string | null>;
-  last_name?: FormControl<string | null>;
-  phone_number?: FormControl<string | null>;
   email?: FormControl<string | null>;
-  password?: FormControl<string | null>;
   username?: FormControl<string | null>;
-  birthdate?: FormControl<string | null>;
-  account_type?: FormControl<string | null>;
+  password?: FormControl<string | null>;
   location?: FormControl<string | null>;
-  incognito_mode?: FormControl<boolean | null>;
-  // Step 2 fields
-  college_university?: FormControl<string | null>;
+  latitude?: FormControl<number | null>;
+  last_name?: FormControl<string | null>;
+  birthdate?: FormControl<string | null>;
+  longitude?: FormControl<number | null>;
+  first_name?: FormControl<string | null>;
+  phone_number?: FormControl<string | null>;
+  account_type?: FormControl<string | null>;
+  hide_location?: FormControl<boolean | null>;
+
+  // step 2 fields
+  x?: FormControl<string | null>;
+  fb?: FormControl<string | null>;
+  ig?: FormControl<string | null>;
+  li?: FormControl<string | null>;
+  sc?: FormControl<string | null>;
+  web?: FormControl<string | null>;
   company?: FormControl<string | null>;
   aboutMe?: FormControl<string | null>;
-  // Step 3 fields
+  college_university?: FormControl<string | null>;
+
+  // step 3 fields
   profile_image?: FormControl<string | null>;
-  preference1?: FormControl<string | null>;
-  preference2?: FormControl<string | null>;
+}
+
+interface State {
+  user?: User;
 }
 
 interface NetworkSuggestion {
   id: string;
   name: string;
-  profileImage?: string;
   value: number;
-  jobTitle: string;
   company: string;
+  jobTitle: string;
+  profileImage?: string;
 }
 
 @Component({
@@ -52,58 +67,72 @@ interface NetworkSuggestion {
   templateUrl: './profile.html',
   imports: [
     Button,
+    NgClass,
     IonHeader,
     TextInput,
     IonFooter,
     IonToolbar,
-    ModalInput,
     IonContent,
+    ImageInput,
     EmailInput,
     MobileInput,
     SocialInput,
-    ImageInput,
-    CommonModule,
     TextAreaInput,
     UsernameInput,
     IncognitoModeInput,
     ReactiveFormsModule
   ]
 })
-export class Profile implements OnInit {
+export class Profile implements AfterViewInit {
   // services
-  fb = inject(FormBuilder);
-  authService = inject(AuthService);
+  private router = inject(Router);
+  private fb = inject(FormBuilder);
+  private navCtrl = inject(NavController);
+  private authService = inject(AuthService);
+  private modalService = inject(ModalService);
+  private toasterService = inject(ToasterService);
 
   // signals
-  usernameVerified = signal<boolean>(false);
+  currentStep = signal<number>(1);
+  step2Fields = signal<string[]>([]);
+  step3Fields = signal<string[]>([]);
+  isSubmitted = signal<boolean>(false);
+  steps = signal<number[]>([1, 2, 3, 4]);
+  selectedSuggestions = signal<Set<string>>(new Set());
   profileForm = signal<FormGroup<ProfileForm>>(this.fb.group({}));
+  step1Fields = signal<string[]>(['title', 'first_name', 'last_name', 'email', 'phone_number', 'username', 'birthdate', 'account_type', 'location']);
 
-  ngOnInit(): void {
-    // Initialize incognito_mode control with default value false
-    const form = this.profileForm();
-    if (!form.get('incognito_mode')) {
-      form.addControl('incognito_mode', this.fb.control(false));
+  ngAfterViewInit(): void {
+    // get state from Router navigation
+    const state = this.router.currentNavigation()?.extras?.state as State;
+
+    if (state && state.user) {
+      const { email, phoneNumber, displayName, photoUrl } = state.user;
+
+      // set profile image
+      if (photoUrl) {
+        this.profileForm().patchValue({ profile_image: photoUrl });
+      }
+
+      // set first and last name
+      if (displayName) {
+        const [first_name, last_name] = displayName.split(' ');
+        this.profileForm().patchValue({ first_name, last_name });
+      }
+
+      // set email and disable it
+      if (email) {
+        this.profileForm().patchValue({ email }, { emitEvent: false });
+        this.profileForm().get('email')?.disable({ emitEvent: false });
+      }
+
+      // set phone number and disable it
+      if (phoneNumber) {
+        this.profileForm().patchValue({ phone_number: phoneNumber }, { emitEvent: false });
+        this.profileForm().get('phone_number')?.disable({ emitEvent: false });
+      }
     }
   }
-
-  titleOptions: SelectOption[] = [
-    { value: 'Mr.', label: 'Mr.' },
-    { value: 'Mrs.', label: 'Mrs.' },
-    { value: 'Ms.', label: 'Ms.' }
-  ];
-
-  accountTypeOptions: SelectOption[] = [
-    { value: 'individual', label: 'Individual' },
-    { value: 'business', label: 'Business' }
-  ];
-
-  steps = signal<number[]>([1, 2, 3, 4]);
-  currentStep = signal<number>(1);
-  selectedSuggestions = signal<Set<string>>(new Set());
-
-  step1Fields = ['title', 'first_name', 'last_name', 'email', 'phone_number', 'username', 'birthdate', 'account_type', 'location'];
-  step2Fields: string[] = [];
-  step3Fields: string[] = []; // Profile image is optional
 
   // Network suggestions static data
   networkSuggestions: NetworkSuggestion[] = [
@@ -179,90 +208,64 @@ export class Profile implements OnInit {
     return this.selectedSuggestions().has(id);
   }
 
-  private validateFields(fieldNames: string[]): boolean {
-    const form = this.profileForm();
-    console.log('form', form.getRawValue());
-    const isValid = fieldNames.every((field) => {
-      const control = form.get(field);
-      if (!control) return false;
+  save(): void {
+    this.isSubmitted.set(true);
 
-      if (control.disabled && control.value) {
-        return true;
-      }
-
-      return control.valid;
-    });
-
-    if (!isValid) {
-      fieldNames.forEach((field) => {
-        const control = form.get(field);
-        if (control && !control.disabled) {
-          control.markAsTouched();
-          control.updateValueAndValidity();
-        }
-      });
-    }
-
-    return isValid;
-  }
-
-  nextStep(): void {
     if (this.currentStep() === 1) {
-      // Validate step 1 fields
-      if (!this.validateFields(this.step1Fields)) {
-        return;
-      }
-
-      if (!this.usernameVerified()) {
-        const usernameControl = this.profileForm().get('username');
-        if (usernameControl) {
-          usernameControl.markAsTouched();
-          usernameControl.updateValueAndValidity();
-        }
+      if (!validateFields(this.profileForm(), this.step1Fields())) {
+        this.toasterService.showError('Please fill all required fields.');
         return;
       }
 
       this.currentStep.set(2);
     } else if (this.currentStep() === 2) {
-      if (!this.validateFields(this.step2Fields)) {
+      if (!validateFields(this.profileForm(), this.step2Fields())) {
+        this.toasterService.showError('Please fill all required fields.');
         return;
       }
+
       this.currentStep.set(3);
     } else if (this.currentStep() === 3) {
-      if (!this.validateFields(this.step3Fields)) {
+      if (!validateFields(this.profileForm(), this.step3Fields())) {
+        this.toasterService.showError('Please fill all required fields.');
         return;
       }
+
       this.currentStep.set(4);
+    } else {
+      const form = this.profileForm();
+      console.log('form', form.getRawValue());
     }
   }
 
-  previousStep() {
-    if (this.currentStep() > 1) {
+  goBack(): void {
+    if (this.currentStep() === 1) {
+      this.navCtrl.navigateBack('/');
+    } else {
       this.currentStep.set(this.currentStep() - 1);
     }
   }
 
-  async update(): Promise<void> {
-    // Validate all steps in order
-    const allFields = [...this.step1Fields, ...this.step3Fields];
-    const allFieldsValid = this.validateFields(allFields);
+  async openTitleModal(): Promise<void> {
+    const value = this.profileForm().get('title')?.value || 'Mr.';
+    const title = await this.modalService.openTitleModal(value);
+    this.profileForm().patchValue({ title });
+  }
 
-    if (!allFieldsValid) {
-      // Go back to first invalid step in sequence
-      if (!this.validateFields(this.step1Fields)) {
-        this.currentStep.set(1);
-      } else if (!this.validateFields(this.step2Fields)) {
-        this.currentStep.set(2);
-      } else if (!this.validateFields(this.step3Fields)) {
-        this.currentStep.set(3);
-      }
-      return;
-    }
+  async openDateModal(): Promise<void> {
+    const value = this.profileForm().get('birthdate')?.value || '';
+    const birthdate = await this.modalService.openDateTimeModal('date', value);
+    this.profileForm().patchValue({ birthdate });
+  }
 
-    // All validations passed - submit form
-    const form = this.profileForm();
-    console.log('form', form.getRawValue());
-    const result = await this.authService.signInWithEmailAndPassword('ravi.disolutions@gmail.com', 'Test@123');
-    console.log('result', result);
+  async openAccountTypeModal(): Promise<void> {
+    const value = this.profileForm().get('account_type')?.value || 'individual';
+    const account_type = await this.modalService.openAccountTypeModal(value);
+    this.profileForm().patchValue({ account_type });
+  }
+
+  async openLocationModal(): Promise<void> {
+    const { address, latitude, longitude } = await this.modalService.openLocationModal();
+    this.profileForm().patchValue({ location: address, latitude, longitude });
   }
 }

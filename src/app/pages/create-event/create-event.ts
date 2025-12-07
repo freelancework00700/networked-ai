@@ -13,15 +13,14 @@ import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
+import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
-import { ModalInput } from '@/components/form/modal-input';
 import { ModalController } from '@ionic/angular/standalone';
 import { EditorInput } from '@/components/form/editor-input';
 import { NumberInput } from '@/components/form/number-input';
 import { ConfirmModal } from '@/components/modal/confirm-modal';
 import { signal, computed, inject, Component } from '@angular/core';
 import { TicketCard } from '@/pages/create-event/components/ticket-card';
-import { SelectOption } from '@/components/modal/select-modal/select-modal';
 import { AIPromptModal } from '@/pages/create-event/components/ai-prompt-modal';
 import { PromoCodeCard } from '@/pages/create-event/components/promo-code-card';
 import { TicketTypeItem } from '@/pages/create-event/components/ticket-type-item';
@@ -43,7 +42,6 @@ import { PromoCodeForm, PromoCodeFormData } from '@/pages/create-event/component
     IonHeader,
     IonFooter,
     IonToggle,
-    ModalInput,
     IonToolbar,
     IonContent,
     TicketCard,
@@ -64,6 +62,7 @@ export class CreateEvent {
   // services
   fb = inject(FormBuilder);
   modalCtrl = inject(ModalController);
+  modalService = inject(ModalService);
 
   atLeastOneTagValidator = (control: any) => {
     const value = control.value;
@@ -172,18 +171,6 @@ export class CreateEvent {
     }
     return false;
   });
-
-  categoryOptions: SelectOption[] = [
-    { value: 'business', label: 'Business' },
-    { value: 'networking', label: 'Networking' },
-    { value: 'conference', label: 'Conference' },
-    { value: 'workshop', label: 'Workshop' },
-    { value: 'social', label: 'Social' },
-    { value: 'sports', label: 'Sports' },
-    { value: 'music', label: 'Music' },
-    { value: 'arts', label: 'Arts' },
-    { value: 'other', label: 'Other' }
-  ];
 
   metaTagOptions: NetworkTag[] = [
     { name: 'Agriculture', icon: '🌿', value: 'agriculture' },
@@ -587,6 +574,31 @@ export class CreateEvent {
     } else if (this.currentStep() === 3) {
       this.currentStep.set(4);
     }
+  }
+
+  async openDateModal(): Promise<void> {
+    const date = await this.modalService.openDateTimeModal('date');
+    this.eventForm().patchValue({ date });
+  }
+
+  async openTimeModal(type: 'start_time' | 'end_time'): Promise<void> {
+    const time = await this.modalService.openDateTimeModal('time');
+
+    if (type === 'start_time') {
+      this.eventForm().patchValue({ start_time: time });
+    } else {
+      this.eventForm().patchValue({ end_time: time });
+    }
+  }
+
+  async openLocationModal(): Promise<void> {
+    const { address } = await this.modalService.openLocationModal();
+    this.eventForm().patchValue({ address });
+  }
+
+  async openEventCategoryModal(): Promise<void> {
+    const category = await this.modalService.openEventCategoryModal();
+    this.eventForm().patchValue({ category });
   }
 
   async createEvent() {
