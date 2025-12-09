@@ -1,0 +1,16 @@
+<div class="flex items-center justify-between gap-4">
+  <!-- Title on the left -->
+  @if (label()) {
+    <label class="neutral-02 body-14M flex-1">
+      {{ label() }}
+    </label>
+  }
+
+  <!-- Toggle button on the right -->
+  <ion-toggle [formControlName]="controlName()" />
+</div>
+
+<!-- validation -->
+@if (isControlInvalid) {
+  <div class="accent-red pt-2 body-12M">Please enable {{ label().toLowerCase() }}.</div>
+}

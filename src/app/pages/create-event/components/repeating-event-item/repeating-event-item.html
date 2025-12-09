@@ -1,0 +1,47 @@
+<span class="flex items-center gap-1 text-surface-500 body-regular-12 mb-2">
+  <img src="assets/svg/calendarCheckIcon.svg" alt="Event Number" class="w-5 h-5" />
+  <span>Event #{{ event().eventNumber }}</span>
+</span>
+<div class="flex items-center gap-3 p-3 border border-surface-300 rounded-2xl mb-2">
+  <!-- IMAGE -->
+  <img [src]="event().image || 'assets/images/profile.jpeg'" alt="Event Image" class="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+
+  <!-- TEXT CONTENT -->
+  <div class="flex flex-col flex-1">
+    <!-- TITLE -->
+    <span class="body-medium-16 text-surface-900">
+      {{ event().title }}
+    </span>
+
+    <!-- DATE + LOCATION -->
+    <div class="flex items-center gap-4 mt-1 text-surface-500 body-regular-12">
+      <!-- DATE -->
+      <span class="flex items-center gap-1">
+        <i class="pi pi-calendar text-md"></i>
+        {{ formatDate(event().date) }}
+      </span>
+
+      <!-- LOCATION -->
+      @if (event().address) {
+        <div class="border-l-3 border-surface-300 pl-2 pr-2">
+          <span class="flex items-center gap-1">
+            <i class="pi pi-map-marker text-xs"></i>
+            {{ event().address }}
+          </span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ACTION BUTTONS (edit/delete) -->
+  @if (!isMainEvent()) {
+    <div class="flex items-center gap-4">
+      <button (click)="onEdit()">
+        <img src="assets/svg/editIcon.svg" alt="edit" class="w-6 h-6" />
+      </button>
+      <button (click)="onDelete()">
+        <img src="assets/svg/deleteIcon.svg" alt="delete" class="w-6 h-6" />
+      </button>
+    </div>
+  }
+</div>

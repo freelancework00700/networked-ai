@@ -26,6 +26,7 @@ export class TextInput implements OnInit {
   required = input(true);
   placeholder = input('');
   endIconName = input('');
+  showLabel = input(true);
   readonly = input(false);
   initialValue = input('');
   isSubmitted = input(true);

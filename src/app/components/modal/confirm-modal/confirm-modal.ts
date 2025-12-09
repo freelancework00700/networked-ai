@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
+import { ModalService } from '@/services/modal.service';
 import { ModalController } from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy, Input } from '@angular/core';
 
@@ -9,8 +10,7 @@ export interface ConfirmModalConfig {
   description?: string;
   confirmButtonLabel?: string;
   cancelButtonLabel?: string;
-  primaryButtonColor?: 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null;
-  secondaryButtonColor?: 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null;
+  confirmButtonColor?: 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null;
 }
 
 @Component({
@@ -22,18 +22,23 @@ export interface ConfirmModalConfig {
 })
 export class ConfirmModal {
   private modalCtrl = inject(ModalController);
+  private modalService = inject(ModalService);
 
   @Input() icon: string = '';
   @Input() title: string = 'Confirm';
   @Input() description: string = '';
   @Input() confirmButtonLabel: string = 'Confirm';
   @Input() cancelButtonLabel: string = 'Cancel';
+  @Input() iconPosition: 'left' | 'center' = 'center';
+  @Input() confirmButtonColor: 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' = 'primary';
 
   confirm(): void {
     this.modalCtrl.dismiss(true, 'confirm');
+    this.modalService.close();
   }
 
   cancel(): void {
     this.modalCtrl.dismiss(false, 'cancel');
+    this.modalService.close();
   }
 }

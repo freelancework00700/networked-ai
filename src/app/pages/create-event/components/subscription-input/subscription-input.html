@@ -11,10 +11,7 @@
   @if (hasPlans()) {
     <!-- Subscription Select Dropdown -->
     <div class="flex flex-col gap-2">
-      <div
-        class="flex items-center justify-between px-3 py-3 border border-neutral-300 rounded-lg bg-neutral-07 cursor-pointer transition-colors"
-        (click)="openSubscriptionSelect()"
-      >
+      <div class="flex items-center justify-between px-3 py-3 border border-neutral-300 rounded-lg bg-neutral-07" (click)="openSubscriptionSelect()">
         <span [class.text-surface-500]="!selectedPlanName" [class.text-surface-900]="selectedPlanName" class="text-sm">
           {{ selectedPlanName || 'Select Subscription' }}
         </span>

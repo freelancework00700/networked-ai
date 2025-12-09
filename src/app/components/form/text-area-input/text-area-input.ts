@@ -19,6 +19,8 @@ import { FormBuilder, ControlContainer, FormGroup, Validators, ReactiveFormsModu
 })
 export class TextAreaInput {
   label = input('');
+  rows = input(4);
+  showLength = input(false);
   controlName = input.required<string>();
   required = input(true);
   placeholder = input('');

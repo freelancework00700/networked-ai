@@ -1,5 +1,5 @@
 import { Button } from '@/components/form/button';
-import { Component, inject, signal } from '@angular/core';
+import { Component, Input, inject, signal } from '@angular/core';
 import { ModalController, IonPicker, IonPickerColumn, IonPickerColumnOption } from '@ionic/angular/standalone';
 
 @Component({
@@ -12,8 +12,8 @@ export class EventCategoryModal {
   // services
   modalCtrl = inject(ModalController);
 
-  // signals
-  selectedValue = signal<string>('');
+  // inputs
+  @Input() value: string = 'business';
 
   options = signal([
     { value: 'business', label: 'Business' },
@@ -28,11 +28,6 @@ export class EventCategoryModal {
   ]);
 
   async dismiss() {
-    await this.modalCtrl.dismiss(this.selectedValue());
-  }
-
-  onPickerChange(event: CustomEvent): void {
-    const value = event.detail.value;
-    this.selectedValue.set(value);
+    await this.modalCtrl.dismiss(this.value);
   }
 }

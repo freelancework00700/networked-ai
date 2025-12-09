@@ -40,11 +40,7 @@
     <div>
       <text-area-input controlName="description" label="Description" placeholder="Enter description" [required]="false" />
       <div class="flex justify-end pt-1">
-        <button
-          type="button"
-          class="flex items-center gap-1.5 brand-02 body-14M hover:opacity-80 transition-opacity cursor-pointer"
-          (click)="handleGenerateClick()"
-        >
+        <button type="button" class="flex items-center gap-1.5 brand-02 body-14M" (click)="handleGenerateClick()">
           {{ isCustomize() ? 'Customize' : 'Generate' }}
           <img src="assets/svg/generateIcon.svg" alt="Generate" class="w-5 h-5" />
         </button>
@@ -55,13 +51,23 @@
     <div>
       <label class="block neutral-02 body-14M pb-1">Sales Start</label>
       <div class="flex items-center gap-2 w-full">
-        <text-input label="Date" iconName="pi-calendar" placeholder="Select date" (click)="openDateModal()" controlName="sales_start_date" />
+        <text-input
+          label="Date"
+          [showLabel]="false"
+          iconName="pi-calendar"
+          placeholder="Select date"
+          (click)="openDateModal('sales_start_date')"
+          controlName="sales_start_date"
+          class="w-full"
+        />
         <text-input
           label="Time"
+          [showLabel]="false"
           iconName="pi-clock"
           placeholder="Select time"
           controlName="sales_start_time"
           (click)="openTimeModal('sales_start_time')"
+          class="w-full"
         />
       </div>
     </div>
@@ -77,13 +83,23 @@
       <div class="flex flex-col gap-1">
         <label class="block neutral-02 body-14M">Sales End</label>
         <div class="flex items-center gap-2 w-full">
-          <text-input label="Date" iconName="pi-calendar" (click)="openDateModal()" placeholder="Select date" controlName="sales_end_date" />
+          <text-input
+            label="Date"
+            iconName="pi-calendar"
+            [showLabel]="false"
+            (click)="openDateModal('sales_end_date')"
+            placeholder="Select date"
+            controlName="sales_end_date"
+            class="w-full"
+          />
           <text-input
             label="Time"
             iconName="pi-clock"
+            [showLabel]="false"
             placeholder="Select time"
             controlName="sales_end_time"
             (click)="openTimeModal('sales_end_time')"
+            class="w-full"
           />
         </div>
       </div>

@@ -1,10 +1,10 @@
 <!-- label -->
-@if (label()) {
+@if (label() && showLabel()) {
   <div class="flex items-center justify-between text-surface-900 mb-1">
     <label class="neutral-02 body-14M">
       {{ label() }}
     </label>
-    @if (!required()) {
+    @if (!required() && !readonly()) {
       <span class="neutral-04 body-14R">Optional</span>
     }
   </div>

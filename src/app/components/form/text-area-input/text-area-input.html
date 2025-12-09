@@ -1,17 +1,25 @@
-<div class="flex flex-col gap-2 w-full">
-  <div class="flex items-center justify-between text-surface-900 mb-1">
-    <label class="neutral-02 body-14M">
-      {{ label() }}
-      @if (required()) {
-        <span class="accent-red">*</span>
-      }
-    </label>
-    @if (!required()) {
-      <span class="neutral-04 body-14R">Optional</span>
-    }
-  </div>
-  <textarea rows="4" cols="30" pTextarea class="p-2 border rounded-md" [formControlName]="controlName()" [placeholder]="placeholder()"></textarea>
-  @if (isControlInvalid) {
-    <small class="text-red-500 text-sm mb-1">*{{ label() }} is required.</small>
+<div class="flex items-center justify-between text-surface-900 mb-1">
+  <label class="neutral-02 body-14M">
+    {{ label() }}
+  </label>
+  @if (!required()) {
+    <span class="neutral-04 body-14R">Optional</span>
   }
 </div>
+
+<textarea
+  [rows]="rows()"
+  cols="30"
+  pTextarea
+  class="p-2 border rounded-md w-full max-h-40 overflow-y-auto"
+  [formControlName]="controlName()"
+  [placeholder]="placeholder()"
+></textarea>
+
+@if (showLength()) {
+  <div class="flex justify-end text-gray-500 text-sm">{{ parentFormGroup.get(controlName())?.value?.length || 0 }}/5000</div>
+}
+
+@if (isControlInvalid) {
+  <div class="accent-red pt-1 body-12M">Please enter the valid {{ label().toLowerCase() }}.</div>
+}

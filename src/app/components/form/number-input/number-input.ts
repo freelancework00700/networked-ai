@@ -21,6 +21,7 @@ import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, 
 export class NumberInput {
   // inputs
   label = input('');
+  showLabel = input(true);
   iconName = input<string>('');
   required = input(true);
   placeholder = input('');

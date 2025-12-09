@@ -18,6 +18,17 @@ export interface EventForm {
   host_pays_fees?: FormControl<boolean | null>;
   additional_fees?: FormControl<string | null>;
   guest_fee_enabled?: FormControl<boolean | null>;
+  co_hosts?: FormControl<string[] | null>;
+  sponsors?: FormControl<string[] | null>;
+  speakers?: FormControl<string[] | null>;
+  visibility?: FormControl<'public' | 'invite-only' | null>;
+  plus?: FormControl<number | null>;
+  repeat_frequency?: FormControl<'weekly' | 'monthly' | 'custom' | null>;
+  repeat_count?: FormControl<number | 'custom' | null>;
+  repeating_events?: FormControl<any[] | null>;
+  frequency_date?: FormControl<string | null>;
+  custom_repeat_count?: FormControl<number | null>;
+  questionnaire?: FormControl<any | null>;
 }
 
 export interface Ticket {

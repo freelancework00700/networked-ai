@@ -2,12 +2,20 @@ import { inject, Injectable } from '@angular/core';
 import { ModalController } from '@ionic/angular/standalone';
 import { TitleModal } from '@/components/modal/title-modal';
 import { LoadingModal } from '@/components/modal/loading-modal';
+import { CreateEvent } from '@/pages/create-event/create-event';
+import { ConfirmModal } from '@/components/modal/confirm-modal';
 import { LocationModal } from '@/components/modal/location-modal';
 import { DateTimeModal } from '@/components/modal/date-time-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
 import { EventCategoryModal } from '@/components/modal/event-category-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
+import { AIPromptModal } from '@/pages/create-event/components/ai-prompt-modal';
+import { TicketTypeModal } from '@/pages/create-event/components/ticket-type-modal';
+import { QuestionnaireForm } from '@/pages/create-event/components/questionnaire-form';
 import { PhoneEmailVerifiedModal } from '@/components/modal/phone-email-verified-modal';
+import { TicketForm, TicketFormData } from '@/pages/create-event/components/ticket-form';
+import { NetworkTagModal, NetworkTag } from '@/pages/create-event/components/network-tag';
+import { PromoCodeForm, PromoCodeFormData } from '@/pages/create-event/components/promo-code-form';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -75,7 +83,7 @@ export class ModalService {
     return data;
   }
 
-  async openDateTimeModal(type: 'date' | 'time', value?: string): Promise<string> {
+  async openDateTimeModal(type: 'date' | 'time', value?: string, min?: string, max?: string): Promise<string> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -84,7 +92,7 @@ export class ModalService {
       backdropDismiss: false,
       component: DateTimeModal,
       cssClass: 'auto-hight-modal',
-      componentProps: { type, value }
+      componentProps: { type, value, min, max }
     });
 
     await modal.present();
@@ -128,7 +136,7 @@ export class ModalService {
     return data;
   }
 
-  async openEventCategoryModal(): Promise<string> {
+  async openEventCategoryModal(value?: string): Promise<string> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -136,12 +144,187 @@ export class ModalService {
       initialBreakpoint: 1,
       backdropDismiss: false,
       cssClass: 'auto-hight-modal',
-      component: EventCategoryModal
+      component: EventCategoryModal,
+      componentProps: { value }
     });
 
     await modal.present();
 
     const { data } = await modal.onDidDismiss();
+    return data;
+  }
+
+  async openNetworkTagModal(tags: NetworkTag[], initialSelectedTags: string[]): Promise<string[] | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: NetworkTagModal,
+      backdropDismiss: true,
+      cssClass: 'auto-hight-modal',
+      componentProps: {
+        title: 'Networked Meta Tags',
+        subtitle: 'Select up to 5',
+        tags,
+        initialSelectedTags,
+        maxSelections: 5
+      }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    return data && Array.isArray(data) ? data : null;
+  }
+
+  async openAIPromptModal(conversation: any[], isEvent?: boolean): Promise<any> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: AIPromptModal,
+      componentProps: {
+        conversation,
+        isEvent
+      }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
+  async openTicketModal(
+    ticketType: 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard',
+    initialData?: Partial<TicketFormData>,
+    eventDate?: string | null,
+    eventStartTime?: string | null
+  ): Promise<{ data: TicketFormData; role: string } | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: TicketForm,
+      cssClass: 'auto-hight-modal',
+      backdropDismiss: false,
+      componentProps: {
+        ticketType,
+        initialData,
+        eventDate,
+        eventStartTime
+      }
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    return data && role === 'save' ? { data, role } : null;
+  }
+
+  async openTicketTypeModal(): Promise<'standard' | 'early-bird' | 'sponsor' | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: TicketTypeModal,
+      cssClass: 'auto-hight-modal',
+      backdropDismiss: true
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    return role === 'select' && data ? (data as 'standard' | 'early-bird' | 'sponsor') : null;
+  }
+
+  async openPromoCodeModal(initialData?: Partial<PromoCodeFormData>): Promise<{ data: PromoCodeFormData; role: string } | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: PromoCodeForm,
+      cssClass: 'auto-hight-modal',
+      backdropDismiss: false,
+      componentProps: {
+        initialData
+      }
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    return data && role === 'save' ? { data, role } : null;
+  }
+
+  async openConfirmModal(config: {
+    icon?: string;
+    title: string;
+    description: string;
+    confirmButtonLabel: string;
+    cancelButtonLabel: string;
+    confirmButtonColor?: string;
+    iconPosition?: 'left' | 'center';
+  }): Promise<{ data: any; role: string } | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: ConfirmModal,
+      backdropDismiss: true,
+      cssClass: 'auto-hight-modal',
+      componentProps: config
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    return { data, role: role || '' };
+  }
+
+  async openRepeatingEventModal(eventData: any): Promise<{ data: any; role: string } | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: CreateEvent,
+      // cssClass: 'auto-hight-modal',
+      backdropDismiss: false,
+      componentProps: {
+        isModalMode: true,
+        eventData: eventData
+      }
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    return data && role === 'save' ? { data, role } : null;
+  }
+
+  async openQuestionnaireModal(type: 'pre-event' | 'post-event', initialData?: any): Promise<any> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: QuestionnaireForm,
+      componentProps: {
+        type,
+        initialData
+      }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
     return data;
   }
 

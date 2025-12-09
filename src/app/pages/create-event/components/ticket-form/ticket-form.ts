@@ -5,7 +5,6 @@ import { TextInput } from '@/components/form/text-input';
 import { NumberInput } from '@/components/form/number-input';
 import { TextAreaInput } from '@/components/form/text-area-input';
 import { ModalController, IonCheckbox } from '@ionic/angular/standalone';
-import { AIPromptModal } from '@/pages/create-event/components/ai-prompt-modal';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Component, inject, ChangeDetectionStrategy, signal, OnInit, Input, computed } from '@angular/core';
 
@@ -37,6 +36,7 @@ export class TicketForm implements OnInit {
 
   @Input() ticketType: 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard' = 'free';
   @Input() initialData?: Partial<TicketFormData> | null;
+  @Input() eventDate?: string | null;
 
   ticketForm = signal<FormGroup>(
     this.fb.group({
@@ -60,6 +60,11 @@ export class TicketForm implements OnInit {
     const isFree = this.ticketType === 'free';
     this.isFreeTicket.set(isFree);
 
+    // Get current date and time for defaults
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0];
+    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
     // Initialize date/time values for form controls
     let salesStartDateValue = '';
     let salesStartTimeValue = '';
@@ -67,7 +72,14 @@ export class TicketForm implements OnInit {
       const date = new Date(this.initialData.sales_start_date);
       salesStartDateValue = date.toISOString().split('T')[0];
       salesStartTimeValue = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    } else {
+      // Set default to current date and time
+      salesStartDateValue = currentDate;
+      salesStartTimeValue = currentTime;
     }
+
+    const endSaleOnEventStart = this.initialData?.end_sale_on_event_start ?? true;
+    this.endSaleOnEventStart.set(endSaleOnEventStart);
 
     let salesEndDateValue = '';
     let salesEndTimeValue = '';
@@ -75,18 +87,19 @@ export class TicketForm implements OnInit {
       const date = new Date(this.initialData.sales_end_date);
       salesEndDateValue = date.toISOString().split('T')[0];
       salesEndTimeValue = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    } else if (!endSaleOnEventStart) {
+      // Set default to current date and time if end sale is enabled
+      salesEndDateValue = currentDate;
+      salesEndTimeValue = currentTime;
     }
-
-    const endSaleOnEventStart = this.initialData?.end_sale_on_event_start ?? true;
-    this.endSaleOnEventStart.set(endSaleOnEventStart);
 
     const form = this.fb.group({
       name: [this.initialData?.name || '', [Validators.required]],
       price: [isFree ? '0.00' : this.initialData?.price || '5.00', [Validators.required]],
       quantity: [this.initialData?.quantity || 500, [Validators.required]],
       description: [this.initialData?.description || ''],
-      sales_start_date: [salesStartDateValue],
-      sales_start_time: [salesStartTimeValue],
+      sales_start_date: [salesStartDateValue, [Validators.required]],
+      sales_start_time: [salesStartTimeValue, [Validators.required]],
       sales_end_date: [salesEndDateValue],
       sales_end_time: [salesEndTimeValue],
       end_sale_on_event_start: [endSaleOnEventStart],
@@ -100,6 +113,35 @@ export class TicketForm implements OnInit {
 
     form.get('end_sale_on_event_start')?.valueChanges.subscribe((value) => {
       this.endSaleOnEventStart.set(value ?? true);
+
+      // Update validators for sales_end_date and sales_end_time based on checkbox value
+      const salesEndDateControl = form.get('sales_end_date');
+      const salesEndTimeControl = form.get('sales_end_time');
+
+      if (value) {
+        // If end_sale_on_event_start is true, remove required validators
+        salesEndDateControl?.clearValidators();
+        salesEndTimeControl?.clearValidators();
+        // Clear values when checkbox is checked
+        salesEndDateControl?.setValue('');
+        salesEndTimeControl?.setValue('');
+      } else {
+        // If end_sale_on_event_start is false, add required validators
+        salesEndDateControl?.setValidators([Validators.required]);
+        salesEndTimeControl?.setValidators([Validators.required]);
+        // Set default values to current date/time if fields are empty
+        if (!salesEndDateControl?.value) {
+          const now = new Date();
+          salesEndDateControl?.setValue(now.toISOString().split('T')[0]);
+        }
+        if (!salesEndTimeControl?.value) {
+          const now = new Date();
+          salesEndTimeControl?.setValue(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
+        }
+      }
+
+      salesEndDateControl?.updateValueAndValidity();
+      salesEndTimeControl?.updateValueAndValidity();
     });
   }
 
@@ -141,20 +183,7 @@ export class TicketForm implements OnInit {
   }
 
   async openAIPromptModal(): Promise<void> {
-    const modal = await this.modalCtrl.create({
-      component: AIPromptModal,
-      initialBreakpoint: 1,
-      handle: true,
-      componentProps: {
-        conversation: this.conversation(),
-        isEvent: false
-      }
-    });
-
-    await modal.present();
-
-    // Handle modal dismissal and data
-    const { data } = await modal.onWillDismiss();
+    const data = await this.modalService.openAIPromptModal(this.conversation());
 
     if (data) {
       if (data.type === 'value' && data.data) {
@@ -180,20 +209,48 @@ export class TicketForm implements OnInit {
       return;
     }
 
-    this.modalCtrl.dismiss(form.value, 'save');
+    this.modalCtrl.dismiss({ ...form.value, ticket_type: this.ticketType }, 'save');
   }
 
-  async openDateModal(): Promise<void> {
-    const date = await this.modalService.openDateTimeModal('date');
-    this.ticketForm().patchValue({ sales_start_date: date });
+  async openDateModal(type: 'sales_start_date' | 'sales_end_date' = 'sales_start_date'): Promise<void> {
+    const form = this.ticketForm();
+    const currentDate = form.get(type)?.value || '';
+
+    // Set min to today and max to event date for sales_start_date
+    // For sales_end_date, min should be sales_start_date (if set) or today
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const maxDate = this.eventDate || undefined;
+
+    let minDate: string | undefined = todayStr;
+    if (type === 'sales_end_date') {
+      const salesStartDate = form.get('sales_start_date')?.value;
+      if (salesStartDate) {
+        minDate = salesStartDate;
+      }
+    }
+
+    const date = await this.modalService.openDateTimeModal('date', currentDate, minDate, maxDate);
+    if (date) {
+      if (type === 'sales_start_date') {
+        form.patchValue({ sales_start_date: date });
+      } else {
+        form.patchValue({ sales_end_date: date });
+      }
+    }
   }
 
   async openTimeModal(type: 'sales_start_time' | 'sales_end_time'): Promise<void> {
-    const time = await this.modalService.openDateTimeModal('time');
-    if (type === 'sales_start_time') {
-      this.ticketForm().patchValue({ sales_start_time: time });
-    } else {
-      this.ticketForm().patchValue({ sales_end_time: time });
+    const form = this.ticketForm();
+    const currentTime = form.get(type)?.value || '';
+
+    const time = await this.modalService.openDateTimeModal('time', currentTime);
+    if (time) {
+      if (type === 'sales_start_time') {
+        form.patchValue({ sales_start_time: time });
+      } else {
+        form.patchValue({ sales_end_time: time });
+      }
     }
   }
 
