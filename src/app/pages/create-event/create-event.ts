@@ -60,8 +60,8 @@ import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } 
     IonReorderGroup,
     ParticipantInput,
     SubscriptionInput,
-    ReactiveFormsModule,
-    RepeatingEventItem
+    RepeatingEventItem,
+    ReactiveFormsModule
   ]
 })
 export class CreateEvent {
@@ -70,6 +70,8 @@ export class CreateEvent {
   modalService = inject(ModalService);
   modalCtrl = inject(ModalController);
   cd = inject(ChangeDetectorRef);
+
+  // validators
   atLeastOneTagValidator = (control: any) => {
     const value = control.value;
     if (!value || !Array.isArray(value) || value.length === 0) {
@@ -82,7 +84,42 @@ export class CreateEvent {
   @Input() isModalMode: boolean = false;
   @Input() eventData: any | null = null;
 
-  // signals
+  // signals & static properties
+  metaTagOptions = signal<{ name: string; icon: string; value: string }[]>([
+    { name: 'Agriculture', icon: '🌿', value: 'agriculture' },
+    { name: 'Art & Entertainment', icon: '🎨', value: 'art_entertainment' },
+    { name: 'Business & Finance', icon: '📈', value: 'business_finance' },
+    { name: 'Education', icon: '📚', value: 'education' },
+    { name: 'Engineering', icon: '⚙️', value: 'engineering' },
+    { name: 'Health & Medicine', icon: '🏥', value: 'health_medicine' },
+    { name: 'Software & IT', icon: '💻', value: 'software_it' },
+    { name: 'Hospitality & Tourism', icon: '✈️', value: 'hospitality_tourism' },
+    { name: 'Law & Public Policy', icon: '⚖�️', value: 'law_policy' },
+    { name: 'Manufacturing', icon: '🏭', value: 'manufacturing' },
+    { name: 'Retail & Sales', icon: '🏪', value: 'retail_sales' },
+    { name: 'Student', icon: '🎓', value: 'student' },
+    { name: 'Service & Freelancing', icon: '🤝', value: 'service_freelancing' },
+    { name: 'Others', icon: '🎲', value: 'others' }
+  ]);
+
+  repeatOptions = signal<{ label: string; value: 'weekly' | 'monthly' | 'custom' }[]>([
+    { label: 'Weekly', value: 'weekly' },
+    { label: 'Monthly', value: 'monthly' },
+    { label: 'Custom', value: 'custom' }
+  ]);
+
+  repeatCountOptions = signal<{ label: string; value: number | 'custom' }[]>([
+    { label: '2', value: 2 },
+    { label: '3', value: 3 },
+    { label: '4', value: 4 },
+    { label: 'Custom', value: 'custom' }
+  ]);
+
+  sections = signal<{ type: 'pre_event' | 'post_event'; label: string; placeholder: string }[]>([
+    { type: 'pre_event', label: 'Pre-Event', placeholder: 'Displayed when user signs up for the event.' },
+    { type: 'post_event', label: 'Post-Event', placeholder: 'A feedback survey after the event has concluded.' }
+  ]);
+
   eventForm = signal<FormGroup<EventForm>>(
     this.fb.group<EventForm>({
       images: this.fb.control<string | File[] | null>(null),
@@ -109,42 +146,33 @@ export class CreateEvent {
   );
 
   maxDescriptionLength = 2500;
+  co_hosts = signal<User[]>([]);
+  sponsors = signal<User[]>([]);
+  speakers = signal<User[]>([]);
   tickets = signal<Ticket[]>([]);
-  currentStep = signal<number>(3);
-  hostCharge = signal<string>('');
+  currentStep = signal<number>(1);
   conversation = signal<any[]>([]);
-  discount = signal<PromoCode[]>([]);
-  ticketType = signal<string>('free');
+  repeatingEvents = signal<any[]>([]);
+  promoCodes = signal<PromoCode[]>([]);
   isCustomize = signal<boolean>(false);
-  isSubmitted = signal<boolean>(false);
   descriptionLength = signal<number>(0);
   steps = signal<number[]>([1, 2, 3, 4]);
-  isSubscription = signal<boolean>(false);
   storedPlans = signal<SubscriptionPlan[]>([]);
-  subscriptionId = signal<string | null>(null);
   promoCodeSectionOpen = signal<boolean>(false);
   advancedSettingsOpen = signal<boolean>(false);
   isStripeAccountSetup = signal<boolean>(false);
+  customRepeatCount = signal<number | null>(null);
   editingPromoIndex = signal<number | null>(null);
   editingTicketIndex = signal<number | null>(null);
   selectedMetaTags = signal<Set<string>>(new Set());
-
-  // Participant signals
-  coHosts = signal<User[]>([]);
-  sponsors = signal<User[]>([]);
-  speakers = signal<User[]>([]);
-
-  // Visibility signal
   visibility = signal<'public' | 'invite-only'>('public');
-
-  // Repeating events signal
-  repeatingEvents = signal<any[]>([]);
   editingRepeatingEventId = signal<string | null>(null);
 
   step1Fields = ['title', 'date', 'address', 'category', 'description', 'meta_tags', 'start_time', 'end_time', 'until_finished'];
   step2Fields = ['tickets', 'promo_codes', 'is_subscription', 'subscription_plan', 'host_pays_fees', 'additional_fees'];
   step3Fields: string[] = [];
   step4Fields: string[] = [];
+
   stepHeading = computed(() => {
     const step = this.currentStep();
     switch (step) {
@@ -204,47 +232,6 @@ export class CreateEvent {
     return false;
   });
 
-  metaTagOptions: NetworkTag[] = [
-    { name: 'Agriculture', icon: '🌿', value: 'agriculture' },
-    { name: 'Art & Entertainment', icon: '🎨', value: 'art_entertainment' },
-    { name: 'Business & Finance', icon: '📈', value: 'business_finance' },
-    { name: 'Education', icon: '📚', value: 'education' },
-    { name: 'Engineering', icon: '⚙️', value: 'engineering' },
-    { name: 'Health & Medicine', icon: '🏥', value: 'health_medicine' },
-    { name: 'Software & IT', icon: '💻', value: 'software_it' },
-    { name: 'Hospitality & Tourism', icon: '✈️', value: 'hospitality_tourism' },
-    { name: 'Law & Public Policy', icon: '⚖�️', value: 'law_policy' },
-    { name: 'Manufacturing', icon: '🏭', value: 'manufacturing' },
-    { name: 'Retail & Sales', icon: '🏪', value: 'retail_sales' },
-    { name: 'Student', icon: '🎓', value: 'student' },
-    { name: 'Service & Freelancing', icon: '🤝', value: 'service_freelancing' },
-    { name: 'Others', icon: '🎲', value: 'others' }
-  ];
-
-  repeatOptions: { label: string; value: 'weekly' | 'monthly' | 'custom' }[] = [
-    { label: 'Weekly', value: 'weekly' },
-    { label: 'Monthly', value: 'monthly' },
-    { label: 'Custom', value: 'custom' }
-  ];
-
-  repeatCountOptions: { label: string; value: number | 'custom' }[] = [
-    { label: '2', value: 2 },
-    { label: '3', value: 3 },
-    { label: '4', value: 4 },
-    { label: 'Custom', value: 'custom' }
-  ];
-  sections = [
-    {
-      type: 'preEventQuestions',
-      label: 'Pre-Event',
-      placeholder: 'Displayed when user signs up for the event.'
-    },
-    {
-      type: 'postEventQuestions',
-      label: 'Post-Event',
-      placeholder: 'A feedback survey after the event has concluded.'
-    }
-  ];
   constructor() {
     this.eventForm()
       .get('until_finished')
@@ -262,8 +249,8 @@ export class CreateEvent {
       this.eventForm().patchValue(this.eventData as any);
       this.selectedMetaTags.set(new Set(this.eventData.meta_tags as string[]));
       this.tickets.set(this.eventData.tickets as Ticket[]);
-      this.discount.set(this.eventData.promo_codes as PromoCode[]);
-      this.coHosts.set(this.eventData.co_hosts as User[]);
+      this.promoCodes.set(this.eventData.promo_codes as PromoCode[]);
+      this.co_hosts.set(this.eventData.co_hosts as User[]);
       this.sponsors.set(this.eventData.sponsors as User[]);
       this.speakers.set(this.eventData.speakers as User[]);
       this.visibility.set(this.eventData.visibility as 'public' | 'invite-only');
@@ -272,7 +259,6 @@ export class CreateEvent {
     } else {
       const currentDate = this.getTodayDate();
       const currentTime = this.getCurrentTime();
-      const endTime = this.addMinutesToTime(currentTime, 30);
 
       this.eventForm().patchValue({
         date: currentDate,
@@ -307,7 +293,7 @@ export class CreateEvent {
     const metaTagsControl = form.get('meta_tags');
     const currentSelected = metaTagsControl?.value || [];
 
-    const data = await this.modalService.openNetworkTagModal(this.metaTagOptions, currentSelected);
+    const data = await this.modalService.openNetworkTagModal(this.metaTagOptions(), currentSelected);
     if (data && Array.isArray(data)) {
       const selectedSet = new Set(data);
       this.selectedMetaTags.set(selectedSet);
@@ -318,29 +304,26 @@ export class CreateEvent {
     }
   }
 
-  // Optional helper method for modal
-  getModalType(sectionType: string): 'pre-event' | 'post-event' {
-    return sectionType === 'preEventQuestions' ? 'pre-event' : 'post-event';
-  }
-
   getSelectedTagValues(): string[] {
     return Array.from(this.selectedMetaTags());
   }
 
   getTagByName(value: string): NetworkTag | undefined {
-    return this.metaTagOptions.find((tag) => tag.value === value);
+    return this.metaTagOptions().find((tag) => tag.value === value);
   }
 
   getTodayDate(): string {
     const today = new Date();
     return today.toISOString().split('T')[0];
   }
+
   getCurrentTime(): string {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, '0');
     const minutes = now.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
   }
+
   addMinutesToTime(time: string, minutes: number): string {
     const [hours, mins] = time.split(':').map(Number);
     const date = new Date();
@@ -348,10 +331,23 @@ export class CreateEvent {
     date.setMinutes(date.getMinutes() + minutes);
     return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
   }
+
   get isMetaTagsInvalid(): boolean {
     const form = this.eventForm();
     const metaTagsControl = form.get('meta_tags');
-    return !!(metaTagsControl?.invalid && (metaTagsControl?.touched || this.isSubmitted()));
+    return !!(metaTagsControl?.invalid && metaTagsControl?.touched);
+  }
+
+  getFieldValue<T>(field: string): T | null {
+    return this.eventForm().get(field)?.value ?? null;
+  }
+
+  getSectionQuestions(type: string) {
+    return (this.getFieldValue('questionnaire') as any)?.[type] ?? [];
+  }
+
+  hasQuestions(type: string): boolean {
+    return this.getSectionQuestions(type).length > 0;
   }
 
   generateDescription(): void {
@@ -423,8 +419,8 @@ export class CreateEvent {
         price: data.ticket_type === 'free' ? '$0.00' : `$${parseFloat(data.price).toFixed(2)}`,
         quantity: data.quantity,
         description: data.description || null,
-        sales_start_date: data.sales_start_date || null,
-        sales_end_date: null,
+        sale_start_date: data.sale_start_date || null,
+        sale_end_date: data.sale_end_date || null,
         end_sale_on_event_start: data.end_sale_on_event_start
       };
 
@@ -452,7 +448,8 @@ export class CreateEvent {
         price: ticket.price.replace('$', ''),
         quantity: ticket.quantity || null,
         description: (ticket as any).description,
-        sales_start_date: ticket.sales_start_date || null,
+        sale_start_date : ticket.sale_start_date || null,
+        sale_end_date: ticket.sale_end_date || null,
         end_sale_on_event_start: ticket.end_sale_on_event_start ?? true,
         ticket_type: ticket.ticket_type
       };
@@ -473,7 +470,6 @@ export class CreateEvent {
   }
 
   async createFreeTicket() {
-    this.ticketType.set('free');
     await this.openTicketModal('free');
   }
 
@@ -486,7 +482,6 @@ export class CreateEvent {
     const ticketType = await this.modalService.openTicketTypeModal();
 
     if (ticketType) {
-      this.ticketType.set(ticketType);
       await this.openTicketModal(ticketType);
     }
   }
@@ -547,22 +542,22 @@ export class CreateEvent {
       };
 
       if (this.editingPromoIndex() !== null) {
-        const currentDiscounts = [...this.discount()];
-        currentDiscounts[this.editingPromoIndex()!] = promoData;
-        this.discount.set(currentDiscounts);
+        const currentPromoCodes = [...this.promoCodes()];
+        currentPromoCodes[this.editingPromoIndex()!] = promoData;
+        this.promoCodes.set(currentPromoCodes);
         this.editingPromoIndex.set(null);
       } else {
-        const currentDiscounts = [...this.discount()];
-        currentDiscounts.push(promoData);
-        this.discount.set(currentDiscounts);
+        const currentPromoCodes = [...this.promoCodes()];
+        currentPromoCodes.push(promoData);
+        this.promoCodes.set(currentPromoCodes);
       }
-      this.eventForm().get('promo_codes')?.setValue(this.discount());
+      this.eventForm().get('promo_codes')?.setValue(this.promoCodes());
     }
   }
 
   async editPromoCode(index: number) {
     this.editingPromoIndex.set(index);
-    const promo = this.discount()[index];
+    const promo = this.promoCodes()[index];
     if (promo) {
       const initialData: Partial<PromoCodeFormData> = {
         promoCode: promo.promoCode,
@@ -581,10 +576,10 @@ export class CreateEvent {
 
     if (!confirmed) return;
 
-    const currentDiscounts = [...this.discount()];
-    currentDiscounts.splice(index, 1);
-    this.discount.set(currentDiscounts);
-    this.eventForm().get('promo_codes')?.setValue(currentDiscounts);
+    const currentPromoCodes = [...this.promoCodes()];
+    currentPromoCodes.splice(index, 1);
+    this.promoCodes.set(currentPromoCodes);
+    this.eventForm().get('promo_codes')?.setValue(currentPromoCodes);
   }
 
   async resetPromoForm() {
@@ -593,12 +588,15 @@ export class CreateEvent {
   }
 
   getPromoCodeOriginalIndex(promo: PromoCode): number {
-    return this.discount().findIndex((p) => p === promo);
+    return this.promoCodes().findIndex((p) => p === promo);
   }
 
   previousStep(): void {
     if (this.currentStep() > 1) {
       this.currentStep.set(this.currentStep() - 1);
+    } else if (this.currentStep() === 1 && this.isModalMode) {
+      this.modalService.close();
+      return;
     }
   }
 
@@ -671,27 +669,6 @@ export class CreateEvent {
     }
   }
 
-  customRepeatCount = signal<number | null>(null);
-
-  handleRepeatCountClick(value: number | 'custom') {
-    if (value === 'custom') {
-      this.eventForm().patchValue({ repeat_count: 'custom' });
-      return;
-    }
-
-    this.customRepeatCount.set(null);
-    this.eventForm().patchValue({ repeat_count: value });
-  }
-  onCustomRepeatValueChange(event: any) {
-    const val = Number(event?.target?.value || 0);
-
-    this.customRepeatCount.set(val);
-
-    this.eventForm().patchValue({
-      repeat_count: val
-    });
-  }
-
   async openTimeModal(type: 'start_time' | 'end_time'): Promise<void> {
     const form = this.eventForm();
     const currentTime = form.get(type)?.value || '';
@@ -728,22 +705,12 @@ export class CreateEvent {
     this.eventForm().get('category')?.setValue(category);
   }
 
-  onCoHostsChange(users: User[]): void {
-    this.coHosts.set(users);
-    const userIds = users.map((u) => u.uid);
-    this.eventForm().patchValue({ co_hosts: userIds });
-  }
+  onUsersChange(users: User[], field: 'co_hosts' | 'sponsors' | 'speakers') {
+    this[field].set(users);
 
-  onSponsorsChange(users: User[]): void {
-    this.sponsors.set(users);
-    const userIds = users.map((u) => u.uid);
-    this.eventForm().patchValue({ sponsors: userIds });
-  }
-
-  onSpeakersChange(users: User[]): void {
-    this.speakers.set(users);
-    const userIds = users.map((u) => u.uid);
-    this.eventForm().patchValue({ speakers: userIds });
+    this.eventForm().patchValue({
+      [field]: users.map((u) => u.uid)
+    });
   }
 
   setVisibility(type: 'public' | 'invite-only'): void {
@@ -759,22 +726,33 @@ export class CreateEvent {
     this.eventForm().patchValue({ repeat_frequency: frequency });
   }
 
-  setRepeatCount(count: number | 'custom'): void {
-    this.eventForm().patchValue({ repeat_count: count });
+  handleRepeatCountClick(value: number | 'custom') {
+    if (value === 'custom') {
+      this.eventForm().patchValue({ repeat_count: 'custom' });
+      return;
+    }
+
+    this.customRepeatCount.set(null);
+    this.eventForm().patchValue({ repeat_count: value });
   }
 
-  generateRepeatingEvents(): void {
-    const frequency = this.eventForm().get('repeat_frequency')?.value;
-    const count = this.eventForm().get('repeat_count')?.value || 0;
-    const baseDate = this.eventForm().get('date')?.value || new Date().toISOString().split('T')[0];
-    const baseTitle = this.eventForm().get('title')?.value || '';
-    const baseAddress = this.eventForm().get('address')?.value || '';
-    const baseStartTime = this.eventForm().get('start_time')?.value || '';
-    const baseEndTime = this.eventForm().get('end_time')?.value || '';
-    const baseDescription = this.eventForm().get('description')?.value || '';
+  onCustomRepeatValueChange(event: any) {
+    const val = Number(event?.target?.value || 0);
 
+    this.customRepeatCount.set(val);
+
+    this.eventForm().patchValue({
+      repeat_count: val
+    });
+  }
+  generateRepeatingEvents(): void {
+    const form = this.eventForm();
+    const values = form.getRawValue();
+
+    const { repeat_frequency: frequency, repeat_count: count = 0, date, title, address, start_time, end_time, description } = values;
+
+    const baseDateObj = new Date(date ?? new Date().toISOString().split('T')[0]);
     const events: any[] = [];
-    const baseDateObj = new Date(baseDate || '');
 
     for (let i = 1; i <= (count as number); i++) {
       const eventDate = new Date(baseDateObj);
@@ -785,67 +763,44 @@ export class CreateEvent {
         eventDate.setMonth(baseDateObj.getMonth() + (i - 1));
       }
 
-      const eventInstance: any = {
-        ...this.eventForm().value,
+      events.push({
+        ...values,
         id: `repeating-event-${i}-${Date.now()}`,
         eventNumber: i,
-        title: baseTitle,
+        title,
         date: eventDate.toISOString().split('T')[0],
-        start_time: baseStartTime,
-        end_time: baseEndTime,
-        address: baseAddress,
-        description: baseDescription
-      };
-
-      events.push(eventInstance);
+        start_time,
+        end_time,
+        address,
+        description
+      });
     }
 
     this.repeatingEvents.set(events);
-    this.eventForm().patchValue({ repeating_events: events });
+    form.patchValue({ repeating_events: events });
   }
 
   async editRepeatingEvent(event: any): Promise<void> {
     const result = await this.modalService.openRepeatingEventModal(event);
+    if (!result || result.role !== 'save') return;
 
-    if (result && result.role === 'save' && result.data) {
-      const updatedEvents = this.repeatingEvents().map((e) => (e.id === event.id ? { ...e, ...result.data } : e));
-      this.repeatingEvents.set(updatedEvents);
-      this.eventForm().patchValue({ repeating_events: updatedEvents });
-    }
+    const updatedEvents = this.repeatingEvents().map((e) => (e.id === event.id ? { ...e, ...result.data } : e));
+
+    this.repeatingEvents.set(updatedEvents);
+    this.eventForm().patchValue({ repeating_events: updatedEvents });
   }
 
   async deleteRepeatingEvent(eventId: string) {
     const confirmed = await this.confirmDelete('This event occurrence will be permanently removed.');
-
     if (!confirmed) return;
 
     const updatedEvents = this.repeatingEvents().filter((e) => e.id !== eventId);
+
     this.repeatingEvents.set(updatedEvents);
-    this.eventForm().patchValue({ repeating_events: updatedEvents });
-
-    const newCount = updatedEvents.length;
-    if (newCount > 0) {
-      this.eventForm().patchValue({ repeat_count: newCount });
-    }
-  }
-
-  formatEventDate(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = monthNames[date.getMonth()];
-    return `${day} ${month}`;
-  }
-
-  async createEvent() {
-    console.log(this.eventForm().value);
-    this.isSubmitted.set(true);
-    return;
-  }
-
-  cancelModal(): void {
-    this.modalService.close();
+    this.eventForm().patchValue({
+      repeating_events: updatedEvents,
+      repeat_count: updatedEvents.length || null
+    });
   }
 
   async saveRepeatingEventChanges(): Promise<void> {
@@ -857,50 +812,51 @@ export class CreateEvent {
     this.modalService.close();
   }
 
-  async openQuestionnaireModal(type: 'pre-event' | 'post-event') {
-    // open modal
-    const currentQuestionnaire = this.eventForm().get('questionnaire')?.value || {};
-    const updatedQuestionnaire = {
-      preEventQuestions: currentQuestionnaire.preEventQuestions || [],
-      postEventQuestions: currentQuestionnaire.postEventQuestions || []
+  async openQuestionnaireModal(type: 'pre_event' | 'post_event') {
+    const form = this.eventForm();
+    const current = form.get('questionnaire')?.value ?? {};
+
+    const existing = current[type] ?? [];
+
+    const result = await this.modalService.openQuestionnaireModal(type, existing);
+
+    if (!result) return;
+
+    const updated = {
+      ...current,
+      [type]: result.questions ?? []
     };
 
-    const result = await this.modalService.openQuestionnaireModal(
-      type,
-      type === 'pre-event' ? updatedQuestionnaire.preEventQuestions : updatedQuestionnaire.postEventQuestions
-    );
-
-    if (result) {
-      if (type === 'pre-event') {
-        updatedQuestionnaire.preEventQuestions = result?.questions || [];
-      } else {
-        updatedQuestionnaire.postEventQuestions = result?.questions || [];
-      }
-
-      this.eventForm().patchValue({
-        questionnaire: updatedQuestionnaire
-      });
-
-      this.cd.detectChanges();
-    }
+    form.patchValue({ questionnaire: updated });
+    this.cd.detectChanges();
   }
 
-  async deleteEventQuestionnaire(sectionType: string) {
-    const type = this.getModalType(sectionType);
+  async deleteEventQuestionnaire(sectionType: 'pre_event' | 'post_event') {
     const confirm = await this.confirmDelete(
-      type === 'pre-event' ? 'Are you sure you want to delete all Pre-Event questions?' : 'Are you sure you want to delete all Post-Event questions?'
+      sectionType === 'pre_event'
+        ? 'Are you sure you want to delete all Pre-Event questions?'
+        : 'Are you sure you want to delete all Post-Event questions?'
     );
 
-    if (!confirm) return; // user cancelled
+    if (!confirm) return;
 
     const current = this.eventForm().get('questionnaire')?.value || {};
     const updated = {
       ...current,
-      preEventQuestions: type === 'pre-event' ? [] : current.preEventQuestions || [],
-      postEventQuestions: type === 'post-event' ? [] : current.postEventQuestions || []
+      pre_event: sectionType === 'pre_event' ? [] : current.pre_event || [],
+      post_event: sectionType === 'post_event' ? [] : current.post_event || []
     };
 
     this.eventForm().get('questionnaire')?.setValue(updated);
     this.cd.detectChanges();
+  }
+
+  cancelModal(): void {
+    this.modalService.close();
+  }
+
+  async createEvent() {
+    console.log(this.eventForm().value);
+    return;
   }
 }

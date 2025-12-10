@@ -61,7 +61,6 @@ export class SubscriptionInput implements OnInit {
   showCreateSubscription = computed(() => this.isEnabled && !this.hasPlans());
 
   ngOnInit(): void {
-    // Initialize control if it doesn't exist
     if (!this.parentFormGroup.get(this.controlName)) {
       this.parentFormGroup.addControl(this.controlName, this.fb.control(false));
     }
@@ -69,7 +68,6 @@ export class SubscriptionInput implements OnInit {
       this.parentFormGroup.addControl(this.subscriptionIdControlName, this.fb.control(null));
     }
 
-    // Watch for toggle changes - clear subscription ID when disabled
     const control = this.parentFormGroup.get(this.controlName);
     if (control) {
       control.valueChanges.subscribe((value) => {

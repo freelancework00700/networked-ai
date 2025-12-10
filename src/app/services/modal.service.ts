@@ -309,7 +309,7 @@ export class ModalService {
     return data && role === 'save' ? { data, role } : null;
   }
 
-  async openQuestionnaireModal(type: 'pre-event' | 'post-event', initialData?: any): Promise<any> {
+  async openQuestionnaireModal(type: 'pre_event' | 'post_event', initialData?: any): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,

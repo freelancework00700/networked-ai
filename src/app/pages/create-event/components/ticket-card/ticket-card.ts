@@ -10,8 +10,8 @@ export interface Ticket {
   price: string;
   quantity?: number | null;
   description?: string | null;
-  sales_start_date?: string | null;
-  sales_end_date?: string | null;
+  sale_start_date?: string | null;
+  sale_end_date?: string | null;
   end_sale_on_event_start?: boolean;
 }
 
@@ -104,7 +104,7 @@ export class TicketCard {
     if (ticket.is_free_ticket) {
       return 'FREE';
     }
-    return ticket.price.startsWith('$') ? ticket.price : '$' + ticket.price;
+    return ticket?.price?.startsWith('$') ? ticket.price : '$' + ticket.price;
   });
 
   formattedQuantity = computed(() => {
@@ -113,7 +113,7 @@ export class TicketCard {
   });
 
   saleStartDisplay = computed(() => {
-    const salesStartDate = this.ticket().sales_start_date;
+    const salesStartDate = this.ticket().sale_start_date;
     if (salesStartDate) {
       return `${this.formatDate(salesStartDate)}, ${this.formatTime(salesStartDate)}`;
     }
@@ -129,8 +129,8 @@ export class TicketCard {
         return `${this.formatEventDate(eventDate)}, ${this.formatEventTime(eventTime)}`;
       }
       return 'When event starts';
-    } else if (ticket.sales_end_date) {
-      return `${this.formatDate(ticket.sales_end_date)}, ${this.formatTime(ticket.sales_end_date)}`;
+    } else if (ticket.sale_end_date) {
+      return `${this.formatDate(ticket.sale_end_date)}, ${this.formatTime(ticket.sale_end_date)}`;
     }
     return 'Not set';
   });
@@ -140,7 +140,6 @@ export class TicketCard {
     if (!ticketDescription) {
       return 'Insert one or two lines of the description here.';
     }
-    // Strip HTML tags for display
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = ticketDescription;
     const plainText = tempDiv.textContent || tempDiv.innerText || '';

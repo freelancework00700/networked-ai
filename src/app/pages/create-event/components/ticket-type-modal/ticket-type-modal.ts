@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
+import { TicketTypeItem } from '../ticket-type-item';
 import { ModalController } from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { TicketTypeItem } from '../ticket-type-item';
 
 export interface TicketTypeOption {
   type: 'standard' | 'early-bird' | 'sponsor';
@@ -12,10 +12,10 @@ export interface TicketTypeOption {
 
 @Component({
   selector: 'ticket-type-modal',
-  templateUrl: './ticket-type-modal.html',
   styleUrl: './ticket-type-modal.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TicketTypeItem]
+  templateUrl: './ticket-type-modal.html',
+  imports: [CommonModule, TicketTypeItem],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TicketTypeModal {
   private modalCtrl = inject(ModalController);

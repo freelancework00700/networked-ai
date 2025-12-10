@@ -14,24 +14,24 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators, For
   templateUrl: './questionnaire-form.html',
   styleUrl: './questionnaire-form.scss',
   imports: [
-    ReactiveFormsModule,
     Button,
-    TitleCasePipe,
     TextInput,
-    SelectModule,
-    CheckboxModule,
+    IonReorder,
     NumberInput,
-    InputTextModule,
+    SelectModule,
+    TitleCasePipe,
+    CheckboxModule,
     IonReorderGroup,
-    IonReorder
+    InputTextModule,
+    ReactiveFormsModule
   ]
 })
 export class QuestionnaireForm {
-  @Input() type: 'pre-event' | 'post-event' = 'pre-event';
-  @Input() initialData: any;
+  fb = inject(FormBuilder);
   modalService = inject(ModalService);
   modalCtrl = inject(ModalController);
-  fb = inject(FormBuilder);
+  @Input() type: 'pre-event' | 'post-event' = 'pre-event';
+  @Input() initialData: any;
 
   showSelectionBox = signal(false);
 

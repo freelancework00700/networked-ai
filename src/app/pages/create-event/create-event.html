@@ -91,7 +91,7 @@
                   iconName="pi-clock"
                   [showLabel]="false"
                   controlName="end_time"
-                  [required]="!eventForm().get('until_finished')?.value"
+                  [required]="!getFieldValue('until_finished')"
                   (click)="openTimeModal('end_time')"
                   class="w-full"
                 />
@@ -200,8 +200,8 @@
               @for (ticket of tickets(); track ticket.id || $index; let index = $index) {
                 <ticket-card
                   [ticket]="ticket"
-                  [eventDate]="eventForm().get('date')?.value"
-                  [eventStartTime]="eventForm().get('start_time')?.value"
+                  [eventDate]="getFieldValue('date')"
+                  [eventStartTime]="getFieldValue('start_time')"
                   (edit)="editTicket(index)"
                   (delete)="deleteTicket(index)"
                 />
@@ -235,9 +235,9 @@
                   @if (isEventCompletelyFree()) {
                     <div class="body-regular-14 natural-03">Unapplicable to free events</div>
                   } @else {
-                    @if (discount()) {
+                    @if (promoCodes()) {
                       <div class="flex flex-col gap-3">
-                        @for (promo of discount(); track promo.promoCode) {
+                        @for (promo of promoCodes(); track promo.promoCode) {
                           <promo-code-card
                             [promo]="promo"
                             (edit)="editPromoCode(getPromoCodeOriginalIndex(promo))"
@@ -283,20 +283,20 @@
                     <div class="body-regular-14 natural-03">Unapplicable to free events</div>
                   } @else {
                     <div class="w-full border-l-2 border-neutral-300 pl-4">
-                      @if (!eventForm().get('host_pays_fees')?.value) {
+                      @if (!getFieldValue('host_pays_fees')) {
                         <div class="flex items-center gap-4 mb-2">
                           <ion-label class="body-regular-14 natural-01"> Additional fee for guests (%) </ion-label>
                           <ion-toggle formControlName="guest_fee_enabled" />
                         </div>
 
-                        @if (eventForm().get('guest_fee_enabled')?.value) {
+                        @if (getFieldValue('guest_fee_enabled')) {
                           <div class="w-[100px]">
                             <number-input
-                              controlName="hostCharge"
+                              controlName="additional_fees"
                               placeholder="0%"
                               [max]="100"
                               [min]="0"
-                              [required]="eventForm().get('guest_fee_enabled')?.value ?? false"
+                              [required]="getFieldValue('guest_fee_enabled') ?? false"
                             />
                           </div>
                         }
@@ -324,19 +324,19 @@
               <div>
                 <toggle-input controlName="is_repeating" label="Repeating Event" />
 
-                @if (eventForm().get('is_repeating')?.value) {
+                @if (getFieldValue('is_repeating')) {
                   <div class="w-full mt-2">
                     <div class="border-l-3 border-neutral-300 pl-3">
                       <!-- Repeat Frequency -->
                       <div class="flex gap-2 mb-4">
-                        @for (item of repeatOptions; track item.value) {
+                        @for (item of repeatOptions(); track item.value) {
                           <ion-chip
                             outline="true"
                             class="flex-1 h-11 rounded-lg border cursor-pointer flex items-center justify-center px-4"
-                            [color]="eventForm().get('repeat_frequency')?.value === item.value ? 'lgold' : ''"
-                            [style.background-color]="eventForm().get('repeat_frequency')?.value === item.value ? '#FEF7EC' : ''"
+                            [color]="getFieldValue('repeat_frequency') === item.value ? 'lgold' : ''"
+                            [style.background-color]="getFieldValue('repeat_frequency') === item.value ? '#FEF7EC' : ''"
                             [style.border-color]="
-                              eventForm().get('repeat_frequency')?.value === item.value ? 'var(--brand-04)' : 'var(--p-inputtext-border-color)'
+                              getFieldValue('repeat_frequency') === item.value ? 'var(--brand-04)' : 'var(--p-inputtext-border-color)'
                             "
                             (click)="setRepeatFrequency(item.value)"
                           >
@@ -350,15 +350,15 @@
                       <label class="neutral-02 body-14M block mb-2"> How many times will the event occur in total? </label>
 
                       <div class="flex gap-2">
-                        @for (item of repeatCountOptions; track item.value) {
+                        @for (item of repeatCountOptions(); track item.value) {
                           @if (item.value !== 'custom') {
                             <ion-chip
                               outline="true"
                               class="flex-1 h-12 rounded-lg border cursor-pointer flex items-center justify-center px-4 relative"
-                              [color]="eventForm().get('repeat_count')?.value === item.value ? 'lgold' : ''"
-                              [style.background-color]="eventForm().get('repeat_count')?.value === item.value ? '#FEF7EC' : ''"
+                              [color]="getFieldValue('repeat_count') === item.value ? 'lgold' : ''"
+                              [style.background-color]="getFieldValue('repeat_count') === item.value ? '#FEF7EC' : ''"
                               [style.border-color]="
-                                eventForm().get('repeat_count')?.value === item.value ? 'var(--brand-04)' : 'var(--p-inputtext-border-color)'
+                                getFieldValue('repeat_count') === item.value ? 'var(--brand-04)' : 'var(--p-inputtext-border-color)'
                               "
                               (click)="handleRepeatCountClick(item.value)"
                             >
@@ -403,13 +403,13 @@
               </div>
             }
             <!-- Co-Hosts -->
-            <participant-input label="Co-Host(s)" type="co-host" [selectedUsers]="coHosts()" (usersChange)="onCoHostsChange($event)" />
+            <participant-input label="Co-Host(s)" type="co-host" [selectedUsers]="co_hosts()" (usersChange)="onUsersChange($event, 'co_hosts')" />
 
             <!-- Sponsors -->
-            <participant-input label="Sponsor(s)" type="sponsor" [selectedUsers]="sponsors()" (usersChange)="onSponsorsChange($event)" />
+            <participant-input label="Sponsor(s)" type="sponsor" [selectedUsers]="sponsors()" (usersChange)="onUsersChange($event, 'sponsors')" />
 
             <!-- Speakers -->
-            <participant-input label="Speaker(s)" type="speaker" [selectedUsers]="speakers()" (usersChange)="onSpeakersChange($event)" />
+            <participant-input label="Speaker(s)" type="speaker" [selectedUsers]="speakers()" (usersChange)="onUsersChange($event, 'speakers')" />
 
             <!-- Visibility -->
             <div class="flex items-center justify-between">
@@ -440,7 +440,7 @@
             <div>
               <toggle-input controlName="allow_plus_ones" label="Allow +1’s?" />
 
-              @if (eventForm().get('allow_plus_ones')?.value) {
+              @if (getFieldValue('allow_plus_ones')) {
                 <div class="w-full border-l-3 border-neutral-300 pl-2 mt-2">
                   <label class="neutral-02 body-14M block mb-2"> How many additional person per guest? </label>
 
@@ -448,7 +448,7 @@
                     @for (item of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track item) {
                       <ion-chip
                         class="circle-chip cursor-pointer flex items-center justify-center"
-                        [class.active-chip]="eventForm().get('plus')?.value === item"
+                        [class.active-chip]="getFieldValue('plus') === item"
                         (click)="setPlusCount(item)"
                       >
                         +{{ item }}
@@ -463,25 +463,25 @@
             <div class="flex flex-col gap-3">
               <toggle-input controlName="questionnaire" label="Questionnaire" />
 
-              @if (eventForm().get('questionnaire')?.value) {
-                @for (section of sections; track section.type) {
+              @if (getFieldValue('questionnaire') !== null) {
+                @for (section of sections(); track section.type) {
                   <div class="border border-surface-300 rounded-xl p-4">
                     <!-- Header Row: Title + Actions -->
                     <div class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
-                        @if (eventForm().get('questionnaire')?.value?.[section.type]?.length) {
+                        @if (hasQuestions(section.type)) {
                           <img src="assets/svg/checkIcon.svg" alt="{{ section.label }}" class="w-5 h-5" />
                         }
                         <div class="font-medium text-surface-900">{{ section.label }}</div>
                       </div>
 
                       <div class="flex gap-4">
-                        @if (!eventForm().get('questionnaire')?.value?.[section.type]?.length) {
-                          <button (click)="openQuestionnaireModal(getModalType(section.type))">
+                        @if (!hasQuestions(section.type)) {
+                          <button (click)="openQuestionnaireModal(section.type)">
                             <i class="pi pi-plus text-gray-700"></i>
                           </button>
                         } @else {
-                          <button (click)="openQuestionnaireModal(getModalType(section.type))">
+                          <button (click)="openQuestionnaireModal(section.type)">
                             <img src="assets/svg/editIcon.svg" alt="Edit" />
                           </button>
 
@@ -494,11 +494,11 @@
 
                     <!-- Content Row: List of questions or placeholder -->
                     <div class="mt-2">
-                      @if (!eventForm().get('questionnaire')?.value?.[section.type]?.length) {
+                      @if (!hasQuestions(section.type)) {
                         <div class="text-sm text-gray-500">{{ section.placeholder }}</div>
                       } @else {
                         <ul class="list-disc list-inside text-sm text-gray-500 space-y-1 pl-2">
-                          @for (question of eventForm().get('questionnaire')?.value?.[section.type]; track question.id) {
+                          @for (question of getSectionQuestions(section.type); track question.id) {
                             <li>{{ question.question }}</li>
                           }
                         </ul>

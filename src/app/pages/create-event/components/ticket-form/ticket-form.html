@@ -49,15 +49,15 @@
 
     <!-- Sales Start -->
     <div>
-      <label class="block neutral-02 body-14M pb-1">Sales Start</label>
+      <label class="block neutral-02 body-14M pb-1">Sale Start</label>
       <div class="flex items-center gap-2 w-full">
         <text-input
           label="Date"
           [showLabel]="false"
           iconName="pi-calendar"
           placeholder="Select date"
-          (click)="openDateModal('sales_start_date')"
-          controlName="sales_start_date"
+          (click)="openDateModal('sale_start_date')"
+          controlName="sale_start_date"
           class="w-full"
         />
         <text-input
@@ -65,8 +65,8 @@
           [showLabel]="false"
           iconName="pi-clock"
           placeholder="Select time"
-          controlName="sales_start_time"
-          (click)="openTimeModal('sales_start_time')"
+          controlName="sale_start_time"
+          (click)="openTimeModal('sale_start_time')"
           class="w-full"
         />
       </div>
@@ -81,15 +81,15 @@
     <!-- Sales End (shown when end_sale_on_event_start is false) -->
     @if (showEndSaleInputs()) {
       <div class="flex flex-col gap-1">
-        <label class="block neutral-02 body-14M">Sales End</label>
+        <label class="block neutral-02 body-14M">Sale End</label>
         <div class="flex items-center gap-2 w-full">
           <text-input
             label="Date"
             iconName="pi-calendar"
             [showLabel]="false"
-            (click)="openDateModal('sales_end_date')"
+            (click)="openDateModal('sale_end_date')"
             placeholder="Select date"
-            controlName="sales_end_date"
+            controlName="sale_end_date"
             class="w-full"
           />
           <text-input
@@ -97,8 +97,8 @@
             iconName="pi-clock"
             [showLabel]="false"
             placeholder="Select time"
-            controlName="sales_end_time"
-            (click)="openTimeModal('sales_end_time')"
+            controlName="sale_end_time"
+            (click)="openTimeModal('sale_end_time')"
             class="w-full"
           />
         </div>

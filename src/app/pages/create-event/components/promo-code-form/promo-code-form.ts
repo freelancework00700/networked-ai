@@ -4,7 +4,7 @@ import { TextInput } from '@/components/form/text-input';
 import { NumberInput } from '@/components/form/number-input';
 import { ModalController, IonChip } from '@ionic/angular/standalone';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Component, inject, ChangeDetectionStrategy, signal, OnInit, Input } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, Input } from '@angular/core';
 
 export interface PromoCodeFormData {
   promoCode: string;
@@ -22,7 +22,7 @@ export interface PromoCodeFormData {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, ReactiveFormsModule, Button, TextInput, NumberInput, IonChip]
 })
-export class PromoCodeForm implements OnInit {
+export class PromoCodeForm {
   private modalCtrl = inject(ModalController);
   private fb = inject(FormBuilder);
 
@@ -30,40 +30,28 @@ export class PromoCodeForm implements OnInit {
 
   promoForm = signal<FormGroup>(
     this.fb.group({
-      promoCode: ['', [Validators.required]],
       promotion_type: ['fixed', [Validators.required]],
-      promoPresent: ['', [Validators.required]],
-      capped_amount: [null],
-      redemption_limit: [null],
-      max_use_per_user: [1]
+      capped_amount: [null]
     })
   );
   promotionType = signal<'percentage' | 'fixed'>('fixed');
 
-  ngOnInit(): void {
-    const data = this.initialData;
-    const initialType = data?.promotion_type || 'fixed';
-    this.promotionType.set(initialType);
-
-    const form = this.promoForm();
-
-    form.patchValue({
-      promoCode: data?.promoCode || '',
-      promotion_type: initialType,
-      promoPresent: data?.promoPresent || '',
-      capped_amount: data?.capped_amount || null,
-      redemption_limit: data?.redemption_limit || null,
-      max_use_per_user: data?.max_use_per_user || 1
-    });
+  ionViewWillEnter(): void {
+    if (this.initialData) {
+      this.promotionType.set(this.initialData.promotion_type as 'percentage' | 'fixed');
+      this.promoForm().patchValue({
+        ...this.initialData
+      });
+    }
 
     // Watch promotion type changes
-    const typeControl = form.get('promotion_type');
+    const typeControl = this.promoForm().get('promotion_type');
     if (typeControl) {
       typeControl.valueChanges.subscribe((value) => {
         if (value === 'percentage' || value === 'fixed') {
           this.promotionType.set(value);
           // Reset promoPresent when type changes
-          const promoPresentControl = form.get('promoPresent');
+          const promoPresentControl = this.promoForm().get('promoPresent');
           if (promoPresentControl) {
             promoPresentControl.setValue('');
           }

@@ -25,7 +25,6 @@ export class ParticipantInput {
 
   usersChange = output<User[]>();
 
-  // Static mock data - 10 users
   private mockUsers: User[] = [
     { uid: '1', firstName: 'John', lastName: 'Doe', thumbnail: 'assets/images/profile.jpeg', email: 'john@example.com' },
     { uid: '2', firstName: 'Jane', lastName: 'Smith', thumbnail: 'assets/images/profile.jpeg', email: 'jane@example.com' },
@@ -44,19 +43,16 @@ export class ParticipantInput {
   searchInputs = signal<Record<number, string>>({});
   filteredUsers = signal<Record<number, User[]>>({});
 
-  // Computed to check if all slots are filled
   allSlotsFilled = computed(() => {
     const users = this.internalUsers();
     return users.length > 0 && !users.some((u) => u === null);
   });
 
-  // Computed to check if searchbar is visible
   isSearchbarVisible = computed(() => {
     return this.showInput() && this.internalUsers().some((u) => u === null);
   });
 
   constructor() {
-    // React to changes in selectedUsers input
     effect(() => {
       const users = this.selectedUsers();
       this.initializeUsers(users);
@@ -64,7 +60,6 @@ export class ParticipantInput {
   }
 
   private initializeUsers(users: User[]): void {
-    // Initialize with provided users or empty array
     if (users && users.length > 0) {
       this.internalUsers.set([...users]);
       this.showInput.set(true);
@@ -80,14 +75,11 @@ export class ParticipantInput {
   }
 
   addInput(): void {
-    // Always add a new null placeholder for new input (don't replace existing ones)
     const currentUsers = this.internalUsers();
     const newIndex = currentUsers.length;
 
-    // Add new entry to the end
     this.internalUsers.update((users) => [...users, null]);
 
-    // Initialize search input and filtered users for the new index
     this.searchInputs.update((inputs) => ({ ...inputs, [newIndex]: '' }));
     this.filteredUsers.update((users) => ({ ...users, [newIndex]: [] }));
   }
@@ -109,7 +101,6 @@ export class ParticipantInput {
     const searchTerm = value.toLowerCase();
     const currentUsers = this.internalUsers();
     const filtered = this.mockUsers.filter((user) => {
-      // Exclude already selected users
       const isSelected = currentUsers.some((u) => u && u.uid === user.uid);
       if (isSelected) return false;
 
@@ -126,23 +117,19 @@ export class ParticipantInput {
   onSelectUser(index: number, user: User): void {
     const currentUsers = this.internalUsers();
 
-    // Check if user is already selected (prevent duplicates)
     const isAlreadySelected = currentUsers.some((u) => u && u.uid === user.uid);
     if (isAlreadySelected) {
-      return; // Don't allow duplicate selection
+      return;
     }
 
-    // Always add the user as a new entry at the end (don't replace the empty slot at index)
     this.internalUsers.update((users) => [...users, user]);
 
-    // Clear filtered results for the current search index (keep the search input for the empty slot)
     this.filteredUsers.update((users) => {
       const newUsers = { ...users };
       delete newUsers[index];
       return newUsers;
     });
 
-    // Clear the search input for the current index so the empty slot is ready for new input
     this.searchInputs.update((inputs) => {
       const newInputs = { ...inputs };
       newInputs[index] = '';
@@ -154,16 +141,12 @@ export class ParticipantInput {
   }
 
   onClear(index: number): void {
-    const currentUsers = this.internalUsers();
-    const userToRemove = currentUsers[index];
-
     this.internalUsers.update((users) => {
       const updated = [...users];
       updated.splice(index, 1);
       return updated;
     });
 
-    // Reindex search inputs and filtered users
     this.searchInputs.update((inputs) => {
       const newInputs: Record<number, string> = {};
       Object.keys(inputs).forEach((key) => {
@@ -190,7 +173,6 @@ export class ParticipantInput {
       return newUsers;
     });
 
-    // If no users left, hide the input section
     if (this.internalUsers().length === 0) {
       this.showInput.set(false);
     }
@@ -209,18 +191,5 @@ export class ParticipantInput {
 
   getUsers(): (User | null)[] {
     return this.internalUsers();
-  }
-
-  getItemLabel(index: number): string {
-    // Convert label to singular form and remove (s) if present
-    // Handle labels like "Co-Host(s)", "Sponsor(s)", "Speaker(s)" -> "Host", "Sponsor", "Speaker"
-    let baseLabel = this.label().replace(/\(s\)/g, '').trim();
-
-    // Handle "Co-Host(s)" -> "Host"
-    if (baseLabel.toLowerCase().includes('co-host')) {
-      baseLabel = 'Host';
-    }
-
-    return `${baseLabel} ${index + 1}`;
   }
 }

@@ -39,8 +39,8 @@ export interface Ticket {
   price: string;
   quantity?: number | null;
   description?: string | null;
-  sales_start_date?: string | null;
-  sales_end_date?: string | null;
+  sale_start_date?: string | null;
+  sale_end_date?: string | null;
   end_sale_on_event_start?: boolean;
 }
 

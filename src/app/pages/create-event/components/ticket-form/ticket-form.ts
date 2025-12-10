@@ -13,10 +13,10 @@ export interface TicketFormData {
   price: string;
   quantity: number | null;
   description?: string;
-  sales_start_date?: string | null;
-  sales_start_time?: string | null;
-  sales_end_date?: string | null;
-  sales_end_time?: string | null;
+  sale_start_date?: string | null;
+  sale_start_time?: string | null;
+  sale_end_date?: string | null;
+  sale_end_time?: string | null;
   end_sale_on_event_start: boolean;
   free_for_subscribers?: boolean;
   ticket_type: 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard';
@@ -50,11 +50,9 @@ export class TicketForm implements OnInit {
   endSaleOnEventStart = signal<boolean>(true);
   conversation = signal<any[]>([]);
 
-  // Computed signal to check if end sale inputs should be shown
   showEndSaleInputs = computed(() => !this.endSaleOnEventStart());
-
-  // Computed signal to check if in customize mode
   isCustomize = computed(() => this.showDescriptionEditor());
+
 
   ngOnInit(): void {
     const isFree = this.ticketType === 'free';
@@ -68,8 +66,8 @@ export class TicketForm implements OnInit {
     // Initialize date/time values for form controls
     let salesStartDateValue = '';
     let salesStartTimeValue = '';
-    if (this.initialData?.sales_start_date) {
-      const date = new Date(this.initialData.sales_start_date);
+    if (this.initialData?.sale_start_date) {
+      const date = new Date(this.initialData.sale_start_date);
       salesStartDateValue = date.toISOString().split('T')[0];
       salesStartTimeValue = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
     } else {
@@ -83,8 +81,8 @@ export class TicketForm implements OnInit {
 
     let salesEndDateValue = '';
     let salesEndTimeValue = '';
-    if (this.initialData?.sales_end_date) {
-      const date = new Date(this.initialData.sales_end_date);
+      if (this.initialData?.sale_end_date) {
+      const date = new Date(this.initialData.sale_end_date);
       salesEndDateValue = date.toISOString().split('T')[0];
       salesEndTimeValue = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
     } else if (!endSaleOnEventStart) {
@@ -98,10 +96,10 @@ export class TicketForm implements OnInit {
       price: [isFree ? '0.00' : this.initialData?.price || '5.00', [Validators.required]],
       quantity: [this.initialData?.quantity || 500, [Validators.required]],
       description: [this.initialData?.description || ''],
-      sales_start_date: [salesStartDateValue, [Validators.required]],
-      sales_start_time: [salesStartTimeValue, [Validators.required]],
-      sales_end_date: [salesEndDateValue],
-      sales_end_time: [salesEndTimeValue],
+      sale_start_date: [salesStartDateValue, [Validators.required]],
+      sale_start_time: [salesStartTimeValue, [Validators.required]],
+      sale_end_date: [salesEndDateValue],
+      sale_end_time: [salesEndTimeValue],
       end_sale_on_event_start: [endSaleOnEventStart],
       free_for_subscribers: [this.initialData?.free_for_subscribers ?? false]
     });
@@ -114,9 +112,9 @@ export class TicketForm implements OnInit {
     form.get('end_sale_on_event_start')?.valueChanges.subscribe((value) => {
       this.endSaleOnEventStart.set(value ?? true);
 
-      // Update validators for sales_end_date and sales_end_time based on checkbox value
-      const salesEndDateControl = form.get('sales_end_date');
-      const salesEndTimeControl = form.get('sales_end_time');
+      // Update validators for sale_end_date and sale_end_time based on checkbox value
+      const salesEndDateControl = form.get('sale_end_date');
+      const salesEndTimeControl = form.get('sale_end_time');
 
       if (value) {
         // If end_sale_on_event_start is true, remove required validators
@@ -187,7 +185,6 @@ export class TicketForm implements OnInit {
 
     if (data) {
       if (data.type === 'value' && data.data) {
-        // Update description value
         const form = this.ticketForm();
         const descriptionControl = form.get('description');
         if (descriptionControl) {
@@ -195,7 +192,6 @@ export class TicketForm implements OnInit {
           descriptionControl.markAsTouched();
         }
       } else if (data.type === 'data' && data.data) {
-        // Update conversation data
         this.conversation.set(data.data);
       }
     }
@@ -203,7 +199,6 @@ export class TicketForm implements OnInit {
 
   saveTicket(): void {
     const form = this.ticketForm();
-
     if (form.invalid) {
       form.markAllAsTouched();
       return;
@@ -212,19 +207,17 @@ export class TicketForm implements OnInit {
     this.modalCtrl.dismiss({ ...form.value, ticket_type: this.ticketType }, 'save');
   }
 
-  async openDateModal(type: 'sales_start_date' | 'sales_end_date' = 'sales_start_date'): Promise<void> {
+  async openDateModal(type: 'sale_start_date' | 'sale_end_date' = 'sale_start_date'): Promise<void> {
     const form = this.ticketForm();
     const currentDate = form.get(type)?.value || '';
 
-    // Set min to today and max to event date for sales_start_date
-    // For sales_end_date, min should be sales_start_date (if set) or today
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
     const maxDate = this.eventDate || undefined;
 
     let minDate: string | undefined = todayStr;
-    if (type === 'sales_end_date') {
-      const salesStartDate = form.get('sales_start_date')?.value;
+    if (type === 'sale_end_date') {
+      const salesStartDate = form.get('sale_start_date')?.value;
       if (salesStartDate) {
         minDate = salesStartDate;
       }
@@ -232,26 +225,27 @@ export class TicketForm implements OnInit {
 
     const date = await this.modalService.openDateTimeModal('date', currentDate, minDate, maxDate);
     if (date) {
-      if (type === 'sales_start_date') {
-        form.patchValue({ sales_start_date: date });
+      if (type === 'sale_start_date') {
+        form.patchValue({ sale_start_date: date });
       } else {
-        form.patchValue({ sales_end_date: date });
+        form.patchValue({ sale_end_date: date });
       }
     }
   }
 
-  async openTimeModal(type: 'sales_start_time' | 'sales_end_time'): Promise<void> {
+  async openTimeModal(type: 'sale_start_time' | 'sale_end_time'): Promise<void> {
     const form = this.ticketForm();
     const currentTime = form.get(type)?.value || '';
 
     const time = await this.modalService.openDateTimeModal('time', currentTime);
     if (time) {
-      if (type === 'sales_start_time') {
-        form.patchValue({ sales_start_time: time });
+      if (type === 'sale_start_time') {
+        form.patchValue({ sale_start_time: time });
       } else {
-        form.patchValue({ sales_end_time: time });
+        form.patchValue({ sale_end_time: time });
       }
     }
+    console.log(form.value);
   }
 
   close(): void {

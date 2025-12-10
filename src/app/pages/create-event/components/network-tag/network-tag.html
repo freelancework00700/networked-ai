@@ -6,12 +6,10 @@
   <ion-grid class="ion-padding-horizontal ion-padding-top">
     <ion-row>
       @for (tag of tags; track tag.value) {
-        <div class="tag-col">
+        <div class="p-1">
           <button type="button" class="tag-button" [class.active]="isTagSelected(tag.value)" (click)="toggleTag(tag.value)">
-            <div class="tag-content">
-              <span [innerHTML]="tag.icon"></span>
-              <span>{{ tag.name }}</span>
-            </div>
+            <span [innerHTML]="tag.icon" class="pr-1"></span>
+            <span>{{ tag.name }}</span>
             @if (isTagSelected(tag.value)) {
               <i class="pi pi-times text-lg pl-2"></i>
             }
