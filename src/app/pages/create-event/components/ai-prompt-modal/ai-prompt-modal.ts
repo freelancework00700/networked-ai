@@ -78,7 +78,7 @@ export class AIPromptModal implements OnInit, AfterViewInit {
     try {
       const headers = new HttpHeaders({
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${environment.openai}`
+        Authorization: `Bearer ${environment.openaiKey}`
       });
 
       const result = await this.http

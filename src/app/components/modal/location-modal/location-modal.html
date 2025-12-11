@@ -1,31 +1,56 @@
-<div class="p-4">
+<div class="p-6">
   <!-- title -->
   <div class="flex items-center justify-center mb-4 text-center">
     <div class="heading-h3 neutral-01">{{ title }}</div>
   </div>
 
   <!-- location search input -->
-  <div class="mb-4">
+  <div>
     <p-iconfield>
-      <p-inputicon class="pi pi-map-marker" />
-      <input
-        pInputText
-        #searchInput
-        class="w-full h-[44px]"
-        [value]="selectedLocation()"
-        (input)="selectedLocation.set($any($event.target).value)"
-        placeholder="Search for a location..."
-      />
+      <!-- search icon -->
+      <p-inputicon class="pi pi-search" />
+
+      <!-- search input -->
+      <input pInputText [value]="searchQuery()" class="w-full h-[44px]" (input)="onSearchInput($event)" placeholder="Search for a location..." />
+
+      <!-- spinner when searching, clear icon when not searching and has value -->
+      @if (isSearching()) {
+        <p-inputicon class="pi pi-spin pi-spinner" />
+      } @else if (searchQuery()) {
+        <p-inputicon class="pi pi-times cursor-pointer" (click)="clearSearch()" />
+      }
     </p-iconfield>
   </div>
 
-  <!-- selected location display -->
-  @if (selectedLocation()) {
-    <div class="mb-4 p-3 bg-surface-50 rounded-md">
-      <p class="text-sm text-surface-600 mb-1">Selected Location:</p>
-      <p class="text-surface-900">{{ selectedLocation() }}</p>
-    </div>
-  }
+  <!-- search results -->
+  <div class="mt-6 max-h-[400px] overflow-y-auto">
+    @for (result of searchResults(); track result.latitude + result.longitude) {
+      <div
+        class="flex items-start relative border-b border-[#DBDBDB] py-3 gap-2 cursor-pointer hover:bg-surface-50 transition-colors"
+        (click)="selectLocation(result)"
+      >
+        <div>
+          <p-inputicon class="pi pi-map-marker !mt-0 !top-3 !text-[20px]" />
+        </div>
 
-  <app-button label="Confirm" (click)="confirm()" />
+        <div class="pl-7 flex flex-col gap-1 flex-1">
+          <div class="body-14M neutral-01">{{ result.address }}</div>
+          <div class="flex gap-2 neutral-03 body-12 items-center">
+            <div>{{ formatDistance(result.distance) }}</div>
+            @if (formatAddress(result)) {
+              <div class="bg-neutral-05 h-3 w-[2px]"></div>
+              <div>{{ formatAddress(result) }}</div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- no results message -->
+    @if (searchQuery().length >= 2 && !isSearching() && searchResults().length === 0) {
+      <div class="flex items-center justify-center py-4">
+        <div class="body-14M neutral-03">No locations found</div>
+      </div>
+    }
+  </div>
 </div>

@@ -1,16 +1,15 @@
-import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { ModalController } from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy, Input } from '@angular/core';
 
 @Component({
-  selector: 'image-confirm-modal',
-  templateUrl: './image-confirm-modal.html',
-  styleUrl: './image-confirm-modal.scss',
+  imports: [Button],
+  selector: 'app-profile-image-confirm-modal',
+  styleUrl: './profile-image-confirm-modal.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, Button]
+  templateUrl: './profile-image-confirm-modal.html'
 })
-export class ImageConfirmModal {
+export class ProfileImageConfirmModal {
   private modalCtrl = inject(ModalController);
 
   @Input() imageDataUrl: string = '';

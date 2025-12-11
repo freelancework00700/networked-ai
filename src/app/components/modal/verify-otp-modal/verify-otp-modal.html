@@ -1,0 +1,4 @@
+<div class="p-6 max-w-[672px] mx-auto">
+  <otp-input [mobile]="mobile" [isLoading]="isLoading()" (resendOtp)="resendOtp()" (otpChange)="otp.set($event)" />
+  <app-button label="Verify OTP" [isLoading]="isLoading()" (click)="verifyOtp()" />
+</div>

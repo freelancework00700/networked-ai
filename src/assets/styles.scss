@@ -127,6 +127,13 @@ ion-footer.footer-toolbar-padding ion-toolbar:last-of-type {
   }
 }
 
+.location-modal {
+  --height: 80%;
+  --max-width: 672px;
+  align-items: flex-end;
+  --border-radius: 32px;
+}
+
 .p-toggleswitch-handle {
   background: var(--neutral-07) !important;
 }

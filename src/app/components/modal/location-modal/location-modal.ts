@@ -1,68 +1,237 @@
-import { Button } from '../../form/button';
-import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
-import { ModalController } from '@ionic/angular/standalone';
-import { Component, inject, ChangeDetectionStrategy, signal, OnInit, ViewChild, ElementRef, AfterViewInit, Input } from '@angular/core';
+import { ModalService } from '@/services/modal.service';
+import { environment } from 'src/environments/environment';
+import { of, Subject, catchError, switchMap, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Input, inject, OnInit, signal, Component, ChangeDetectionStrategy } from '@angular/core';
+
+interface LocationResult {
+  city?: string;
+  state?: string;
+  address: string;
+  country?: string;
+  latitude: number;
+  distance: number; // in miles
+  longitude: number;
+}
+
+interface MapTilerContext {
+  id: string;
+  text: string;
+  kind?: string;
+  text_en?: string;
+  country_code?: string;
+  place_designation?: string;
+}
+
+interface MapTilerFeature {
+  id: string;
+  type: string;
+  geometry: {
+    type: string;
+    coordinates: [number, number]; // [longitude, latitude]
+  };
+  text: string;
+  text_en?: string;
+  relevance: number;
+  place_name: string;
+  place_name_en?: string;
+  context?: MapTilerContext[];
+  properties?: Record<string, any>;
+}
+
+interface MapTilerGeocodingResponse {
+  type: string;
+  query: string[];
+  attribution: string;
+  features: MapTilerFeature[];
+}
 
 @Component({
   selector: 'location-modal',
   templateUrl: './location-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, CommonModule, IconFieldModule, InputIconModule, InputTextModule, FormsModule]
+  imports: [IconFieldModule, InputIconModule, InputTextModule]
 })
-export class LocationModal implements OnInit, AfterViewInit {
-  private modalCtrl = inject(ModalController);
-
+export class LocationModal implements OnInit {
+  // inputs
+  @Input() location = '';
   @Input() title = 'Select Location';
-  @Input() initialLocation: string | null = null;
-  selectedLocation = signal<string>('');
-  selectedLat = signal<number | null>(null);
-  selectedLng = signal<number | null>(null);
 
-  @ViewChild('searchInput', { static: false }) searchInput!: ElementRef<HTMLInputElement>;
-  autocomplete!: google.maps.places.Autocomplete;
+  // services
+  private http = inject(HttpClient);
+  private modalService = inject(ModalService);
+  private searchSubject = new Subject<string>();
+
+  // signals
+  searchQuery = signal('');
+  isSearching = signal(true);
+  searchResults = signal<LocationResult[]>([]);
+
+  // default coordinates: 33.7501° N, 84.3885° W (Atlanta, GA)
+  private readonly DEFAULT_LAT = 33.7501;
+  private readonly DEFAULT_LNG = -84.3885;
 
   ngOnInit(): void {
-    if (this.initialLocation) {
-      this.selectedLocation.set(this.initialLocation);
-    }
+    // set search query
+    this.searchQuery.set(this.location);
+
+    // setup debounced search first
+    this.searchSubject
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
+        switchMap((query: string) => {
+          if (!query || query.trim().length < 2) {
+            this.searchResults.set([]);
+            return of([]);
+          }
+          return this.searchLocations(query);
+        })
+      )
+      .subscribe({
+        next: (results) => {
+          this.searchResults.set(results);
+          this.isSearching.set(false);
+        },
+        error: () => {
+          this.isSearching.set(false);
+          this.searchResults.set([]);
+        }
+      });
+
+    // trigger the search by emitting to the subject
+    this.searchSubject.next(this.searchQuery() || 'Atlanta, GA');
   }
 
-  ngAfterViewInit(): void {
-    this.initializeAutocomplete();
+  /**
+   * Searches for locations using MapTiler Geocoding API
+   * @param query - Search query string
+   * @returns Observable of location results with distance calculations
+   */
+  private searchLocations(query: string) {
+    this.isSearching.set(true);
+    const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json`;
+
+    return this.http
+      .get<MapTilerGeocodingResponse>(url, {
+        params: {
+          limit: '10',
+          key: environment.maptilerApiKey,
+          proximity: `${this.DEFAULT_LNG},${this.DEFAULT_LAT}` // Bias results towards default location
+        }
+      })
+      .pipe(
+        catchError((error) => {
+          console.error('MapTiler geocoding error:', error);
+          return of({ features: [] });
+        }),
+        switchMap((response) => {
+          const results: LocationResult[] = response.features.map((feature) => {
+            const [longitude, latitude] = feature.geometry.coordinates;
+
+            // Extract city, state, and country from context array
+            let city: string | undefined;
+            let state: string | undefined;
+            let country: string | undefined;
+
+            if (feature.context && feature.context.length > 0) {
+              // Context items are ordered from most specific to least specific
+              // City/municipality is usually near the start
+              // State/region is in the middle
+              // Country is near the end
+              for (const ctx of feature.context) {
+                const designation = ctx.place_designation?.toLowerCase();
+                if (!city && (designation === 'city' || designation === 'municipality' || designation === 'town')) {
+                  city = ctx.text_en || ctx.text;
+                } else if (!state && (designation === 'state' || designation === 'province' || designation === 'region')) {
+                  state = ctx.text_en || ctx.text;
+                } else if (!country && designation === 'country') {
+                  country = ctx.text_en || ctx.text;
+                }
+              }
+            }
+
+            // use place_name_en or place_name as the address
+            const address = feature.place_name_en || feature.place_name || feature.text_en || feature.text || '';
+
+            // calculate distance from default location
+            const distance = this.calculateDistance(this.DEFAULT_LAT, this.DEFAULT_LNG, latitude, longitude);
+
+            return { city, state, address, country, distance, latitude, longitude };
+          });
+
+          return of(results);
+        })
+      );
   }
 
-  initializeAutocomplete(): void {
-    if (!window.google || !google.maps || !google.maps.places) {
-      console.error('Google Maps library not loaded!');
-      return;
+  /**
+   * Calculates the distance between two coordinates using the Haversine formula
+   * @param lat1 - Latitude of first point
+   * @param lon1 - Longitude of first point
+   * @param lat2 - Latitude of second point
+   * @param lon2 - Longitude of second point
+   * @returns Distance in miles
+   */
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 3959; // Radius of the Earth in miles
+    const dLat = this.toRad(lat2 - lat1);
+    const dLon = this.toRad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+
+    return Math.round(distance * 10) / 10; // Round to 1 decimal place
+  }
+
+  // converts degrees to radians
+  private toRad(degrees: number) {
+    return degrees * (Math.PI / 180);
+  }
+
+  // formats distance for display
+  formatDistance(distance: number): string {
+    if (distance < 1) {
+      return `${Math.round(distance * 5280)}ft`; // Convert to feet
     }
+    return `${distance}mi`;
+  }
 
-    this.autocomplete = new google.maps.places.Autocomplete(this.searchInput.nativeElement);
+  // formats location address for display
+  formatAddress(result: LocationResult): string {
+    const parts: string[] = [];
+    if (result.city) parts.push(result.city);
+    if (result.state) parts.push(result.state);
+    if (parts.length === 0 && result.country) parts.push(result.country);
+    return parts.join(', ');
+  }
 
-    this.autocomplete.addListener('place_changed', () => {
-      const place = this.autocomplete.getPlace();
-      if (place && place.name) {
-        const address = place?.formatted_address || '';
-        this.selectedLocation.set(address);
-        this.selectedLat.set(place?.geometry?.location?.lat() || null);
-        this.selectedLng.set(place?.geometry?.location?.lng() || null);
-      }
+  onSearchInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const query = input.value;
+    this.searchQuery.set(query);
+    this.searchSubject.next(query);
+  }
+
+  selectLocation(result: LocationResult): void {
+    this.searchQuery.set(result.address);
+    this.modalService.close({
+      address: result.address,
+      latitude: result.latitude,
+      longitude: result.longitude,
+      distance: result.distance
     });
   }
 
-  confirm(): void {
-    if (this.selectedLocation()) {
-      this.modalCtrl.dismiss({
-        latitude: this.selectedLat(),
-        longitude: this.selectedLng(),
-        address: this.selectedLocation()
-      });
-    } else {
-      this.modalCtrl.dismiss(null);
-    }
+  clearSearch(): void {
+    this.searchQuery.set('');
+    // set default location and trigger search
+    this.searchSubject.next('Atlanta, GA');
   }
 }

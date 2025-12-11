@@ -7,11 +7,15 @@ import {
   linkWithCredential,
   sendEmailVerification
 } from 'firebase/auth';
+import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
-import { NavController } from '@ionic/angular';
+import { HttpClient } from '@angular/common/http';
+import { IAuthResponse } from '@/interfaces/IAuth';
 import { inject, Injectable } from '@angular/core';
 import { FirebaseService } from './firebase.service';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { environment } from 'src/environments/environment';
+import { KEYS, LocalStorageService } from './localstorage.service';
 import { FirebaseAuthError } from '@/utils/firebase-error-message';
 import { User, FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
@@ -19,39 +23,39 @@ import { User, FirebaseAuthentication } from '@capacitor-firebase/authentication
 export class AuthService {
   // services
   private router = inject(Router);
+  private http = inject(HttpClient);
   private firebaseService = inject(FirebaseService);
+  private localStorageService = inject(LocalStorageService);
 
   // variables
   private verificationId: string | null = null;
   private recaptchaVerifier: RecaptchaVerifier | null = null;
 
   // initialize Firebase Auth state listener
-  initializeOnAuthStateChanged(): void {
-    this.firebaseService.auth.onAuthStateChanged(async (user) => {
-      // hide splash screen
+  async initializeOnAuthStateChanged(): Promise<void> {
+    // this.firebaseService.auth.onAuthStateChanged(async (user) => {
+    //   // hide splash screen
       await SplashScreen.hide();
-
-      if (user) {
-        console.log('firebase logged in: ', user);
-      } else {
-        await this.signOut();
-        const currentUrl = this.router.url;
-        // check if we're not already on the login page (check path without query params)
-        const currentPath = currentUrl.split('?')[0];
-        if (!currentPath.startsWith('/login') && !currentPath.startsWith('/not-found')) {
-          // without redirect query param
-          if (currentPath === '/') {
-            this.router.navigate(['/login']);
-          }
-
-          // with redirect query param
-          else {
-            const redirectUrl = encodeURIComponent(currentUrl);
-            this.router.navigate(['/login'], { queryParams: { redirect: redirectUrl } });
-          }
-        }
-      }
-    });
+    //   if (user) {
+    //     console.log('firebase logged in: ', user);
+    //   } else {
+    //     await this.signOut();
+    //     const currentUrl = this.router.url;
+    //     // check if we're not already on the login page (check path without query params)
+    //     const currentPath = currentUrl.split('?')[0];
+    //     if (!currentPath.startsWith('/login') && !currentPath.startsWith('/not-found')) {
+    //       // without redirect query param
+    //       if (currentPath === '/') {
+    //         this.router.navigate(['/login']);
+    //       }
+    //       // with redirect query param
+    //       else {
+    //         const redirectUrl = encodeURIComponent(currentUrl);
+    //         this.router.navigate(['/login'], { queryParams: { redirect: redirectUrl } });
+    //       }
+    //     }
+    //   }
+    // });
   }
 
   async signOut() {
@@ -66,6 +70,19 @@ export class AuthService {
 
     // clear recaptcha verifier
     this.recaptchaVerifier = null;
+
+    // clear API token
+    this.localStorageService.removeItem(KEYS.TOKEN);
+  }
+
+  async createUserWithEmailAndPassword(email: string, password: string): Promise<{ user: User; isNewUser: boolean }> {
+    try {
+      const nativeResult = await FirebaseAuthentication.createUserWithEmailAndPassword({ email, password });
+      return { user: nativeResult.user!, isNewUser: nativeResult?.additionalUserInfo?.isNewUser || false };
+    } catch (error) {
+      console.error('error: ', error);
+      throw new Error(FirebaseAuthError(error));
+    }
   }
 
   async sendOtpForPhoneLogin(phoneNumber: string): Promise<boolean> {
@@ -222,6 +239,27 @@ export class AuthService {
     } catch (error) {
       console.error('Error deleting account: ', error);
       throw new Error(FirebaseAuthError(error));
+    }
+  }
+
+  async loginWithFirebaseToken(): Promise<IAuthResponse> {
+    try {
+      const currentUser = this.firebaseService.auth.currentUser;
+      if (!currentUser) {
+        throw new Error('No authenticated user found');
+      }
+
+      const firebase_token = await currentUser.getIdToken();
+      const response = await firstValueFrom(this.http.post<IAuthResponse>(`${environment.apiUrl}/auth/login`, { firebase_token }));
+
+      if (response?.data?.token) {
+        this.localStorageService.setItem(KEYS.TOKEN, response.data.token);
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Error logging in with Firebase token: ', error);
+      throw error;
     }
   }
 }

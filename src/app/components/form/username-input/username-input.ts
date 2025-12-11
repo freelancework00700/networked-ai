@@ -1,7 +1,8 @@
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { usernameValidator } from '@/validations/usernameValidation';
+import { UserService } from '@/services/user.service';
+import { availability } from '@/validations/availability';
 import { input, signal, inject, OnInit, Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
 
@@ -24,10 +25,14 @@ export class UsernameInput implements OnInit {
   label = input('Username');
   isSubmitted = input(true);
   controlName = input('username');
+  checkAvailability = input(true);
   placeholder = input('ethan_cortazzo');
 
   // signals
   isChecking = signal(false);
+
+  // services
+  private userService = inject(UserService);
 
   constructor(
     private fb: FormBuilder,
@@ -48,6 +53,8 @@ export class UsernameInput implements OnInit {
   }
 
   ngOnInit() {
+    const asyncValidators = this.checkAvailability() ? [availability(this.userService, 'username')] : [];
+
     this.parentFormGroup.addControl(
       this.controlName(),
       this.fb.control('', {
@@ -57,7 +64,7 @@ export class UsernameInput implements OnInit {
           Validators.maxLength(30),
           Validators.pattern(/^(?!.*\.\.)(?!.*\.$)(?!^\.)(?!^.*\.$)[a-zA-Z0-9_.]+$/)
         ],
-        asyncValidators: [usernameValidator()],
+        asyncValidators,
         updateOn: 'change'
       })
     );
@@ -76,7 +83,7 @@ export class UsernameInput implements OnInit {
 
     if (control.errors?.['required']) {
       return 'Please provide your username.';
-    } else if (control.errors?.['usernameTaken']) {
+    } else if (control.errors?.['taken']) {
       return 'This username has been taken.';
     } else if (control.errors?.['minlength']) {
       return 'Username must be at least 6 characters.';

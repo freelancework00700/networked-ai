@@ -22,6 +22,7 @@
             controlName="title"
             placeholder="Select title"
             (click)="openTitleModal()"
+            [showLabel]="isSubmitted()"
             [isSubmitted]="isSubmitted()"
             endIconName="pi-chevron-right"
           />
@@ -40,10 +41,15 @@
           </div>
 
           <!-- email input -->
-          <email-input />
+          <email-input [checkAvailability]="true" />
+
+          <!-- password input - only show during signup -->
+          @if (showPasswordInput()) {
+            <password-input controlName="password" [isSubmitted]="isSubmitted()" />
+          }
 
           <!-- phone input -->
-          <mobile-input />
+          <mobile-input [checkAvailability]="true" />
 
           <!-- username input -->
           <username-input />
@@ -51,8 +57,8 @@
           <!-- birthdate input -->
           <text-input
             [readonly]="true"
-            label="Birthdate"
-            controlName="birthdate"
+            label="Birth Date"
+            controlName="dob"
             (click)="openDateModal()"
             [isSubmitted]="isSubmitted()"
             endIconName="pi-chevron-right"
@@ -63,8 +69,9 @@
           <text-input
             [readonly]="true"
             label="Account Type"
-            initialValue="individual"
+            initialValue="Individual"
             controlName="account_type"
+            [isSubmitted]="isSubmitted()"
             endIconName="pi-chevron-right"
             placeholder="Select account type"
             (click)="openAccountTypeModal()"
@@ -78,7 +85,7 @@
             <text-input
               [readonly]="true"
               label="City/Location"
-              controlName="location"
+              controlName="address"
               iconName="pi pi-map-marker"
               [isSubmitted]="isSubmitted()"
               placeholder="Select location"
@@ -95,13 +102,13 @@
       <div [hidden]="currentStep() !== 2" class="space-y-4 flex flex-col gap-4">
         <div class="heading-h2 neutral-01">More About You</div>
         <!-- college/university input -->
-        <text-input controlName="college_university" label="College/University" [required]="false" />
+        <text-input controlName="college_university_name" label="College/University" [required]="false" />
 
         <!-- company input -->
-        <text-input controlName="company" label="Company" [required]="false" />
+        <text-input controlName="company_name" label="Company" [required]="false" />
 
         <!-- about input -->
-        <text-area-input label="About Me" controlName="aboutMe" [required]="false" placeholder="Write description here" />
+        <text-area-input label="About Me" controlName="description" [required]="false" placeholder="Write description here" />
 
         <!-- sites & socials -->
         <social-input />
@@ -111,7 +118,7 @@
       <div [hidden]="currentStep() !== 3" class="h-full flex items-center justify-center">
         <div class="flex flex-col items-center justify-center">
           <div class="heading-h2 neutral-01 mb-8">Upload Photo</div>
-          <image-input controlName="profile_image" label="Profile Picture" [required]="false" (skipped)="save()" />
+          <profile-image-input controlName="image_url" label="Profile Picture" [required]="false" (skipped)="save()" />
           <button type="button" (click)="save()" class="body-14M neutral-03 mt-6">Skip Now</button>
         </div>
       </div>
@@ -155,6 +162,9 @@
       </div>
     </form>
   </div>
+
+  <!-- recaptcha container for phone authentication -->
+  <div id="recaptcha-container"></div>
 </ion-content>
 
 <ion-footer>
@@ -171,13 +181,7 @@
       </div>
       <!-- navigation buttons -->
       <div class="flex items-center gap-2">
-        @if (currentStep() === 4) {
-          <app-button label="Finish" width="96px" height="48px" (click)="save()" />
-        } @else if (currentStep() < steps().length) {
-          <app-button label="Next" width="96px" height="48px" (click)="save()" />
-        } @else {
-          <app-button label="Submit" width="96px" height="48px" (click)="save()" />
-        }
+        <app-button width="96px" height="48px" label="Next" (click)="save()" [isLoading]="isLoading()" />
       </div>
     </div>
   </ion-toolbar>

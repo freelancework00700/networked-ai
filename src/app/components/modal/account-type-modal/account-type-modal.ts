@@ -9,14 +9,14 @@ import { IonPicker, ModalController, IonPickerColumn, IonPickerColumnOption } fr
 })
 export class AccountTypeModal {
   // inputs
-  @Input() value = 'individual';
+  @Input() value: 'Individual' | 'Business' = 'Individual';
 
   // services
   modalCtrl = inject(ModalController);
 
   options = signal([
-    { value: 'individual', label: 'Individual' },
-    { value: 'business', label: 'Business' }
+    { value: 'Individual', label: 'Individual' },
+    { value: 'Business', label: 'Business' }
   ]);
 
   async dismiss() {

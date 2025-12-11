@@ -51,7 +51,7 @@ export class ForgotPassword {
     this.isSubmitted.set(true);
 
     // validate email login form fields
-    if (!validateFields(this.forgotPasswordForm(), ['email'])) {
+    if (!(await validateFields(this.forgotPasswordForm(), ['email']))) {
       this.toasterService.showError('Please enter the email and password.');
       return;
     }

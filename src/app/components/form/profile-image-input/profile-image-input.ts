@@ -1,14 +1,11 @@
-import { Subscription } from 'rxjs';
-import { CommonModule } from '@angular/common';
-import { ImageConfirmModal } from './image-confirm-modal';
-import { ModalController } from '@ionic/angular/standalone';
+import { ModalService } from '@/services/modal.service';
 import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
 import { input, signal, OnInit, inject, Component, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild, ElementRef } from '@angular/core';
 @Component({
-  selector: 'image-input',
-  styleUrl: './image-input.scss',
-  templateUrl: './image-input.html',
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule],
+  selector: 'profile-image-input',
+  styleUrl: './profile-image-input.scss',
+  templateUrl: './profile-image-input.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: [
     {
@@ -17,7 +14,7 @@ import { input, signal, OnInit, inject, Component, ChangeDetectorRef, ChangeDete
     }
   ]
 })
-export class ImageInput implements OnInit {
+export class ProfileImageInput implements OnInit {
   // inputs
   label = input('');
   required = input(true);
@@ -30,15 +27,14 @@ export class ImageInput implements OnInit {
 
   // variables
   private objectUrl: string | null = null;
-  private subscriptions = new Subscription();
 
   @ViewChild('fileInput', { static: false }) fileInputRef!: ElementRef<HTMLInputElement>;
 
   constructor(
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
+    private modalService: ModalService,
     private parentContainer: ControlContainer,
-    private modalCtrl: ModalController
   ) {}
 
   get control(): AbstractControl {
@@ -61,6 +57,7 @@ export class ImageInput implements OnInit {
 
   ngOnInit(): void {
     const validators = this.required() ? [Validators.required] : [];
+    this.parentFormGroup.addControl('thumbnail_url', this.fb.control(null, validators));
     this.parentFormGroup.addControl(this.controlName(), this.fb.control(null, validators));
 
     this.updateImagePreview(this.control.value);
@@ -96,45 +93,24 @@ export class ImageInput implements OnInit {
     }
   }
 
-  onFileSelected(event: Event): void {
+  async onFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      this.showConfirmationModal(file);
-    }
+      const result = await this.modalService.showProfileImageConfirmationModal(file);
 
-    input.value = '';
-  }
-
-  private async showConfirmationModal(file: File): Promise<void> {
-    const reader = new FileReader();
-    reader.onload = async (e: any) => {
-      const imageDataUrl = e.target.result;
-
-      const modal = await this.modalCtrl.create({
-        component: ImageConfirmModal,
-        backdropDismiss: false,
-        cssClass: 'auto-hight-modal',
-        componentProps: {
-          imageDataUrl: imageDataUrl
-        }
-      });
-
-      await modal.present();
-
-      const { data } = await modal.onWillDismiss();
-
-      if (data && data.action === 'confirm') {
-        this.control.setValue(file);
+      if (result.action === 'confirm' && result.file) {
+        this.control.setValue(result.file);
         this.control.markAsTouched();
-      } else if (data && data.action === 'retake') {
+      } else if (result.action === 'retake') {
         setTimeout(() => {
           if (this.fileInputRef?.nativeElement) {
             this.fileInputRef.nativeElement.click();
           }
         }, 100);
       }
-    };
-    reader.readAsDataURL(file);
+    }
+
+    input.value = '';
   }
 }

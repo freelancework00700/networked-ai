@@ -28,9 +28,9 @@ export class TextInput implements OnInit {
   endIconName = input('');
   showLabel = input(true);
   readonly = input(false);
-  initialValue = input('');
   isSubmitted = input(true);
   controlName = input.required<string>();
+  initialValue = input<string | number>('');
 
   constructor(
     private fb: FormBuilder,

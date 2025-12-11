@@ -2,9 +2,11 @@ import intlTelInput, { Iti } from 'intl-tel-input';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { UserService } from '@/services/user.service';
+import { availability } from '@/validations/availability';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
-import { input, inject, OnInit, Component, ViewChild, ElementRef, afterNextRender, ChangeDetectionStrategy } from '@angular/core';
+import { input, inject, OnInit, signal, Component, ViewChild, ElementRef, afterNextRender, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'mobile-input',
@@ -23,8 +25,15 @@ export class MobileInput implements OnInit {
   // inputs
   required = input(true);
   isSubmitted = input(true);
+  controlName = input('mobile');
   label = input('Mobile Number');
-  controlName = input('phone_number');
+  checkAvailability = input(false);
+
+  // services
+  private userService = inject(UserService);
+
+  // signals
+  isChecking = signal(false);
 
   // variables
   iti!: Iti;
@@ -54,6 +63,8 @@ export class MobileInput implements OnInit {
 
     if (control.errors?.['required']) {
       return 'Please enter your mobile number.';
+    } else if (control.errors?.['taken']) {
+      return 'This mobile number is already taken.';
     } else if (!this.iti?.isValidNumber()) {
       return 'Please enter a valid mobile number.';
     } else {
@@ -96,7 +107,21 @@ export class MobileInput implements OnInit {
       validators.push(Validators.required);
     }
 
-    this.parentFormGroup.addControl(this.controlName(), this.fb.control('', validators));
+    const asyncValidators = this.checkAvailability() ? [availability(this.userService, 'mobile', () => this.getPhoneNumber())] : [];
+
+    this.parentFormGroup.addControl(
+      this.controlName(),
+      this.fb.control('', {
+        validators,
+        asyncValidators,
+        updateOn: 'change'
+      })
+    );
+
+    // check username status
+    this.control?.statusChanges?.subscribe((status) => {
+      this.isChecking.set(status === 'PENDING');
+    });
 
     // check validation if there's an value (edit scenario)
     const subscription = this.control.valueChanges.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {

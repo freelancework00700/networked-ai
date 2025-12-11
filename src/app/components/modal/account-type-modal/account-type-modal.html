@@ -3,7 +3,7 @@
     <div class="heading-h3 neutral-01">Account Type</div>
   </div>
 
-  <ion-picker (ionChange)="value = $any($event).detail.value">
+  <ion-picker (ionChange)="value = $any($event).detail.value" mode="md">
     <ion-picker-column name="column" [value]="value">
       @for (option of options(); track option.value) {
         <ion-picker-column-option [value]="option.value">

@@ -1,8 +1,10 @@
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
+import { UserService } from '@/services/user.service';
+import { availability } from '@/validations/availability';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { input, OnInit, inject, Component, ChangeDetectionStrategy } from '@angular/core';
+import { input, signal, OnInit, inject, Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
@@ -25,7 +27,14 @@ export class EmailInput implements OnInit {
   showIcon = input(false);
   isSubmitted = input(true);
   controlName = input('email');
+  checkAvailability = input(false);
   placeholder = input('email@example.com');
+
+  // services
+  private userService = inject(UserService);
+
+  // signals
+  isChecking = signal(false);
 
   constructor(
     private fb: FormBuilder,
@@ -44,8 +53,21 @@ export class EmailInput implements OnInit {
     return this.placeholder() || `Enter ${this.label().toLowerCase()}`;
   }
 
-  get isControlInvalid(): boolean {
-    return !this.control?.valid && this.control?.touched && this.required() && this.isSubmitted();
+  get getErrorMessage(): string | null {
+    if (!this.isSubmitted()) return null;
+
+    const control = this.control;
+    if (!control.touched) return null;
+
+    if (control.errors?.['required']) {
+      return 'Please enter your email address.';
+    } else if (control.errors?.['email']) {
+      return 'Please enter a valid email address.';
+    } else if (control.errors?.['taken']) {
+      return 'This email is already taken.';
+    } else {
+      return null;
+    }
   }
 
   ngOnInit(): void {
@@ -55,7 +77,21 @@ export class EmailInput implements OnInit {
     }
     validators.push(Validators.email);
 
-    this.parentFormGroup.addControl(this.controlName(), this.fb.control('', validators));
+    const asyncValidators = this.checkAvailability() ? [availability(this.userService, 'email')] : [];
+
+    this.parentFormGroup.addControl(
+      this.controlName(),
+      this.fb.control('', {
+        validators,
+        asyncValidators,
+        updateOn: 'change'
+      })
+    );
+
+    // check email status
+    this.control?.statusChanges?.subscribe((status) => {
+      this.isChecking.set(status === 'PENDING');
+    });
 
     // check validation if there's an value (edit scenario)
     const subscription = this.control.valueChanges.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {

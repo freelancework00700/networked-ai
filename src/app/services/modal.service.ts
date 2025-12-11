@@ -6,6 +6,7 @@ import { CreateEvent } from '@/pages/create-event/create-event';
 import { ConfirmModal } from '@/components/modal/confirm-modal';
 import { LocationModal } from '@/components/modal/location-modal';
 import { DateTimeModal } from '@/components/modal/date-time-modal';
+import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
 import { EventCategoryModal } from '@/components/modal/event-category-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
@@ -15,6 +16,7 @@ import { QuestionnaireForm } from '@/pages/create-event/components/questionnaire
 import { PhoneEmailVerifiedModal } from '@/components/modal/phone-email-verified-modal';
 import { TicketForm, TicketFormData } from '@/pages/create-event/components/ticket-form';
 import { NetworkTagModal, NetworkTag } from '@/pages/create-event/components/network-tag';
+import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confirm-modal';
 import { PromoCodeForm, PromoCodeFormData } from '@/pages/create-event/components/promo-code-form';
 
 @Injectable({ providedIn: 'root' })
@@ -72,7 +74,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: TitleModal,
-      backdropDismiss: false,
+      backdropDismiss: true,
       componentProps: { value },
       cssClass: 'auto-hight-modal'
     });
@@ -80,7 +82,8 @@ export class ModalService {
     await modal.present();
 
     const { data } = await modal.onDidDismiss();
-    return data;
+    // return original value if dismissed via backdrop without data
+    return data || value;
   }
 
   async openDateTimeModal(type: 'date' | 'time', value?: string, min?: string, max?: string): Promise<string> {
@@ -89,7 +92,7 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      backdropDismiss: false,
+      backdropDismiss: true,
       component: DateTimeModal,
       cssClass: 'auto-hight-modal',
       componentProps: { type, value, min, max }
@@ -98,16 +101,17 @@ export class ModalService {
     await modal.present();
 
     const { data } = await modal.onDidDismiss();
-    return data;
+    // return original value if dismissed via backdrop without data
+    return data || value;
   }
 
-  async openAccountTypeModal(value: string): Promise<string> {
+  async openAccountTypeModal(value: 'Individual' | 'Business'): Promise<'Individual' | 'Business'> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      backdropDismiss: false,
+      backdropDismiss: true,
       componentProps: { value },
       component: AccountTypeModal,
       cssClass: 'auto-hight-modal'
@@ -116,24 +120,27 @@ export class ModalService {
     await modal.present();
 
     const { data } = await modal.onDidDismiss();
-    return data;
+    // return original value if dismissed via backdrop without data
+    return data || value;
   }
 
-  async openLocationModal(): Promise<{ address: string; latitude: number; longitude: number }> {
+  async openLocationModal(location= ''): Promise<{ address: string; latitude: number; longitude: number }> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      backdropDismiss: false,
+      backdropDismiss: true,
       component: LocationModal,
-      cssClass: 'auto-hight-modal'
+      cssClass: 'location-modal',
+      componentProps: { location }
     });
 
     await modal.present();
 
     const { data } = await modal.onDidDismiss();
-    return data;
+    // return original value if dismissed via backdrop without data
+    return data || { address: location || '', latitude: 0, longitude: 0 };
   }
 
   async openEventCategoryModal(value?: string): Promise<string> {
@@ -328,8 +335,59 @@ export class ModalService {
     return data;
   }
 
-  async close(): Promise<void> {
+  async openOtpModal(mobile: string, type: 'email' | 'mobile' = 'mobile'): Promise<boolean> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      backdropDismiss: false,
+      component: VerifyOtpModal,
+      cssClass: 'auto-hight-modal',
+      componentProps: { mobile, type }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    return data;
+  }
+
+  async showProfileImageConfirmationModal(file: File): Promise<{ action: 'confirm' | 'retake' | 'cancel'; file?: File }> {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = async (e: any) => {
+        const imageDataUrl = e.target.result;
+
+        const modal = await this.modalCtrl.create({
+          mode: 'ios',
+          handle: true,
+          breakpoints: [0, 1],
+          initialBreakpoint: 1,
+          backdropDismiss: false,
+          cssClass: 'auto-hight-modal',
+          componentProps: { imageDataUrl },
+          component: ProfileImageConfirmModal,
+        });
+
+        await modal.present();
+
+        const { data } = await modal.onWillDismiss();
+
+        if (data && data.action === 'confirm') {
+          resolve({ action: 'confirm', file });
+        } else if (data && data.action === 'retake') {
+          resolve({ action: 'retake' });
+        } else {
+          resolve({ action: 'cancel' });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async close(data?: any): Promise<void> {
     const modal = await this.modalCtrl.getTop();
-    if (modal) await modal.dismiss();
+    if (modal) await modal.dismiss(data);
   }
 }

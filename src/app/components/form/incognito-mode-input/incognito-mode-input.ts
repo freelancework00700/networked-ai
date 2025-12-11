@@ -17,7 +17,7 @@ import { FormGroup, FormBuilder, ControlContainer, ReactiveFormsModule } from '@
 })
 export class IncognitoModeInput implements OnInit {
   // inputs
-  controlName = input('hide_location');
+  controlName = input('settings');
 
   // services
   private fb = inject(FormBuilder);
@@ -27,12 +27,25 @@ export class IncognitoModeInput implements OnInit {
     return this.parentContainer.control as FormGroup;
   }
 
+  get settingsFormGroup(): FormGroup {
+    return this.parentFormGroup.get(this.controlName()) as FormGroup;
+  }
+
   get isEnabled(): boolean {
-    const control = this.parentFormGroup.get(this.controlName());
-    return control?.value === true;
+    const settingsGroup = this.settingsFormGroup;
+    return settingsGroup?.get('hide_location')?.value === true;
   }
 
   ngOnInit(): void {
-    this.parentFormGroup.addControl(this.controlName(), this.fb.control(false));
+    const settingsControl = this.parentFormGroup.get(this.controlName());
+
+    if (!settingsControl) {
+      this.parentFormGroup.addControl(
+        this.controlName(),
+        this.fb.group({
+          hide_location: [false]
+        })
+      );
+    }
   }
 }

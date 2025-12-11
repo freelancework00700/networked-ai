@@ -36,12 +36,12 @@ export class SocialInput implements OnInit {
       this.parentFormGroup.addControl(
         this.controlName,
         this.formBuilder.group({
-          x: [''],
-          fb: [''],
-          ig: [''],
-          li: [''],
-          sc: [''],
-          web: ['']
+          website: [''],
+          twitter: [''],
+          facebook: [''],
+          snapchat: [''],
+          linkedin: [''],
+          instagram: ['']
         })
       );
     }

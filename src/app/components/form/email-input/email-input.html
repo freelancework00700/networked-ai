@@ -17,14 +17,19 @@
     class="w-full h-[44px]"
     (input)="onInput($event)"
     [attr.inputmode]="'email'"
-    [invalid]="isControlInvalid"
+    [invalid]="!!getErrorMessage"
     [placeholder]="getPlaceholder"
     [formControlName]="controlName()"
-    [class.ng-invalid]="isControlInvalid"
+    [class.ng-invalid]="!!getErrorMessage"
   />
+
+  <!-- loader when checking email -->
+  @if (isChecking()) {
+    <p-inputicon class="pi pi-spin pi-spinner" />
+  }
 </p-iconField>
 
 <!-- validation -->
-@if (isControlInvalid) {
-  <div class="accent-red pt-2 body-12M">Please enter the valid {{ label().toLowerCase() }}.</div>
+@if (getErrorMessage) {
+  <div class="accent-red pt-2 body-12M">{{ getErrorMessage }}</div>
 }

@@ -1,8 +1,7 @@
-import { maskPhoneNumber } from '@/utils/helper';
 import { Button } from '@/components/form/button';
-import { NgOtpInputComponent } from 'ng-otp-input';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
+import { OtpInput } from '@/components/common/otp-input';
 import { validateFields } from '@/utils/form-validation';
 import { EmailInput } from '@/components/form/email-input';
 import { ToasterService } from '@/services/toaster.service';
@@ -15,15 +14,15 @@ import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angul
 
 interface LoginForm {
   email?: FormControl<string | null>;
+  mobile?: FormControl<string | null>;
   password?: FormControl<string | null>;
-  phone_number?: FormControl<string | null>;
 }
 
 @Component({
   selector: 'login',
   styleUrl: './login.scss',
   templateUrl: './login.html',
-  imports: [Button, IonContent, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, NgOtpInputComponent, ReactiveFormsModule]
+  imports: [Button, OtpInput, IonContent, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule]
 })
 export class Login {
   // services
@@ -43,17 +42,8 @@ export class Login {
   otp = signal<string | null>(null);
   isLoading = signal<boolean>(false);
   isSubmitted = signal<boolean>(false);
-  isModalOpen = signal<boolean>(false);
-  maskedPhoneNumber = signal<string>('');
   activeTab = signal<'email' | 'mobile'>('email');
   loginForm = signal<FormGroup<LoginForm>>(this.fb.group<LoginForm>({}));
-
-  // variables
-  otpConfig = {
-    length: 6,
-    placeholder: '',
-    allowNumbersOnly: true
-  };
 
   async login() {
     this.isSubmitted.set(true);
@@ -73,7 +63,7 @@ export class Login {
     try {
       // validate email login form fields
       const fields = ['email', 'password'];
-      if (!validateFields(this.loginForm(), fields)) {
+      if (!(await validateFields(this.loginForm(), fields))) {
         this.toasterService.showError('Please enter the email and password.');
         return;
       }
@@ -85,6 +75,7 @@ export class Login {
       // login with email and password
       const { email, password } = this.loginForm().value;
       const { user, isNewUser } = await this.authService.signInWithEmailAndPassword(email!, password!);
+      await this.authService.loginWithFirebaseToken();
 
       // new user -> profile page
       // existing user -> home page
@@ -107,7 +98,7 @@ export class Login {
     const fullPhoneNumber = this.mobileInput?.getPhoneNumber();
 
     // validate phone number step-1 fields
-    if (!validateFields(this.loginForm(), ['phone_number']) || !fullPhoneNumber) {
+    if (!(await validateFields(this.loginForm(), ['mobile'])) || !fullPhoneNumber) {
       this.toasterService.showError('Please enter a valid phone number.');
       return;
     }
@@ -118,7 +109,6 @@ export class Login {
 
       // store phone number and create masked version
       this.phoneNumber.set(fullPhoneNumber);
-      this.maskedPhoneNumber.set(maskPhoneNumber(fullPhoneNumber));
       this.otpSent.set(true);
       this.isSubmitted.set(false); // reset submission state for otp input
     } catch (error: any) {
@@ -143,6 +133,7 @@ export class Login {
 
       // verify otp
       const { user, isNewUser } = await this.authService.verifyOTP(otp);
+      await this.authService.loginWithFirebaseToken();
 
       // new user -> profile page
       // existing user -> home page
@@ -168,7 +159,7 @@ export class Login {
     try {
       this.isLoading.set(true);
       await this.authService.sendOtpForPhoneLogin(this.phoneNumber());
-      this.toasterService.showSuccess('OTP resent successfully');
+      this.toasterService.showSuccess('OTP resent successfully.');
     } catch (error: any) {
       console.error('Resend OTP error:', error);
       this.toasterService.showError(error.message || 'Failed to resend OTP. Please try again.');
@@ -183,6 +174,5 @@ export class Login {
     this.otpSent.set(false);
     this.phoneNumber.set('');
     this.isSubmitted.set(false);
-    this.maskedPhoneNumber.set('');
   }
 }

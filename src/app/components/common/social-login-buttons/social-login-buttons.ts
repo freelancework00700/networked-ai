@@ -15,6 +15,7 @@ export class SocialLoginButtons {
   async loginWithGoogle() {
     try {
       const { user, isNewUser } = await this.authService.signInWithGoogle();
+      await this.authService.loginWithFirebaseToken();
 
       // new user -> profile page
       // existing user -> home page
@@ -31,6 +32,7 @@ export class SocialLoginButtons {
   async loginWithApple() {
     try {
       const { user, isNewUser } = await this.authService.signInWithApple();
+      await this.authService.loginWithFirebaseToken();
 
       // new user -> profile page
       // existing user -> home page
@@ -47,6 +49,7 @@ export class SocialLoginButtons {
   async loginWithFacebook() {
     try {
       const { user, isNewUser } = await this.authService.signInWithFacebook();
+      await this.authService.loginWithFirebaseToken();
 
       // new user -> profile page
       // existing user -> home page

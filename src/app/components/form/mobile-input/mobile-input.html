@@ -4,18 +4,24 @@
     {{ label() }}
   </label>
 }
+<p-iconField>
+  <!-- input -->
+  <input
+    pInputText
+    #mobileNumberInput
+    class="w-full h-[44px]"
+    (input)="onInput($event)"
+    [attr.inputmode]="'numeric'"
+    [invalid]="!!getErrorMessage"
+    [formControlName]="controlName()"
+    [class.ng-invalid]="!!getErrorMessage"
+  />
 
-<!-- input -->
-<input
-  pInputText
-  #mobileNumberInput
-  class="w-full h-[44px]"
-  (input)="onInput($event)"
-  [attr.inputmode]="'numeric'"
-  [invalid]="!!getErrorMessage"
-  [formControlName]="controlName()"
-  [class.ng-invalid]="!!getErrorMessage"
-/>
+  <!-- loader when checking mobile -->
+  @if (isChecking()) {
+    <p-inputicon class="pi pi-spin pi-spinner" />
+  }
+</p-iconField>
 
 <!-- validation -->
 
