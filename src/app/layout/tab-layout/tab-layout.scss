@@ -2,47 +2,64 @@ ion-tab-bar {
   height: 76px;
   --color: none;
   --border: none;
-  --background: #fff;
-  border-top-left-radius: 45px;
-  border-top-right-radius: 45px;
+  --background: transparent;
   --background-focused: transparent;
-  box-shadow: 0px -4px 37.2px -5px rgba(0, 0, 0, 0.07);
 
   ion-tab-button {
-    background: #fff;
+    background: transparent;
     position: relative;
-    --padding-top: 14px;
-    --padding-bottom: 7px;
-
-    ion-label {
-      color: #999;
-      font-weight: normal;
-
-      &.active {
-        color: #000;
-        font-weight: bold;
+    --padding-end: 0;
+    --padding-start: 0;
+    height: 76px;
+    display: flex;
+    align-items: flex-end;
+    max-width: 100% !important;
+    .tab-button-wrapper {
+      display: flex;
+      align-items: flex-end;
+      width: 100%;
+      height: 100%;
+      .tab-button-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--neutral-01);
+        height: 64px;
+        width: 100%;
+        gap: 2px;
       }
     }
 
-    .notification-wrapper {
-      position: relative;
-      display: inline-block;
+    // Inactive tab styles (default)
+    .tab-indicator {
+      display: none;
+    }
 
-      .notification-badge {
-        top: -2px;
-        width: 18px;
-        right: -8px;
-        height: 18px;
-        color: #fff;
-        display: flex;
-        line-height: 1;
-        font-size: 10px;
-        font-weight: bold;
-        position: absolute;
-        border-radius: 50%;
-        align-items: center;
-        justify-content: center;
-        background-color: #ff0000;
+    ion-icon {
+      opacity: 0.6;
+    }
+
+    // Active tab styles - when routerLinkActive adds 'active' class
+    &.active {
+      .tab-indicator {
+        display: block;
+      }
+      
+      ion-icon {
+        opacity: 1;
+      }
+    }
+
+    ion-label {
+      color: var(--neutral-04);
+      font-weight: medium;
+      font-size: 10px;
+      padding-top: 4px;
+
+      &.active {
+        color: var(--neutral-07);
+        font-weight: medium;
       }
     }
   }

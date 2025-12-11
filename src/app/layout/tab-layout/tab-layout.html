@@ -1,33 +1,59 @@
 <ion-tabs>
   <ion-tab-bar slot="bottom">
     <!-- home tab -->
-    <ion-tab-button routerLink="/">
-      <img class="pb-1" />
-      <ion-label>Event</ion-label>
+    <ion-tab-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+      <div class="tab-button-wrapper">
+        <div class="tab-button-inner">
+          <div class="tab-indicator bg-brand-04 h-[2px] w-[32px] absolute top-[14px] hidden"></div>
+          <ion-icon src="/assets/svg/tab-home.svg" class="text-[20px] opacity-60"></ion-icon>
+          <ion-label>Home</ion-label>
+        </div>
+      </div>
     </ion-tab-button>
 
     <!-- network tab -->
-    <ion-tab-button routerLink="/network">
-      <img class="pb-1" />
-      <ion-label>Network</ion-label>
+    <ion-tab-button routerLink="/network" routerLinkActive="active">
+      <div class="tab-button-wrapper">
+        <div class="tab-button-inner">
+          <div class="tab-indicator bg-brand-04 h-[2px] w-[32px] absolute top-[14px] hidden"></div>
+          <ion-icon src="/assets/svg/tab-network.svg" class="text-[20px] opacity-60"></ion-icon>
+          <ion-label>Network</ion-label>
+        </div>
+      </div>
     </ion-tab-button>
 
     <!-- host tab -->
     <ion-tab-button routerLink="/event">
-      <img class="pb-1" />
-      <ion-label>Host</ion-label>
+      <div class="tab-button-wrapper">
+        <div class="tab-button-inner">
+          <div class="min-h-[48px] h-[48px] w-[48px] rounded-full flex items-center justify-center bg-brand-04 absolute top-[0px]">
+            <ion-icon src="/assets/svg/tab-plus.svg" class="text-[22px]"></ion-icon>
+          </div>
+          <ion-label class="absolute bottom-[12px]">Host</ion-label>
+        </div>
+      </div>
     </ion-tab-button>
 
     <!-- message tab -->
-    <ion-tab-button routerLink="/message">
-      <img class="pb-1" />
-      <ion-label>Messages</ion-label>
+    <ion-tab-button routerLink="/message" routerLinkActive="active">
+      <div class="tab-button-wrapper">
+        <div class="tab-button-inner">
+          <div class="tab-indicator bg-brand-04 h-[2px] w-[32px] absolute top-[14px] hidden"></div>
+          <ion-icon src="/assets/svg/tab-message.svg" class="text-[20px] opacity-60"></ion-icon>
+          <ion-label>Messages</ion-label>
+        </div>
+      </div>
     </ion-tab-button>
 
     <!-- profile tab -->
-    <ion-tab-button routerLink="/profile">
-      <img class="pb-1" />
-      <ion-label>Profile</ion-label>
+    <ion-tab-button routerLink="/profile" routerLinkActive="active">
+      <div class="tab-button-wrapper">
+        <div class="tab-button-inner">
+          <div class="tab-indicator bg-brand-04 h-[2px] w-[32px] absolute top-[14px] hidden"></div>
+          <ion-icon src="/assets/svg/tab-profile.svg" class="text-[20px] opacity-60"></ion-icon>
+          <ion-label>Profile</ion-label>
+        </div>
+      </div>
     </ion-tab-button>
   </ion-tab-bar>
 </ion-tabs>
