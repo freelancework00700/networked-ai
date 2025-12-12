@@ -1,0 +1,323 @@
+<ion-content [fullscreen]="true" class="profile-view-content">
+    <div class="flex flex-col min-h-full bg-white pb-4">
+        <!-- Header -->
+        <header class="flex justify-between items-center pt-4 px-5 bg-white relative">
+          <div class="flex gap-2 relative">
+            <div 
+              class="flex mt-2 items-center gap-2 bg-transparent border-none cursor-pointer p-0"
+              (click)="toggleSelector()">
+              <h1 class="body-14SB neutral-01">{{ userName() }}</h1>
+              <ion-icon 
+                [name]="selectorOpen() ? 'chevron-up' : 'chevron-down'" 
+                class="text-base mb-3 text-gray-500"></ion-icon>
+            </div>
+            
+            <!-- Account Selector Dropdown -->
+            @if (selectorOpen()) {
+              <div class="absolute top-full left-0 mt-2 bg-white m-4 rounded-lg shadow-lg border border-gray-200 min-w-[200px] z-50">
+                @for (account of accounts(); track account.id) {
+                  <div
+                    class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                    [class.bg-blue-50]="selectedAccount().id === account.id"
+                    (click)="selectAccount(account)">
+                    <img 
+                      [src]="account.image" 
+                      [alt]="account.name" 
+                      class="w-10 h-10 rounded-full object-cover" />
+                    <span class="body-14R neutral-01">{{ account.name }}</span>
+                  </div>
+                }
+                <div class="border-t border-gray-200"></div>
+                <div
+                  class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                  (click)="addAccount()">
+                  <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <ion-icon name="add" class="text-xl text-gray-600"></ion-icon>
+                  </div>
+                  <span class="body-14R neutral-01">Add Account</span>
+                </div>
+                <div
+                  class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                  (click)="signOut()">
+                  <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <ion-icon name="log-out-outline" class="text-xl text-gray-600"></ion-icon>
+                  </div>
+                  <span class="body-14R neutral-01">Sign out</span>
+                </div>
+              </div>
+            }
+          </div>
+          <div class="flex items-center gap-4 relative">
+            <ion-icon name="notifications-outline" class="text-2xl text-gray-900"></ion-icon>
+            <div 
+              class="relative bg-transparent border-none cursor-pointer p-0"
+              (click)="toggleMenu()">
+              <ion-icon name="ellipsis-vertical" class="text-2xl text-gray-900"></ion-icon>
+            </div>
+            
+            <!-- Three Dots Menu Popup -->
+            @if (menuOpen()) {
+              <div class="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[150px] z-50">
+                <div
+                  class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left bg-transparent border-none cursor-pointer"
+                  (click)="handleNFC()">
+                  <img src="/assets/svg/NFC.svg" alt="NFC" class="w-8 h-8" />
+                  <span class="body-14R neutral-01">NFC</span>
+                </div>
+                <div
+                  class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left bg-transparent border-none cursor-pointer"
+                  (click)="handleFavorites()">
+                  <img src="/assets/svg/favorite.svg" alt="Favorites" class="w-8 h-8" />
+                  <span class="body-14R neutral-01">Favorites</span>
+                </div>
+                <div
+                  class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left bg-transparent border-none cursor-pointer"
+                  (click)="handleSettings()">
+                  <img src="/assets/svg/settings.svg" alt="Settings" class="w-8 h-8" />
+                  <span class="body-14R neutral-01">Settings</span>
+                </div>
+              </div>
+            }
+          </div>    
+        </header>
+      
+        <!-- Profile Summary Section -->
+        <div class="flex items-center gap-6 pb-4 px-5 bg-white w-full">
+          <div 
+            class="w-20 h-20 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-purple-600 to-blue-500 cursor-pointer"
+            (touchstart)="onProfilePictureTouchStart($event)"
+            (touchend)="onProfilePictureTouchEnd($event)"
+            (touchmove)="onProfilePictureTouchMove($event)"
+            (mousedown)="onProfilePictureTouchStart($any($event))"
+            (mouseup)="onProfilePictureTouchEnd($any($event))"
+            (mouseleave)="onProfilePictureTouchMove($any($event))">
+            <img src="/assets/svg/user_image.svg" alt="{{ userName() }}" class="w-full h-full object-cover" />
+          </div>
+          <div class="flex gap-8 flex-1 justify-around items-center">
+            <div class="flex flex-col items-center gap-1">
+              <div class="text-2xl font-bold text-gray-900">{{ networksCount() }}</div>
+              <div class="text-sm text-gray-500">Networks</div>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <div class="text-2xl font-bold text-gray-900">{{ eventsCount() }}</div>
+              <div class="text-sm text-gray-500">Events</div>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <div class="text-2xl font-bold text-gray-900">{{ attendedCount() }}</div>
+              <div class="text-sm text-gray-500">Attended</div>
+            </div>
+          </div>
+        </div>
+      
+        <!-- Main Profile Details -->
+        <div class="px-5 bg-white">
+          <h2 class="heading-h3 neutral-01 m-0 mb-4">{{ userName() }}</h2>
+      
+          <div class="flex flex-col gap-3 mb-4">
+            <div class="flex items-center gap-3">
+              <ion-icon name="location-outline" class="text-xl text-gray-500 flex-shrink-0"></ion-icon>
+              <span class="neutral-03 body-14R">{{ location() }}</span>
+            </div>
+      
+            <div class="flex items-center gap-3">
+              <ion-icon name="briefcase-outline" class="text-xl text-gray-500 flex-shrink-0"></ion-icon>
+              <span class="neutral-03 body-14R">{{ jobTitle() }}</span>
+            </div>
+      
+          </div>
+      
+          <!-- Tags -->
+          <div class="flex flex-col gap-2">
+            <span class="body-14R neutral-01">🏠 ATL, Georgia </span>
+            <span class="body-14R neutral-01">🙏🏻 Believer</span>
+            <span class="body-14R neutral-01">💼 Entrepreneur</span>
+            <span class="body-14R neutral-01">🧠 AI Thought Leader</span>
+            <span class="body-14R neutral-01">📷 Community Builder</span>
+            <span class="body-14R neutral-01">✈️ International Traveler</span>
+          </div>
+        </div>
+      
+        <!-- Links Section -->
+        <div class="bg-white px-5  mt-4">
+          <button
+            class="flex justify-between items-center w-full p-4 px-5 bg-transparent border-none cursor-pointer text-left"
+            (click)="toggleLinks()">
+            <span class="text-base font-semibold text-gray-900">Links ({{ links().length }})</span>
+            <ion-icon [name]="linksExpanded() ? 'chevron-up' : 'chevron-down'" class="text-base text-gray-500"></ion-icon>
+          </button>
+      
+          @if (linksExpanded()) {
+          <div class="grid grid-cols-2 gap-3 px-5 pb-4 mt-4">
+            @for (link of links(); track link.type) {
+            <a href="#" class="flex items-center gap-3 no-underline text-blue-600 text-[0.9375rem] hover:opacity-80">
+              <ion-icon [name]="getLinkIcon(link.type)" class="text-xl text-blue-600 flex-shrink-0"></ion-icon>
+              <span class="text-blue-600">{{ link.value }}</span>
+            </a>
+            }
+          </div>
+          }
+        </div>
+      
+        <!-- Action Buttons -->
+        <div class="flex flex-col gap-3 p-6 px-5 bg-white">
+          <div class="flex gap-3">
+            <button
+              class="flex items-center justify-center gap-2 flex-1 px-4 h-12 py-3 rounded-lg border bg-neutral-06 border-neutral-06 cursor-pointer ">
+              <ion-icon src="/assets/svg/edit_icon.svg" class="text-xl"></ion-icon>
+              <span class="neutral-02 body-14R">Edit Profile</span>
+            </button>
+            <button
+              class="flex items-center justify-center gap-2 flex-1 px-4 h-12 py-3 rounded-lg border bg-neutral-06 border-neutral-06 cursor-pointer"
+              (click)="openShareProfileDialog()">
+              <ion-icon src="/assets/svg/share.svg" class="text-xl"></ion-icon>
+              <span class="neutral-02 body-14R">Share Profile</span>
+            </button>
+          </div>
+          <button
+            class="mt-2 h-12 flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg border border-blue-600 bg-blue-600 text-[0.9375rem] font-medium text-white cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0">
+            <ion-icon src="/assets/svg/Crown.svg" ></ion-icon>
+            <span class="neutral-07 body-14SB">Set Up Subscription</span>
+          </button>
+          <!-- Networking Score Card -->
+          <div class="mt-4 mx-5 rounded-xl bg-gray-900 p-4 relative overflow-hidden">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-start gap-3 flex-1">
+                <img src="/assets/svg/Diamond.svg" alt="Diamond" class="w-16 h-16 flex-shrink-0" />
+                <div class="flex flex-col">
+                  <h3 class="body-12 neutral-07 m-0 mb-1">Networking Score</h3>
+                  <div class="neutral-07 font-semibold text-[24px]">{{ networkingScore() | number }}</div>
+                </div>
+              </div>
+              <ion-icon name="chevron-forward" class="text-white text-xl flex-shrink-0"></ion-icon>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <div class="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  class="h-full bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full"
+                  [style.width.%]="getProgressPercentage()">
+                </div>
+              </div>
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <img src="/assets/svg/Diamond-white.svg" alt="Diamond" class="w-12 h-12" />
+                <span class="body-16SB neutral-07">{{ networkingScoreTarget() / 100 }}K</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Create Business Card -->
+          <div class="mt-4 mx-5 rounded-xl bg-gray-900 p-4 relative overflow-hidden">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <h3 class="body-16SB neutral-07 mb-2 m-0">Create Your Business Card!</h3>
+                <p class="body-12 neutral-07 mb-4 opacity-90 leading-relaxed">
+                  Complete your profile, add your socials and share your business card!
+                </p>
+                <button class="bg-brand-04 h-12 rounded-lg text-gray-900 font-bold px-6 py-4 hover:opacity-90 transition-opacity">
+                  <span class="body-14SB neutral-01">Create Business Card</span>
+                </button>
+              </div>
+              <div class="ml-4 flex-shrink-0">
+                <div class="w-32 h-40 bg-white rounded-lg shadow-lg transform rotate-3 relative overflow-hidden">
+                  <div class="absolute top-2 right-2 w-16 h-16 bg-gradient-to-br from-yellow-400 to-gray-800 rounded"></div>
+                  <div class="absolute top-4 left-4 w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                    <span class="text-gray-900 font-bold text-sm">N</span>
+                  </div>
+                  <div class="absolute bottom-8 left-4 right-4">
+                    <div class="text-gray-900 font-semibold text-sm mb-1">Johnny James</div>
+                    <div class="text-gray-600 text-xs mb-1">CEO at One Design Studio</div>
+                    <div class="text-gray-600 text-xs">Atlanta, GA @johnnyjames</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+
+        <!-- Tab Navigation Bar -->
+        <div class="tab-navigation-bar">
+          <button 
+            class="tab-nav-button"
+            [class.tab-nav-button--active]="activeTab() === 'profile'"
+            (click)="setActiveTab('profile')">
+            <img 
+              [src]="activeTab() === 'profile' ? '/assets/svg/user-edit-active.svg' : '/assets/svg/user-edit.svg'" 
+              alt="Profile" 
+              class="tab-nav-button__icon" />
+          </button>
+          
+          <button 
+            class="tab-nav-button"
+            [class.tab-nav-button--active]="activeTab() === 'attended'"
+            (click)="setActiveTab('attended')">
+            <img 
+              [src]="activeTab() === 'attended' ? '/assets/svg/clock-rewind-active.svg' : '/assets/svg/clock-rewind.svg'" 
+              alt="Attended Events" 
+              class="tab-nav-button__icon" />
+          </button>
+          
+          <button 
+            class="tab-nav-button"
+            [class.tab-nav-button--active]="activeTab() === 'upcoming'"
+            (click)="setActiveTab('upcoming')">
+            <img 
+              [src]="activeTab() === 'upcoming' ? '/assets/svg/calendar-plus-active.svg' : '/assets/svg/calendar-plus.svg'" 
+              alt="Upcoming" 
+              class="tab-nav-button__icon" />
+          </button>
+          
+          <button 
+            class="tab-nav-button"
+            [class.tab-nav-button--active]="activeTab() === 'posts'"
+            (click)="setActiveTab('posts')">
+            <img 
+              [src]="activeTab() === 'posts' ? '/assets/svg/layout-active.svg' : '/assets/svg/layout.svg'" 
+              alt="Posts" 
+              class="tab-nav-button__icon" />
+          </button>
+          
+          <button 
+            class="tab-nav-button"
+            [class.tab-nav-button--active]="activeTab() === 'achievements'"
+            (click)="setActiveTab('achievements')">
+            <img 
+              [src]="activeTab() === 'achievements' ? '/assets/svg/trophy-active.svg' : '/assets/svg/trophy.svg'" 
+              alt="Achievements" 
+              class="tab-nav-button__icon" />
+          </button>
+        </div>
+
+        <!-- Tab Content Swiper -->
+        <div class="tab-content-container">
+          <div class="swiper" #tabSwiperContainer>
+            <div class="swiper-wrapper">
+              <!-- Profile Tab -->
+              <div class="swiper-slide">
+                <app-default-profile></app-default-profile>
+              </div>
+              
+              <!-- Attended Events Tab -->
+              <div class="swiper-slide">
+                <app-attended-events></app-attended-events>
+              </div>
+              
+              <!-- Upcoming Tab -->
+              <div class="swiper-slide">
+                <app-upcoming></app-upcoming>
+              </div>
+              
+              <!-- Posts Tab -->
+              <div class="swiper-slide">
+                <app-posts></app-posts>
+              </div>
+              
+              <!-- Achievements Tab -->
+              <div class="swiper-slide">
+                <app-achievements></app-achievements>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+</ion-content>

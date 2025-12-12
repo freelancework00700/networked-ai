@@ -26,7 +26,8 @@
     <ion-tab-button routerLink="/event">
       <div class="tab-button-wrapper">
         <div class="tab-button-inner">
-          <div class="min-h-[48px] h-[48px] w-[48px] rounded-full flex items-center justify-center bg-brand-04 absolute top-[0px]">
+          <div
+            class="min-h-[48px] h-[48px] w-[48px] rounded-full flex items-center justify-center bg-brand-04 absolute top-[0px]">
             <ion-icon src="/assets/svg/tab-plus.svg" class="text-[22px]"></ion-icon>
           </div>
           <ion-label class="absolute bottom-[12px]">Host</ion-label>
@@ -46,14 +47,16 @@
     </ion-tab-button>
 
     <!-- profile tab -->
-    <ion-tab-button routerLink="/profile" routerLinkActive="active">
-      <div class="tab-button-wrapper">
-        <div class="tab-button-inner">
-          <div class="tab-indicator bg-brand-04 h-[2px] w-[32px] absolute top-[14px] hidden"></div>
-          <ion-icon src="/assets/svg/tab-profile.svg" class="text-[20px] opacity-60"></ion-icon>
-          <ion-label>Profile</ion-label>
+  
+      <ion-tab-button routerLink="/view-profile" routerLinkActive="active">
+        <div class="tab-button-wrapper">
+          <div class="tab-button-inner">
+            <div class="tab-indicator bg-brand-04 h-[2px] w-[32px] absolute top-[14px] hidden"></div>
+            <ion-icon src="/assets/svg/tab-profile.svg" class="text-[20px] opacity-60"></ion-icon>
+            <ion-label>Profile</ion-label>
+          </div>
         </div>
-      </div>
-    </ion-tab-button>
+      </ion-tab-button>
+    
   </ion-tab-bar>
 </ion-tabs>

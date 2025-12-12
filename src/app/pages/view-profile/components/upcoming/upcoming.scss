@@ -1,0 +1,20 @@
+.upcoming {
+  padding: 2rem 1.5rem;
+  min-height: 100%;
+
+  &__header {
+    margin-bottom: 2rem;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+
+  &__content {
+    color: #6b7280;
+  }
+}
+

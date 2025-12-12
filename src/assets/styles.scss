@@ -4,6 +4,21 @@
 @use './layout/layout.scss';
 @use 'primeicons/primeicons.css';
 
+/* Modal Styles */
+.share-profile-modal {
+  --width: 100%;
+  --max-width: 500px;
+  --height: 100%;
+  --border-radius: 0;
+}
+
+.profile-long-press-modal {
+  --width: 100%;
+  --height: 100%;
+  --border-radius: 0;
+  --backdrop-opacity: 0.5;
+}
+
 /*
  * App Global CSS
  * ----------------------------------------------------------------------------

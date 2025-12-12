@@ -5,6 +5,7 @@ import { NotFound } from '@/pages/not-found';
 import { TabLayout } from '@/layout/tab-layout';
 import { Onboarding } from '@/pages/onboarding';
 import { Profile } from '@/pages/profile/profile';
+import { ViewProfile } from '@/pages/view-profile/view-profile';
 import { CreateEvent } from '@/pages/create-event';
 import { ForgotPassword } from '@/pages/forgot-password';
 import { onboardingGuard } from '@/guards/onboarding.guard';
@@ -14,7 +15,10 @@ export const appRoutes: Routes = [
     path: '',
     component: TabLayout,
     canActivate: [onboardingGuard],
-    children: [{ path: '', component: Home }]
+    children: [
+      { path: '', component: Home },
+      { path: 'view-profile', component: ViewProfile }
+    ]
   },
   { path: 'profile', component: Profile },
   { path: 'not-found', component: NotFound },

@@ -1,0 +1,57 @@
+<div class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/50 backdrop-blur-md">
+  <!-- Close on background click -->
+  <div class="absolute inset-0" (click)="close()"></div>
+  
+  <!-- Content Container -->
+  <div class="relative z-10 flex flex-col items-center gap-8">
+    <!-- Profile Picture with Edit Icon -->
+    <div class="relative">
+      <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+        <img 
+          [src]="userImage" 
+          [alt]="userName" 
+          class="w-full h-full object-cover" />
+      </div>
+      <!-- Edit Icon -->
+      <button
+        class="absolute bottom-0 right-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center border-2 border-white shadow-md"
+        (click)="handleEdit()">
+        <ion-icon name="create-outline" class="text-base text-gray-700"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center gap-6">
+      <!-- Copy Link -->
+      <button
+        class="flex flex-col items-center gap-2 bg-transparent border-none cursor-pointer"
+        (click)="handleCopyLink()">
+        <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-lg">
+          <ion-icon name="link-outline" class="text-2xl text-white"></ion-icon>
+        </div>
+        <span class="text-white text-sm font-medium">Copy Link</span>
+      </button>
+
+      <!-- Share -->
+      <button
+        class="flex flex-col items-center gap-2 bg-transparent border-none cursor-pointer"
+        (click)="handleShare()">
+        <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-lg">
+          <ion-icon name="share-outline" class="text-2xl text-white"></ion-icon>
+        </div>
+        <span class="text-white text-sm font-medium">Share</span>
+      </button>
+
+      <!-- Business Card -->
+      <button
+        class="flex flex-col items-center gap-2 bg-transparent border-none cursor-pointer"
+        (click)="handleBusinessCard()">
+        <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-lg">
+          <ion-icon name="card-outline" class="text-2xl text-white"></ion-icon>
+        </div>
+        <span class="text-white text-sm font-medium">Business Card</span>
+      </button>
+    </div>
+  </div>
+</div>
+
