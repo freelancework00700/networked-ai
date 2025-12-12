@@ -1,19 +1,10 @@
-import {
-  signOut,
-  deleteUser,
-  RecaptchaVerifier,
-  PhoneAuthProvider,
-  EmailAuthProvider,
-  linkWithCredential,
-  sendEmailVerification
-} from 'firebase/auth';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
+import { RecaptchaVerifier } from 'firebase/auth';
 import { HttpClient } from '@angular/common/http';
 import { IAuthResponse } from '@/interfaces/IAuth';
 import { inject, Injectable } from '@angular/core';
 import { FirebaseService } from './firebase.service';
-import { SplashScreen } from '@capacitor/splash-screen';
 import { environment } from 'src/environments/environment';
 import { KEYS, LocalStorageService } from './localstorage.service';
 import { FirebaseAuthError } from '@/utils/firebase-error-message';
@@ -31,39 +22,9 @@ export class AuthService {
   private verificationId: string | null = null;
   private recaptchaVerifier: RecaptchaVerifier | null = null;
 
-  // initialize Firebase Auth state listener
-  async initializeOnAuthStateChanged(): Promise<void> {
-    // this.firebaseService.auth.onAuthStateChanged(async (user) => {
-    //   // hide splash screen
-      await SplashScreen.hide();
-    //   if (user) {
-    //     console.log('firebase logged in: ', user);
-    //   } else {
-    //     await this.signOut();
-    //     const currentUrl = this.router.url;
-    //     // check if we're not already on the login page (check path without query params)
-    //     const currentPath = currentUrl.split('?')[0];
-    //     if (!currentPath.startsWith('/login') && !currentPath.startsWith('/not-found')) {
-    //       // without redirect query param
-    //       if (currentPath === '/') {
-    //         this.router.navigate(['/login']);
-    //       }
-    //       // with redirect query param
-    //       else {
-    //         const redirectUrl = encodeURIComponent(currentUrl);
-    //         this.router.navigate(['/login'], { queryParams: { redirect: redirectUrl } });
-    //       }
-    //     }
-    //   }
-    // });
-  }
-
   async signOut() {
     // log out from native device
     await FirebaseAuthentication.signOut();
-
-    // log out from web app
-    await signOut(this.firebaseService.auth);
 
     // clear verification id
     this.verificationId = null;
@@ -116,7 +77,7 @@ export class AuthService {
     });
   }
 
-  async verifyOTP(verificationCode: string): Promise<{ user: User; isNewUser: boolean }> {
+  async verifyPhoneOTP(verificationCode: string): Promise<{ user: User; isNewUser: boolean }> {
     try {
       const nativeResult = await FirebaseAuthentication.confirmVerificationCode({ verificationId: this.verificationId!, verificationCode });
       return { user: nativeResult.user!, isNewUser: nativeResult?.additionalUserInfo?.isNewUser || false };
@@ -155,17 +116,6 @@ export class AuthService {
         throw new Error(FirebaseAuthError(error));
       }
     });
-  }
-
-  async verifyOtpAndLinkPhoneNumber(otp: string): Promise<void> {
-    try {
-      const credential = PhoneAuthProvider.credential(this.verificationId!, otp);
-      await linkWithCredential(this.firebaseService.auth.currentUser!, credential);
-      console.log('Phone number linked to account success');
-    } catch (error) {
-      console.error('Error linking phone number to account:', error);
-      throw new Error(FirebaseAuthError(error));
-    }
   }
 
   async signInWithEmailAndPassword(email: string, password: string): Promise<{ user: User; isNewUser: boolean }> {
@@ -211,11 +161,10 @@ export class AuthService {
   async linkEmailToAccount(email: string): Promise<void> {
     try {
       // link email/password to current user
-      const credential = EmailAuthProvider.credential(email.trim().toLowerCase(), Date.now().toString());
-      const { user } = await linkWithCredential(this.firebaseService.auth.currentUser!, credential);
+      await FirebaseAuthentication.linkWithEmailAndPassword({ email: email.trim().toLowerCase(), password: Date.now().toString() });
 
       // send verification email ( optional )
-      sendEmailVerification(user);
+      await FirebaseAuthentication.sendEmailVerification();
 
       console.log('Email linked to account success');
     } catch (error) {
@@ -235,7 +184,7 @@ export class AuthService {
 
   async deleteAccount(): Promise<void> {
     try {
-      await deleteUser(this.firebaseService.auth.currentUser!);
+      await FirebaseAuthentication.deleteUser();
     } catch (error) {
       console.error('Error deleting account: ', error);
       throw new Error(FirebaseAuthError(error));
@@ -244,12 +193,7 @@ export class AuthService {
 
   async loginWithFirebaseToken(): Promise<IAuthResponse> {
     try {
-      const currentUser = this.firebaseService.auth.currentUser;
-      if (!currentUser) {
-        throw new Error('No authenticated user found');
-      }
-
-      const firebase_token = await currentUser.getIdToken();
+      const { token: firebase_token } = await FirebaseAuthentication.getIdToken();
       const response = await firstValueFrom(this.http.post<IAuthResponse>(`${environment.apiUrl}/auth/login`, { firebase_token }));
 
       if (response?.data?.token) {

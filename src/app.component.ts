@@ -1,7 +1,6 @@
 import { addIcons } from 'ionicons';
 import * as icons from 'ionicons/icons';
 import { Component } from '@angular/core';
-import { AuthService } from '@/services/auth.service';
 import { IonRouterOutlet } from '@ionic/angular/standalone';
 
 @Component({
@@ -13,8 +12,7 @@ import { IonRouterOutlet } from '@ionic/angular/standalone';
   `
 })
 export class AppComponent {
-  constructor(private authService: AuthService) {
-    this.authService.initializeOnAuthStateChanged();
+  constructor() {
     addIcons(icons);
   }
 }

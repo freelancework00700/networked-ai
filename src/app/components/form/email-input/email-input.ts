@@ -28,7 +28,7 @@ export class EmailInput implements OnInit {
   isSubmitted = input(true);
   controlName = input('email');
   checkAvailability = input(false);
-  placeholder = input('email@example.com');
+  placeholder = input('user@email.com');
 
   // services
   private userService = inject(UserService);

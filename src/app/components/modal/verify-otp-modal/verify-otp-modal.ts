@@ -49,7 +49,7 @@ export class VerifyOtpModal {
     try {
       this.isLoading.set(true);
       if (this.type === 'mobile') {
-        await this.authService.verifyOtpAndLinkPhoneNumber(this.otp()!);
+        await this.authService.verifyPhoneOTP(this.otp()!);
         await this.modalService.close(true);
       }
     } catch (error: any) {

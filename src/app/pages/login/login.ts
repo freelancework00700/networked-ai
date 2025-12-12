@@ -80,7 +80,7 @@ export class Login {
       // new user -> profile page
       // existing user -> home page
       if (isNewUser) {
-        this.navCtrl.navigateForward('/profile', { state: { user: JSON.parse(JSON.stringify(user)) } });
+        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(user)) } });
       } else {
         this.navCtrl.navigateForward('/');
       }
@@ -132,13 +132,13 @@ export class Login {
       await this.modalService.openLoadingModal('Signing you in...');
 
       // verify otp
-      const { user, isNewUser } = await this.authService.verifyOTP(otp);
+      const { user, isNewUser } = await this.authService.verifyPhoneOTP(otp);
       await this.authService.loginWithFirebaseToken();
 
       // new user -> profile page
       // existing user -> home page
       if (isNewUser) {
-        this.navCtrl.navigateForward('/profile', { state: { user: JSON.parse(JSON.stringify(user)) } });
+        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(user)) } });
       } else {
         this.navCtrl.navigateForward('/');
       }
