@@ -4,14 +4,14 @@ const config: CapacitorConfig = {
   appName: 'Networked AI',
   webDir: 'dist/browser',
   appId: 'app.networked.ai',
+  android:{
+    allowMixedContent: true,
+  },
   plugins: {
     FirebaseAuthentication: {
       skipNativeAuth: false,
       authDomain: 'app.net-worked.ai',
       providers: ['google.com', 'apple.com', 'phone', 'facebook.com']
-    },
-    SplashScreen: {
-      launchAutoHide: false
     }
   }
 };

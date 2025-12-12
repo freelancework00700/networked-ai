@@ -1,0 +1,47 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="flex items-center p-6 max-w-[672px] mx-auto">
+      <div class="pi pi-arrow-left cursor-pointer" (click)="goBack()"></div>
+      <div class="body-14M neutral-02 text-center w-full">Edit Profile</div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="w-full p-6 max-w-[672px] mx-auto">
+    <form [formGroup]="profileForm()" class="h-full">
+      <!-- profile image -->
+      <div class="flex flex-col items-center mb-8">
+        <profile-image-input controlName="image_url" label="Profile Picture" [required]="false" />
+      </div>
+
+      <!-- personal information -->
+      <user-personal-info
+        [formGroup]="profileForm()"
+        [showPasswordInput]="false"
+        [isSubmitted]="isSubmitted()"
+        (openDateModal)="openDateModal()"
+        (openTitleModal)="openTitleModal()"
+        (openLocationModal)="openLocationModal()"
+        (openAccountTypeModal)="openAccountTypeModal()"
+      />
+
+      <!-- additional information -->
+      <div class="space-y-4 flex flex-col gap-4">
+        <div class="body-16SB neutral-01">Additional Information</div>
+        <user-additional-info [formGroup]="profileForm()" />
+      </div>
+    </form>
+  </div>
+
+  <!-- recaptcha container for phone authentication -->
+  <div id="recaptcha-container"></div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <div class="p-6 max-w-[672px] mx-auto">
+      <app-button label="Save Changes" (click)="save()" [isLoading]="isLoading()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

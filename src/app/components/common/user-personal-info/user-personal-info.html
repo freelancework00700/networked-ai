@@ -1,0 +1,81 @@
+<div class="flex flex-col gap-4">
+  <!-- title input -->
+  <text-input
+    label="Title"
+    [readonly]="true"
+    controlName="title"
+    placeholder="Select title"
+    [isSubmitted]="isSubmitted()"
+    (click)="openTitleModal.emit()"
+    endIconName="pi-chevron-right"
+  />
+
+  <!-- name input -->
+  <div class="flex items-stretch gap-2 w-full">
+    <!-- first name input -->
+    <div class="flex-1">
+      <text-input label="First Name" placeholder="Ethan" class="w-full h-full" controlName="first_name" [isSubmitted]="isSubmitted()" />
+    </div>
+
+    <!-- last name input -->
+    <div class="flex-1">
+      <text-input label="Last Name" placeholder="Cortazzo" class="w-full h-full" controlName="last_name" [isSubmitted]="isSubmitted()" />
+    </div>
+  </div>
+
+  <!-- email input -->
+  <email-input [checkAvailability]="true" />
+
+  <!-- password input - only show during signup -->
+  @if (showPasswordInput()) {
+    <password-input controlName="password" [isSubmitted]="isSubmitted()" />
+  }
+
+  <!-- phone input -->
+  <mobile-input [checkAvailability]="true" />
+
+  <!-- username input -->
+  <username-input />
+
+  <!-- birthdate input -->
+  <text-input
+    [readonly]="true"
+    label="Birth Date"
+    controlName="dob"
+    placeholder="Select Date"
+    (click)="openDateModal.emit()"
+    [isSubmitted]="isSubmitted()"
+    endIconName="pi-chevron-right"
+  />
+
+  <!-- account type input -->
+  <text-input
+    [readonly]="true"
+    label="Account Type"
+    initialValue="Individual"
+    controlName="account_type"
+    [isSubmitted]="isSubmitted()"
+    endIconName="pi-chevron-right"
+    placeholder="Select account type"
+    (click)="openAccountTypeModal.emit()"
+  />
+
+  <!-- location & location setting -->
+  <div class="flex flex-col gap-4">
+    <div class="text-lg font-semibold">Location & Settings</div>
+
+    <!-- location input -->
+    <text-input
+      [readonly]="true"
+      label="City/Location"
+      controlName="address"
+      iconName="pi pi-map-marker"
+      [isSubmitted]="isSubmitted()"
+      placeholder="Select location"
+      (click)="openLocationModal.emit()"
+    />
+
+    <!-- user setting toggle -->
+    <user-setting-toggle />
+  </div>
+</div>

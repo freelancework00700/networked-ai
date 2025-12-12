@@ -18,7 +18,7 @@ export class UserService {
     return { ...rest, name, account_type: account_type.toLowerCase() };
   }
 
-  async updateUser(payload: any): Promise<IUserResponse> {
+  async saveUser(payload: any): Promise<IUserResponse> {
     try {
       const transformedPayload = this.transformProfilePayload(payload);
       const response = await firstValueFrom(this.http.put<IUserResponse>(`/users`, transformedPayload));
