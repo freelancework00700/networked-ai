@@ -1,12 +1,13 @@
 import { Button } from '@/components/form/button';
 import { inject, Component } from '@angular/core';
-import { NavController } from '@ionic/angular/standalone';
+import { NavController, IonHeader, IonToolbar, IonContent, IonIcon } from '@ionic/angular/standalone';
+import { InputIcon } from 'primeng/inputicon';
 
 @Component({
-  imports: [Button],
+  imports: [IonIcon, IonContent, IonToolbar, IonHeader, Button, InputIcon],
   selector: 'profile',
   styleUrl: './profile.scss',
-  templateUrl: './profile.html',
+  templateUrl: './profile.html'
 })
 export class Profile {
   // services

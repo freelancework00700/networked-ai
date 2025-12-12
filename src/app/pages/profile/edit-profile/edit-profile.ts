@@ -9,13 +9,28 @@ import { ProfileImageInput } from '@/components/form/profile-image-input';
 import { UserPersonalInfo } from '@/components/common/user-personal-info';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { UserAdditionalInfo } from '@/components/common/user-additional-info';
-import { IonFooter, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
+import {
+  IonFooter,
+  IonHeader,
+  IonToolbar,
+  IonContent,
+  NavController,
+  IonSegment,
+  IonSegmentButton,
+  SegmentValue,
+  SegmentCustomEvent,
+  IonIcon
+} from '@ionic/angular/standalone';
+import { InputIcon } from 'primeng/inputicon';
 
 @Component({
   selector: 'edit-profile',
   styleUrl: './edit-profile.scss',
   templateUrl: './edit-profile.html',
   imports: [
+    IonIcon,
+    IonSegmentButton,
+    IonSegment,
     Button,
     IonHeader,
     IonFooter,
@@ -24,10 +39,12 @@ import { IonFooter, IonHeader, IonToolbar, IonContent, NavController } from '@io
     UserPersonalInfo,
     ProfileImageInput,
     UserAdditionalInfo,
-    ReactiveFormsModule
-  ],
+    ReactiveFormsModule,
+    InputIcon
+  ]
 })
 export class EditProfile {
+  segmentValue: SegmentValue = 'events';
   // services
   private fb = inject(FormBuilder);
   private navCtrl = inject(NavController);
@@ -43,7 +60,6 @@ export class EditProfile {
 
   // view child
   @ViewChild(UserPersonalInfo) userPersonalInfo?: UserPersonalInfo;
-
 
   goBack(): void {
     this.navCtrl.back();
@@ -99,5 +115,9 @@ export class EditProfile {
     const currentAddress = this.profileForm().get('address')?.value || '';
     const { address, latitude, longitude } = await this.modalService.openLocationModal(currentAddress);
     this.profileForm().patchValue({ address, latitude, longitude });
+  }
+
+  onSegmentChange(event: SegmentCustomEvent) {
+    this.segmentValue = event.detail.value ?? 'events';
   }
 }
