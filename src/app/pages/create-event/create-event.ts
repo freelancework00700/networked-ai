@@ -390,10 +390,12 @@ export class CreateEvent {
   }
 
   openNetworkedGallery(): void {
+    this.modalService.openImageGalleryModal();
     // TODO: Implement Networked Gallery modal
   }
 
   openNetworkedGIFs(): void {
+    this.modalService.openGifGalleryModal();
     // TODO: Implement Networked GIFs modal
   }
 

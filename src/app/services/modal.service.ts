@@ -7,7 +7,9 @@ import { ConfirmModal } from '@/components/modal/confirm-modal';
 import { LocationModal } from '@/components/modal/location-modal';
 import { DateTimeModal } from '@/components/modal/date-time-modal';
 import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
+import { GifGalleryModal } from '@/components/modal/gif-gallery-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
+import { ImageGalleryModal } from '@/components/modal/image-gallery-modal';
 import { EventCategoryModal } from '@/components/modal/event-category-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
 import { AIPromptModal } from '@/pages/create-event/components/ai-prompt-modal';
@@ -124,7 +126,7 @@ export class ModalService {
     return data || value;
   }
 
-  async openLocationModal(location= ''): Promise<{ address: string; latitude: number; longitude: number }> {
+  async openLocationModal(location = ''): Promise<{ address: string; latitude: number; longitude: number }> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -132,8 +134,8 @@ export class ModalService {
       initialBreakpoint: 1,
       backdropDismiss: true,
       component: LocationModal,
-      cssClass: 'location-modal',
-      componentProps: { location }
+      componentProps: { location },
+      cssClass: 'modal-80-percent-height'
     });
 
     await modal.present();
@@ -367,7 +369,7 @@ export class ModalService {
           backdropDismiss: false,
           cssClass: 'auto-hight-modal',
           componentProps: { imageDataUrl },
-          component: ProfileImageConfirmModal,
+          component: ProfileImageConfirmModal
         });
 
         await modal.present();
@@ -384,6 +386,42 @@ export class ModalService {
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  async openImageGalleryModal(title = 'Select Image', multiSelect = true): Promise<string | string[] | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      backdropDismiss: true,
+      component: ImageGalleryModal,
+      cssClass: 'modal-80-percent-height',
+      componentProps: { title, multiSelect }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    return data;
+  }
+
+  async openGifGalleryModal(title = 'Select GIF', multiSelect = true): Promise<string | string[] | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      backdropDismiss: true,
+      component: GifGalleryModal,
+      cssClass: 'modal-80-percent-height',
+      componentProps: { title, multiSelect }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    return data;
   }
 
   async close(data?: any): Promise<void> {

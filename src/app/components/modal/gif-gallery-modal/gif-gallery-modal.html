@@ -1,0 +1,90 @@
+<div class="p-6 h-full flex flex-col">
+  <!-- title -->
+  <div class="flex items-center justify-center mb-4 text-center">
+    <div class="heading-h3 neutral-01">{{ title }}</div>
+  </div>
+
+  <!-- searchbar -->
+  <div class="mb-6">
+    <p-iconfield>
+      <!-- search icon -->
+      <p-inputicon class="pi pi-search" />
+
+      <!-- search input -->
+      <input pInputText [value]="searchQuery()" class="w-full h-[44px]" (input)="onSearchInput($event)" placeholder="Search Tenor" />
+
+      <!-- spinner when searching, clear icon when not searching and has value -->
+      @if (isSearching()) {
+        <p-inputicon class="pi pi-spin pi-spinner" />
+      } @else if (searchQuery()) {
+        <p-inputicon class="pi pi-times cursor-pointer" (click)="clearSearch()" />
+      }
+    </p-iconfield>
+  </div>
+
+  <!-- gif grid with infinite scroll -->
+  <ion-content>
+    <div class="grid grid-cols-3 gap-2 p-2">
+      @for (gif of gifs(); track gif.id) {
+        <div
+          role="article"
+          (click)="selectGif(gif)"
+          class="aspect-square cursor-pointer rounded-lg overflow-hidden hover:opacity-80 transition-opacity relative"
+        >
+          <img [src]="getTinyGifUrl(gif)" class="w-full h-full object-cover" loading="lazy" lazyImage />
+          @if (multiSelect && isGifSelected(gif)) {
+            <div class="absolute top-2 right-2 bg-primary rounded-md px-2 py-1">
+              {{ getSelectionIndex(gif) }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- no results message -->
+    @if (searchQuery().length > 0 && !isSearching() && gifs().length === 0) {
+      <div class="flex items-center justify-center py-8">
+        <div class="body-14M neutral-03">No GIFs found</div>
+      </div>
+    }
+
+    <!-- loading state -->
+    @if (isSearching() && gifs().length === 0) {
+      <div class="flex items-center justify-center py-8">
+        <div class="body-14M neutral-03">Searching...</div>
+      </div>
+    }
+
+    <!-- infinite scroll -->
+    <ion-infinite-scroll threshold="100px" (ionInfinite)="onInfiniteScroll($event)" [disabled]="!hasMore()">
+      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more GIFs..." />
+    </ion-infinite-scroll>
+  </ion-content>
+</div>
+
+@if (multiSelect && selectedGifs().length > 0) {
+  <ion-footer>
+    <ion-toolbar>
+      <div class="flex items-center gap-4 p-4 bg-white min-h-[80px]">
+        <div class="flex-1 min-w-0 overflow-visible py-2 pr-2">
+          <div class="flex items-center gap-3 overflow-x-auto py-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            @for (gif of selectedGifs(); track gif.id) {
+              <div class="relative flex-shrink-0">
+                <img [src]="getTinyGifUrl(gif)" class="w-16 h-16 rounded-lg object-cover block" loading="lazy" lazyImage />
+
+                <div
+                  (click)="removeSelectedGif(gif)"
+                  class="absolute -top-1.5 -right-1.5 w-6 h-6 bg-neutral-05 text-neutral-07 rounded-full flex items-center justify-center cursor-pointer"
+                >
+                  <i class="pi pi-times"></i>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <app-button label="Next" width="100px" height="48px" (click)="confirmSelection()" />
+      </div>
+    </ion-toolbar>
+  </ion-footer>
+}
