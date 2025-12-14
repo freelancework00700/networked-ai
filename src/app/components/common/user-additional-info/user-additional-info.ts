@@ -9,7 +9,7 @@ import { TextAreaInput } from '@/components/form/text-area-input';
   selector: 'user-additional-info',
   styleUrl: './user-additional-info.scss',
   templateUrl: './user-additional-info.html',
-  imports: [TextInput, SocialInput, TextAreaInput, ReactiveFormsModule],
+  imports: [TextInput, SocialInput, TextAreaInput, ReactiveFormsModule]
 })
 export class UserAdditionalInfo {
   // inputs

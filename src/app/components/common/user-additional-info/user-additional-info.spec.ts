@@ -8,8 +8,7 @@ describe('UserAdditionalInfo', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [UserAdditionalInfo]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(UserAdditionalInfo);
     component = fixture.componentInstance;

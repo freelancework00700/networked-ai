@@ -53,7 +53,6 @@ export class TicketForm implements OnInit {
   showEndSaleInputs = computed(() => !this.endSaleOnEventStart());
   isCustomize = computed(() => this.showDescriptionEditor());
 
-
   ngOnInit(): void {
     const isFree = this.ticketType === 'free';
     this.isFreeTicket.set(isFree);
@@ -81,7 +80,7 @@ export class TicketForm implements OnInit {
 
     let salesEndDateValue = '';
     let salesEndTimeValue = '';
-      if (this.initialData?.sale_end_date) {
+    if (this.initialData?.sale_end_date) {
       const date = new Date(this.initialData.sale_end_date);
       salesEndDateValue = date.toISOString().split('T')[0];
       salesEndTimeValue = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;

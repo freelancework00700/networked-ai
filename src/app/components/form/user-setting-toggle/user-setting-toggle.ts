@@ -2,7 +2,6 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { inject, input, OnInit, Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormGroup, FormBuilder, ControlContainer, ReactiveFormsModule } from '@angular/forms';
 
-
 @Component({
   selector: 'user-setting-toggle',
   styleUrl: './user-setting-toggle.scss',

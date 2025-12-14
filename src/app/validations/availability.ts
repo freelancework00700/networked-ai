@@ -9,7 +9,6 @@ export function availability(
   getValueFn?: () => string | undefined
 ): AsyncValidatorFn {
   return (control: AbstractControl): Observable<ValidationErrors | null> => {
-    
     if (!control.value) {
       return of(null);
     }
@@ -31,4 +30,3 @@ export function availability(
     );
   };
 }
-

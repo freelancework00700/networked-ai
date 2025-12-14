@@ -5,7 +5,7 @@ import { FormGroup, AbstractControl } from '@angular/forms';
 /**
  * Validates form fields and marks invalid fields as touched.
  * Waits for async validators to complete before validating.
- * 
+ *
  * @param form - The FormGroup to validate
  * @param fieldNames - Array of form control names to validate
  * @returns Promise that resolves to true if all fields are valid, false otherwise
@@ -56,7 +56,7 @@ export async function validateFields(form: FormGroup, fieldNames: string[]): Pro
 /**
  * Waits for all async validators to complete for the specified fields.
  * Handles both regular controls and nested FormGroups.
- * 
+ *
  * @param form - The FormGroup containing the controls
  * @param fieldNames - Array of field names to wait for
  */
@@ -82,7 +82,7 @@ async function waitForAsyncValidators(form: FormGroup, fieldNames: string[]): Pr
  * Waits for a single control's async validators to complete.
  * Returns immediately if control is not in PENDING state.
  * Has a 5-second timeout to prevent infinite waiting.
- * 
+ *
  * @param control - The control to wait for (can be null)
  */
 async function waitForControlAsyncValidation(control: AbstractControl | null): Promise<void> {

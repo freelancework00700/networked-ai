@@ -8,8 +8,6 @@ export default [
     path: '',
     component: TabLayout,
     canActivate: [onboardingGuard],
-    children: [
-      { path: '', component: Home }
-    ]
+    children: [{ path: '', component: Home }]
   }
 ] as Routes;

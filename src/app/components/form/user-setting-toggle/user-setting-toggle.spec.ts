@@ -8,8 +8,7 @@ describe('UserSettingToggle', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [UserSettingToggle]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(UserSettingToggle);
     component = fixture.componentInstance;

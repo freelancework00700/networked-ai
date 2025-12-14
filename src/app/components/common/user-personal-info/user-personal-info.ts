@@ -12,7 +12,7 @@ import { UserSettingToggle } from '@/components/form/user-setting-toggle';
   selector: 'user-personal-info',
   styleUrl: './user-personal-info.scss',
   templateUrl: './user-personal-info.html',
-  imports: [TextInput, EmailInput, MobileInput, PasswordInput, UsernameInput, UserSettingToggle, ReactiveFormsModule],
+  imports: [TextInput, EmailInput, MobileInput, PasswordInput, UsernameInput, UserSettingToggle, ReactiveFormsModule]
 })
 export class UserPersonalInfo {
   // inputs

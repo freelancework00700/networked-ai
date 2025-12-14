@@ -1,7 +1,7 @@
 export interface IAuthResponse {
-    success: boolean;
-    message: string;
-    data: {
-        token: string;
-    };
+  message: string;
+  success: boolean;
+  data: {
+    token: string;
+  };
 }

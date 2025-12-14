@@ -1,65 +1,64 @@
 <div class="flex flex-col gap-4" [formGroupName]="controlName()">
-    <!-- hide location toggle -->
-    <div class="flex p-3 border border-surface-300 rounded-lg gap-4">
-      <!-- left: svg -->
-      @if (isLocationEnabled) {
-        <img src="assets/svg/locationDisable.svg" alt="Location Disabled" class="w-10 h-10" />
-      } @else {
-        <img src="assets/svg/location.svg" alt="Location Enabled" class="w-10 h-10" />
-      }
-  
-      <!-- middle: text -->
-      <div class="flex-1">
-        <div class="font-bold mb-1">Hide Location</div>
-        <div class="text-sm text-surface-600">When enabled, your networks can't see your location.</div>
-      </div>
-  
-      <!-- right: toggle switch -->
-      <div class="flex items-center">
-        <p-toggleSwitch formControlName="hide_location" />
-      </div>
+  <!-- hide location toggle -->
+  <div class="flex p-3 border border-surface-300 rounded-lg gap-4">
+    <!-- left: svg -->
+    @if (isLocationEnabled) {
+      <img src="assets/svg/locationDisable.svg" alt="Location Disabled" class="w-10 h-10" />
+    } @else {
+      <img src="assets/svg/location.svg" alt="Location Enabled" class="w-10 h-10" />
+    }
+
+    <!-- middle: text -->
+    <div class="flex-1">
+      <div class="font-bold mb-1">Hide Location</div>
+      <div class="text-sm text-surface-600">When enabled, your networks can't see your location.</div>
     </div>
-  
-    <!-- hide mobile toggle -->
-    <div class="flex p-3 border border-surface-300 rounded-lg gap-4">
-      <!-- left: svg -->
-      @if (isMobileEnabled) {
-        <img src="assets/svg/callDisable.svg" alt="Mobile Disabled" class="w-10 h-10" />
-      } @else {
-        <img src="assets/svg/callEnabled.svg" alt="Mobile Enabled" class="w-10 h-10" />
-      }
-  
-      <!-- middle: text -->
-      <div class="flex-1">
-        <div class="font-bold mb-1">Hide Mobile</div>
-        <div class="text-sm text-surface-600">When enabled, your networks can't see your mobile number.</div>
-      </div>
-  
-      <!-- right: toggle switch -->
-      <div class="flex items-center">
-        <p-toggleSwitch formControlName="hide_mobile" />
-      </div>
-    </div>
-  
-    <!-- hide email toggle -->
-    <div class="flex p-3 border border-surface-300 rounded-lg gap-4">
-      <!-- left: svg -->
-      @if (isEmailEnabled) {
-        <img src="assets/svg/emailDisable.svg" alt="Email Disabled" class="w-10 h-10" />
-      } @else {
-        <img src="assets/svg/emailEnabled.svg" alt="Email Enabled" class="w-10 h-10" />
-      }
-  
-      <!-- middle: text -->
-      <div class="flex-1">
-        <div class="font-bold mb-1">Hide Email</div>
-        <div class="text-sm text-surface-600">When enabled, your networks can't see your email address.</div>
-      </div>
-  
-      <!-- right: toggle switch -->
-      <div class="flex items-center">
-        <p-toggleSwitch formControlName="hide_email" />
-      </div>
+
+    <!-- right: toggle switch -->
+    <div class="flex items-center">
+      <p-toggleSwitch formControlName="hide_location" />
     </div>
   </div>
-  
+
+  <!-- hide mobile toggle -->
+  <div class="flex p-3 border border-surface-300 rounded-lg gap-4">
+    <!-- left: svg -->
+    @if (isMobileEnabled) {
+      <img src="assets/svg/callDisable.svg" alt="Mobile Disabled" class="w-10 h-10" />
+    } @else {
+      <img src="assets/svg/callEnabled.svg" alt="Mobile Enabled" class="w-10 h-10" />
+    }
+
+    <!-- middle: text -->
+    <div class="flex-1">
+      <div class="font-bold mb-1">Hide Mobile</div>
+      <div class="text-sm text-surface-600">When enabled, your networks can't see your mobile number.</div>
+    </div>
+
+    <!-- right: toggle switch -->
+    <div class="flex items-center">
+      <p-toggleSwitch formControlName="hide_mobile" />
+    </div>
+  </div>
+
+  <!-- hide email toggle -->
+  <div class="flex p-3 border border-surface-300 rounded-lg gap-4">
+    <!-- left: svg -->
+    @if (isEmailEnabled) {
+      <img src="assets/svg/emailDisable.svg" alt="Email Disabled" class="w-10 h-10" />
+    } @else {
+      <img src="assets/svg/emailEnabled.svg" alt="Email Enabled" class="w-10 h-10" />
+    }
+
+    <!-- middle: text -->
+    <div class="flex-1">
+      <div class="font-bold mb-1">Hide Email</div>
+      <div class="text-sm text-surface-600">When enabled, your networks can't see your email address.</div>
+    </div>
+
+    <!-- right: toggle switch -->
+    <div class="flex items-center">
+      <p-toggleSwitch formControlName="hide_email" />
+    </div>
+  </div>
+</div>

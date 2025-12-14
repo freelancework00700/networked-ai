@@ -39,4 +39,3 @@ export interface IUserResponse {
   message: string;
   success: boolean;
 }
-

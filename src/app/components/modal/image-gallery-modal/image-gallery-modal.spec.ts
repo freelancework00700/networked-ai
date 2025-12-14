@@ -8,8 +8,7 @@ describe('ImageGalleryModal', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ImageGalleryModal]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ImageGalleryModal);
     component = fixture.componentInstance;

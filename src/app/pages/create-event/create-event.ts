@@ -450,7 +450,7 @@ export class CreateEvent {
         price: ticket.price.replace('$', ''),
         quantity: ticket.quantity || null,
         description: (ticket as any).description,
-        sale_start_date : ticket.sale_start_date || null,
+        sale_start_date: ticket.sale_start_date || null,
         sale_end_date: ticket.sale_end_date || null,
         end_sale_on_event_start: ticket.end_sale_on_event_start ?? true,
         ticket_type: ticket.ticket_type

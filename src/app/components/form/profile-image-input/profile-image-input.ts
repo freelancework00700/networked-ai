@@ -34,7 +34,7 @@ export class ProfileImageInput implements OnInit {
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
     private modalService: ModalService,
-    private parentContainer: ControlContainer,
+    private parentContainer: ControlContainer
   ) {}
 
   get control(): AbstractControl {

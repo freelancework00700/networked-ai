@@ -38,7 +38,7 @@ interface UnsplashSearchResponse {
     InputTextModule,
     IonInfiniteScroll,
     LazyImageDirective,
-    IonInfiniteScrollContent,
+    IonInfiniteScrollContent
   ]
 })
 export class ImageGalleryModal implements OnInit {

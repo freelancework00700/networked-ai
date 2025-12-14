@@ -4,8 +4,8 @@ const config: CapacitorConfig = {
   appName: 'Networked AI',
   webDir: 'dist/browser',
   appId: 'app.networked.ai',
-  android:{
-    allowMixedContent: true,
+  android: {
+    allowMixedContent: true
   },
   plugins: {
     FirebaseAuthentication: {

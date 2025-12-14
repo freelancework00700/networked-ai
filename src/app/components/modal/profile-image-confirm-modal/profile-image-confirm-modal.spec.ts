@@ -8,8 +8,7 @@ describe('ProfileImageConfirmModal', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProfileImageConfirmModal]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ProfileImageConfirmModal);
     component = fixture.componentInstance;
