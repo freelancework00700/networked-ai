@@ -1,0 +1,20 @@
+<div class="rounded-[16px] bg-neutral-06 py-8 flex flex-col items-center gap-4">
+  <div
+    class="rounded-[24px] bg-[radial-gradient(50%_50%_at_50%_50%,rgba(255,255,255,0.70)_0%,rgba(255,255,255,0.70)_100%)] shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] flex items-center justify-center p-3"
+  >
+    <div
+      class="w-14 h-14 rounded-[12px] bg-[linear-gradient(138deg,#ABABAB_8.51%,#545454_85.69%)] shadow-[0_12px_24px_rgba(9,70,103,0.30)] flex items-center justify-center"
+    >
+      <div class="w-10 h-10 rounded-[12px] bg-neutral-04/40 flex items-center justify-center">
+        <ion-icon src="/assets/svg/no-event.svg" class="text-[24px]" />
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col items-center gap-2">
+    <div class="heading-h3 neutral-01">No Upcoming Events</div>
+    <div class="body-14M neutral-03 text-center">You haven't registered for any events.</div>
+  </div>
+
+  <app-button height="40px" label="Browse Events" (click)="onBrowseClick.emit()" />
+</div>

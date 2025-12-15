@@ -1,0 +1,192 @@
+<div class="flex flex-col gap-6">
+  <!-- host your first event card -->
+  <div class="w-full max-w-[672px] mx-auto mt-4 px-4">
+    <host-first-event-card />
+  </div>
+
+  <!-- filter buttons -->
+  <div class="w-full max-w-[672px] mx-auto flex gap-2 px-4">
+    <button class="filter-button" (click)="filter.set('browse')" [class.active]="isBrowseMode()">Browse Events</button>
+    <button class="filter-button" (click)="filter.set('upcoming')" [class.active]="isUpcomingMode()">My Upcoming Events</button>
+  </div>
+
+  <!-- no upcoming events -->
+  @if (isUpcomingMode()) {
+    <div class="w-full max-w-[672px] mx-auto px-4">
+      <no-upcoming-event-card (onBrowseClick)="filter.set('browse')" />
+    </div>
+  }
+
+  <!-- my upcoming events -->
+  @if (isUpcomingMode()) {
+    <div class="w-full max-w-[672px] mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="body-16SB neutral-01">My Upcoming Events</div>
+        <button type="button" class="body-14SB brand-02">See all</button>
+      </div>
+    </div>
+
+    <div class="w-full max-w-[672px] mx-auto">
+      <div class="flex flex-col gap-3 px-4">
+        @for (event of eventCards; track event.title) {
+          <upcoming-event-card [event]="event" (onViewTicket)="handleViewTicket()" />
+        }
+      </div>
+    </div>
+  }
+
+  @if (isBrowseMode()) {
+    <!-- browse events by cities -->
+    <div class="w-full max-w-[672px] mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="body-16SB neutral-01">Browse events by cities</div>
+        <button type="button" class="body-14SB brand-02">See all</button>
+      </div>
+    </div>
+
+    <div class="w-full max-w-[672px] mx-auto">
+      <div class="swiper" #swiperContainerEventByCities>
+        <div class="swiper-wrapper">
+          @for (city of cityCards; track city.city) {
+            <div class="swiper-slide first:pl-4 last:pr-4">
+              <city-card [city]="city" />
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- events for you -->
+    <div class="w-full max-w-[672px] mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="body-16SB neutral-01">Events for you</div>
+        <button type="button" class="body-14SB brand-02">See all</button>
+      </div>
+    </div>
+
+    <div class="w-full max-w-[672px] mx-auto">
+      <div class="swiper" #swiperContainerEventByYou>
+        <div class="swiper-wrapper">
+          @for (event of eventCards; track event.title) {
+            <div class="swiper-slide first:pl-4 last:pr-4">
+              <event-card [event]="event" />
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- user recommendations -->
+    <div class="w-full max-w-[672px] mx-auto bg-neutral-06 py-3">
+      <div class="px-4">
+        <div class="flex items-center justify-between">
+          <div class="body-16SB neutral-01">People you might know</div>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <div class="swiper" #swiperContainerPeople>
+          <div class="swiper-wrapper">
+            @for (person of peopleCards; track person.name) {
+              <div class="swiper-slide first:pl-4 last:pr-4">
+                <user-card [user]="person" />
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- feed recommendations -->
+    <div class="w-full max-w-[672px] mx-auto px-4">
+      @for (post of feedPosts; track post.id) {
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center gap-3">
+            <div class="relative flex-shrink-0">
+              <img [src]="post.primaryUser.profileImage" class="w-10 h-10 rounded-full object-cover border-2 border-neutral-07" />
+              <div
+                class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-neutral-02 border-2 border-neutral-07 flex items-center justify-center"
+              >
+                <span class="body-10 neutral-07 font-medium">+{{ post.otherCount }}</span>
+              </div>
+            </div>
+            <div class="flex-1 body-14 neutral-01">
+              <span class="body-14SB neutral-01">{{ post.primaryUser.name }}</span>
+              <span> and {{ post.otherCount }} others recently registered for </span>
+              <span class="body-14SB neutral-01">{{ post.event.title }}</span>
+            </div>
+          </div>
+
+          <event-card [event]="post.event" variant="compact" />
+        </div>
+      }
+    </div>
+
+    <!-- message recommendations -->
+    <div class="w-full max-w-[672px] mx-auto px-4 py-3 bg-neutral-06">
+      @for (suggestion of networkSuggestions; track suggestion.id) {
+        <div class="flex gap-4">
+          <div class="flex-1 flex flex-col gap-3">
+            <div>
+              <div class="body-14 neutral-01">
+                <span class="body-14SB neutral-01">{{ suggestion.name }}</span>
+                <span class="neutral-03 body-14R"> recently was in</span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <span class="body-16SB neutral-01">{{ suggestion.location }}</span>
+                <div class="h-4 w-[1px] bg-neutral-04"></div>
+                <span class="body-14R neutral-03">{{ suggestion.distance }}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 rounded-[12px]">
+              <div
+                class="flex-1 h-[40px] !rounded-[8px] bg-neutral-07 !border !border-[#dbdbdb] flex items-center justify-between gap-2 hover:bg-neutral-06 transition-colors !px-4 cursor-pointer"
+              >
+                <span class="body-14SB text-[var(--early-bird)]">Hey, let's network!</span>
+                <div class="pi pi-send text-[var(--early-bird)]"></div>
+              </div>
+
+              <app-button label="" iconName="pi-comments" height="40px" width="40px" />
+            </div>
+          </div>
+
+          <div class="relative w-[102px] h-[88px] rounded-[12px] overflow-hidden bg-neutral-02 flex-shrink-0">
+            <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + suggestion.mapImage + ')'"></div>
+            <div class="absolute inset-0 bg-neutral-02/70"></div>
+
+            <div class="absolute inset-0 flex items-center justify-center z-10">
+              <div class="relative">
+                <img [src]="suggestion.profileImage" [alt]="suggestion.name" class="w-20 h-20 rounded-full object-cover border-2 border-neutral-07" />
+                <div class="absolute -bottom-1 -right-1 bg-neutral-02 rounded-[6px] px-1.5 py-0.5 border border-neutral-03 shadow-sm">
+                  <span class="body-10 neutral-07">{{ suggestion.timeAgo }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- public events -->
+    <div class="w-full max-w-[672px] mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="body-16SB neutral-01">Public events</div>
+        <button type="button" class="body-14SB brand-02">See all</button>
+      </div>
+    </div>
+
+    <div class="w-full max-w-[672px] mx-auto">
+      <div class="swiper" #swiperContainerPublicEvent>
+        <div class="swiper-wrapper">
+          @for (event of eventCards; track event.title) {
+            <div class="swiper-slide first:pl-4 last:pr-4">
+              <event-card [event]="event" />
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

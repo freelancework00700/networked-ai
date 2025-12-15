@@ -1,21 +1,30 @@
-ion-segment-button {
-  min-height: 40px;
+.segment-button {
+  flex: 1;
+  gap: 4px;
+  border: none;
+  display: flex;
+  cursor: pointer;
   font-size: 14px;
+  min-height: 40px;
   font-weight: 400;
-  letter-spacing: unset !important;
-  line-height: 20px !important;
+  line-height: 20px;
   position: relative;
-  --indicator-color: var(--brand-03);
-  --color-checked: var(--brand-02);
-  --indicator-height: 1px;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--neutral-03);
+  transition: all 0.2s ease;
   text-transform: capitalize;
   border-bottom: 2px solid var(--neutral-05);
 
   .segment-icon {
     font-size: 18px;
-    margin-right: 4px;
   }
-}
-.segment-button-checked {
-  border-bottom: 1px solid var(--brand-03);
+
+  &.active {
+    font-weight: 500;
+    color: var(--brand-02);
+    border-bottom-width: 2px;
+    border-bottom-color: var(--brand-03);
+  }
 }

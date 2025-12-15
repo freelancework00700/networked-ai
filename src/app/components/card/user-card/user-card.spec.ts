@@ -1,0 +1,21 @@
+import { UserCard } from './user-card';
+import { TestBed, ComponentFixture } from '@angular/core/testing';
+
+describe('UserCard', () => {
+  let component: UserCard;
+  let fixture: ComponentFixture<UserCard>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [UserCard]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(UserCard);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});

@@ -1,0 +1,25 @@
+.filter-button {
+  flex: 1 1 0%;
+  height: 2rem;
+  cursor: pointer;
+  font-size: 14px;
+  border: 1px solid;
+  line-height: 20px;
+  border-radius: 100px;
+  transition: all 0.2s ease;
+  font-family: 'Manrope', sans-serif;
+
+  &.active {
+    font-weight: 600;
+    color: var(--brand-02);
+    border-color: #e1910e;
+    background-color: var(--brand-07);
+  }
+
+  &:not(.active) {
+    font-weight: 500;
+    border-color: #d7d7d7;
+    color: var(--neutral-03);
+    background-color: var(--neutral-07);
+  }
+}

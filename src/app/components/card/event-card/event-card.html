@@ -1,0 +1,70 @@
+<div
+  [style.background-image]="'url(' + event().image + ')'"
+  class="relative w-full h-[320px] shrink-0 rounded-[16px] overflow-hidden bg-cover bg-center"
+>
+  <!-- dark overlay at bottom -->
+  <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
+
+  <!-- top left: views -->
+  <div class="absolute top-2 left-2 z-10">
+    <div
+      class="flex p-2 justify-center items-center gap-2 rounded-full border border-white/10 bg-black/20 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
+    >
+      <div class="body-12 neutral-07">{{ event().views }}</div>
+    </div>
+  </div>
+
+  <!-- top right: icons -->
+  <div class="absolute top-2 right-2 z-10 flex items-center gap-2">
+    <div
+      class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
+    >
+      <div class="pi pi-upload text-white !text-[14px]"></div>
+    </div>
+
+    <div
+      class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
+    >
+      <div class="pi pi-heart text-white !text-[14px]"></div>
+    </div>
+  </div>
+
+  <!-- bottom content -->
+  <div class="absolute bottom-0 left-0 right-0 p-2 z-10">
+    <div
+      class="flex flex-col p-2 px-3 pb-3 items-start gap-2 self-stretch rounded-xl border border-white/10 bg-[rgba(25,25,25,0.40)] backdrop-blur-sm"
+    >
+      <div class="flex flex-col gap-0.5">
+        <div class="body-16SB neutral-07">{{ event().title }}</div>
+        <div class="body-12 neutral-05">{{ event().organization }}</div>
+      </div>
+
+      <div class="h-[1px] w-full bg-white/10"></div>
+      @if (variant() === 'compact') {
+        <div class="flex items-center gap-4 w-full">
+          <div class="flex items-center gap-1.5">
+            <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
+            <span class="body-12 neutral-05">{{ event().date }}</span>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <div class="pi pi-map-marker neutral-07 !text-[12px]"></div>
+            <span class="body-12 neutral-05">{{ event().location }}</span>
+          </div>
+        </div>
+      } @else {
+        <div class="flex items-start gap-1 flex-col">
+          <div class="flex items-center gap-1.5">
+            <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
+            <span class="body-12 neutral-05">{{ event().date }}</span>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <div class="pi pi-map-marker neutral-07 !text-[12px]"></div>
+            <span class="body-12 neutral-05">{{ event().location }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

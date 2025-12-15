@@ -1,0 +1,21 @@
+<div class="bg-neutral-07 rounded-[12px] p-2 pt-3 shrink-0 w-full">
+  <div class="flex flex-col items-center gap-2">
+    <!-- image -->
+    <img [src]="user().profileImage" [alt]="user().name" class="w-20 h-20 rounded-full object-cover" />
+
+    <!-- name and location -->
+    <div class="flex flex-col items-center gap-1 w-full">
+      <div class="body-14SB neutral-01 text-center">{{ user().name }}</div>
+
+      <div class="flex items-center gap-1">
+        <div class="pi pi-map-marker neutral-03 !text-[14px]"></div>
+        <span class="body-12 neutral-02">{{ user().location }}</span>
+      </div>
+    </div>
+
+    <!-- add button -->
+    <div class="w-full">
+      <app-button label="Add" iconName="pi-plus" iconPos="right" height="40px" />
+    </div>
+  </div>
+</div>
