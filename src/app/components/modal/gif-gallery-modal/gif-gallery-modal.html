@@ -1,4 +1,4 @@
-<div class="p-6 h-full flex flex-col">
+<div class="p-6 pb-0 h-full flex flex-col">
   <!-- title -->
   <div class="flex items-center justify-center mb-4 text-center">
     <div class="heading-h3 neutral-01">{{ title }}</div>
@@ -24,16 +24,18 @@
 
   <!-- gif grid with infinite scroll -->
   <ion-content>
-    <div class="grid grid-cols-3 gap-2 p-2">
+    <div class="grid grid-cols-3 gap-1 px-2">
       @for (gif of gifs(); track gif.id) {
         <div
           role="article"
           (click)="selectGif(gif)"
-          class="aspect-square cursor-pointer rounded-lg overflow-hidden hover:opacity-80 transition-opacity relative"
+          class="aspect-square cursor-pointer rounded-[4px] overflow-hidden hover:opacity-80 transition-opacity relative"
         >
           <img [src]="getTinyGifUrl(gif)" class="w-full h-full object-cover" loading="lazy" lazyImage />
           @if (multiSelect && isGifSelected(gif)) {
-            <div class="absolute top-2 right-2 bg-primary rounded-md px-2 py-1">
+            <div
+              class="absolute top-1 right-1 bg-brand-04 rounded-[4px] px-2 py-1 h-[20px] w-[20px] flex justify-center items-center body-14R neutral-01"
+            >
               {{ getSelectionIndex(gif) }}
             </div>
           }
@@ -63,20 +65,22 @@
 </div>
 
 @if (multiSelect && selectedGifs().length > 0) {
-  <ion-footer>
+  <ion-footer class="ion-padding-horizontal border-t border-[#DBDBDB]">
     <ion-toolbar>
-      <div class="flex items-center gap-4 p-4 bg-white min-h-[80px]">
+      <div class="flex items-center gap-4 bg-white min-h-[80px] px-2">
         <div class="flex-1 min-w-0 overflow-visible py-2 pr-2">
-          <div class="flex items-center gap-3 overflow-x-auto py-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div
+            class="flex items-center gap-2 overflow-x-auto py-2 max-sm:[&::-webkit-scrollbar]:hidden max-sm:[-ms-overflow-style:none] max-sm:[scrollbar-width:none]"
+          >
             @for (gif of selectedGifs(); track gif.id) {
               <div class="relative flex-shrink-0">
-                <img [src]="getTinyGifUrl(gif)" class="w-16 h-16 rounded-lg object-cover block" loading="lazy" lazyImage />
+                <img [src]="getTinyGifUrl(gif)" class="w-[48px] h-[48px] rounded-[4px] object-cover block" loading="lazy" lazyImage />
 
                 <div
                   (click)="removeSelectedGif(gif)"
-                  class="absolute -top-1.5 -right-1.5 w-6 h-6 bg-neutral-05 text-neutral-07 rounded-full flex items-center justify-center cursor-pointer"
+                  class="absolute -top-1 -right-1 w-[16px] h-[16px] border border-white bg-neutral-04 text-neutral-07 rounded-full flex items-center justify-center cursor-pointer"
                 >
-                  <i class="pi pi-times"></i>
+                  <i class="pi pi-times neutral-07 !text-[6px]"></i>
                 </div>
               </div>
             }

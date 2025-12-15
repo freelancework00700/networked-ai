@@ -8,27 +8,29 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <div class="sticky -top-[1.5px] bg-neutral-07 z-50 px-4">
-    <ion-segment class="home-segment" mode="md" [value]="segmentValue" (ionChange)="onSegmentChange($event)">
-      <ion-segment-button value="events">
-        <div class="segment-item flex items-center gap-1">
-          <ion-icon
-            [src]="segmentValue === 'events' ? '../../../../assets/svg/profile-details-active.svg' : '../../../../assets/svg/profile-details.svg'"
-            class="text-[20px]"
-          ></ion-icon>
-          <span class="segment-text">Events</span>
-        </div>
-      </ion-segment-button>
-      <ion-segment-button value="feed">
-        <div class="segment-item flex items-center gap-1">
-          <ion-icon
-            [src]="segmentValue === 'feed' ? '../../../../assets/svg/preferences-active.svg' : '../../../../assets/svg/preferences.svg'"
-            class="text-[20px]"
-          ></ion-icon>
-          <span class="segment-text">My Feed</span>
-        </div>
-      </ion-segment-button>
-    </ion-segment>
+  <div class="w-full max-w-[672px] mx-auto">
+    <div class="sticky -top-[1.5px] bg-neutral-07 z-50 px-4">
+      <ion-segment class="home-segment" mode="md" [value]="segmentValue" (ionChange)="onSegmentChange($event)">
+        <ion-segment-button value="events">
+          <div class="segment-item flex items-center gap-1">
+            <ion-icon
+              [src]="segmentValue === 'events' ? '../../../../assets/svg/profile-details-active.svg' : '../../../../assets/svg/profile-details.svg'"
+              class="text-[20px]"
+            ></ion-icon>
+            <span class="segment-text">Events</span>
+          </div>
+        </ion-segment-button>
+        <ion-segment-button value="feed">
+          <div class="segment-item flex items-center gap-1">
+            <ion-icon
+              [src]="segmentValue === 'feed' ? '../../../../assets/svg/preferences-active.svg' : '../../../../assets/svg/preferences.svg'"
+              class="text-[20px]"
+            ></ion-icon>
+            <span class="segment-text">My Feed</span>
+          </div>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
   </div>
   <div class="w-full p-6 max-w-[672px] mx-auto">
     <form [formGroup]="profileForm()" class="h-full">

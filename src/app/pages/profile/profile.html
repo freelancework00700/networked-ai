@@ -1,142 +1,714 @@
 <ion-header>
   <ion-toolbar>
-    <div class="flex justify-between px-4 py-2.5">
-      <div class="flex items-center body-14SB neutral-01">Sandra Tanner <p-inputicon class="pi pi-angle-down neutral-02 !text-[16px] ml-1" /></div>
-      <div class="flex gap-4 items-center">
-        <p-inputicon class="pi pi-bell neutral-02 !text-[18px]" />
-        <p-inputicon class="pi pi-ellipsis-v neutral-02 !text-[16px]" />
+    <div class="w-full p-6 px-4 max-w-[672px] mx-auto">
+      <div class="flex justify-between">
+        <div class="flex items-center body-14SB neutral-01">
+          Sandra Tanner
+          <div class="pi pi-angle-down neutral-02 !text-[16px] ml-1"></div>
+        </div>
+        <div class="flex gap-4 items-center">
+          <ion-icon src="/assets/svg/notification.svg" class="text-[20px] cursor-pointer"></ion-icon>
+          <ion-icon src="/assets/svg/menu-dot.svg" class="text-[20px] cursor-pointer"></ion-icon>
+        </div>
       </div>
     </div>
   </ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true">
-  <div class="flex flex-col items-start px-4 py-4 gap-6 bg-neutral-07">
-    <div class="flex flex-col items-start gap-4 bg-neutral-07 w-full">
-      <div class="flex items-center w-full">
-        <!-- Profile image -->
-        <div class="w-[72px] min-w-[72px] h-[72px] rounded-full overflow-hidden">
-          <img src="/assets/images/profile.jpeg" alt="Sandra Tanner" class="w-full h-full object-cover" />
-        </div>
-
-        <!-- Stats -->
+  <div class="w-full px-4 max-w-[672px] mx-auto">
+    <div class="flex flex-col items-start py-4 gap-6 bg-neutral-07">
+      <div class="flex flex-col items-start gap-4 bg-neutral-07 w-full">
         <div class="flex items-center w-full">
-          <div class="flex flex-col items-center w-full">
-            <div class="heading-h3 neutral-01">249</div>
-            <div class="body-12 neutral-03">Networks</div>
-          </div>
-          <div class="flex flex-col items-center w-full">
-            <div class="heading-h3 neutral-01">60</div>
-            <div class="body-12 neutral-03">Events</div>
-          </div>
-          <div class="flex flex-col items-center w-full">
-            <div class="heading-h3 neutral-01">75</div>
-            <div class="body-12 neutral-03">Attended</div>
-          </div>
-        </div>
-      </div>
-      <div class="flex flex-col gap-3">
-        <!-- Name -->
-        <div class="heading-h3 neutral-01">Sandra Tanner</div>
-        <div>
-          <!-- Location -->
-          <div class="flex items-center gap-2 body-14R neutral-03">
-            <ion-icon src="/assets/svg/location-icon.svg" class="text-[16px]"></ion-icon>
-            <span>Atlanta, GA</span>
+          <!-- Profile image -->
+          <div class="w-[72px] min-w-[72px] h-[72px] rounded-full overflow-hidden">
+            <img src="/assets/images/profile.jpeg" alt="Sandra Tanner" class="w-full h-full object-cover" />
           </div>
 
-          <!-- Title -->
-          <div class="flex items-center gap-2 body-14R neutral-03">
-            <ion-icon src="/assets/svg/briefcase.svg" class="text-[16px]"></ion-icon>
-            <span>Founder &amp; CEO, Cortazzo Consulting</span>
+          <!-- Stats -->
+          <div class="flex items-center w-full">
+            <div class="flex flex-col items-center w-full">
+              <div class="heading-h3 neutral-01">249</div>
+              <div class="body-12 neutral-03">Networks</div>
+            </div>
+            <div class="flex flex-col items-center w-full">
+              <div class="heading-h3 neutral-01">60</div>
+              <div class="body-12 neutral-03">Events</div>
+            </div>
+            <div class="flex flex-col items-center w-full">
+              <div class="heading-h3 neutral-01">75</div>
+              <div class="body-12 neutral-03">Attended</div>
+            </div>
           </div>
         </div>
+        <div class="flex flex-col gap-3">
+          <!-- Name -->
+          <div class="heading-h3 neutral-01">Sandra Tanner</div>
+          <div>
+            <!-- Location -->
+            <div class="flex items-center gap-2 body-14R neutral-03">
+              <ion-icon src="/assets/svg/location-icon.svg" class="text-[16px]"></ion-icon>
+              <span>Atlanta, GA</span>
+            </div>
 
-        <!-- Highlights -->
-        <div class="w-full flex flex-col body-14R neutral-01">
-          <div>🏠 ATL, Georgia</div>
-          <div>🙏🏻 Believer</div>
-          <div>💼 Entrepreneur</div>
-          <div>🧠 AI Thought Leader</div>
-          <div>🧱 Community Builder</div>
-          <div>✈️ International Traveler</div>
-        </div>
-      </div>
-      <!-- Links -->
-      <div class="w-full">
-        <div class="flex items-center mb-1 gap-[2px]">
-          <div class="body-16SB neutral-02">Links (7)</div>
-          <p-inputicon class="pi pi-chevron-up text-[#1D5BFF] !text-[14px]" />
-        </div>
-        <div class="grid grid-cols-2 gap-y-3 text-[#1D5BFF]">
-          <div class="flex items-center gap-2 body-14M">
-            <ion-icon name="globe-outline" class="text-[18px]"></ion-icon>
-            <span>website.com</span>
-          </div>
-          <div class="flex items-center gap-2 body-14M">
-            <ion-icon name="logo-facebook" class="text-[18px]"></ion-icon>
-            <span>Page Name Here</span>
-          </div>
-          <div class="flex items-center gap-2 body-14M">
-            <ion-icon name="call-outline" class="text-[18px]"></ion-icon>
-            <span>+1 097 728 772</span>
-          </div>
-          <div class="flex items-center gap-2 body-14M">
-            <ion-icon name="logo-instagram" class="text-[18px]"></ion-icon>
-            <span>usernamehere</span>
-          </div>
-          <div class="flex items-center gap-2 body-14M">
-            <ion-icon name="logo-snapchat" class="text-[18px]"></ion-icon>
-            <span>usernamehere</span>
-          </div>
-          <div class="flex items-center gap-2 body-14M">
-            <ion-icon name="logo-linkedin" class="text-[18px]"></ion-icon>
-            <span>Name Here</span>
-          </div>
-          <div class="flex items-center gap-2 body-14M">
-            <ion-icon name="logo-twitter" class="text-[18px]"></ion-icon>
-            <span>usernamehere</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Action Buttons -->
-    <div class="w-full flex flex-col gap-3">
-      <!-- Top Row: Edit Profile and Share Profile -->
-      <div class="flex items-center gap-3">
-        <app-button label="Edit Profile" iconName="pi-pencil" color="secondary" (click)="goToEditProfile()" class="w-full" />
-        <app-button label="Share Profile" iconName="pi-share-alt" color="secondary" class="w-full" />
-      </div>
-      <!-- Bottom Row: Set Up Subscription -->
-      <button type="button" class="w-full h-[44px] body-14SB neutral-01 !rounded-lg bg-[#2B5BDE] flex gap-2 justify-center items-center">
-        <p-inputicon class="pi pi-crown neutral-07 !text-[16px]" />
-        <span class="body-14SB neutral-07">Set Up Subscription</span>
-      </button>
-    </div>
-    <!-- Networking Score Card -->
-    <div class="w-full">
-      <div
-        class="flex flex-col gap-3 p-4 rounded-[16px] bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f] shadow-[0_12px_32px_rgba(0,0,0,0.25)]"
-      >
-        <div class="flex items-start justify-between">
-          <div class="flex items-start gap-3">
-            <div class="w-[48px] h-[48px] min-w-[48px]">
-              <img src="/assets/svg/gold-big-diamond.svg" alt="Networking score" class="w-full h-full object-contain" />
-            </div>
-            <div class="flex flex-col leading-tight">
-              <span class="body-12 neutral-07">Networking Score</span>
-              <span class="heading-h2 neutral-07">37,890</span>
+            <!-- Title -->
+            <div class="flex items-center gap-2 body-14R neutral-03">
+              <ion-icon src="/assets/svg/briefcase.svg" class="text-[16px]"></ion-icon>
+              <span>Founder &amp; CEO, Cortazzo Consulting</span>
             </div>
           </div>
-          <p-inputicon class="pi pi-arrow-right neutral-07 !text-[16px]" />
+
+          <!-- Highlights -->
+          <div class="w-full flex flex-col body-14R neutral-01">
+            <div>🏠 ATL, Georgia</div>
+            <div>🙏🏻 Believer</div>
+            <div>💼 Entrepreneur</div>
+            <div>🧠 AI Thought Leader</div>
+            <div>🧱 Community Builder</div>
+            <div>✈️ International Traveler</div>
+          </div>
         </div>
+        <!-- Links -->
+        <div class="w-full">
+          <div class="flex items-center mb-1 gap-[2px]">
+            <div class="body-16SB neutral-02">Links (7)</div>
+            <div class="pi pi-chevron-up text-[#1D5BFF] !text-[14px]"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-y-3 text-[#1D5BFF]">
+            <div class="flex items-center gap-2 body-14M">
+              <ion-icon name="globe-outline" class="text-[18px]"></ion-icon>
+              <span>website.com</span>
+            </div>
+            <div class="flex items-center gap-2 body-14M">
+              <ion-icon name="logo-facebook" class="text-[18px]"></ion-icon>
+              <span>Page Name Here</span>
+            </div>
+            <div class="flex items-center gap-2 body-14M">
+              <ion-icon name="call-outline" class="text-[18px]"></ion-icon>
+              <span>+1 097 728 772</span>
+            </div>
+            <div class="flex items-center gap-2 body-14M">
+              <ion-icon name="logo-instagram" class="text-[18px]"></ion-icon>
+              <span>usernamehere</span>
+            </div>
+            <div class="flex items-center gap-2 body-14M">
+              <ion-icon name="logo-snapchat" class="text-[18px]"></ion-icon>
+              <span>usernamehere</span>
+            </div>
+            <div class="flex items-center gap-2 body-14M">
+              <ion-icon name="logo-linkedin" class="text-[18px]"></ion-icon>
+              <span>Name Here</span>
+            </div>
+            <div class="flex items-center gap-2 body-14M">
+              <ion-icon name="logo-twitter" class="text-[18px]"></ion-icon>
+              <span>usernamehere</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Action Buttons -->
+      <div class="w-full flex flex-col gap-3">
+        <!-- Top Row: Edit Profile and Share Profile -->
         <div class="flex items-center gap-3">
-          <div class="flex-1 h-[12px] rounded-full bg-[#2a2a2a] overflow-hidden">
-            <div class="h-full w-[82%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+          <app-button label="Edit Profile" iconName="pi-pencil" color="secondary" (click)="goToEditProfile()" class="w-full" />
+          <app-button label="Share Profile" iconName="pi-share-alt" color="secondary" class="w-full" />
+        </div>
+        <!-- Bottom Row: Set Up Subscription -->
+        <button type="button" class="w-full h-[44px] body-14SB neutral-01 !rounded-lg bg-[#2B5BDE] flex gap-2 justify-center items-center">
+          <ion-icon src="/assets/svg/subscription-white.svg" class="text-[18px]"></ion-icon>
+          <span class="body-14SB neutral-07">Set Up Subscription</span>
+        </button>
+      </div>
+      <!-- Networking Score Card -->
+      <div class="flex flex-col gap-2 w-full">
+        <div class="w-full">
+          <div class="flex flex-col gap-3 p-4 rounded-[12px] bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
+            <div class="flex items-start justify-between">
+              <div class="flex items-start gap-3">
+                <div class="w-[48px] h-[48px] min-w-[48px]">
+                  <img src="/assets/svg/gold-big-diamond.svg" alt="Networking score" class="w-full h-full object-contain" />
+                </div>
+                <div class="flex flex-col leading-tight">
+                  <span class="body-12 neutral-07">Networking Score</span>
+                  <span class="heading-h2 neutral-07">37,890</span>
+                </div>
+              </div>
+              <div class="pi pi-arrow-right neutral-07 !text-[16px]"></div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="flex-1 h-[12px] rounded-full bg-[#2a2a2a] overflow-hidden">
+                <div class="h-full w-[82%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+              </div>
+              <div class="flex items-center gap-1">
+                <img src="/assets/svg/gray-small-diamond.svg" alt="Target" class="w-[20px] min-w-[20px] h-[20px] object-contain" />
+                <span class="body-16SB neutral-07">40K</span>
+              </div>
+            </div>
           </div>
-          <div class="flex items-center gap-1">
-            <img src="/assets/svg/gray-small-diamond.svg" alt="Target" class="w-[20px] min-w-[20px] h-[20px] object-contain" />
-            <span class="body-16SB neutral-07">40K</span>
+        </div>
+        <div class="w-full">
+          <div
+            class="relative overflow-hidden flex flex-col lg:flex-row items-start justify-between gap-6 px-[12px] py-[16px] rounded-[12PX] border-none bg-gradient-to-r from-[#121212] via-[#0f0f0f] to-[#111827]"
+          >
+            <!-- Left copy -->
+            <div class="flex flex-col gap-4 items-start relative z-10">
+              <div class="w-[213px] flex flex-col gap-[2px]">
+                <div class="body-16SB neutral-07 mb-0">Create Your Business Card!</div>
+                <div class="body-12 neutral-07">Complete your profile, add your socials and share your business card!</div>
+              </div>
+              <button
+                type="button"
+                class="flex items-center justify-center !px-6 !py-3 !rounded-[12px] !h-[40px] bg-brand-04 neutral-01 body-14SB transition"
+              >
+                Create Business Card
+              </button>
+            </div>
+
+            <!-- Right mock card preview -->
+            <div class="absolute right-[26px] -top-[15px]">
+              <ion-icon src="/assets/svg/business-card.svg" class="w-[104px] h-[174px] object-contain scale-150"></ion-icon>
+            </div>
           </div>
+        </div>
+      </div>
+      <div class="bg-neutral-07">
+        <ion-segment class="home-segment" mode="md" [value]="segmentValue" (ionChange)="onSegmentChange($event)">
+          <ion-segment-button value="user-profile">
+            <div class="segment-item">
+              <ion-icon
+                [src]="
+                  segmentValue === 'user-profile' ? '../../../assets/svg/profile-user-edit-active.svg' : '../../../assets/svg/profile-user-edit.svg'
+                "
+                [ngClass]="segmentValue === 'user-profile' ? 'text-[#e1910e]' : 'neutral-03'"
+                class="text-[20px]"
+              ></ion-icon>
+            </div>
+          </ion-segment-button>
+          <ion-segment-button value="clock-rewind">
+            <div class="segment-item">
+              <ion-icon
+                [src]="
+                  segmentValue === 'clock-rewind'
+                    ? '../../../assets/svg/profile-clock-rewind-active.svg'
+                    : '../../../assets/svg/profile-clock-rewind.svg'
+                "
+                [ngClass]="segmentValue === 'clock-rewind' ? 'text-[#e1910e]' : 'neutral-03'"
+                class="text-[20px]"
+              ></ion-icon>
+            </div>
+          </ion-segment-button>
+          <ion-segment-button value="calendar">
+            <div class="segment-item">
+              <ion-icon
+                [src]="
+                  segmentValue === 'calendar'
+                    ? '../../../assets/svg/profile-calendar-plus-active.svg'
+                    : '../../../assets/svg/profile-calendar-plus.svg'
+                "
+                [ngClass]="segmentValue === 'calendar' ? 'text-[#e1910e]' : 'neutral-03'"
+                class="text-[20px]"
+              ></ion-icon>
+            </div>
+          </ion-segment-button>
+          <ion-segment-button value="layout">
+            <div class="segment-item">
+              <ion-icon
+                [src]="segmentValue === 'layout' ? '../../../assets/svg/profile-layout-alt-active.svg' : '../../../assets/svg/profile-layout.svg'"
+                [ngClass]="segmentValue === 'layout' ? 'text-[#e1910e]' : 'neutral-03'"
+                class="text-[20px]"
+              ></ion-icon>
+            </div>
+          </ion-segment-button>
+          <ion-segment-button value="trophy">
+            <div class="segment-item">
+              <ion-icon
+                src="../../../assets/svg/profile-trophy.svg"
+                [ngClass]="segmentValue === 'trophy' ? 'text-[#e1910e]' : 'neutral-03'"
+                class="text-[20px]"
+              ></ion-icon>
+            </div>
+          </ion-segment-button>
+        </ion-segment>
+        <!-- user-profile start here -->
+        <div *ngIf="segmentValue === 'user-profile'">
+          <div class="flex items-center justify-between px-[2px] py-4">
+            <div class="heading-h3 neutral-01">Hosted Events</div>
+          </div>
+
+          <!-- Empty State: No Hosted Events -->
+          <div *ngIf="hostedEvents.length <= 1" class="flex flex-col items-center justify-center py-4 px-4">
+            <div
+              class="rounded-[24px] bg-[radial-gradient(50%_50%_at_50%_50%,rgba(255,255,255,0.70)_0%,rgba(255,255,255,0.70)_100%)] shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] flex items-center justify-center p-3"
+            >
+              <div
+                class="w-14 h-14 rounded-[12px] bg-[linear-gradient(138deg,#ABABAB_8.51%,#545454_85.69%)] shadow-[0_12px_24px_rgba(9,70,103,0.30)] flex items-center justify-center"
+              >
+                <div class="w-10 h-10 rounded-[12px] bg-neutral-04/40 flex items-center justify-center">
+                  <ion-icon src="/assets/svg/calendar-x.svg" class="text-[24px]"></ion-icon>
+                </div>
+              </div>
+            </div>
+
+            <!-- Heading -->
+            <div class="mt-4">
+              <h2 class="heading-h2 neutral-01 text-center">No Hosted Events Yet</h2>
+            </div>
+
+            <!-- Sub-heading -->
+            <div class="mb-4">
+              <p class="body-14M neutral-03 text-center">Create your first event now!</p>
+            </div>
+
+            <!-- Create Event Button -->
+            <button
+              type="button"
+              class="!h-[40px] !px-6 !rounded-[8px] bg-brand-04 neutral-01 body-14SB flex items-center justify-center hover:opacity-90 transition-opacity"
+              (click)="goToCreateEvent()"
+            >
+              <div class="pi pi-plus neutral-01 !text-[16px] mr-1.5"></div>
+              <span class="body-14SB neutral-01">Create Event</span>
+            </button>
+          </div>
+
+          <!-- Event Cards: Show when hostedEvents.length > 1 -->
+          <div *ngIf="hostedEvents.length > 1" class="flex flex-col gap-4">
+            <div
+              *ngFor="let event of hostedEvents"
+              class="relative w-full h-[320px] shrink-0 rounded-[16px] overflow-hidden bg-cover bg-center"
+              [ngStyle]="{
+                'background-image':
+                  'url(' + (event.image || 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80') + ')'
+              }"
+            >
+              <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
+              <div class="absolute top-2 left-2 z-10">
+                <div
+                  class="flex p-2 justify-center items-center gap-2 rounded-full border border-white/10 bg-black/20 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
+                >
+                  <div class="body-12 neutral-07">{{ event.views || '12' }} views</div>
+                </div>
+              </div>
+              <div class="absolute top-2 right-2 z-10 flex items-center gap-2">
+                <div
+                  class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
+                >
+                  <div class="pi pi-upload text-white !text-[14px]"></div>
+                </div>
+                <div
+                  class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
+                >
+                  <div class="pi pi-heart text-white !text-[14px]"></div>
+                </div>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 p-2 z-10">
+                <div
+                  class="flex flex-col p-2 px-3 pb-3 items-start gap-2 self-stretch rounded-xl border border-white/10 bg-[rgba(25,25,25,0.40)] backdrop-blur-sm"
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <div class="body-16SB neutral-07">{{ event.title || 'Scheveningen' }}</div>
+                    <div class="body-12 neutral-05">{{ event.organization || 'Networked AI' }}</div>
+                  </div>
+                  <div class="h-[1px] w-full bg-white/10"></div>
+                  <div class="flex items-start gap-4">
+                    <div class="flex items-center gap-1.5">
+                      <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
+                      <span class="body-12 neutral-05">{{ event.date || 'Fri 8/30, 7.00AM' }}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <div class="pi pi-map-marker neutral-07 !text-[12px]"></div>
+                      <span class="body-12 neutral-05">{{ event.location || 'Atlanta, GA' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- user-profile END here -->
+        <!-- clock-rewind start here -->
+        <div *ngIf="segmentValue === 'clock-rewind'" class="flex flex-col px-[2px] py-4">
+          <div class="heading-h3 neutral-01">Attended Events</div>
+          <div *ngIf="hostedEvents.length <= 1" class="flex flex-col items-center justify-center py-12 px-4">
+            <div
+              class="rounded-[24px] bg-[radial-gradient(50%_50%_at_50%_50%,rgba(255,255,255,0.70)_0%,rgba(255,255,255,0.70)_100%)] shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] flex items-center justify-center p-3"
+            >
+              <div
+                class="w-14 h-14 rounded-[12px] bg-[linear-gradient(138deg,#ABABAB_8.51%,#545454_85.69%)] shadow-[0_12px_24px_rgba(9,70,103,0.30)] flex items-center justify-center"
+              >
+                <div class="w-10 h-10 rounded-[12px] bg-neutral-04/40 flex items-center justify-center">
+                  <ion-icon src="/assets/svg/calendar-x.svg" class="text-[24px]"></ion-icon>
+                </div>
+              </div>
+            </div>
+
+            <!-- Heading -->
+            <div class="mt-4">
+              <h2 class="heading-h2 neutral-01 text-center">No Attended Events Yet</h2>
+            </div>
+
+            <!-- Sub-heading -->
+            <div class="mb-4">
+              <p class="body-14M neutral-03 text-center">Browse events near you!</p>
+            </div>
+
+            <!-- Create Event Button -->
+            <button
+              type="button"
+              class="!h-[40px] !px-6 !rounded-[8px] bg-brand-04 neutral-01 body-14SB flex items-center justify-center hover:opacity-90 transition-opacity"
+              (click)="goToCreateEvent()"
+            >
+              <div class="pi pi-search neutral-01 !text-[16px] mr-1.5"></div>
+              <span class="body-14SB neutral-01">Browse Events</span>
+            </button>
+          </div>
+        </div>
+        <!-- clock-rewind END here -->
+        <!-- calendar start here -->
+        <div *ngIf="segmentValue === 'calendar'" class="flex flex-col px-[2px] py-4">
+          <div class="heading-h3 neutral-01">Upcoming Events</div>
+          <div *ngIf="eventCards.length <= 1" class="flex flex-col items-center justify-center py-12 px-4">
+            <div
+              class="rounded-[24px] bg-[radial-gradient(50%_50%_at_50%_50%,rgba(255,255,255,0.70)_0%,rgba(255,255,255,0.70)_100%)] shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] flex items-center justify-center p-3"
+            >
+              <div
+                class="w-14 h-14 rounded-[12px] bg-[linear-gradient(138deg,#ABABAB_8.51%,#545454_85.69%)] shadow-[0_12px_24px_rgba(9,70,103,0.30)] flex items-center justify-center"
+              >
+                <div class="w-10 h-10 rounded-[12px] bg-neutral-04/40 flex items-center justify-center">
+                  <ion-icon src="/assets/svg/calendar-x.svg" class="text-[24px]"></ion-icon>
+                </div>
+              </div>
+            </div>
+
+            <!-- Heading -->
+            <div class="mt-4">
+              <h2 class="heading-h2 neutral-01 text-center">No Upcoming Events</h2>
+            </div>
+
+            <!-- Sub-heading -->
+            <div class="mb-4">
+              <p class="body-14M neutral-03 text-center">Browse events near you!</p>
+            </div>
+
+            <!-- Create Event Button -->
+            <button
+              type="button"
+              class="!h-[40px] !px-6 !rounded-[8px] bg-brand-04 neutral-01 body-14SB flex items-center justify-center hover:opacity-90 transition-opacity"
+              (click)="goToCreateEvent()"
+            >
+              <div class="pi pi-search neutral-01 !text-[16px] mr-1.5"></div>
+              <span class="body-14SB neutral-01">Browse Events</span>
+            </button>
+          </div>
+          <div class="mt-3" *ngIf="eventCards.length > 1">
+            <div class="flex flex-col gap-3">
+              <div class="rounded-[14px] bg-neutral-07 border border-[#f0f0f0] overflow-hidden p-2" *ngFor="let event of eventCards">
+                <div class="flex items-center gap-3 pb-2">
+                  <img [src]="event.image" [alt]="event.title" class="w-[80px] h-[80px] rounded-[8px] object-cover flex-shrink-0" />
+                  <div class="flex-1 flex flex-col gap-1">
+                    <div class="body-16SB neutral-01">{{ event.title }}</div>
+                    <div class="flex items-center gap-1">
+                      <div class="pi pi-map-marker neutral-03 !text-[13px]"></div>
+                      <span class="body-12 neutral-03">{{ event.location }}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <div class="pi pi-clock neutral-03 !text-[13px]"></div>
+                      <span class="body-12 neutral-03">{{ event.date }}</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col items-center justify-center w-[64px] bg-neutral-06 rounded-[8px] p-2">
+                    <div class="body-12 neutral-03">{{ event.dayOfWeek || 'Fri' }}</div>
+                    <div class="heading-h1 neutral-01">{{ event.day || '12' }}</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="w-full h-[40px] bg-brand-04 !neutral-01 !body-14SB flex items-center justify-center gap-2 !rounded-[8px] font-semibold"
+                >
+                  <div class="pi pi-ticket !text-[16px]"></div>
+                  View Ticket
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-between items-center pb-4">
+            <div class="heading-h3 neutral-01">Achievements</div>
+            <div class="brand-02 body-14SB">See all</div>
+          </div>
+          <div class="flex justify-between items-center pb-3">
+            <div class="body-16M neutral-01">Events Hosted</div>
+            <div class="flex">
+              <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                <div class="h-full w-[50%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+              </div>
+              <div class="body-12M">144/250</div>
+            </div>
+          </div>
+          <div>
+            <div class="grid grid-cols-5 gap-2">
+              <!-- Achievement Card 1: 10K -->
+              <div
+                class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
+              >
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                  <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
+                  <div class="relative z-10 flex flex-col items-center">
+                    <span class="neutral-03 body-16SB">10K</span>
+                    <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+                  </div>
+                </div>
+                <span class="neutral-04 body-10">Locked</span>
+                <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                  <div class="h-full w-[50%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+                </div>
+              </div>
+
+              <!-- Achievement Card 2: 5K -->
+              <div
+                class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
+              >
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                  <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
+                  <div class="relative z-10 flex flex-col items-center">
+                    <span class="neutral-03 body-16SB">5K</span>
+                    <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+                  </div>
+                </div>
+                <span class="neutral-04 body-10">Locked</span>
+                <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                  <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+                </div>
+              </div>
+
+              <!-- Achievement Card 3: 2K -->
+              <div
+                class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
+              >
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                  <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
+                  <div class="relative z-10 flex flex-col items-center">
+                    <span class="neutral-03 body-16SB">2K</span>
+                    <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+                  </div>
+                </div>
+                <span class="neutral-04 body-10">Locked</span>
+                <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                  <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+                </div>
+              </div>
+
+              <!-- Achievement Card 4: 1K -->
+              <div
+                class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
+              >
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                  <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
+                  <div class="relative z-10 flex flex-col items-center">
+                    <span class="neutral-03 body-16SB">1K</span>
+                    <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+                  </div>
+                </div>
+                <span class="neutral-04 body-10">Locked</span>
+                <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                  <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+                </div>
+              </div>
+
+              <!-- Achievement Card 5: 500 -->
+              <div
+                class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
+              >
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                  <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
+                  <div class="relative z-10 flex flex-col items-center">
+                    <span class="neutral-03 body-16SB">500</span>
+                    <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+                  </div>
+                </div>
+                <span class="neutral-04 body-10">Locked</span>
+                <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                  <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+                </div>
+              </div>
+              <!-- Achievement Card 6: 10K -->
+              <div
+                class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
+              >
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                  <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
+                  <div class="relative z-10 flex flex-col items-center">
+                    <span class="neutral-03 body-16SB">10K</span>
+                    <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+                  </div>
+                </div>
+                <span class="neutral-04 body-10">Locked</span>
+                <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                  <div class="h-full w-[50%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+                </div>
+              </div>
+
+              <!-- Achievement Card 7: 5K -->
+              <div
+                class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
+              >
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                  <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
+                  <div class="relative z-10 flex flex-col items-center">
+                    <span class="neutral-03 body-16SB">5K</span>
+                    <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+                  </div>
+                </div>
+                <span class="neutral-04 body-10">Locked</span>
+                <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                  <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+                </div>
+              </div>
+
+              <!-- Achievement Card 8: 2K -->
+              <div
+                class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
+              >
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                  <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
+                  <div class="relative z-10 flex flex-col items-center">
+                    <span class="neutral-03 body-16SB">2K</span>
+                    <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+                  </div>
+                </div>
+                <span class="neutral-04 body-10">Locked</span>
+                <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                  <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+                </div>
+              </div>
+
+              <!-- Achievement Card 9: 1K -->
+              <div
+                class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
+              >
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                  <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
+                  <div class="relative z-10 flex flex-col items-center">
+                    <span class="neutral-03 body-16SB">1K</span>
+                    <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+                  </div>
+                </div>
+                <span class="neutral-04 body-10">Locked</span>
+                <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                  <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+                </div>
+              </div>
+
+              <!-- Achievement Card 10: 500 -->
+              <div
+                class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
+              >
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                  <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
+                  <div class="relative z-10 flex flex-col items-center">
+                    <span class="neutral-03 body-16SB">500</span>
+                    <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+                  </div>
+                </div>
+                <span class="neutral-04 body-10">Locked</span>
+                <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                  <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- calendar END here -->
+        <!-- layout start here -->
+        <div *ngIf="segmentValue === 'layout'" class="flex flex-col px-[2px] py-4">
+          <div class="heading-h3 neutral-01">Upcoming Posts</div>
+          <div *ngIf="hostedEvents.length <= 1" class="flex flex-col items-center justify-center py-12 px-4">
+            <div
+              class="rounded-[24px] bg-[radial-gradient(50%_50%_at_50%_50%,rgba(255,255,255,0.70)_0%,rgba(255,255,255,0.70)_100%)] shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] flex items-center justify-center p-3"
+            >
+              <div
+                class="w-14 h-14 rounded-[12px] bg-[linear-gradient(138deg,#ABABAB_8.51%,#545454_85.69%)] shadow-[0_12px_24px_rgba(9,70,103,0.30)] flex items-center justify-center"
+              >
+                <div class="w-10 h-10 rounded-[12px] bg-neutral-04/40 flex items-center justify-center">
+                  <ion-icon src="/assets/svg/calendar-x.svg" class="text-[24px]"></ion-icon>
+                </div>
+              </div>
+            </div>
+
+            <!-- Heading -->
+            <div class="mt-4">
+              <h2 class="heading-h2 neutral-01 text-center">No Posts Yet</h2>
+            </div>
+
+            <!-- Sub-heading -->
+            <div class="mb-4">
+              <p class="body-14M neutral-03 text-center">Create your first post!</p>
+            </div>
+
+            <!-- Create Event Button -->
+            <button
+              type="button"
+              class="!h-[40px] !px-6 !rounded-[8px] bg-brand-04 neutral-01 body-14SB flex items-center justify-center hover:opacity-90 transition-opacity"
+              (click)="goToCreateEvent()"
+            >
+              <div class="pi pi-search neutral-01 !text-[16px] mr-1.5"></div>
+              <span class="body-14SB neutral-01">Browse Events</span>
+            </button>
+          </div>
+          <div class="flex flex-col bg-neutral-07">
+            <!-- Post composer -->
+            <div class="flex items-center gap-3 py-3 bg-neutral-07 border-b border-[#dbdbdb]">
+              <div class="w-[32px] min-w-[32px] h-[32px] min-h-[32px] rounded-full bg-brand-04 flex items-center justify-center body-14SB neutral-07">
+                EC
+              </div>
+              <div class="flex-1 flex flex-col gap-1">
+                <div class="body-14SB neutral-01">Ethan Cortazzo</div>
+                <input type="text" placeholder="Start a new post..." class="w-full bg-neutral-07 body-12 focus:outline-none placeholder:neutral-05" />
+              </div>
+            </div>
+
+            <!-- Feed card -->
+            <div class="flex flex-col gap-3 py-3 bg-neutral-07 border-b border-[#dbdbdb]">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex items-start gap-3">
+                  <div
+                    class="w-[32px] min-w-[32px] h-[32px] min-h-[32px] rounded-full bg-brand-02 flex items-center justify-center body-14SB neutral-07"
+                  >
+                    SK
+                  </div>
+                  <div class="flex flex-col gap-3">
+                    <div class="flex flex-col gap-1">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-1">
+                          <span class="body-12 neutral-01">Sammy K.</span>
+                          <span class="body-12 neutral-04">3h</span>
+                        </div>
+                        <div class="neutral-03 body-10">Suggested for you</div>
+                      </div>
+                      <div class="mt-1 body-12 neutral-01">Hey everyone! Anyone in St. Louis? Would love to network!</div>
+                    </div>
+                    <div class="flex items-center gap-4 neutral-03">
+                      <div class="flex items-center gap-1.5">
+                        <div class="pi pi-heart !text-[16px]"></div>
+                        <span class="body-14M neutral-03">2</span>
+                      </div>
+                      <div class="flex items-center gap-1.5">
+                        <div class="pi pi-comment !text-[16px]"></div>
+                        <span class="body-14M neutral-03">2</span>
+                      </div>
+                      <div class="flex items-center gap-1.5">
+                        <div class="pi pi-send !text-[16px]"></div>
+                        <span class="body-14M neutral-03">2</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="pi pi-ellipsis-h neutral-03 !text-[16px]"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- layout END here -->
+        <!-- trophy start here -->
+        <div *ngIf="segmentValue === 'trophy'" class="flex items-center justify-between px-[2px] py-4">
+          <div class="heading-h3 neutral-01">Trophy</div>
         </div>
       </div>
     </div>
