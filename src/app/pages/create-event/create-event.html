@@ -330,20 +330,16 @@
                       <!-- Repeat Frequency -->
                       <div class="flex gap-2 mb-4">
                         @for (item of repeatOptions(); track item.value) {
-                          <ion-chip
-                            outline="true"
-                            class="flex-1 h-11 rounded-lg border cursor-pointer flex items-center justify-center px-4"
+                          <chip
+                            [type]="item.value"
                             [color]="getFieldValue('repeat_frequency') === item.value ? 'lgold' : ''"
-                            [style.background-color]="getFieldValue('repeat_frequency') === item.value ? '#FEF7EC' : ''"
-                            [style.border-color]="
-                              getFieldValue('repeat_frequency') === item.value ? 'var(--brand-04)' : 'var(--p-inputtext-border-color)'
-                            "
-                            (click)="setRepeatFrequency(item.value)"
+                            (selectedType)="setRepeatFrequency(item.value)"
+                            class="w-full"
                           >
                             <span class="body-14R">
                               {{ item.label }}
                             </span>
-                          </ion-chip>
+                          </chip>
                         }
                       </div>
                       <!-- Repeat Count -->
@@ -352,20 +348,15 @@
                       <div class="flex gap-2">
                         @for (item of repeatCountOptions(); track item.value) {
                           @if (item.value !== 'custom') {
-                            <ion-chip
-                              outline="true"
-                              class="flex-1 h-12 rounded-lg border cursor-pointer flex items-center justify-center px-4 relative"
+                            <chip
+                              [type]="item.value.toString()"
                               [color]="getFieldValue('repeat_count') === item.value ? 'lgold' : ''"
-                              [style.background-color]="getFieldValue('repeat_count') === item.value ? '#FEF7EC' : ''"
-                              [style.border-color]="
-                                getFieldValue('repeat_count') === item.value ? 'var(--brand-04)' : 'var(--p-inputtext-border-color)'
-                              "
-                              (click)="handleRepeatCountClick(item.value)"
+                              (selectedType)="handleRepeatCountClick(item.value)"
                             >
                               <span class="body-14R">
                                 {{ item.label }}
                               </span>
-                            </ion-chip>
+                            </chip>
                           }
                         }
 
@@ -415,24 +406,12 @@
             <div class="flex items-center justify-between">
               <label class="neutral-02 body-14M">Visibility</label>
               <div class="flex gap-2">
-                <ion-chip
-                  outline="true"
-                  [color]="visibility() === 'public' ? 'lgold' : ''"
-                  [style.background-color]="visibility() === 'public' ? '#FEF7EC' : ''"
-                  class="promo-chip"
-                  (click)="setVisibility('public')"
-                >
-                  <span class="body-regular-14">Public</span>
-                </ion-chip>
-                <ion-chip
-                  outline="true"
-                  [color]="visibility() === 'invite-only' ? 'lgold' : ''"
-                  [style.background-color]="visibility() === 'invite-only' ? '#FEF7EC' : ''"
-                  class="promo-chip"
-                  (click)="setVisibility('invite-only')"
-                >
-                  <span class="body-regular-14">Invite Only</span>
-                </ion-chip>
+                <chip [type]="visibility()" [color]="visibility() === 'public' ? 'lgold' : ''" (selectedType)="setVisibility('public')">
+                  <span class="body-14R">Public</span>
+                </chip>
+                <chip [type]="visibility()" [color]="visibility() === 'invite-only' ? 'lgold' : ''" (selectedType)="setVisibility('invite-only')">
+                  <span class="body-14R">Invite Only</span>
+                </chip>
               </div>
             </div>
 
@@ -446,13 +425,9 @@
 
                   <div class="flex flex-wrap gap-3">
                     @for (item of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track item) {
-                      <ion-chip
-                        class="circle-chip cursor-pointer flex items-center justify-center"
-                        [class.active-chip]="getFieldValue('plus') === item"
-                        (click)="setPlusCount(item)"
-                      >
-                        +{{ item }}
-                      </ion-chip>
+                      <chip [type]="item.toString()" [color]="getFieldValue('plus') === item ? 'lgold' : ''" (selectedType)="setPlusCount(item)">
+                        <span class="body-14R">+{{ item }}</span>
+                      </chip>
                     }
                   </div>
                 </div>

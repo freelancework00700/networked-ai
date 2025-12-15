@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
-import { IonSearchbar } from '@ionic/angular/standalone';
+import { Searchbar } from '@/components/common/searchbar';
 import { Component, input, output, signal, computed, ChangeDetectionStrategy, effect } from '@angular/core';
 
 export interface User {
@@ -16,7 +16,7 @@ export interface User {
   styleUrl: './participant-input.scss',
   templateUrl: './participant-input.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, IonSearchbar, Button]
+  imports: [CommonModule, Button, Searchbar]
 })
 export class ParticipantInput {
   label = input<string>('');

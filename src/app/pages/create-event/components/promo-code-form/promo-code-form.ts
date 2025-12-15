@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
+import { Chip } from '@/components/common/chip';
 import { Button } from '@/components/form/button';
 import { TextInput } from '@/components/form/text-input';
+import { ModalController } from '@ionic/angular/standalone';
 import { NumberInput } from '@/components/form/number-input';
-import { ModalController, IonChip } from '@ionic/angular/standalone';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Component, inject, ChangeDetectionStrategy, signal, Input } from '@angular/core';
 
@@ -20,7 +21,7 @@ export interface PromoCodeFormData {
   templateUrl: './promo-code-form.html',
   styleUrl: './promo-code-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, Button, TextInput, NumberInput, IonChip]
+  imports: [CommonModule, ReactiveFormsModule, Button, TextInput, NumberInput, Chip]
 })
 export class PromoCodeForm {
   private modalCtrl = inject(ModalController);

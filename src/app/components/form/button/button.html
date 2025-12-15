@@ -7,6 +7,10 @@
   [disabled]="disabled()"
   (click)="onClick($event)"
   [icon]="iconName() ? 'pi ' + iconName() : ''"
-  [style]="{ width: width(), height: height() }"
+  [style]="{ width: width(), height: height(), borderRadius: radius() }"
   styleClass="w-full h-[44px] body-14SB neutral-01"
-/>
+>
+  @if (icon()) {
+    <ion-icon [src]="icon()" class="text-xl" />
+  }
+</p-button>

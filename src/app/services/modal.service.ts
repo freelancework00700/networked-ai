@@ -6,12 +6,15 @@ import { CreateEvent } from '@/pages/create-event/create-event';
 import { ConfirmModal } from '@/components/modal/confirm-modal';
 import { LocationModal } from '@/components/modal/location-modal';
 import { DateTimeModal } from '@/components/modal/date-time-modal';
+import { MenuModal } from '@/pages/messages/components/menu-modal';
+import { ShareGroup } from '@/pages/messages/components/share-group';
 import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
 import { GifGalleryModal } from '@/components/modal/gif-gallery-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
 import { ImageGalleryModal } from '@/components/modal/image-gallery-modal';
 import { EventCategoryModal } from '@/components/modal/event-category-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
+import { GroupInvitation } from '@/pages/messages/components/group-invitation';
 import { AIPromptModal } from '@/pages/create-event/components/ai-prompt-modal';
 import { TicketTypeModal } from '@/pages/create-event/components/ticket-type-modal';
 import { QuestionnaireForm } from '@/pages/create-event/components/questionnaire-form';
@@ -274,7 +277,9 @@ export class ModalService {
   async openConfirmModal(config: {
     icon?: string;
     title: string;
+    iconName?: string;
     description: string;
+    iconBgColor?: string;
     confirmButtonLabel: string;
     cancelButtonLabel: string;
     confirmButtonColor?: string;
@@ -421,6 +426,54 @@ export class ModalService {
     await modal.present();
 
     const { data } = await modal.onDidDismiss();
+    return data;
+  }
+
+  async openMenuModal(): Promise<{ role: string } | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: MenuModal,
+      cssClass: 'auto-hight-modal'
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
+  async openShareGroupModal(data: any): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: ShareGroup,
+      cssClass: 'auto-hight-modal',
+      componentProps: {
+        data: data
+      }
+    });
+    await modal.present();
+    const { data: shareGroupData } = await modal.onWillDismiss();
+    return shareGroupData;
+  }
+
+  async openGroupInvitationModal(groupId: string): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: GroupInvitation,
+      backdropDismiss: false,
+      cssClass: 'auto-hight-modal'
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
     return data;
   }
 

@@ -13,12 +13,11 @@
       <div class="w-full relative">
         @if (!user) {
           <div class="flex gap-2 items-center relative">
-            <ion-searchbar
-              class="c-host-searchBar"
-              [debounce]="500"
-              placeholder="Search by username, email or phone"
+            <searchbar
+              [placeholder]="'Search by username, email or phone'"
               [value]="getSearchInput($index)"
-              (ionInput)="onSearchInputEvent($index, $event)"
+              (onInput)="onSearchInputEvent($index, $event)"
+              class="w-full"
             />
 
             @if (getFilteredUsers($index).length > 0) {

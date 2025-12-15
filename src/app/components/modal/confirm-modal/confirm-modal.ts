@@ -7,6 +7,8 @@ import { Component, inject, ChangeDetectionStrategy, Input } from '@angular/core
 export interface ConfirmModalConfig {
   icon?: string; // SVG path
   title: string;
+  iconName?: string;
+  iconBgColor?: string;
   description?: string;
   confirmButtonLabel?: string;
   cancelButtonLabel?: string;
@@ -25,6 +27,8 @@ export class ConfirmModal {
   private modalService = inject(ModalService);
 
   @Input() icon: string = '';
+  @Input() iconBgColor?: string;
+  @Input() iconName: string = '';
   @Input() title: string = 'Confirm';
   @Input() description: string = '';
   @Input() confirmButtonLabel: string = 'Confirm';

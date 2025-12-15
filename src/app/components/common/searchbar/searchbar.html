@@ -1,0 +1,7 @@
+<ion-searchbar
+  class="c-host-searchBar"
+  [debounce]="500"
+  placeholder="Search by username, email or phone"
+  [value]="value()"
+  (ionInput)="onInputChange($event)"
+/>

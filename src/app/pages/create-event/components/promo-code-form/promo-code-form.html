@@ -18,32 +18,21 @@
       <div class="w-full">
         <div class="flex gap-2 mt-1">
           <!-- Percentage Chip -->
-          <ion-chip
-            outline="true"
+          <chip
+            [type]="'percentage'"
             [color]="promotionType() === 'percentage' ? 'lgold' : ''"
-            [style.background-color]="promotionType() === 'percentage' ? '#FEF7EC' : ''"
-            class="promo-chip"
-            (click)="setPromotionType('percentage')"
+            (selectedType)="setPromotionType('percentage')"
+            class="w-full"
           >
-            <div class="chip-inner body-14R">
-              <span>Percentage Off</span>
-              <span>%</span>
-            </div>
-          </ion-chip>
+            <span>Percentage Off</span>
+            <span>%</span>
+          </chip>
 
           <!-- Fixed Chip -->
-          <ion-chip
-            outline="true"
-            [color]="promotionType() === 'fixed' ? 'lgold' : ''"
-            [style.background-color]="promotionType() === 'fixed' ? '#FEF7EC' : ''"
-            class="promo-chip"
-            (click)="setPromotionType('fixed')"
-          >
-            <div class="chip-inner body-14R">
-              <span>Fixed Amount Off</span>
-              <span>$</span>
-            </div>
-          </ion-chip>
+          <chip [type]="'fixed'" [color]="promotionType() === 'fixed' ? 'lgold' : ''" (selectedType)="setPromotionType('fixed')" class="w-full">
+            <span>Fixed Amount Off</span>
+            <span>$</span>
+          </chip>
         </div>
       </div>
     </div>

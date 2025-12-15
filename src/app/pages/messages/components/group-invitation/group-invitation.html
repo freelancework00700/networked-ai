@@ -1,0 +1,39 @@
+<div class="p-4">
+  <div class="flex flex-col items-center text-center">
+    <h2 class="body-16M">Group Invitation</h2>
+
+    <img [src]="group().image" class="w-20 h-20 rounded-full object-cover my-3" />
+
+    <div class="text-lg font-semibold">
+      {{ group().name }}
+    </div>
+
+    <div class="text-sm text-gray-500">{{ group().membersCount }} Members</div>
+  </div>
+
+  <!-- MEMBERS PREVIEW -->
+  <div class="border border-surface-300 rounded-xl p-4 mt-6 text-center">
+    <div class="flex justify-center -space-x-2 mb-2">
+      @for (img of group().membersPreview; track img) {
+        <img [src]="img" class="w-8 h-8 rounded-full object-cover" />
+      }
+    </div>
+
+    <div class="text-sm">
+      <strong>
+        {{ group().previewText.first }},
+        {{ group().previewText.second }}
+      </strong>
+      and <strong>{{ group().previewText.others }} others</strong>
+      <br />
+      <span class="text-gray-500"> are members of this group. </span>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="flex gap-3 mt-6">
+    <app-button label="Decline" class="flex-1" color="secondary" [disabled]="isJoining()" (click)="close()" />
+
+    <app-button label="Join Group" class="flex-1" [isLoading]="isJoining()" [disabled]="isJoining()" (click)="joinGroup()" />
+  </div>
+</div>

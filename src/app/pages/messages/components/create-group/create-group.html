@@ -1,0 +1,169 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="relative p-4 max-w-[672px] mx-auto flex items-center">
+      <i class="pi pi-arrow-left text-xl cursor-pointer z-10" (click)="handleBack()"></i>
+      <div class="absolute left-1/2 -translate-x-1/2 body-16M neutral-01">{{ routeId() ? 'Edit Group' : 'Create New Group' }}</div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="w-full max-w-[672px] mx-auto p-4 pt-0 flex flex-col gap-2">
+    @if (isGroupDetails()) {
+      <!-- Group Details Picture + Name Input -->
+      <div class="flex items-center gap-4 mb-6">
+        <!-- Group Image Placeholder -->
+        <input #fileInput type="file" accept="image/*" class="hidden" (change)="onGroupImageSelected($event)" />
+
+        <div class="w-16 h-16 bg-neutral-05 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer" (click)="fileInput.click()">
+          @if (groupImage()) {
+            <img [src]="groupImage()!" alt="Group" class="w-full h-full rounded-full object-cover" />
+          } @else {
+            <i class="pi pi-camera text-white text-[24px]"></i>
+          }
+        </div>
+
+        <!-- Group Name Input -->
+        <input pInputText class="flex-1 h-[44px]" [value]="groupName()" (input)="onGroupNameInput($event)" placeholder="Sports Group" />
+      </div>
+
+      <!-- Members List -->
+      <div>
+        <div class="body-14M neutral-01 mb-2">Members</div>
+
+        @for (m of selectedMembers(); track m.id) {
+          <div class="flex items-center gap-3 py-3 border-b border-gray-200">
+            <!-- Profile -->
+            <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" />
+
+            <!-- Details -->
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-medium">{{ m.name }}</span>
+
+                <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
+                  <img src="assets/svg/diamondYellow.svg" class="h-4" />
+                  <span class="text-xs font-semibold">{{ m.value }}</span>
+                </div>
+              </div>
+
+              <div class="text-xs text-gray-500">{{ m.jobTitle }}, {{ m.company }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div>
+        @if (selectedMembers().length > 0) {
+          <div class="flex gap-3 overflow-x-auto pb-3">
+            @for (m of selectedMembers(); track m.id) {
+              <div class="flex flex-col items-center w-16">
+                <div class="relative">
+                  <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" />
+
+                  <div
+                    class="absolute -bottom-1 -right-1 bg-neutral-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
+                    (click)="removeMember(m)"
+                  >
+                    <i class="pi pi-times !text-[10px]"></i>
+                  </div>
+                </div>
+
+                <div class="text-xs mt-1 w-full text-center truncate">
+                  {{ m.name }}
+                </div>
+              </div>
+            }
+          </div>
+        }
+        <div class="body-16M neutral-01">Add Members</div>
+        <div class="flex items-center justify-between gap-2">
+          <searchbar [placeholder]="'Search by username, email or phone'" (onInput)="onSearchChange($event)" class="w-full" />
+        </div>
+
+        @if (searchText().trim() == '' || filteredSuggestions().length == 0) {
+          <div class="flex flex-col my-4">
+            <div class="flex items-center justify-between p-2">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+                  <img src="assets/svg/addUserIcon.svg" class="w-5 h-5" />
+                </div>
+                <div class="body-14M neutral-01">Add by Scanning QR Code</div>
+              </div>
+              <img src="assets/svg/scanner.svg" class="w-6 h-6" />
+            </div>
+          </div>
+        }
+
+        @if (routeId()) {
+          <div class="flex flex-col my-4">
+            <div class="flex items-center justify-between p-2">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+                  <img src="assets/svg/linkBlackIcon.svg" class="w-5 h-5" />
+                </div>
+                <div class="body-14M neutral-01">Copy Invite Link</div>
+              </div>
+              <img src="assets/svg/copyBlackIcon.svg" class="w-6 h-6" (click)="copyInviteLink()" />
+            </div>
+          </div>
+        }
+
+        <div>
+          @if (filteredSuggestions().length > 0) {
+            <div class="body-14M neutral-01">Your Network</div>
+
+            @for (s of filteredSuggestions(); track s.id) {
+              <div class="flex items-center gap-3 py-4 border-b border-gray-200 cursor-pointer" (click)="toggleMember(s)">
+                <div class="relative">
+                  <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" />
+
+                  @if (isSelected(s.id)) {
+                    <div
+                      class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
+                    >
+                      <i class="pi pi-check !text-[10px]"></i>
+                    </div>
+                  }
+                </div>
+
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="font-medium truncate">{{ s.name }}</span>
+
+                    <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
+                      <img src="assets/svg/diamondYellow.svg" class="h-4" />
+                      <span class="text-xs font-semibold">{{ s.value }}</span>
+                    </div>
+                  </div>
+
+                  <div class="text-xs text-gray-500">{{ s.jobTitle }}, {{ s.company }}</div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar class="bg-white border-t border-gray-200">
+    <div class="flex items-center gap-2 p-4 max-w-[672px] mx-auto w-full">
+      @if (routeId()) {
+        <app-button label="Add to Group" (click)="goToCreateGroup()" class="flex-1" />
+      }
+
+      @if (!routeId() && selectedMembers().length > 0 && !isGroupDetails()) {
+        <app-button label="Proceed" (click)="nextStep()" class="flex-1" />
+      }
+
+      @if (isGroupDetails()) {
+        <div class="ml-auto">
+          <app-button iconName="pi pi-check" (click)="createGroup()" [disabled]="groupName() === ''" width="48px" height="48px" />
+        </div>
+      }
+    </div>
+  </ion-toolbar>
+</ion-footer>

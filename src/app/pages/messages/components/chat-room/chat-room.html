@@ -1,0 +1,88 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="relative p-6 max-w-[672px] mx-auto flex items-center">
+      <i class="pi pi-arrow-left text-xl cursor-pointer z-10" (click)="handleBack()"></i>
+
+      <div class="flex justify-center items-center gap-3 mx-auto" (click)="openChatInfo()">
+        <ion-avatar class="w-12 h-12 mb-1">
+          <img src="assets/images/profile.jpeg" />
+        </ion-avatar>
+        <div class="body-16M neutral-01">{{ chatName() }}</div>
+      </div>
+
+      <i class="pi pi-search"></i>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="w-full max-w-[672px] mx-auto p-4 pt-0 flex flex-col gap-2">
+    @for (msg of messages(); track $index) {
+      @if (msg.sender === 'You') {
+        <div
+          class="flex flex-col items-end mb-2 relative transition-opacity"
+          [class.opacity-100]="editingIndex() === null || editingIndex() === $index"
+          [class.opacity-30]="editingIndex() !== null && editingIndex() !== $index"
+          [class.pointer-events-none]="editingIndex() !== null && editingIndex() !== $index"
+          (click)="onLongPress($index)"
+        >
+          <div
+            class="rounded-xl px-4 py-2 max-w-[80%] break-words"
+            [class.bg-primary]="!msg.deleted"
+            [class.bg-gray-200]="msg.deleted"
+            [class.text-gray-500]="msg.deleted"
+          >
+            {{ msg.text }}
+          </div>
+
+          <div class="text-xs text-gray-500 mt-1">
+            {{ msg.time }}
+          </div>
+
+          @if (selectedIndex() === $index && editingIndex() === null && !msg.deleted) {
+            <div class="absolute right-0 mt-1 bg-white shadow-lg rounded-xl px-3 py-2 flex gap-4 z-50">
+              <img src="assets/svg/editIcon.svg" class="w-5 h-5 cursor-pointer" (click)="editMessage($index)" />
+              <img src="assets/svg/deleteIcon.svg" class="w-5 h-5 cursor-pointer" (click)="deleteMessage($index)" />
+            </div>
+          }
+        </div>
+
+      } @else if (msg.sender !== 'You') {
+        <div
+          class="flex items-start gap-2 mb-2 transition-opacity"
+          [class.opacity-100]="editingIndex() === null"
+          [class.opacity-30]="editingIndex() !== null"
+          [class.pointer-events-none]="editingIndex() !== null"
+        >
+          <ion-avatar class="w-10 h-10 flex-shrink-0">
+            <img src="assets/images/profile.jpeg" />
+          </ion-avatar>
+
+          <div class="flex flex-col">
+            <div class="bg-gray-200 text-gray-900 rounded-xl px-4 py-2 max-w-[80%] break-words">
+              {{ msg.text }}
+            </div>
+            <div class="text-xs text-gray-500 mt-1">
+              {{ msg.time }}
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar class="bg-white border-t border-gray-200">
+    <div class="flex items-center gap-2 p-4 max-w-[672px] mx-auto w-full">
+      <ion-input
+        [value]="newMessage()"
+        (ionInput)="newMessage.set($event.detail.value || '')"
+        placeholder="Message..."
+        class="flex-1 rounded-full border border-gray-300 px-4 py-2"
+      ></ion-input>
+
+      <app-button (click)="sendMessage()" [iconName]="editingIndex() === null ? 'pi-send' : 'pi-check'" iconPos="left" height="40px" width="40px" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

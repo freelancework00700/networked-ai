@@ -10,6 +10,5 @@ export default [
     component: TabLayout,
     canActivate: [onboardingGuard],
     children: [{ path: '', component: Profile }]
-  },
-  { path: 'edit', canActivate: [onboardingGuard], component: EditProfile }
+  }
 ] as Routes;

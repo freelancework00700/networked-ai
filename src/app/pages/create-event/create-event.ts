@@ -1,5 +1,4 @@
 import {
-  IonChip,
   IonLabel,
   IonHeader,
   IonToggle,
@@ -12,6 +11,7 @@ import {
   ItemReorderEventDetail
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
+import { Chip } from '@/components/common/chip';
 import { Button } from '@/components/form/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
@@ -38,8 +38,8 @@ import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } 
   styleUrl: './create-event.scss',
   templateUrl: './create-event.html',
   imports: [
+    Chip,
     Button,
-    IonChip,
     IonLabel,
     TextInput,
     IonHeader,
@@ -490,7 +490,8 @@ export class CreateEvent {
 
   async promptStripeSignup() {
     const result = await this.modalService.openConfirmModal({
-      icon: 'assets/svg/stripeSetup.svg',
+      icon: 'assets/svg/payoutIcon.svg',
+      iconBgColor: '#9E0A0A',
       title: 'Add Payout Details',
       description: 'To accept ticket sales in app, you must setup your payout details with Stripe.',
       confirmButtonLabel: 'Connect Payment',
@@ -517,7 +518,8 @@ export class CreateEvent {
 
   async confirmDelete(message: string): Promise<boolean> {
     const result = await this.modalService.openConfirmModal({
-      icon: 'assets/svg/deleteConfirmation.svg',
+      icon: 'assets/svg/deleteWhiteIcon.svg',
+      iconBgColor: '#C73838',
       title: 'Delete Confirmation',
       description: message,
       confirmButtonLabel: 'Delete',

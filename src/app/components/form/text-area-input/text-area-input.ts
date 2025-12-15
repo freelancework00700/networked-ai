@@ -2,7 +2,7 @@ import { distinctUntilChanged } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { TextareaModule } from 'primeng/textarea';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { FormBuilder, ControlContainer, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FormBuilder, ControlContainer, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'text-area-input',

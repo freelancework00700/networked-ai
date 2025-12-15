@@ -1,0 +1,13 @@
+<ion-chip
+  outline="true"
+  [color]="color()"
+  [style.background-color]="color() === 'lgold' ? '#FEF7EC' : ''"
+  class="promo-chip"
+  (click)="onChange(type())"
+  [style.height]="height()"
+  [style.width]="width()"
+>
+  <div class="chip-inner body-14R">
+    <ng-content />
+  </div>
+</ion-chip>

@@ -1,0 +1,72 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="relative p-4 max-w-[672px] mx-auto flex items-center">
+      <i class="pi pi-arrow-left text-xl cursor-pointer z-10" (click)="handleBack()"></i>
+      <div class="absolute left-1/2 -translate-x-1/2 body-16M neutral-01">Start a New Chat</div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="w-full max-w-[672px] mx-auto p-4 pt-0 flex flex-col gap-2">
+    <div class="flex items-center justify-between gap-2">
+      <div class="text-body-14M neutral-01">To:</div>
+      <searchbar [placeholder]="'Search by username, email or phone'" (onInput)="onSearchChange($event)" class="w-full" />
+    </div>
+
+    <!-- CREATE GROUP + ADD NEW CONTACT -->
+    @if (searchText().trim() == '' || filteredSuggestions().length == 0) {
+      <div class="flex flex-col">
+        <div class="flex items-center justify-between p-2">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+              <img src="assets/svg/users.svg" class="w-5 h-5" />
+            </div>
+            <div class="body-14M neutral-01">Create New Group</div>
+          </div>
+          <i class="pi pi-arrow-right" (click)="goToCreateGroup()"></i>
+        </div>
+
+        <div class="flex items-center justify-between p-2">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+              <img src="assets/svg/addUserIcon.svg" class="w-5 h-5" />
+            </div>
+            <div class="body-14M neutral-01">Add New Contact</div>
+          </div>
+          <img src="assets/svg/scanner.svg" class="w-6 h-6" />
+        </div>
+      </div>
+    }
+
+    <!-- YOUR NETWORK -->
+    <div>
+      @if (filteredSuggestions().length > 0) {
+        <div class="body-14M neutral-01">Your Network</div>
+
+        @for (s of filteredSuggestions(); track s.id) {
+          <div class="flex items-center gap-3 py-4 border-b border-gray-200">
+            <!-- Profile -->
+            <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" />
+            <!-- Details -->
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-medium truncate">{{ s.name }}</span>
+
+                <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
+                  <img src="assets/svg/diamondYellow.svg" class="h-4" />
+                  <span class="text-xs font-semibold">{{ s.value }}</span>
+                </div>
+              </div>
+
+              <div class="text-xs text-gray-500">{{ s.jobTitle }}, {{ s.company }}</div>
+            </div>
+
+            <!-- Add/Added button -->
+            <i class="pi pi-arrow-right pr-2" (click)="goToChatRoom(s.id)"></i>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</ion-content>

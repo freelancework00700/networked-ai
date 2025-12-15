@@ -1,0 +1,36 @@
+.time-unread {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 12px;
+  span {
+    margin-bottom: 4px;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60%;
+  gap: 12px;
+  ion-icon {
+    font-size: 48px;
+    color: #ccc;
+  }
+  p {
+    font-size: 16px;
+    color: #999;
+  }
+  button {
+    background-color: #f4a600;
+    color: #fff;
+  }
+}
+
+ion-item {
+  --inner-padding-top: 8px;
+  --inner-padding-bottom: 8px;
+  --min-height: 60px;
+}
