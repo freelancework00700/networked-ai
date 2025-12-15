@@ -14,10 +14,10 @@
         @if (!user) {
           <div class="flex gap-2 items-center relative">
             <searchbar
-              [placeholder]="'Search by username, email or phone'"
-              [value]="getSearchInput($index)"
-              (onInput)="onSearchInputEvent($index, $event)"
               class="w-full"
+              [searchQuery]="getSearchInput($index)"
+              (searchChange)="onSearchInput($index, $event)"
+              [placeholder]="'Search by username, email or phone'"
             />
 
             @if (getFilteredUsers($index).length > 0) {

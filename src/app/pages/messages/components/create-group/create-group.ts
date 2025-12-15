@@ -52,12 +52,6 @@ export class CreateGroup {
     return this.networkSuggestions.filter((s) => s.name.toLowerCase().includes(search));
   });
 
-  onSearchChange(event: Event) {
-    const customEvent = event as CustomEvent;
-    const value = customEvent.detail?.value || '';
-    this.searchText.set(value);
-  }
-
   toggleAdd(id: string) {
     const current = new Set(this.selectedIds());
     current.has(id) ? current.delete(id) : current.add(id);

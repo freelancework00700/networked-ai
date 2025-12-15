@@ -1,9 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Button } from '@/components/form/button';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
-import { InputTextModule } from 'primeng/inputtext';
 import { ModalService } from '@/services/modal.service';
+import { Searchbar } from '@/components/common/searchbar';
 import { environment } from 'src/environments/environment';
 import { LazyImageDirective } from '@/directives/lazy-image.directive';
 import { of, Subject, switchMap, catchError, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -30,12 +28,10 @@ interface TenorSearchResponse {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     Button,
+    Searchbar,
     IonFooter,
     IonContent,
     IonToolbar,
-    IconFieldModule,
-    InputIconModule,
-    InputTextModule,
     IonInfiniteScroll,
     LazyImageDirective,
     IonInfiniteScrollContent
@@ -136,8 +132,7 @@ export class GifGalleryModal implements OnInit {
     return this.http.get<TenorSearchResponse>('https://g.tenor.com/v1/search', { params }).pipe(catchError(() => of({ next: '', results: [] })));
   }
 
-  onSearchInput(event: Event): void {
-    const query = (event.target as HTMLInputElement).value;
+  onSearchInput(query: string): void {
     this.searchQuery.set(query);
     this.searchSubject.next(query);
   }

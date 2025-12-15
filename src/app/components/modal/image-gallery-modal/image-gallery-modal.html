@@ -6,20 +6,13 @@
 
   <!-- searchbar -->
   <div class="mb-6">
-    <p-iconfield>
-      <!-- search icon -->
-      <p-inputicon class="pi pi-search" />
-
-      <!-- search input -->
-      <input pInputText [value]="searchQuery()" class="w-full h-[44px]" (input)="onSearchInput($event)" placeholder="Search for images..." />
-
-      <!-- spinner when searching, clear icon when not searching and has value -->
-      @if (isSearching()) {
-        <p-inputicon class="pi pi-spin pi-spinner" />
-      } @else if (searchQuery()) {
-        <p-inputicon class="pi pi-times cursor-pointer" (click)="clearSearch()" />
-      }
-    </p-iconfield>
+    <searchbar
+      (clear)="clearSearch()"
+      [searchQuery]="searchQuery()"
+      [isSearching]="isSearching()"
+      placeholder="Search for images..."
+      (searchChange)="onSearchInput($event)"
+    />
   </div>
 
   <!-- image grid with infinite scroll -->

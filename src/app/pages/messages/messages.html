@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <div class="flex items-center gap-4 p-6 max-w-[672px] mx-auto">
-      <searchbar [placeholder]="'Search by username, email or phone'" (onInput)="onSearchInputEvent($event)" class="w-full" />
+      <searchbar class="w-full" [searchQuery]="searchInput()" (searchChange)="searchInput.set($event)" placeholder="Search by username, email or phone" />
       <app-button (click)="startNewChat()" [icon]="'assets/svg/chatIcon.svg'" iconPos="left" />
     </div>
   </ion-toolbar>
@@ -10,9 +10,9 @@
 <ion-content [fullscreen]="true">
   <div class="w-full pt-0 max-w-[672px] mx-auto">
     <!-- Tabs -->
-    <div class="flex px-6 pb-4">
+    <div class="flex px-6 pb-4 gap-2">
       @for (tab of ['All', 'Unread', 'Group', 'Event', 'Network']; track tab) {
-        <chip [type]="tab" [color]="activeTab() === tab ? 'lgold' : ''" (selectedType)="setTab(tab)" height="24px">
+        <chip [type]="tab" [color]="activeTab() === tab ? 'lgold' : ''" (selectedType)="activeTab.set(tab)" height="24px">
           {{ tab }}
         </chip>
       }

@@ -84,12 +84,6 @@ export class ParticipantInput {
     this.filteredUsers.update((users) => ({ ...users, [newIndex]: [] }));
   }
 
-  onSearchInputEvent(index: number, event: Event): void {
-    const customEvent = event as CustomEvent;
-    const value = customEvent.detail?.value || '';
-    this.onSearchInput(index, value);
-  }
-
   onSearchInput(index: number, value: string): void {
     this.searchInputs.update((inputs) => ({ ...inputs, [index]: value }));
 

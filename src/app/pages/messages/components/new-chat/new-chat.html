@@ -11,7 +11,7 @@
   <div class="w-full max-w-[672px] mx-auto p-4 pt-0 flex flex-col gap-2">
     <div class="flex items-center justify-between gap-2">
       <div class="text-body-14M neutral-01">To:</div>
-      <searchbar [placeholder]="'Search by username, email or phone'" (onInput)="onSearchChange($event)" class="w-full" />
+      <searchbar class="w-full" [searchQuery]="searchText()" (searchChange)="searchText.set($event)" placeholder="Search by username, email or phone" />
     </div>
 
     <!-- CREATE GROUP + ADD NEW CONTACT -->

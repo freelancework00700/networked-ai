@@ -1,7 +1,17 @@
-<ion-searchbar
-  class="c-host-searchBar"
-  [debounce]="500"
-  placeholder="Search by username, email or phone"
-  [value]="value()"
-  (ionInput)="onInputChange($event)"
-/>
+<p-iconfield>
+  <!-- search icon -->
+  <p-inputicon class="pi pi-search" />
+
+  <!-- input -->
+  <input pInputText [value]="searchQuery()" class="w-full h-[44px]" [placeholder]="placeholder()" (input)="onSearchInput($event)" />
+
+  <!-- loader when searching -->
+  @if (isSearching()) {
+    <p-inputicon class="pi pi-spin pi-spinner" />
+  }
+
+  <!-- clear button when there's a search query and not searching -->
+  @else if (searchQuery()) {
+    <p-inputicon class="pi pi-times cursor-pointer" (click)="onClearClick()" />
+  }
+</p-iconfield>

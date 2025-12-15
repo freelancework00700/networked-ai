@@ -96,16 +96,6 @@ export class Messages {
     this.router.navigate(['/new-chat']);
   }
 
-  onSearchInputEvent(event: Event) {
-    const customEvent = event as CustomEvent;
-    const value = customEvent.detail?.value || '';
-    this.searchInput.set(value);
-  }
-
-  setTab(tab: string) {
-    this.activeTab.set(tab);
-  }
-
   async muteChat(msg: Message) {
     const result = await this.modalService.openConfirmModal({
       icon: msg.isMuted ? 'assets/svg/alertBlackIcon.svg' : 'assets/svg/alertOffBlackIcon.svg',

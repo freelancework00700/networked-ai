@@ -1,20 +1,31 @@
-import { IonSearchbar } from '@ionic/angular/standalone';
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { InputIcon } from 'primeng/inputicon';
+import { IconField } from 'primeng/iconfield';
+import { InputTextModule } from 'primeng/inputtext';
+import { input, output, Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'searchbar',
-  imports: [IonSearchbar],
   styleUrl: './searchbar.scss',
   templateUrl: './searchbar.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [IconField, InputIcon, InputTextModule]
 })
 export class Searchbar {
-  placeholder = input<string>('');
-  debounce = input<number>(500);
-  value = input<string>('');
-  onInput = output<CustomEvent<any>>();
+  // inputs
+  isSearching = input(false);
+  placeholder = input('Search...');
+  searchQuery = input.required<string>();
 
-  onInputChange(event: CustomEvent<any>): void {
-    this.onInput.emit(event);
+  // outputs
+  clear = output<void>();
+  searchChange = output<string>();
+
+  onSearchInput(event: Event): void {
+    const query = (event.target as HTMLInputElement).value;
+    this.searchChange.emit(query);
+  }
+
+  onClearClick(): void {
+    this.clear.emit();
   }
 }
