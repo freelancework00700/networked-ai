@@ -1,0 +1,41 @@
+<ion-header>
+  <ion-toolbar>
+    <!-- segment buttons -->
+    <div class="bg-neutral-07 w-full max-w-[672px] mx-auto">
+      <div class="flex gap-2 items-center p-4">
+        <searchbar
+          class="w-full"
+          (clear)="searchQuery.set('')"
+          [searchQuery]="searchQuery()"
+          (searchChange)="searchQuery.set($event)"
+          placeholder="Search by username"
+        />
+
+        <app-button icon="/assets/svg/filterIcon.svg" color="secondary" (click)="openLocationFilterModal()" />
+        <app-button icon="/assets/svg/addUserIcon.svg" (click)="navigateToAddNetwork()" />
+      </div>
+
+      <div class="flex">
+        <button type="button" class="segment-button" [class.active]="segmentValue() === 'list'" (click)="segmentValue.set('list')">
+          <ion-icon name="list-outline" class="segment-icon"></ion-icon>
+          <span class="segment-text">List View</span>
+        </button>
+
+        <button type="button" class="segment-button" [class.active]="segmentValue() === 'map'" (click)="segmentValue.set('map')">
+          <img [src]="segmentValue() === 'map' ? 'assets/svg/mapThemeIcon.svg' : 'assets/svg/mapViewIcon.svg'" alt="Map View" class="segment-icon" />
+          <span class="segment-text">Map View</span>
+        </button>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen="true">
+  <div class="w-full max-w-[672px] mx-auto p-4 pt-0 relative h-full">
+    @if (segmentValue() === 'list') {
+      <list-view [filteredSuggestions]="filteredSuggestions()" (clearSearch)="clearSearch()" />
+    } @else {
+      <map-view [users]="filteredSuggestions()" [radius]="radius()" />
+    }
+  </div>
+</ion-content>

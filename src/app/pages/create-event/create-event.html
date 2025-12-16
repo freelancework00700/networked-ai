@@ -32,16 +32,77 @@
           <div class="flex flex-col gap-6">
             <!-- Media Upload Section -->
             <div>
-              <div
-                class="border-2 border-dashed border-surface-300 rounded-lg flex flex-col items-center justify-center gap-3 h-[150px] cursor-pointer"
-              >
-                <img src="assets/svg/imageUpload.svg" alt="Upload" class="w-12 h-12" />
-                <div class="flex flex-col items-center gap-1">
-                  <span class="body-16M text-primary">Browse files</span>
-                  <div class="text-sm text-surface-500">JPG or PNG <span class="text-surface-300 text-lg">|</span> Max 10 photos, 5MB total</div>
+              @if (mediaItems().length) {
+                <div #swiperEl class="swiper">
+                  <div class="swiper-wrapper">
+                    @for (item of mediaItems(); track item.id) {
+                      <div class="swiper-slide">
+                        <div class="slide-content">
+                          <div class="slide-image">
+                            <!-- IMAGE -->
+                            @if (item.type === 'image' || item.type === 'gif') {
+                              <img src="{{ item.url }}" />
+                            }
+
+                            <!-- VIDEO -->
+                            @if (item.type === 'video') {
+                              <video src="{{ item.url }}" controls></video>
+                            }
+
+                            <div
+                              class="absolute top-2 right-2 bg-black/50 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
+                              (click)="deleteMedia($index)"
+                            >
+                              <i class="pi pi-times"></i>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
                 </div>
-                <input type="file" multiple accept="image/jpeg,image/png" class="hidden" id="file-upload" />
-              </div>
+                <div #scrollContainer class="thumbnail-container" cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="drop($event)">
+                  @for (item of mediaItems(); track item.id) {
+                    <div class="thumbnail" cdkDrag [cdkDragBoundary]="scrollContainer" (click)="goToSlide($index)">
+                      <!-- IMAGE -->
+                      @if (item.type === 'image' || item.type === 'gif') {
+                        <img [src]="item.url" />
+                      }
+
+                      <!-- VIDEO -->
+                      @if (item.type === 'video') {
+                        <video [src]="item.url" muted loop></video>
+                      }
+                      <!-- DELETE -->
+                      <div class="delete-btn" (click)="deleteMedia($index)">×</div>
+                    </div>
+                  }
+                </div>
+
+                <div class="mt-2">
+                  <app-button label="Browse files" (click)="fileInput.click()" variant="text" class="w-full" />
+                </div>
+              } @else {
+                <div
+                  class="border-2 border-dashed border-surface-300 rounded-lg flex flex-col items-center justify-center gap-3 h-[150px] cursor-pointer"
+                  (click)="fileInput.click()"
+                >
+                  <img src="assets/svg/imageUpload.svg" class="w-12 h-12" />
+
+                  <div class="flex flex-col items-center gap-1">
+                    <span class="body-16M text-primary">Browse files</span>
+                    <div class="text-sm text-surface-500">JPG or PNG <span class="text-surface-300 text-lg">|</span> Max 10 photos, 5MB total</div>
+                  </div>
+                </div>
+              }
+              <input
+                #fileInput
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,video/mp4,video/webm,video/quicktime"
+                class="hidden"
+                (change)="onBrowseFiles($event)"
+              />
               <div class="flex items-center gap-3 my-2">
                 <div class="flex-1 border-t border-surface-300"></div>
                 <div class="text-surface-500 body-14M">or</div>

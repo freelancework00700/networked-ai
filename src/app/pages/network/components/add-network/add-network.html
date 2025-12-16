@@ -1,0 +1,145 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
+      <div class="pi pi-arrow-left" (click)="navigateBack()"></div>
+      <div class="body-14M neutral-02 text-center w-full">Add Network</div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="min-h-full">
+    <div class="w-full p-6 max-w-[672px] mx-auto">
+      <searchbar
+        [searchQuery]="searchQuery()"
+        (searchChange)="searchQuery.set($event)"
+        placeholder="Search by username"
+        (clear)="searchQuery.set('')"
+      />
+
+      @if (searchQuery() && filteredSuggestions().length) {
+        <div class="flex flex-col gap-4 pt-4">
+          @for (suggestion of filteredSuggestions(); track suggestion.id) {
+            <div class="flex items-center gap-3 py-4 border-b border-surface-200">
+              <!-- Avatar -->
+              <div class="w-12 h-12">
+                <img src="assets/images/profile.jpeg" class="w-full h-full rounded-full object-cover" />
+              </div>
+
+              <!-- Info -->
+              <div class="flex-1 flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                  <div class="body-14SB neutral-01 truncate">
+                    {{ suggestion.name }}
+                  </div>
+
+                  <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full h-[20px]">
+                    <img src="assets/svg/diamondYellow.svg" class="h-4 ml-1.5" />
+                    <span class="text-sm font-medium pr-2">
+                      {{ suggestion.value }}
+                    </span>
+                  </div>
+                </div>
+
+                <p class="body-12 neutral-03">{{ suggestion.jobTitle }}, {{ suggestion.company }}</p>
+              </div>
+
+              @if (suggestion.networked) {
+                <app-button width="72px" height="32px" color="secondary" label="Message" (click)="messageUser(suggestion.id)" />
+              } @else if (suggestion.requested) {
+                <app-button width="72px" height="32px" color="secondary" label="Pending" [disabled]="true" />
+              } @else {
+                <app-button width="60px" height="32px" label="Add" (click)="addSuggestion(suggestion.id)" />
+              }
+            </div>
+          }
+        </div>
+      } @else if (searchQuery() && !filteredSuggestions().length) {
+        <div class="flex items-center justify-center h-full min-h-[400px]">
+          <div class="flex flex-col items-center justify-center gap-3 text-center">
+            <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center">
+              <div class="icon-container">
+                <i class="pi pi-search text-4xl text-white"></i>
+              </div>
+            </div>
+            <div class="text-[20px] font-semibold neutral-01">No Results Found</div>
+            <div class="body-14M text-surface-600">Check your spelling or try searching for a different keyword.</div>
+            <app-button (click)="searchQuery.set('')" label="Clear Search" color="secondary" />
+          </div>
+        </div>
+      } @else {
+        <div>
+          <div class="flex items-center gap-3 my-2">
+            <div class="flex-1 border-t border-surface-300"></div>
+            <div class="text-surface-500 body-14M">or</div>
+            <div class="flex-1 border-t border-surface-300"></div>
+          </div>
+          <app-button label="Scan QR Code" (click)="scanQRCode()" icon="/assets/svg/scannerBlack.svg" />
+
+          <div class="mt-4">
+            <div class="flex items-center justify-between">
+              <div class="body-16SB neutral-01">Added You</div>
+            </div>
+
+            <div class="mt-3">
+              @for (suggestion of visibleSuggestions(); track suggestion.id) {
+                <div class="flex items-center gap-3 py-4 border-b border-surface-200">
+                  <!-- Avatar -->
+                  <div class="w-12 h-12">
+                    <img src="assets/images/profile.jpeg" class="w-full h-full rounded-full object-cover" />
+                  </div>
+
+                  <!-- Info -->
+                  <div class="flex-1 flex flex-col gap-1">
+                    <div class="flex items-center gap-2">
+                      <div class="body-14SB neutral-01 truncate">
+                        {{ suggestion.name }}
+                      </div>
+
+                      <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full h-[20px]">
+                        <img src="assets/svg/diamondYellow.svg" class="h-4 ml-1.5" />
+                        <span class="text-sm font-medium pr-2">
+                          {{ suggestion.value }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p class="body-12 neutral-03">{{ suggestion.jobTitle }}, {{ suggestion.company }}</p>
+                  </div>
+
+                  <!-- Actions -->
+                  <app-button width="72px" height="32px" label="Accept" (click)="acceptNetwork(suggestion.id)" />
+                  <i class="pi pi-times cursor-pointer" (click)="rejectNetwork(suggestion.id)"></i>
+                </div>
+              }
+              @if (remainingCount() > 0) {
+                <div class="text-center py-3 text-sm text-surface-500 cursor-pointer" (click)="toggleView()">
+                  {{ showAll() ? 'View less' : 'View ' + remainingCount() + ' more' }}
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- user recommendations -->
+          <div>
+            <div class="flex items-center justify-between">
+              <div class="body-16SB neutral-01">People you might know</div>
+            </div>
+
+            <div class="mt-3">
+              <div class="swiper" #swiperContainerPeople>
+                <div class="swiper-wrapper">
+                  @for (person of peopleCards; track person.name) {
+                    <div class="swiper-slide first:pl-4 last:pr-4">
+                      <user-card [user]="person" />
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</ion-content>

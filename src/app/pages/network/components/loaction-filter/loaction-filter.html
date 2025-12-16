@@ -1,0 +1,30 @@
+<div class="p-4">
+  <div class="body-16M">Filter</div>
+
+  <div class="input-relative" [formGroup]="form()">
+    <text-input
+      label="Location"
+      [readonly]="true"
+      controlName="location"
+      iconName="pi-map-marker"
+      placeholder="Search location"
+      (click)="openLocationModal()"
+    />
+  </div>
+
+  <div class="body-regular-14 mt-3">Show networks that are within:</div>
+
+  <div class="flex justify-center items-center h-32">
+    <img src="assets/svg/mapFilterChart.svg" />
+  </div>
+
+  <ion-range min="0" max="50" (ionChange)="onRangeChange($event)" [value]="distance()"></ion-range>
+
+  <div class="body-medium-16">{{ distance() }} miles</div>
+
+  <!-- ACTION BUTTONS -->
+  <div class="flex mt-4 gap-4">
+    <app-button label="Reset" color="secondary" (click)="reset()" class="flex-1" />
+    <app-button label="Apply" (click)="apply()" class="flex-1" />
+  </div>
+</div>

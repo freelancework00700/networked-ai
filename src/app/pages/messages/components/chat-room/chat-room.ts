@@ -1,7 +1,7 @@
 import { Button } from '@/components/form/button';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { IonIcon, IonFooter, IonHeader, IonAvatar, IonContent, IonToolbar, IonInput } from '@ionic/angular/standalone';
+import { IonIcon, IonFooter, IonHeader, IonAvatar, IonContent, IonToolbar, IonInput, NavController } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'chat-room',
@@ -13,6 +13,7 @@ import { IonIcon, IonFooter, IonHeader, IonAvatar, IonContent, IonToolbar, IonIn
 export class ChatRoom {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private navCtrl = inject(NavController);
   newMessage = signal('');
   chatId = signal<string>('');
   chatName = signal('Cathryn W.');
@@ -103,7 +104,7 @@ export class ChatRoom {
   }
 
   handleBack() {
-    this.router.navigate(['/messages']);
+    this.navCtrl.back();
   }
 
   openChatInfo() {

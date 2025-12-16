@@ -10,6 +10,8 @@ import {
   IonReorderGroup,
   ItemReorderEventDetail
 } from '@ionic/angular/standalone';
+import { Swiper } from 'swiper';
+import { NavController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { Chip } from '@/components/common/chip';
 import { Button } from '@/components/form/button';
@@ -27,12 +29,12 @@ import { TicketFormData } from '@/pages/create-event/components/ticket-form';
 import { PromoCodeCard } from '@/pages/create-event/components/promo-code-card';
 import { TicketTypeItem } from '@/pages/create-event/components/ticket-type-item';
 import { PromoCodeFormData } from '@/pages/create-event/components/promo-code-form';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { EventForm, Ticket, PromoCode, SubscriptionPlan } from '@/interfaces/event';
 import { SubscriptionInput } from '@/pages/create-event/components/subscription-input';
 import { ParticipantInput, User } from '@/pages/create-event/components/participant-input';
-import { signal, computed, inject, Component, Input, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-
+import { signal, computed, inject, Component, Input, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 @Component({
   selector: 'create-event',
   styleUrl: './create-event.scss',
@@ -55,6 +57,7 @@ import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } 
     CommonModule,
     PromoCodeCard,
     TicketTypeItem,
+    DragDropModule,
     CheckboxModule,
     InputTextModule,
     IonReorderGroup,
@@ -65,11 +68,17 @@ import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } 
   ]
 })
 export class CreateEvent {
+  // swiper instance
+  swiper?: Swiper;
+  currentSlide = signal(0);
+  @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
+
   // services
   fb = inject(FormBuilder);
+  cd = inject(ChangeDetectorRef);
+  navCtrl = inject(NavController);
   modalService = inject(ModalService);
   modalCtrl = inject(ModalController);
-  cd = inject(ChangeDetectorRef);
 
   // validators
   atLeastOneTagValidator = (control: any) => {
@@ -149,6 +158,7 @@ export class CreateEvent {
   co_hosts = signal<User[]>([]);
   sponsors = signal<User[]>([]);
   speakers = signal<User[]>([]);
+  mediaItems = signal<any[]>([]);
   tickets = signal<Ticket[]>([]);
   currentStep = signal<number>(1);
   conversation = signal<any[]>([]);
@@ -242,6 +252,58 @@ export class CreateEvent {
           this.eventForm().get('end_time')?.enable();
         }
       });
+  }
+  ngAfterViewChecked() {
+    if (this.swiper) return;
+    if (!this.swiperEl?.nativeElement) return;
+    if (!this.mediaItems().length) return;
+
+    this.swiper = new Swiper(this.swiperEl.nativeElement, {
+      slidesPerView: 1,
+      spaceBetween: 0,
+      allowTouchMove: true,
+      observer: true,
+      on: {
+        slideChange: (swiper) => {
+          this.currentSlide.set(swiper.activeIndex);
+        }
+      }
+    });
+  }
+
+  private refreshSwiper(targetIndex?: number) {
+    if (!this.swiper) return;
+
+    requestAnimationFrame(() => {
+      this.swiper!.update();
+
+      if (targetIndex !== undefined) {
+        const safeIndex = Math.min(targetIndex, this.swiper!.slides.length - 1);
+
+        this.currentSlide.set(safeIndex);
+        this.swiper!.slideTo(safeIndex, 0);
+      }
+    });
+  }
+
+  private refreshSwiperAndGoToLast() {
+    if (!this.swiper) return;
+
+    requestAnimationFrame(() => {
+      this.swiper!.update();
+
+      const lastIndex = this.swiper!.slides.length - 1;
+      if (lastIndex >= 0) {
+        this.currentSlide.set(lastIndex);
+        this.swiper!.slideTo(lastIndex, 0);
+      }
+    });
+  }
+
+  goToSlide(index: number) {
+    if (!this.swiper) return;
+
+    this.refreshSwiper(index);
   }
 
   ionViewWillEnter(): void {
@@ -389,14 +451,80 @@ export class CreateEvent {
     }
   }
 
-  openNetworkedGallery(): void {
-    this.modalService.openImageGalleryModal();
-    // TODO: Implement Networked Gallery modal
+  deleteMedia(index: number) {
+    this.mediaItems.update((items) => {
+      items.splice(index, 1);
+      return [...items];
+    });
+
+    this.refreshSwiper(index - 1);
   }
 
-  openNetworkedGIFs(): void {
-    this.modalService.openGifGalleryModal();
-    // TODO: Implement Networked GIFs modal
+  drop(event: CdkDragDrop<any[]>) {
+    moveItemInArray(this.mediaItems(), event.previousIndex, event.currentIndex);
+  }
+
+  reorderMedia(event: any) {
+    const items = [...this.mediaItems()];
+    const [moved] = items.splice(event.detail.from, 1);
+    items.splice(event.detail.to, 0, moved);
+    this.mediaItems.set(items);
+    event.detail.complete();
+  }
+
+  onBrowseFiles(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files) return;
+
+    const files = Array.from(input.files);
+
+    const newItems = files.map((file) => ({
+      id: crypto.randomUUID(),
+      type: file.type.startsWith('video') ? 'video' : 'image',
+      file,
+      url: URL.createObjectURL(file)
+    }));
+
+    this.mediaItems.update((list) => [...list, ...newItems]);
+    input.value = '';
+
+    this.refreshSwiperAndGoToLast();
+  }
+
+  toArray(value: string | string[]): string[] {
+    return Array.isArray(value) ? value : [value];
+  }
+
+  async openNetworkedGallery(): Promise<void> {
+    const data = await this.modalService.openImageGalleryModal();
+    if (!data) return;
+
+    const urls = this.toArray(data);
+
+    const items = urls.map((url) => ({
+      id: crypto.randomUUID(),
+      type: 'image',
+      url
+    }));
+
+    this.mediaItems.update((list) => [...list, ...items]);
+    this.refreshSwiperAndGoToLast();
+  }
+
+  async openNetworkedGIFs(): Promise<void> {
+    const data = await this.modalService.openGifGalleryModal();
+    if (!data) return;
+
+    const urls = this.toArray(data);
+
+    const items: any[] = urls.map((url) => ({
+      id: crypto.randomUUID(),
+      type: 'image',
+      url
+    }));
+
+    this.mediaItems.update((list) => [...list, ...items]);
+    this.refreshSwiperAndGoToLast();
   }
 
   handleTicketReorder(event: CustomEvent<ItemReorderEventDetail>): void {
@@ -598,8 +726,12 @@ export class CreateEvent {
   previousStep(): void {
     if (this.currentStep() > 1) {
       this.currentStep.set(this.currentStep() - 1);
-    } else if (this.currentStep() === 1 && this.isModalMode) {
-      this.modalService.close();
+    } else if (this.currentStep() === 1 || this.isModalMode) {
+      if (this.isModalMode) {
+        this.modalService.close();
+      } else {
+        this.navCtrl.back();
+      }
       return;
     }
   }
@@ -862,5 +994,12 @@ export class CreateEvent {
   async createEvent() {
     console.log(this.eventForm().value);
     return;
+  }
+
+  ngOnDestroy() {
+    if (this.swiper) {
+      this.swiper.destroy(true, true);
+      this.swiper = null!;
+    }
   }
 }

@@ -78,7 +78,13 @@
         }
         <div class="body-16M neutral-01">Add Members</div>
         <div class="flex items-center justify-between gap-2">
-          <searchbar class="w-full" [searchQuery]="searchText()" (searchChange)="searchText.set($event)" placeholder="Search by username, email or phone" />
+          <searchbar
+            class="w-full"
+            (clear)="searchText.set('')"
+            [searchQuery]="searchText()"
+            (searchChange)="searchText.set($event)"
+            placeholder="Search by username, email or phone"
+          />
         </div>
 
         @if (searchText().trim() == '' || filteredSuggestions().length == 0) {

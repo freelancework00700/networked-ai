@@ -9,9 +9,11 @@ import { DateTimeModal } from '@/components/modal/date-time-modal';
 import { MenuModal } from '@/pages/messages/components/menu-modal';
 import { ShareGroup } from '@/pages/messages/components/share-group';
 import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
+import { UserDetail } from '@/pages/network/components/user-detail';
 import { GifGalleryModal } from '@/components/modal/gif-gallery-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
 import { ImageGalleryModal } from '@/components/modal/image-gallery-modal';
+import { LoactionFilter } from '@/pages/network/components/loaction-filter';
 import { EventCategoryModal } from '@/components/modal/event-category-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
 import { GroupInvitation } from '@/pages/messages/components/group-invitation';
@@ -473,6 +475,35 @@ export class ModalService {
 
     await modal.present();
 
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
+  async openLocationFilterModal(): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: LoactionFilter,
+      cssClass: 'auto-hight-modal'
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
+  async openUserDetailModal(user: any): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      cssClass: 'auto-hight-modal',
+      component: UserDetail,
+      componentProps: { user }
+    });
+    await modal.present();
     const { data } = await modal.onWillDismiss();
     return data;
   }
