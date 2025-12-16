@@ -19,23 +19,17 @@ export class Onboarding implements AfterViewInit, OnDestroy {
   // swiper instance
   swiper?: Swiper;
 
-  // view child
-  @ViewChild('swiperContainer', { static: false }) swiperContainer?: ElementRef<HTMLDivElement>;
-
   ngAfterViewInit() {
-    if (this.swiperContainer?.nativeElement) {
-      this.swiper = new Swiper(this.swiperContainer.nativeElement, {
-        speed: 300,
-        spaceBetween: 0,
-        slidesPerView: 1,
-        allowTouchMove: true,
-        on: {
-          slideChange: (swiper) => {
-            this.currentSlide.set(swiper.activeIndex);
-          }
+    this.swiper = new Swiper('.swiper-onboarding', {
+      spaceBetween: 0,
+      slidesPerView: 1,
+      allowTouchMove: true,
+      on: {
+        slideChange: (swiper) => {
+          this.currentSlide.set(swiper.activeIndex);
         }
-      });
-    }
+      }
+    });
   }
 
   goToSlide(index: number) {

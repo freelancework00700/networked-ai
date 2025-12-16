@@ -1,11 +1,15 @@
+import { Home } from '@/pages/home';
 import { Login } from '@/pages/login';
 import { Routes } from '@angular/router';
 import { Messages } from '@/pages/messages';
 import { NotFound } from '@/pages/not-found';
 import { Signup } from '@/pages/signup/signup';
+import { TabLayout } from '@/layout/tab-layout';
 import { Onboarding } from '@/pages/onboarding';
+import { Profile } from '@/pages/profile/profile';
 import { CreateEvent } from '@/pages/create-event';
 import { ForgotPassword } from '@/pages/forgot-password';
+import { EditProfile } from '@/pages/profile/edit-profile';
 import { onboardingGuard } from '@/guards/onboarding.guard';
 import { NewChat } from '@/pages/messages/components/new-chat';
 import { ChatRoom } from '@/pages/messages/components/chat-room';
@@ -13,9 +17,17 @@ import { ChatInfo } from '@/pages/messages/components/chat-info';
 import { CreateGroup } from '@/pages/messages/components/create-group';
 
 export const appRoutes: Routes = [
-  { path: '', loadChildren: () => import('@/pages/home/home.routes') },
-  { path: 'profile', loadChildren: () => import('@/pages/profile/profile.routes') },
-  { path: 'messages', loadChildren: () => import('@/pages/messages/messages.routes') },
+  {
+    path: '',
+    component: TabLayout,
+    canActivate: [onboardingGuard],
+    children: [
+      { path: '', component: Home },
+      { path: 'profile', component: Profile },
+      { path: 'messages', component: Messages }
+    ]
+  },
+  { path: 'profile/edit', component: EditProfile },
   { path: 'not-found', component: NotFound },
   { path: 'new-chat', component: NewChat },
   { path: 'chat-room/:id', component: ChatRoom },

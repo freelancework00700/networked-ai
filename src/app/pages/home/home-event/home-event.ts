@@ -6,7 +6,7 @@ import { EventCard, IEvent } from '@/components/card/event-card';
 import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
 import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
-import { signal, computed, Component, ViewChild, ElementRef, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
+import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy } from '@angular/core';
 
 interface FeedPost {
   id: string;
@@ -41,7 +41,7 @@ interface SwiperConfig {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Button, UserCard, CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard]
 })
-export class HomeEvent implements AfterViewInit {
+export class HomeEvent {
   filter = signal<'browse' | 'upcoming'>('browse');
   upcomingEvents = signal<IEvent[]>([]);
 
@@ -148,10 +148,13 @@ export class HomeEvent implements AfterViewInit {
   isBrowseMode = computed(() => this.filter() === 'browse');
   isUpcomingMode = computed(() => this.filter() === 'upcoming');
 
-  @ViewChild('swiperContainerPeople', { static: false }) swiperContainerPeople?: ElementRef<HTMLDivElement>;
-  @ViewChild('swiperContainerEventByYou', { static: false }) swiperContainerEventByYou?: ElementRef<HTMLDivElement>;
-  @ViewChild('swiperContainerPublicEvent', { static: false }) swiperContainerPublicEvent?: ElementRef<HTMLDivElement>;
-  @ViewChild('swiperContainerEventByCities', { static: false }) swiperContainerEventByCities?: ElementRef<HTMLDivElement>;
+  constructor() {
+    afterEveryRender(() => this.initSwipers());
+  }
+
+  handleViewTicket(): void {
+    // TODO: Implement view ticket functionality
+  }
 
   private readonly swiperConfigs: Record<string, SwiperConfig> = {
     cities: { spaceBetween: 8, slidesPerView: 2.7, allowTouchMove: true },
@@ -159,27 +162,14 @@ export class HomeEvent implements AfterViewInit {
     people: { spaceBetween: 8, slidesPerView: 2.2, allowTouchMove: true }
   };
 
-  handleViewTicket(): void {
-    // TODO: Implement view ticket functionality
+  private initSwipers(): void {
+    this.initializeSwiper('.swiper-city', this.swiperConfigs['cities']);
+    this.initializeSwiper('.swiper-public-event', this.swiperConfigs['events']);
+    this.initializeSwiper('.swiper-user-recommendation', this.swiperConfigs['people']);
+    this.initializeSwiper('.swiper-event-recommendation', this.swiperConfigs['events']);
   }
 
-  private initializeSwiper(element: ElementRef<HTMLDivElement> | undefined, config: SwiperConfig): Swiper | undefined {
-    if (!element?.nativeElement) return undefined;
-
-    return new Swiper(element.nativeElement, {
-      ...config,
-      on: {
-        slideChange: () => {
-          // Swiper slide change handler
-        }
-      }
-    });
-  }
-
-  ngAfterViewInit(): void {
-    this.initializeSwiper(this.swiperContainerPeople, this.swiperConfigs['people']);
-    this.initializeSwiper(this.swiperContainerEventByYou, this.swiperConfigs['events']);
-    this.initializeSwiper(this.swiperContainerPublicEvent, this.swiperConfigs['events']);
-    this.initializeSwiper(this.swiperContainerEventByCities, this.swiperConfigs['cities']);
+  private initializeSwiper(selector: string, config: SwiperConfig): Swiper | undefined {
+    return new Swiper(selector, config);
   }
 }
