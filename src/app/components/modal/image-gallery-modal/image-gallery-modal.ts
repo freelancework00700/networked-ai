@@ -26,16 +26,7 @@ interface UnsplashSearchResponse {
   styleUrl: './image-gallery-modal.scss',
   templateUrl: './image-gallery-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    Button,
-    Searchbar,
-    IonFooter,
-    IonContent,
-    IonToolbar,
-    IonInfiniteScroll,
-    LazyImageDirective,
-    IonInfiniteScrollContent
-  ]
+  imports: [Button, Searchbar, IonFooter, IonContent, IonToolbar, IonInfiniteScroll, LazyImageDirective, IonInfiniteScrollContent]
 })
 export class ImageGalleryModal implements OnInit {
   // inputs

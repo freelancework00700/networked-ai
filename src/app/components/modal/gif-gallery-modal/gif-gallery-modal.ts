@@ -26,16 +26,7 @@ interface TenorSearchResponse {
   styleUrl: './gif-gallery-modal.scss',
   templateUrl: './gif-gallery-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    Button,
-    Searchbar,
-    IonFooter,
-    IonContent,
-    IonToolbar,
-    IonInfiniteScroll,
-    LazyImageDirective,
-    IonInfiniteScrollContent
-  ]
+  imports: [Button, Searchbar, IonFooter, IonContent, IonToolbar, IonInfiniteScroll, LazyImageDirective, IonInfiniteScrollContent]
 })
 export class GifGalleryModal implements OnInit {
   // inputs

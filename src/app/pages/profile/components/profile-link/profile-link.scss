@@ -1,0 +1,8 @@
+.pi.pi-chevron-up {
+  display: inline-block;
+  transition: transform 0.2s ease;
+
+  &.rotated {
+    transform: rotate(180deg);
+  }
+}

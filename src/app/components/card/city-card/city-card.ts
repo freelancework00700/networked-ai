@@ -1,6 +1,6 @@
 import { input, Component, ChangeDetectionStrategy } from '@angular/core';
 
-export interface ICity { 
+export interface ICity {
   city: string;
   image: string;
   events: string;

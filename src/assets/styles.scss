@@ -1,6 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
-@use 'swiper/css';
 @use './tailwind.css';
+@use 'swiper/css/bundle';
 @use './layout/layout.scss';
 @use 'primeicons/primeicons.css';
 

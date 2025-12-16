@@ -8,8 +8,7 @@ describe('HostFirstEventCard', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [HostFirstEventCard]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(HostFirstEventCard);
     component = fixture.componentInstance;

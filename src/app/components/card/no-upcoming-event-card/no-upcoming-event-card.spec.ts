@@ -8,8 +8,7 @@ describe('NoUpcomingEventCard', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [NoUpcomingEventCard]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(NoUpcomingEventCard);
     component = fixture.componentInstance;

@@ -1,0 +1,9 @@
+<div class="flex flex-col px-[2px] py-4">
+  <div class="heading-h3 neutral-01">Attended Events</div>
+
+  <div class="flex flex-col gap-4 mt-2">
+    @for (event of events(); track event.id) {
+      <event-card [event]="event" />
+    }
+  </div>
+</div>

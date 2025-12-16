@@ -1,0 +1,43 @@
+<div class="flex items-center mb-1 gap-[2px] cursor-pointer" (click)="toggleLinks()">
+  <div class="body-16SB neutral-02">Links (7)</div>
+  <div class="pi pi-chevron-up !text-[14px]" [class.rotated]="isExpanded()"></div>
+</div>
+
+@if (isExpanded()) {
+  <div class="grid grid-cols-2 gap-y-3 text-[#1D5BFF]">
+    <div class="flex items-center gap-2 body-14M">
+      <ion-icon name="globe-outline" class="text-[18px]"></ion-icon>
+      <span>website.com</span>
+    </div>
+
+    <div class="flex items-center gap-2 body-14M">
+      <ion-icon name="logo-facebook" class="text-[18px]"></ion-icon>
+      <span>Page Name Here</span>
+    </div>
+
+    <div class="flex items-center gap-2 body-14M">
+      <ion-icon name="call-outline" class="text-[18px]"></ion-icon>
+      <span>+1 097 728 772</span>
+    </div>
+
+    <div class="flex items-center gap-2 body-14M">
+      <ion-icon name="logo-instagram" class="text-[18px]"></ion-icon>
+      <span>usernamehere</span>
+    </div>
+
+    <div class="flex items-center gap-2 body-14M">
+      <ion-icon name="logo-snapchat" class="text-[18px]"></ion-icon>
+      <span>usernamehere</span>
+    </div>
+
+    <div class="flex items-center gap-2 body-14M">
+      <ion-icon name="logo-linkedin" class="text-[18px]"></ion-icon>
+      <span>Name Here</span>
+    </div>
+
+    <div class="flex items-center gap-2 body-14M">
+      <ion-icon name="logo-twitter" class="text-[18px]"></ion-icon>
+      <span>usernamehere</span>
+    </div>
+  </div>
+}

@@ -1,48 +1,53 @@
+import Swiper from 'swiper';
+import { Scrollbar } from 'swiper/modules';
 import { Button } from '@/components/form/button';
-import { inject, Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import {
-  NavController,
-  IonHeader,
-  IonToolbar,
-  IonContent,
-  IonIcon,
-  IonSegment,
-  IonSegmentButton,
-  SegmentCustomEvent,
-  SegmentValue,
-  IonProgressBar
-} from '@ionic/angular/standalone';
-import { InputIcon } from 'primeng/inputicon';
+import { ProfileLink } from '@/pages/profile/components/profile-link';
+import { ProfileAchievement } from '@/pages/profile/components/profile-achievement';
+import { ProfileLikedEvents } from '@/pages/profile/components/profile-liked-events';
+import { ProfilePosts } from '@/pages/profile/components/profile-posts/profile-posts';
+import { ProfileHostedEvents } from '@/pages/profile/components/profile-hosted-events';
+import { ProfileUpcomingEvents } from '@/pages/profile/components/profile-upcoming-events';
+import { ProfileAttendedEvents } from '@/pages/profile/components/profile-attended-events';
+import { inject, Component, AfterViewInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { IonIcon, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
+
+type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement' | 'liked-events';
+
+interface TabConfig {
+  icon: string;
+  value: ProfileTabs;
+  iconActive: string;
+}
 
 @Component({
-  imports: [IonProgressBar, CommonModule, IonSegmentButton, IonSegment, IonIcon, IonContent, IonToolbar, IonHeader, Button, InputIcon],
   selector: 'profile',
   styleUrl: './profile.scss',
-  templateUrl: './profile.html'
+  templateUrl: './profile.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    Button,
+    IonIcon,
+    IonHeader,
+    IonContent,
+    IonToolbar,
+    ProfileLink,
+    ProfilePosts,
+    ProfileLikedEvents,
+    ProfileAchievement,
+    ProfileHostedEvents,
+    ProfileAttendedEvents,
+    ProfileUpcomingEvents
+  ]
 })
-export class Profile {
-  public progress = 50;
-  // services
-  private navCtrl = inject(NavController);
+export class Profile implements AfterViewInit {
+  navCtrl = inject(NavController);
+  currentSlide = signal<ProfileTabs>('hosted-events');
+  swiper?: Swiper;
 
-  segmentValue: SegmentValue = 'user-profile';
-
-  // Hosted events array - replace with actual data from service
-  hostedEvents: any[] = [];
-
-  goToEditProfile(): void {
-    this.navCtrl.navigateForward('/profile/edit');
-  }
-
-  onSegmentChange(event: SegmentCustomEvent): void {
-    this.segmentValue = event.detail.value ?? 'user-profile';
-  }
-
-  goToCreateEvent(): void {
-    this.navCtrl.navigateForward('/create-event');
-  }
-  eventCards = [
+  hostedEvents: unknown[] = [];
+  attendedEvents: unknown[] = [];
+  posts: unknown[] = [];
+  events = [
     {
       title: 'Scheveningen',
       organization: 'Networked AI',
@@ -75,20 +80,45 @@ export class Profile {
     }
   ];
 
-  // upcoming events (empty by default to show the empty state)
-  upcomingEvents: Array<(typeof this.eventCards)[number]> = [];
+  readonly tabs: ProfileTabs[] = ['hosted-events', 'attended-events', 'upcoming-events', 'user-posts', 'user-achievement', 'liked-events'];
 
-  constructor() {
-    setInterval(() => {
-      this.progress += 0.01;
+  readonly slides: TabConfig[] = [
+    { value: 'hosted-events', icon: '/assets/svg/profile/hosted-events.svg', iconActive: '/assets/svg/profile/hosted-events-active.svg' },
+    { value: 'attended-events', icon: '/assets/svg/profile/attended-events.svg', iconActive: '/assets/svg/profile/attended-events-active.svg' },
+    { value: 'upcoming-events', icon: '/assets/svg/profile/upcoming-events.svg', iconActive: '/assets/svg/profile/upcoming-events-active.svg' },
+    { value: 'user-posts', icon: '/assets/svg/profile/user-posts.svg', iconActive: '/assets/svg/profile/user-posts-active.svg' },
+    { value: 'user-achievement', icon: '/assets/svg/profile/user-achievement.svg', iconActive: '/assets/svg/profile/user-achievement-active.svg' },
+    { value: 'liked-events', icon: '/assets/svg/profile/liked-events.svg', iconActive: '/assets/svg/profile/liked-events-active.svg' }
+  ];
 
-      // Reset the progress bar when it reaches 100%
-      // to continuously show the demo
-      if (this.progress > 1) {
-        setTimeout(() => {
-          this.progress = 0;
-        }, 1000);
+  changeTab(value: ProfileTabs): void {
+    this.currentSlide.set(value);
+    const slideIndex = this.tabs.indexOf(value);
+    this.swiper?.slideTo(slideIndex);
+  }
+
+  goToCreateEvent(): void {
+    this.navCtrl.navigateForward('/create-event');
+  }
+
+  ngAfterViewInit(): void {
+    const initialSlide = this.tabs.indexOf(this.currentSlide());
+
+    this.swiper = new Swiper('.swiper-profile', {
+      initialSlide,
+      spaceBetween: 0,
+      slidesPerView: 1,
+      autoHeight: true,
+      modules: [Scrollbar],
+      scrollbar: {
+        el: '.swiper-scrollbar'
+      },
+      on: {
+        slideChange: (swiper) => {
+          const newTab = this.tabs[swiper.activeIndex];
+          if (newTab) this.currentSlide.set(newTab);
+        }
       }
-    }, 50);
+    });
   }
 }

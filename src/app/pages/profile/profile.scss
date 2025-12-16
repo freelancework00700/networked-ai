@@ -1,25 +1,13 @@
-.segment-button-checked {
-  border-bottom: 2px solid var(--brand-03);
+::ng-deep .swiper-scrollbar-drag {
+  background: var(--brand-03) !important;
 }
-ion-segment-button {
-  min-height: 40px;
-  min-width: auto;
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: unset !important;
-  line-height: 20px !important;
-  position: relative;
-  --indicator-color: var(--brand-03);
-  --color-checked: var(--brand-02);
-  --indicator-height: 1px;
-  text-transform: capitalize;
-  border-bottom: 2px solid var(--neutral-05);
 
-  .segment-icon {
-    font-size: 18px;
-    margin-right: 4px;
-  }
+::ng-deep .swiper-scrollbar {
+  top: 0 !important;
+  height: 1px !important;
+  background: var(--neutral-05) !important;
 }
-.segment-button-checked {
-  border-bottom: 1px solid var(--brand-03);
+
+.swiper-slide {
+  min-height: 400px;
 }
