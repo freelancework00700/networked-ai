@@ -48,7 +48,7 @@
       <div class="swiper swiper-city">
         <div class="swiper-wrapper">
           @for (city of cityCards; track city.city) {
-            <div class="swiper-slide first:pl-4 last:pr-4">
+            <div class="swiper-slide">
               <city-card [city]="city" />
             </div>
           }
@@ -68,7 +68,7 @@
       <div class="swiper swiper-event-recommendation">
         <div class="swiper-wrapper">
           @for (event of eventCards; track event.title) {
-            <div class="swiper-slide first:pl-4 last:pr-4">
+            <div class="swiper-slide">
               <event-card [event]="event" />
             </div>
           }
@@ -88,7 +88,7 @@
         <div class="swiper swiper-user-recommendation">
           <div class="swiper-wrapper">
             @for (person of peopleCards; track person.name) {
-              <div class="swiper-slide first:pl-4 last:pr-4">
+              <div class="swiper-slide">
                 <user-card [user]="person" />
               </div>
             }
@@ -181,7 +181,7 @@
       <div class="swiper swiper-public-event">
         <div class="swiper-wrapper">
           @for (event of eventCards; track event.title) {
-            <div class="swiper-slide first:pl-4 last:pr-4">
+            <div class="swiper-slide">
               <event-card [event]="event" />
             </div>
           }

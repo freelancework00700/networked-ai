@@ -1,4 +1,5 @@
 import { Swiper } from 'swiper';
+import { SwiperOptions } from 'swiper/types';
 import { Button } from '@/components/form/button';
 import { CityCard, ICity } from '@/components/card/city-card';
 import { UserCard, IUser } from '@/components/card/user-card';
@@ -26,12 +27,6 @@ interface NetworkSuggestion {
   timeAgo: string;
   profileImage: string;
   mapImage: string;
-}
-
-interface SwiperConfig {
-  spaceBetween: number;
-  slidesPerView: number;
-  allowTouchMove: boolean;
 }
 
 @Component({
@@ -156,10 +151,10 @@ export class HomeEvent {
     // TODO: Implement view ticket functionality
   }
 
-  private readonly swiperConfigs: Record<string, SwiperConfig> = {
-    cities: { spaceBetween: 8, slidesPerView: 2.7, allowTouchMove: true },
-    events: { spaceBetween: 8, slidesPerView: 1.5, allowTouchMove: true },
-    people: { spaceBetween: 8, slidesPerView: 2.2, allowTouchMove: true }
+  private readonly swiperConfigs: Record<string, SwiperOptions> = {
+    cities: { spaceBetween: 8, slidesPerView: 2.7, allowTouchMove: true, slidesOffsetBefore: 16, slidesOffsetAfter: 16 },
+    events: { spaceBetween: 8, slidesPerView: 1.5, allowTouchMove: true, slidesOffsetBefore: 16, slidesOffsetAfter: 16 },
+    people: { spaceBetween: 8, slidesPerView: 2.2, allowTouchMove: true, slidesOffsetBefore: 16, slidesOffsetAfter: 16 }
   };
 
   private initSwipers(): void {
@@ -169,7 +164,7 @@ export class HomeEvent {
     this.initializeSwiper('.swiper-event-recommendation', this.swiperConfigs['events']);
   }
 
-  private initializeSwiper(selector: string, config: SwiperConfig): Swiper | undefined {
+  private initializeSwiper(selector: string, config: SwiperOptions): Swiper | undefined {
     return new Swiper(selector, config);
   }
 }
