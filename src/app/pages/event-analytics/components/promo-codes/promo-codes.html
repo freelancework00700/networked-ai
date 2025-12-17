@@ -1,0 +1,71 @@
+<div class="border border-surface-300 rounded-lg p-4">
+  <div class="flex justify-between items-center">
+    <div class="flex flex-col">
+      <div>Promo Codes</div>
+      <div class="neutral-03 font-extrabold heading-h3">
+        <span class="heading-h1 text-black">{{ getTotalUses() }}</span> Uses
+      </div>
+    </div>
+    <div class="section-icon">
+      <img src="assets/svg/ticket/free-ticket.svg" alt="Sale Ongoing" />
+    </div>
+  </div>
+
+  @if (promoCodes().length > 0) {
+    <div class="flex flex-col gap-2">
+      @for (promo of promoCodes(); track promo.code) {
+        <!-- HEADER ROW -->
+        <div class="flex justify-between items-center py-2">
+          <div class="flex items-center gap-2">
+            <img src="assets/svg/ticket/promo-tag.svg" alt="Promo" class="w-6 h-6" />
+            <span class="body-16SB leading-none">
+              {{ promo?.code }}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="body-16SB text-surface-700"> {{ promo?.uses }} uses </span>
+
+            <i
+              (click)="togglePromo(promo.code)"
+              class="pi text-surface-400 cursor-pointer transition-transform duration-200"
+              [ngClass]="{
+                'pi-chevron-down': !visiblePromoCodes[promo.code],
+                'pi-chevron-up': visiblePromoCodes[promo.code]
+              }"
+            ></i>
+          </div>
+        </div>
+
+        @if (promo?.users?.length && visiblePromoCodes[promo?.code]) {
+          <div class="flex flex-col gap-2">
+            @for (user of promo?.users; track user.username) {
+              <div class="flex items-center gap-2" (click)="goToUser(user.username)">
+                <img [src]="user.thumbnail" [alt]="user.name" class="w-10 h-10 rounded-full object-cover" />
+                <span class="body-14R">{{ user.name }}</span>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  } @else {
+    <div class="flex justify-center items-center h-full py-4">
+      <div class="body-14R neutral-02">No promo codes have been created yet.</div>
+    </div>
+  }
+
+  <!-- Create Promo Code Card -->
+  <div class="bg-black text-white rounded-lg p-4">
+    <div class="flex gap-3 pb-4 justify-between">
+      <div>
+        <div class="body-16SB">Boost RSVPs with Promo Codes!</div>
+        <div class="body-14R">Drive more sign ups & reward your community with a custom promo code</div>
+      </div>
+
+      <img src="assets/svg/rocket.svg" alt="rocketIcon" />
+    </div>
+
+    <app-button label="Create a Promo Code" (click)="onCreatePromoCode()" />
+  </div>
+</div>

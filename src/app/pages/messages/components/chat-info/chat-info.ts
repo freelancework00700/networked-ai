@@ -4,6 +4,7 @@ import { ModalService } from '@/services/modal.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { IonToggle, IonContent, IonHeader, IonToolbar, IonFooter } from '@ionic/angular/standalone';
+import { MenuItem } from '../../../../components/modal/menu-modal';
 
 @Component({
   selector: 'chat-info',
@@ -22,6 +23,12 @@ export class ChatInfo {
   tempGroupName = signal(this.groupName());
   private modalService = inject(ModalService);
   groupImage = signal<string | null>('assets/images/profile.jpeg');
+  menuItems: MenuItem[] = [
+    { label: 'Add Members', icon: 'assets/svg/addUserIcon.svg', iconType: 'svg', action: 'addMembers' },
+    { label: 'Change Group Name', icon: 'assets/svg/editIconBlack.svg', iconType: 'svg', action: 'changeGroupName' },
+    { label: 'Mute Notifications', icon: 'assets/svg/alertOffBlackIcon.svg', iconType: 'svg', action: 'toggleNotifications' },
+    { label: 'Leave Group', icon: 'pi pi-sign-out text-6', iconType: 'pi', danger: true, action: 'leaveGroup' }
+  ];
 
   ngOnInit() {
     const routePath = this.router.url;
@@ -94,20 +101,17 @@ export class ChatInfo {
   }
 
   async openMenu() {
-    const result = await this.modalService.openMenuModal();
+    const result = await this.modalService.openMenuModal(this.menuItems);
+    if (!result) return;
 
-    if (result && result.role === 'leave') {
-      this.leaveGroup();
-    }
-    if (result && result.role === 'addMembers') {
-      this.addMembers();
-    }
-    if (result && result.role === 'changeGroupName') {
-      this.changeGroupName();
-    }
-    if (result && result.role === 'muteNotifications') {
-      this.toggleNotifications();
-    }
+    const actions: Record<string, () => void> = {
+      leave: () => this.leaveGroup(),
+      addMembers: () => this.addMembers(),
+      changeGroupName: () => this.changeGroupName(),
+      muteNotifications: () => this.toggleNotifications()
+    };
+
+    actions[result.role]?.();
   }
 
   async openShareGroup() {

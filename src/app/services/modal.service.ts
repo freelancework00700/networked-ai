@@ -6,7 +6,8 @@ import { CreateEvent } from '@/pages/create-event/create-event';
 import { ConfirmModal } from '@/components/modal/confirm-modal';
 import { LocationModal } from '@/components/modal/location-modal';
 import { DateTimeModal } from '@/components/modal/date-time-modal';
-import { MenuModal } from '@/pages/messages/components/menu-modal';
+import { MenuItem } from '@/components/modal/menu-modal';
+import { MenuModal } from '@/components/modal/menu-modal';
 import { ShareGroup } from '@/pages/messages/components/share-group';
 import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
 import { UserDetail } from '@/pages/network/components/user-detail';
@@ -431,18 +432,23 @@ export class ModalService {
     return data;
   }
 
-  async openMenuModal(): Promise<{ role: string } | null> {
+  async openMenuModal(items: MenuItem[]): Promise<{ role: string; data?: MenuItem } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: MenuModal,
-      cssClass: 'auto-hight-modal'
+      cssClass: 'auto-hight-modal',
+      componentProps: {
+        items
+      }
     });
+
     await modal.present();
+
     const { data } = await modal.onWillDismiss();
-    return data;
+    return data ?? null;
   }
 
   async openShareGroupModal(data: any): Promise<any | null> {

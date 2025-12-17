@@ -61,13 +61,13 @@ export class TicketCard {
     const ticketType = this.ticket().ticket_type;
     switch (ticketType) {
       case 'early-bird':
-        return 'assets/svg/earlybirdChip.svg';
+        return 'assets/svg/ticket/early-bird-card-chip.svg';
       case 'sponsor':
-        return 'assets/svg/sponsorChip.svg';
+        return 'assets/svg/ticket/sponsor-card-chip.svg';
       case 'free':
-        return 'assets/svg/freeChip.svg';
+        return 'assets/svg/ticket/free-card-chip.svg';
       default:
-        return 'assets/svg/standardChip.svg';
+        return 'assets/svg/ticket/standard-card-chip.svg';
     }
   });
 

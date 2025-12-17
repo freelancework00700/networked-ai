@@ -25,19 +25,19 @@ export class TicketTypeModal {
       type: 'standard',
       label: 'Standard Paid Ticket',
       description: 'Create a standard paid ticket.',
-      icon: 'assets/svg/paidTicketIcon.svg'
+      icon: 'assets/svg/ticket/paid-ticket.svg'
     },
     {
       type: 'early-bird',
       label: 'Early Bird Ticket',
       description: 'Allow early access for a special price.',
-      icon: 'assets/svg/earlybirdIcon.svg'
+      icon: 'assets/svg/ticket/early-bird.svg'
     },
     {
       type: 'sponsor',
       label: 'Sponsor Ticket',
       description: 'Allow people to become sponsors.',
-      icon: 'assets/svg/sponsorIcon.svg'
+      icon: 'assets/svg/ticket/sponsor.svg'
     }
   ];
 
