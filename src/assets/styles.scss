@@ -134,11 +134,9 @@ ion-footer.footer-toolbar-padding ion-toolbar:last-of-type {
   --border-radius: 32px;
 }
 
-.p-toggleswitch-handle {
-  background: var(--neutral-07) !important;
-}
-
-.p-select-list-container {
+.p-toggleswitch-handle,
+.p-select-list-container,
+.p-menu {
   background: var(--neutral-07) !important;
 }
 

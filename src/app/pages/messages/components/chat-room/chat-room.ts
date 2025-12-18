@@ -1,7 +1,7 @@
+import { ActivatedRoute } from '@angular/router';
 import { Button } from '@/components/form/button';
-import { ActivatedRoute, Router } from '@angular/router';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { IonIcon, IonFooter, IonHeader, IonAvatar, IonContent, IonToolbar, IonInput, NavController } from '@ionic/angular/standalone';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { IonFooter, IonHeader, IonAvatar, IonContent, IonToolbar, IonInput, NavController } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'chat-room',
@@ -12,14 +12,14 @@ import { IonIcon, IonFooter, IonHeader, IonAvatar, IonContent, IonToolbar, IonIn
 })
 export class ChatRoom {
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
   private navCtrl = inject(NavController);
+
   newMessage = signal('');
   chatId = signal<string>('');
   chatName = signal('Cathryn W.');
+  isEvent = signal<boolean>(false);
   selectedIndex = signal<number | null>(null);
   editingIndex = signal<number | null>(null);
-
   messages = signal<any[]>([
     { sender: 'You', text: 'Hey!', time: '11:24 AM' },
     { sender: 'Cathryn W.', text: 'Hi! How are you?', time: '11:25 AM' },
@@ -49,6 +49,15 @@ export class ChatRoom {
     },
     { sender: 'You', text: "Sure thing! I'll make sure everything is ready before the meeting.", time: '11:42 AM' }
   ]);
+
+  private navEffect = effect(() => {
+    const state = history.state;
+
+    if (state?.message) {
+      this.chatName.set(state.message.sender);
+      this.isEvent.set(state.message.event);
+    }
+  });
 
   ngOnInit() {
     this.chatId.set(this.route.snapshot.paramMap.get('id')!);
@@ -104,10 +113,14 @@ export class ChatRoom {
   }
 
   handleBack() {
-    this.navCtrl.back();
+    this.navCtrl.navigateForward('/messages');
   }
 
   openChatInfo() {
-    this.router.navigate(['/chat-info', this.chatId()]);
+    this.navCtrl.navigateForward(`/chat-info/${this.chatId()}`);
+  }
+
+  navigateToNetwork() {
+    this.navCtrl.navigateForward('/questionnaire-response/1');
   }
 }

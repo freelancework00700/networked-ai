@@ -3,7 +3,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Searchbar } from '@/components/common/searchbar';
 import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, IonFooter } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, IonFooter, NavController } from '@ionic/angular/standalone';
 @Component({
   selector: 'create-group',
   styleUrl: './create-group.scss',
@@ -12,10 +12,9 @@ import { IonHeader, IonToolbar, IonContent, IonFooter } from '@ionic/angular/sta
   imports: [IonFooter, Searchbar, IonContent, IonHeader, IonToolbar, Button, InputTextModule]
 })
 export class CreateGroup {
-  private router = inject(Router);
   private route = inject(ActivatedRoute);
   routeId = signal<string | null>(null);
-
+  private navCtrl = inject(NavController);
   ngOnInit() {
     this.route.queryParamMap.subscribe((params) => {
       const groupId = params.get('groupId');
@@ -58,13 +57,8 @@ export class CreateGroup {
     this.selectedIds.set(current);
   }
 
-  goToChatRoom(id: string) {
-    this.router.navigate(['/chat-room', id]);
-  }
-
   goToCreateGroup() {
-    console.log('goToCreateGroup');
-    this.router.navigate(['/chat-info', this.routeId()]);
+    this.navCtrl.navigateForward(`/chat-info/${this.routeId()}`);
   }
 
   toggleMember(user: any) {
@@ -85,12 +79,12 @@ export class CreateGroup {
   }
 
   createGroup() {
-    this.router.navigate(['/chat-info', this.groupName()]);
+    this.navCtrl.navigateForward(`/chat-info/${this.groupName()}`);
   }
 
   handleBack() {
     if (this.routeId()) {
-      this.router.navigate(['/chat-info', this.routeId()]);
+      this.navCtrl.navigateForward(`/chat-info/${this.routeId()}`);
       return;
     }
     if (this.isGroupDetails()) {
@@ -100,7 +94,7 @@ export class CreateGroup {
     }
 
     // Default navigation when not in details mode
-    this.router.navigate(['/new-chat']);
+    this.navCtrl.navigateForward('/new-chat');
   }
   selectGroupImage() {
     console.log('selectGroupImage');

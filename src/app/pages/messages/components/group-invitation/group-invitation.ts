@@ -1,18 +1,17 @@
-import { Router } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
+import { NavController } from '@ionic/angular/standalone';
 import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 @Component({
   imports: [Button],
-  selector: 'app-group-invitation',
+  selector: 'group-invitation',
   styleUrl: './group-invitation.scss',
   templateUrl: './group-invitation.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GroupInvitation {
-  private router = inject(Router);
+  private navCtrl = inject(NavController);
   private modalService = inject(ModalService);
-
   group = signal({
     id: 'grp_001',
     name: 'Sports Group',
@@ -30,7 +29,7 @@ export class GroupInvitation {
 
   close() {
     this.modalService.close();
-    this.router.navigate(['/messages']);
+    this.navCtrl.navigateForward('/messages');
   }
 
   async joinGroup() {

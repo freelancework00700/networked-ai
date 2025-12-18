@@ -1,0 +1,111 @@
+<div class="p-6 space-y-3">
+  <!-- Search -->
+  <searchbar
+    [placeholder]="'Search for a user'"
+    [searchQuery]="searchQuery()"
+    (searchChange)="searchQuery.set($event)"
+    (clear)="searchQuery.set('')"
+  />
+
+  <!-- Checkbox -->
+  <div class="flex items-center gap-2 pt-2">
+    <p-checkbox [binary]="true" [formControl]="selectAllNetworkCtrl()" />
+
+    <div class="body-14R">Send to Entire Network</div>
+  </div>
+
+  <!-- Previous Attendees -->
+  <div class="space-y-2">
+    @if (filteredPreviousAttendees().length) {
+      <div class="body-16SB">Previous Event Attendees</div>
+    }
+
+    <div class="grid grid-cols-4 gap-4">
+      @for (user of filteredPreviousAttendees(); track user.name) {
+        <div class="flex flex-col items-center min-w-[70px] gap-1">
+          <div class="relative cursor-pointer" (click)="toggleUser(user)">
+            <img
+              [src]="user.avatar"
+              class="h-16 w-16 rounded-full object-cover"
+              [class.ring-2]="isSelected(user)"
+              [class.ring-primary]="isSelected(user)"
+            />
+
+            @if (isSelected(user)) {
+              <div
+                class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
+              >
+                <i class="pi pi-check !text-[10px]"></i>
+              </div>
+            }
+          </div>
+          <div class="body-12R text-center truncate w-full">
+            {{ user.name }}
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Your Network -->
+  <div class="space-y-2">
+    @if (filteredYourNetwork().length) {
+      <div class="body-16SB">Your Network</div>
+    }
+
+    <div class="grid grid-cols-4 gap-4">
+      @for (user of filteredYourNetwork(); track user.name) {
+        <div class="flex flex-col items-center gap-1">
+          <div class="relative cursor-pointer" (click)="toggleUser(user)">
+            <img
+              [src]="user.avatar"
+              class="h-16 w-16 rounded-full object-cover"
+              [class.ring-2]="isSelected(user)"
+              [class.ring-primary]="isSelected(user)"
+            />
+
+            @if (isSelected(user)) {
+              <div
+                class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
+              >
+                <i class="pi pi-check !text-[10px]"></i>
+              </div>
+            }
+          </div>
+          <div class="body-12R text-center truncate w-full">
+            {{ user.name }}
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (!filteredYourNetwork().length && !filteredPreviousAttendees().length && searchQuery()) {
+      <div class="body-14R text-center py-4">No users found</div>
+    }
+  </div>
+
+  @if (selectedUsers().length) {
+    <app-button label="Share Event" (click)="shareEvent()" />
+  } @else {
+    <!-- Actions -->
+    <div class="flex justify-around border-t border-gray-200 pt-4">
+      @for (action of actions; track action.label) {
+        <div class="flex flex-col items-center gap-1 text-[11px] text-gray-600">
+          <div class="flex items-center justify-center h-6 w-6">
+            @if (action.type === 'i') {
+              <div [class]="action.icon + ' !text-[16px] text-black'"></div>
+            } @else if (action.type === 'ion') {
+              <ion-icon [name]="action.icon" class="h-6 w-6"></ion-icon>
+            } @else if (action.type === 'svg') {
+              <ion-icon [src]="action.icon" class="h-5 w-5" />
+            }
+          </div>
+
+          <span class="text-center leading-tight">
+            {{ action.label }}
+          </span>
+        </div>
+      }
+    </div>
+  }
+</div>

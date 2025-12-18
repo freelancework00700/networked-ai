@@ -12,7 +12,9 @@ import { UserDetail } from '@/pages/network/components/user-detail';
 import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
 import { ShareGroup } from '@/pages/messages/components/share-group';
 import { GifGalleryModal } from '@/components/modal/gif-gallery-modal';
+import { ShareEventModal } from '@/components/modal/share-event-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
+import { GuestFilterModal } from '@/components/modal/guest-filter-modal';
 import { ImageGalleryModal } from '@/components/modal/image-gallery-modal';
 import { EventCategoryModal } from '@/components/modal/event-category-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
@@ -23,6 +25,7 @@ import { TicketTypeModal } from '@/pages/create-event/components/ticket-type-mod
 import { QuestionnaireForm } from '@/pages/create-event/components/questionnaire-form';
 import { PhoneEmailVerifiedModal } from '@/components/modal/phone-email-verified-modal';
 import { TicketForm, TicketFormData } from '@/pages/create-event/components/ticket-form';
+import { ManageRoleModal } from '@/components/modal/manage-role-modal/manage-role-modal';
 import { NetworkTagModal, NetworkTag } from '@/pages/create-event/components/network-tag';
 import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confirm-modal';
 import { PromoCodeForm, PromoCodeFormData } from '@/pages/create-event/components/promo-code-form';
@@ -508,6 +511,51 @@ export class ModalService {
       cssClass: 'auto-hight-modal',
       component: UserDetail,
       componentProps: { user }
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
+  async openManageRoleModal(users: any[], eventId: string): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: ManageRoleModal,
+      cssClass: 'auto-hight-modal',
+      componentProps: { users, eventId }
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
+  async openGuestFilterModal(filter: any): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: GuestFilterModal,
+      cssClass: 'auto-hight-modal',
+      componentProps: { filter }
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
+  async openShareEventModal(eventId: any): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: ShareEventModal,
+      cssClass: 'auto-hight-modal',
+      componentProps: { eventId }
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();

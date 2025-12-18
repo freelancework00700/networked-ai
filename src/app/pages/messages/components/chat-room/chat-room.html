@@ -16,6 +16,20 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  @if (isEvent()) {
+    <div class="sticky top-0 z-50 bg-white cursor-pointer" (click)="navigateToNetwork()">
+      <div class="w-full max-w-[672px] mx-auto p-4 pt-0">
+        <div class="flex items-center justify-between gap-4 rounded-xl border border-surface-300 bg-white p-2 shadow-sm">
+          <div class="flex items-center gap-2">
+            <img src="assets/svg/users-verify.svg" class="h-9 w-9" />
+            <div class="body-14M neutral-01">Network with people with similar interests!</div>
+          </div>
+
+          <i class="pi pi-arrow-right text-primary pr-3"></i>
+        </div>
+      </div>
+    </div>
+  }
   <div class="w-full max-w-[672px] mx-auto p-4 pt-0 flex flex-col gap-2">
     @for (msg of messages(); track $index) {
       @if (msg.sender === 'You') {

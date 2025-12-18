@@ -9,9 +9,9 @@ import {
   IonToolbar,
   IonItemSliding,
   IonItemOptions,
-  IonItemOption
+  IonItemOption,
+  NavController
 } from '@ionic/angular/standalone';
-import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Chip } from '@/components/common/chip';
 import { Button } from '@/components/form/button';
@@ -55,8 +55,8 @@ export interface Message {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Messages {
+  private navCtrl = inject(NavController);
   private modalService = inject(ModalService);
-  private router = inject(Router);
   messages = signal<Message[]>([
     { id: 1, sender: 'Kathryn Murphy', text: "Hey, what's up?", time: '8:07 pm', unreadCount: 1, isMuted: true },
     { id: 2, sender: 'Group Chat A', text: 'Janette: Hello!', time: '5:15 pm', unreadCount: 3, group: true },
@@ -93,7 +93,7 @@ export class Messages {
   });
 
   startNewChat() {
-    this.router.navigate(['/new-chat']);
+    this.navCtrl.navigateForward('/new-chat');
   }
 
   async muteChat(msg: Message) {
@@ -131,6 +131,6 @@ export class Messages {
   }
 
   goToChat(msg: Message) {
-    this.router.navigate(['/chat-room', msg.id]);
+    this.navCtrl.navigateForward(`/chat-room/${msg.id}`, { state: { message: msg } });
   }
 }

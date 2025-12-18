@@ -151,7 +151,7 @@ export class AddNetwork {
   });
 
   navigateBack() {
-    this.navCtrl.back()
+    this.navCtrl.back();
   }
 
   scanQRCode() {

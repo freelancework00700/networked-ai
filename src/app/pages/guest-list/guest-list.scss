@@ -1,0 +1,26 @@
+.stat-border {
+  padding: 1px;
+  border-radius: 0.75rem;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  text-align: center;
+}
+.stat-total {
+  background: linear-gradient(138.06deg, #f7cd87 8.51%, #f7cd87 85.69%);
+}
+
+.stat-attending {
+  background: linear-gradient(138.06deg, #52d193 8.51%, #0a9e57 85.69%);
+}
+
+.stat-maybe {
+  background: linear-gradient(138.06deg, #f5a361 8.51%, #9e4d0a 85.69%);
+}
+
+.stat-not {
+  background: linear-gradient(138.06deg, #f56161 8.51%, #9e0a0a 85.69%);
+}

@@ -10,7 +10,7 @@ type Filter = 'public' | 'networked';
   imports: [Button, UserCard],
   styleUrl: './home-feed.scss',
   templateUrl: './home-feed.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomeFeed {
   // signals
@@ -33,7 +33,7 @@ export class HomeFeed {
       profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80'
     }
   ];
-  
+
   constructor() {
     afterEveryRender(() => this.initSwiper());
   }

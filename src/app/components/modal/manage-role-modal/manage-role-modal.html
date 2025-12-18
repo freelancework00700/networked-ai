@@ -1,0 +1,33 @@
+<form [formGroup]="form()">
+  <div class="flex items-center justify-between p-4 pb-0">
+    <i class="pi pi-arrow-left" (click)="close()"></i>
+    <div class="body-16SB neutral-01">Manage Roles</div>
+    <i class="pi pi-times" (click)="close()"></i>
+  </div>
+  <div formArrayName="users" class="p-4 flex flex-col gap-2">
+    @for (ctrl of usersFormArray.controls; track $index) {
+      <div [formGroupName]="$index" class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <img [src]="ctrl.value.image || 'assets/images/profile.jpeg'" [alt]="ctrl.value.name" class="w-12 h-12 rounded-full object-cover" />
+          <div>{{ ctrl.value.name }}</div>
+        </div>
+
+        <p-select
+          formControlName="role"
+          [options]="roles()"
+          optionLabel="name"
+          optionValue="value"
+          placeholder="Select Role"
+          class="h-11"
+          (onChange)="changeRole($index, $event.value)"
+        >
+          <ng-template pTemplate="item" let-option>
+            <div class="flex items-center gap-2">
+              <div class="font-medium truncate">{{ option.name }}</div>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+    }
+  </div>
+</form>

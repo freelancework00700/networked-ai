@@ -2,23 +2,24 @@ import { CommonModule } from '@angular/common';
 import { Tickets } from '@/pages/event-analytics/components/tickets';
 import { PromoCodes } from '@/pages/event-analytics/components/promo-codes';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { IonContent, IonHeader, IonToolbar, NavController } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonToolbar, NavController, IonIcon } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'event-analytics',
   styleUrl: './event-analytics.scss',
   templateUrl: './event-analytics.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonHeader, IonToolbar, IonContent, CommonModule, PromoCodes, Tickets]
+  imports: [IonHeader, IonToolbar, IonContent, CommonModule, PromoCodes, Tickets, IonIcon]
 })
 export class EventAnalytics {
   navCtrl = inject(NavController);
+
+  totalSales = signal<number>(466098);
+  totalTicketsSold = signal<number>(233);
+  isDownloading = signal<boolean>(false);
   eventImage = signal<string>('assets/images/profile.jpeg');
 
-  totalTicketsSold = 233;
-  totalSales = 466098; // pennies
-
-  eventData = {
+  eventData = signal<any>({
     title: 'Event Title',
     date: '2025-01-01',
     time: '10:00',
@@ -56,7 +57,7 @@ export class EventAnalytics {
         dateRange: '1 Sep - 10 Sep'
       }
     ]
-  };
+  });
 
   promoCodes = signal<any[]>([
     {
@@ -110,5 +111,12 @@ export class EventAnalytics {
 
   penniesToDollars(value: number): string {
     return (value / 100).toFixed(2);
+  }
+
+  downloadCSV() {
+    this.isDownloading.set(true);
+    setTimeout(() => {
+      this.isDownloading.set(false);
+    }, 2000);
   }
 }

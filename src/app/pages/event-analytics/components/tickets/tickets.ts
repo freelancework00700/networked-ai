@@ -1,10 +1,11 @@
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { IonIcon } from '@ionic/angular/standalone';
 import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'tickets',
-  imports: [CommonModule],
+  imports: [IonIcon, CommonModule],
   styleUrl: './tickets.scss',
   templateUrl: './tickets.html',
   changeDetection: ChangeDetectionStrategy.OnPush

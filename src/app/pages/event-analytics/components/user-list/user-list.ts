@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { Searchbar } from '@/components/common/searchbar';
-import { IonContent, IonHeader, IonToolbar, NavController } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonToolbar, NavController, IonIcon } from '@ionic/angular/standalone';
 import { Component, inject, signal, effect, ChangeDetectionStrategy, computed } from '@angular/core';
 
 @Component({
@@ -9,13 +9,14 @@ import { Component, inject, signal, effect, ChangeDetectionStrategy, computed } 
   styleUrl: './user-list.scss',
   templateUrl: './user-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonToolbar, IonHeader, IonContent, CommonModule, Searchbar, Button]
+  imports: [IonIcon, IonToolbar, IonHeader, IonContent, CommonModule, Searchbar, Button]
 })
 export class UserList {
   navCtrl = inject(NavController);
 
-  searchQuery = signal<string>('');
   ticket = signal<any>(null);
+  searchQuery = signal<string>('');
+  isDownloading = signal<boolean>(false);
 
   networkSuggestions = [
     { id: '1', name: 'Kathryn Murphy', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
@@ -73,5 +74,12 @@ export class UserList {
       default:
         return 'assets/svg/ticket/regular-chip.svg';
     }
+  }
+
+  downloadCSV() {
+    this.isDownloading.set(true);
+    setTimeout(() => {
+      this.isDownloading.set(false);
+    }, 2000);
   }
 }

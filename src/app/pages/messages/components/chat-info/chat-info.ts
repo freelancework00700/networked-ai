@@ -1,10 +1,10 @@
 import { Button } from '@/components/form/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ModalService } from '@/services/modal.service';
+import { MenuItem } from '@/components/modal/menu-modal';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { IonToggle, IonContent, IonHeader, IonToolbar, IonFooter } from '@ionic/angular/standalone';
-import { MenuItem } from '../../../../components/modal/menu-modal';
+import { IonToggle, IonContent, IonHeader, IonToolbar, IonFooter, NavController } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'chat-info',
@@ -14,9 +14,11 @@ import { MenuItem } from '../../../../components/modal/menu-modal';
   imports: [IonFooter, IonToolbar, IonHeader, IonContent, IonToggle, Button, InputTextModule]
 })
 export class ChatInfo {
-  notificationsOn = signal(true);
-  isEditingName = signal(false);
   private router = inject(Router);
+  private navCtrl = inject(NavController);
+
+  isEditingName = signal(false);
+  notificationsOn = signal(true);
   groupName = signal('Sports Group');
   createdDate = signal('13 OCT 2024');
   private route = inject(ActivatedRoute);
@@ -125,7 +127,7 @@ export class ChatInfo {
   }
 
   async addMembers() {
-    this.router.navigate(['/create-group'], { queryParams: { groupId: this.route.snapshot.params['id'] } });
+    this.navCtrl.navigateForward(`/create-group`, { queryParams: { groupId: this.route.snapshot.params['id'] } });
   }
 
   async changeGroupName() {
@@ -168,7 +170,7 @@ export class ChatInfo {
     });
 
     if (result && result.role === 'confirm') {
-      this.router.navigate(['/messages']);
+      this.navCtrl.navigateForward('/messages');
     }
   }
 }

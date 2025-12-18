@@ -24,14 +24,18 @@
             (selectedType)="setPromotionType('percentage')"
             class="w-full"
           >
-            <span>Percentage Off</span>
-            <span>%</span>
+            <div class="flex justify-between">
+              <span>Percentage Off</span>
+              <span>%</span>
+            </div>
           </chip>
 
           <!-- Fixed Chip -->
           <chip [type]="'fixed'" [color]="promotionType() === 'fixed' ? 'lgold' : ''" (selectedType)="setPromotionType('fixed')" class="w-full">
-            <span>Fixed Amount Off</span>
-            <span>$</span>
+            <div class="flex justify-between">
+              <span>Fixed Amount Off</span>
+              <span>$</span>
+            </div>
           </chip>
         </div>
       </div>

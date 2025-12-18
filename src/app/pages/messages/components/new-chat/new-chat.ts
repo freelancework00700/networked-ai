@@ -1,6 +1,5 @@
-import { Router } from '@angular/router';
 import { Searchbar } from '@/components/common/searchbar';
-import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
@@ -11,7 +10,7 @@ import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@a
   imports: [IonContent, IonToolbar, IonHeader, Searchbar]
 })
 export class NewChat {
-  private router = inject(Router);
+  private navCtrl = inject(NavController);
   networkSuggestions = [
     { id: '1', name: 'Kathryn Murphy', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
     { id: '2', name: 'Esther Howard', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
@@ -45,13 +44,14 @@ export class NewChat {
   }
 
   goToChatRoom(id: string) {
-    this.router.navigate(['/chat-room', id]);
+    this.navCtrl.navigateForward(`/chat-room/${id}`);
   }
 
   goToCreateGroup() {
-    this.router.navigate(['/create-group']);
+    this.navCtrl.navigateForward('/create-group');
   }
+
   handleBack() {
-    this.router.navigate(['/messages']);
+    this.navCtrl.navigateForward('/messages');
   }
 }

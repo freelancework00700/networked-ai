@@ -36,9 +36,18 @@ export class EventCard {
     { label: 'Manage Roles', icon: 'assets/svg/manage-event/settings.svg', iconType: 'svg', action: 'manageRoles' },
     { label: 'Guest List', icon: 'assets/svg/manage-event/users.svg', iconType: 'svg', action: 'viewGuestList' },
     { label: 'Event Page QR', icon: 'assets/svg/scanner.svg', iconType: 'svg', action: 'viewEventPageQr' },
-    { label: 'Tap to pay', icon: 'assets/svg/manage-event/tap-to-pay.svg', iconType: 'svg', action: 'viewTapToPay' },
+    // { label: 'Tap to pay', icon: 'assets/svg/manage-event/tap-to-pay.svg', iconType: 'svg', action: 'viewTapToPay' },
     { label: 'Share Event', icon: 'pi pi-upload', iconType: 'pi', action: 'shareEvent' },
     { label: 'Cancel Event', icon: 'assets/svg/manage-event/calendar-x.svg', iconType: 'svg', danger: true, action: 'cancelEvent' }
+  ];
+
+  networkSuggestions = [
+    { id: '1', name: 'Kathryn Murphy', role: 'staff' },
+    { id: '2', name: 'Esther Howard' },
+    { id: '3', name: 'Arlene McCoy' },
+    { id: '4', name: 'Darlene Robertson', role: 'speaker' },
+    { id: '5', name: 'Ronald Richards', role: 'sponsor' },
+    { id: '6', name: 'Albert Flores' }
   ];
 
   async openMenu() {
@@ -66,12 +75,30 @@ export class EventCard {
   viewEventAnalytics() {
     this.navCtrl.navigateForward(`/event-analytics/1111`);
   }
-  viewQuestionnaireResponses() {}
-  manageRoles() {}
-  viewGuestList() {}
-  viewEventPageQr() {}
+
+  viewQuestionnaireResponses() {
+    this.navCtrl.navigateForward(`/questionnaire-response/1111`);
+  }
+
+  async manageRoles() {
+    const result = await this.modalService.openManageRoleModal(this.networkSuggestions, '1111');
+  }
+
+  viewGuestList() {
+    this.navCtrl.navigateForward(`/guest-list/1111`);
+  }
+
+  viewEventPageQr() {
+    this.navCtrl.navigateForward(`/event-qr/1111`);
+  }
   viewTapToPay() {}
-  shareEvent() {}
+
+  async shareEvent() {
+    const result = await this.modalService.openShareEventModal('1111');
+    if (result) {
+      this.toasterService.showSuccess('Event shared');
+    }
+  }
 
   async cancelEvent() {
     const result = await this.modalService.openConfirmModal({

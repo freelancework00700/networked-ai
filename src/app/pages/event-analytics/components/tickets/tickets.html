@@ -9,7 +9,7 @@
       <div class="heading-h2">{{ totalTicketsSold }}</div>
     </div>
 
-    <img src="assets/svg/ticket/paid-ticket.svg" alt="Standard Ticket" />
+    <ion-icon src="assets/svg/ticket/paid-ticket.svg" alt="Standard Ticket" />
   </div>
 
   <div class="p-2 pt-0">
@@ -17,7 +17,7 @@
       <div class="tier-overview-card" [ngClass]="'ticket-type-' + (ticket?.ticket_type || 'standard-paid')">
         <div class="flex justify-between items-center gap-2">
           <div class="flex items-center gap-2">
-            <img src="assets/svg/ticket/ticket.svg" class="stat-icon" class="w-6 h-6" />
+            <ion-icon src="assets/svg/ticket/ticket.svg" class="stat-icon" class="w-6 h-6" />
             <span class="body-16SB neutral-01">{{ ticket.name }}</span>
           </div>
           <img [src]="getTicketTypeChip(ticket)" />

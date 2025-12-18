@@ -1,11 +1,13 @@
 import { Home } from '@/pages/home';
 import { Login } from '@/pages/login';
 import { Routes } from '@angular/router';
+import { EventQr } from '@/pages/event-qr';
 import { Messages } from '@/pages/messages';
 import { NotFound } from '@/pages/not-found';
 import { Signup } from '@/pages/signup/signup';
 import { TabLayout } from '@/layout/tab-layout';
 import { Onboarding } from '@/pages/onboarding';
+import { GuestList } from '@/pages/guest-list';
 import { Profile } from '@/pages/profile/profile';
 import { Network } from '@/pages/network/network';
 import { CreateEvent } from '@/pages/create-event';
@@ -18,7 +20,9 @@ import { ChatRoom } from '@/pages/messages/components/chat-room';
 import { ChatInfo } from '@/pages/messages/components/chat-info';
 import { AddNetwork } from '@/pages/network/components/add-network';
 import { CreateGroup } from '@/pages/messages/components/create-group';
+import { QuestionnaireResponse } from '@/pages/questionnaire-response';
 import { UserList } from '@/pages/event-analytics/components/user-list';
+import { QuestionnaireUserList } from '@/pages/questionnaire-response/components/questionnaire-user-list';
 
 export const appRoutes: Routes = [
   {
@@ -34,10 +38,12 @@ export const appRoutes: Routes = [
   },
   { path: 'new-chat', component: NewChat },
   { path: 'not-found', component: NotFound },
+  { path: 'event-qr/:id', component: EventQr },
   { path: 'add-network', component: AddNetwork },
   { path: 'user-list/:id', component: UserList },
   { path: 'chat-room/:id', component: ChatRoom },
   { path: 'chat-info/:id', component: ChatInfo },
+  { path: 'guest-list/:id', component: GuestList },
   { path: 'create-group', component: CreateGroup },
   { path: 'profile/edit', component: EditProfile },
   { path: 'create-event', component: CreateEvent },
@@ -45,6 +51,8 @@ export const appRoutes: Routes = [
   { path: 'group-invitation/:id', component: ChatInfo },
   { path: 'forgot-password', component: ForgotPassword },
   { path: 'event-analytics/:id', component: EventAnalytics },
+  { path: 'questionnaire-response/:id', component: QuestionnaireResponse },
+  { path: 'questionnaire-response/user-list/:id', component: QuestionnaireUserList },
   { path: 'login', component: Login, canActivate: [onboardingGuard] },
   { path: 'signup', component: Signup, canActivate: [onboardingGuard] },
   { path: 'onboarding', component: Onboarding, canActivate: [onboardingGuard] },
