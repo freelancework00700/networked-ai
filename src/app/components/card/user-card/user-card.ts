@@ -1,12 +1,6 @@
 import { Button } from '@/components/form/button';
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
-export interface IUser {
-  name: string;
-  location: string;
-  profileImage: string;
-}
-
 @Component({
   imports: [Button],
   selector: 'user-card',
@@ -15,5 +9,6 @@ export interface IUser {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserCard {
-  user = input.required<IUser>();
+  // inputs
+  user = input.required<any>();
 }

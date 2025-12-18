@@ -1,27 +1,26 @@
 import { Swiper } from 'swiper';
-import { Router } from '@angular/router';
 import { Button } from '@/components/form/button';
+import { UserCard } from '@/components/card/user-card';
 import { Searchbar } from '@/components/common/searchbar';
-import { IUser, UserCard } from '@/components/card/user-card';
-import { IonContent, IonHeader, IonToolbar } from '@ionic/angular/standalone';
-import { Component, computed, ElementRef, inject, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
-interface SwiperConfig {
-  spaceBetween: number;
-  slidesPerView: number;
-  allowTouchMove: boolean;
-}
+import { UserCardList } from '@/components/card/user-card-list';
+import { SearchEmptyState } from '@/components/common/search-empty-state';
+import { UserNetworkRequestCard } from '@/components/card/user-network-request-card';
+import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
+import { inject, signal, computed, Component, afterEveryRender, ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'add-network',
   styleUrl: './add-network.scss',
   templateUrl: './add-network.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonToolbar, IonHeader, IonContent, Searchbar, Button, UserCard]
+  imports: [Button, UserCard, Searchbar, IonHeader, IonToolbar, IonContent, UserCardList, SearchEmptyState, UserNetworkRequestCard]
 })
 export class AddNetwork {
-  @ViewChild('swiperContainerPeople', { static: false }) swiperContainerPeople?: ElementRef<HTMLDivElement>;
-  private router = inject(Router);
-  searchQuery = signal<string>('');
+  // services
+  private navCtrl = inject(NavController);
+
+  // signals
   showAll = signal(false);
+  searchQuery = signal<string>('');
 
   visibleSuggestions = computed(() => {
     const list = this.networkSuggestions();
@@ -33,7 +32,7 @@ export class AddNetwork {
     return total > 3 ? total - 3 : 0;
   });
 
-  peopleCards: IUser[] = [
+  peopleCards = [
     {
       name: 'Kathryn Murphy',
       location: 'Atlanta, GA',
@@ -152,7 +151,7 @@ export class AddNetwork {
   });
 
   navigateBack() {
-    this.router.navigate(['/network']);
+    this.navCtrl.back()
   }
 
   scanQRCode() {
@@ -172,28 +171,21 @@ export class AddNetwork {
   }
 
   messageUser(id: string) {
-    this.router.navigate(['/chat-room', id]);
+    this.navCtrl.navigateForward(['/chat-room', id]);
   }
 
-  private readonly swiperConfigs: Record<string, SwiperConfig> = {
-    cities: { spaceBetween: 8, slidesPerView: 2.7, allowTouchMove: true },
-    events: { spaceBetween: 8, slidesPerView: 1.5, allowTouchMove: true },
-    people: { spaceBetween: 8, slidesPerView: 2.2, allowTouchMove: true }
-  };
+  constructor() {
+    afterEveryRender(() => this.initSwiper());
+  }
 
-  private initializeSwiper(element: ElementRef<HTMLDivElement> | undefined, config: SwiperConfig): Swiper | undefined {
-    if (!element?.nativeElement) return undefined;
-
-    return new Swiper(element.nativeElement, {
-      ...config,
-      on: {
-        slideChange: () => {}
-      }
+  private initSwiper(): void {
+    new Swiper('.swiper-user-recommendation', {
+      spaceBetween: 8,
+      slidesPerView: 2.2,
+      allowTouchMove: true,
+      slidesOffsetAfter: 16,
+      slidesOffsetBefore: 16
     });
-  }
-
-  ngAfterViewInit(): void {
-    this.initializeSwiper(this.swiperContainerPeople, this.swiperConfigs['people']);
   }
 
   acceptNetwork(id: string) {

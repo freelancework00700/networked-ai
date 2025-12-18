@@ -1,0 +1,21 @@
+<div class="flex items-center gap-3 bg-surface-0 py-4">
+  <!-- profile picture -->
+  <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0">
+    <img src="assets/images/profile.jpeg" class="w-full h-full rounded-full object-cover" />
+  </div>
+
+  <!-- name and details -->
+  <div class="flex-1 flex flex-col gap-1">
+    <div class="flex items-center gap-2">
+      <div class="body-14SB neutral-01 truncate">{{ user().name }}</div>
+      <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full py-0 h-[20px]">
+        <img src="assets/svg/diamondYellow.svg" alt="diamond" class="h-4 w-auto ml-1.5" />
+        <span class="text-sm font-medium pr-2">200</span>
+      </div>
+    </div>
+    <p class="body-12 neutral-03">Founder & CEO, Cortazzo Consulting</p>
+  </div>
+
+  <!-- add button -->
+  <app-button height="32px" color="secondary" (click)="onAddClick(user().id)" [label]="isSelected(user().id) ? 'Message' : 'Add'" />
+</div>

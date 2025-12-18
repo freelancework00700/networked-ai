@@ -1,0 +1,16 @@
+@for (user of users(); track user.id) {
+  <user-card-list [user]="user" (handleClick)="handleClick($event)" />
+} @empty {
+  <div class="flex items-center justify-center h-full min-h-[400px]">
+    <div class="flex flex-col items-center justify-center gap-3 text-center">
+      <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center">
+        <div class="icon-container">
+          <img src="assets/svg/noUserIcon.svg" alt="no user" class="w-6 h-6" />
+        </div>
+      </div>
+      <div class="text-[20px] font-semibold neutral-01">No Network Found</div>
+      <div class="body-14M text-surface-600">Check your spelling or try searching for a different keyword.</div>
+      <app-button (click)="clearSearch.emit($event)" label="Clear Search" color="secondary" />
+    </div>
+  </div>
+}

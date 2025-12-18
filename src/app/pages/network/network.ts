@@ -1,26 +1,27 @@
-import { Router } from '@angular/router';
-import { MapView } from './components/map-view';
-import { ListView } from './components/list-view';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { Searchbar } from '@/components/common/searchbar';
-import { IonHeader, IonToolbar, IonContent, IonIcon } from '@ionic/angular/standalone';
-import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { NetworkMapView } from '@/pages/network/components/network-map-view';
+import { NetworkListView } from '@/pages/network/components/network-list-view';
+import { inject, signal, computed, Component, ChangeDetectionStrategy } from '@angular/core';
+import { IonIcon, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'network',
   styleUrl: './network.scss',
   templateUrl: './network.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonIcon, IonContent, IonToolbar, IonHeader, ListView, MapView, Searchbar, Button]
+  imports: [Button, IonIcon, IonHeader, Searchbar, IonToolbar, IonContent, NetworkMapView, NetworkListView]
 })
 export class Network {
-  private router = inject(Router);
-  private modalService = inject(ModalService);
-
+  // signals
   radius = signal<number>(20);
   searchQuery = signal<string>('');
   segmentValue = signal<string>('list');
+
+  // services
+  private navCtrl = inject(NavController);
+  private modalService = inject(ModalService);
 
   filteredSuggestions = computed(() => {
     const search = this.searchQuery().toLowerCase().trim();
@@ -135,10 +136,6 @@ export class Network {
   }
 
   navigateToAddNetwork() {
-    this.router.navigate(['/add-network']);
-  }
-
-  clearSearch() {
-    this.searchQuery.set('');
+    this.navCtrl.navigateForward('/add-network');
   }
 }

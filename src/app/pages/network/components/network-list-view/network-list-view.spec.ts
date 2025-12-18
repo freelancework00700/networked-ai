@@ -1,17 +1,16 @@
+import { NetworkListView } from './network-list-view';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LoactionFilter } from './loaction-filter';
-
-describe('LoactionFilter', () => {
-  let component: LoactionFilter;
-  let fixture: ComponentFixture<LoactionFilter>;
+describe('NetworkListView', () => {
+  let component: NetworkListView;
+  let fixture: ComponentFixture<NetworkListView>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LoactionFilter]
+      imports: [NetworkListView]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(LoactionFilter);
+    fixture = TestBed.createComponent(NetworkListView);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

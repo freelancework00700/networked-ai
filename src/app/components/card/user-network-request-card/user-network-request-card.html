@@ -1,0 +1,26 @@
+<div class="flex items-center gap-3 py-4 border-b border-surface-200">
+  <!-- image -->
+  <div class="w-12 h-12">
+    <img src="assets/images/profile.jpeg" class="w-full h-full rounded-full object-cover" />
+  </div>
+
+  <!-- name and details  -->
+  <div class="flex-1 flex flex-col gap-1">
+    <div class="flex items-center gap-2">
+      <div class="body-14SB neutral-01 truncate">
+        {{ user().name }}
+      </div>
+
+      <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full h-[20px]">
+        <ion-icon src="assets/svg/diamondYellow.svg" class="h-4 ml-1.5" />
+        <span class="text-sm font-medium pr-2"> 200 </span>
+      </div>
+    </div>
+
+    <p class="body-12 neutral-03">Founder & CEO, Cortazzo Consulting</p>
+  </div>
+
+  <!-- accept and reject button -->
+  <app-button width="72px" height="32px" label="Accept" (click)="onAccept()" />
+  <i class="pi pi-times cursor-pointer" (click)="onReject()"></i>
+</div>

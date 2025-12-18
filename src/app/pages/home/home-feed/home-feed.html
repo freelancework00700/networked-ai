@@ -40,10 +40,10 @@
             <div class="w-full rounded-[12px] border border-[#e5e5e5] bg-neutral-07 overflow-hidden">
               <!-- event image / hero -->
               <div class="w-full p-3 pb-0">
-                <ion-img
-                  src="https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80"
+                <img
                   class="rounded-[8px] overflow-hidden h-[160px] w-full object-cover"
-                ></ion-img>
+                  src="https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80"
+                />
               </div>
 
               <!-- event details -->
@@ -90,11 +90,11 @@
     </div>
   </div>
   <div class="mt-3">
-    <div class="swiper" #swiperContainerPeople>
+    <div class="swiper swiper-user-recommendation">
       <div class="swiper-wrapper">
-        @for (person of peopleCards; track person.name) {
+        @for (user of users; track user.name) {
           <div class="swiper-slide">
-            <user-card [user]="person" />
+            <user-card [user]="user" />
           </div>
         }
       </div>
@@ -125,10 +125,10 @@
             <div class="pi pi-ellipsis-h neutral-03 !text-[16px]"></div>
           </div>
           <div class="w-full">
-            <ion-img
-              src="https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80"
+            <img
               class="rounded-[8px] overflow-hidden h-[225px] w-full object-cover"
-            ></ion-img>
+              src="https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80"
+            />
           </div>
           <div class="flex items-center gap-4 neutral-03">
             <div class="flex items-center gap-1.5">

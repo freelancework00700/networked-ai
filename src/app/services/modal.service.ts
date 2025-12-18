@@ -1,4 +1,6 @@
 import { inject, Injectable } from '@angular/core';
+import { MenuItem } from '@/components/modal/menu-modal';
+import { MenuModal } from '@/components/modal/menu-modal';
 import { ModalController } from '@ionic/angular/standalone';
 import { TitleModal } from '@/components/modal/title-modal';
 import { LoadingModal } from '@/components/modal/loading-modal';
@@ -6,18 +8,16 @@ import { CreateEvent } from '@/pages/create-event/create-event';
 import { ConfirmModal } from '@/components/modal/confirm-modal';
 import { LocationModal } from '@/components/modal/location-modal';
 import { DateTimeModal } from '@/components/modal/date-time-modal';
-import { MenuItem } from '@/components/modal/menu-modal';
-import { MenuModal } from '@/components/modal/menu-modal';
-import { ShareGroup } from '@/pages/messages/components/share-group';
-import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
 import { UserDetail } from '@/pages/network/components/user-detail';
+import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
+import { ShareGroup } from '@/pages/messages/components/share-group';
 import { GifGalleryModal } from '@/components/modal/gif-gallery-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
 import { ImageGalleryModal } from '@/components/modal/image-gallery-modal';
-import { LoactionFilter } from '@/pages/network/components/loaction-filter';
 import { EventCategoryModal } from '@/components/modal/event-category-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
 import { GroupInvitation } from '@/pages/messages/components/group-invitation';
+import { LocationFilterModal } from '@/components/modal/location-filter-modal';
 import { AIPromptModal } from '@/pages/create-event/components/ai-prompt-modal';
 import { TicketTypeModal } from '@/pages/create-event/components/ticket-type-modal';
 import { QuestionnaireForm } from '@/pages/create-event/components/questionnaire-form';
@@ -30,7 +30,7 @@ import { PromoCodeForm, PromoCodeFormData } from '@/pages/create-event/component
 @Injectable({ providedIn: 'root' })
 export class ModalService {
   // services
-  modalCtrl = inject(ModalController);
+  private modalCtrl = inject(ModalController);
 
   async openLoadingModal(message: string): Promise<void> {
     const modal = await this.modalCtrl.create({
@@ -491,8 +491,8 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      component: LoactionFilter,
-      cssClass: 'auto-hight-modal'
+      cssClass: 'auto-hight-modal',
+      component: LocationFilterModal
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();

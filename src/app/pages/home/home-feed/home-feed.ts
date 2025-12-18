@@ -1,43 +1,22 @@
-import { signal, Component, ChangeDetectionStrategy, ElementRef, ViewChild } from '@angular/core';
-import { UserCard, IUser } from '@/components/card/user-card';
-import Swiper from 'swiper';
-import { IonIcon, IonImg } from '@ionic/angular/standalone';
+import { Swiper } from 'swiper';
 import { Button } from '@/components/form/button';
+import { UserCard } from '@/components/card/user-card';
+import { signal, Component, afterEveryRender, ChangeDetectionStrategy } from '@angular/core';
 
-interface SwiperConfig {
-  spaceBetween: number;
-  slidesPerView: number;
-  allowTouchMove: boolean;
-  slidesOffsetBefore: number;
-  slidesOffsetAfter: number;
-}
+type Filter = 'public' | 'networked';
 
 @Component({
   selector: 'home-feed',
+  imports: [Button, UserCard],
   styleUrl: './home-feed.scss',
   templateUrl: './home-feed.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonImg, IonIcon, UserCard, Button]
 })
 export class HomeFeed {
-  feedFilter = signal<'public' | 'networked'>('public');
-  @ViewChild('swiperContainerPeople', { static: false }) swiperContainerPeople?: ElementRef<HTMLDivElement>;
-  private initializeSwiper(element: ElementRef<HTMLDivElement> | undefined, config: SwiperConfig): Swiper | undefined {
-    if (!element?.nativeElement) return undefined;
+  // signals
+  feedFilter = signal<Filter>('public');
 
-    return new Swiper(element.nativeElement, {
-      ...config,
-      on: {
-        slideChange: () => {
-          // Swiper slide change handler
-        }
-      }
-    });
-  }
-  private readonly swiperConfigs: Record<string, SwiperConfig> = {
-    people: { spaceBetween: 8, slidesPerView: 2.2, allowTouchMove: true, slidesOffsetBefore: 16, slidesOffsetAfter: 16 }
-  };
-  peopleCards: IUser[] = [
+  users = [
     {
       name: 'Kathryn Murphy',
       location: 'Atlanta, GA',
@@ -54,7 +33,18 @@ export class HomeFeed {
       profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80'
     }
   ];
-  ngAfterViewInit(): void {
-    this.initializeSwiper(this.swiperContainerPeople, this.swiperConfigs['people']);
+  
+  constructor() {
+    afterEveryRender(() => this.initSwiper());
+  }
+
+  private initSwiper(): void {
+    new Swiper('.swiper-user-recommendation', {
+      spaceBetween: 8,
+      slidesPerView: 2.2,
+      allowTouchMove: true,
+      slidesOffsetAfter: 16,
+      slidesOffsetBefore: 16
+    });
   }
 }
