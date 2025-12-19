@@ -92,7 +92,7 @@
               <mobile-input label="Mobile" [isSubmitted]="isSubmitted()" />
             } @else {
               <!-- otp input section -->
-              <otp-input [mobile]="phoneNumber()" [isLoading]="isLoading()" (resendOtp)="resendOtp()" (otpChange)="otp.set($event)" />
+              <otp-input [mobile]="phoneNumber()" [isLoading]="isLoading()" (resendOtp)="resendOtp()" (mobileOtpChange)="otp.set($event)" />
             }
           </div>
         }

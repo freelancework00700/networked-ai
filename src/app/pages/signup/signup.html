@@ -17,9 +17,10 @@
           [formGroup]="profileForm()"
           [isSubmitted]="isSubmitted()"
           (openDateModal)="openDateModal()"
+          [emailVerified]="emailVerified()"
           (openTitleModal)="openTitleModal()"
+          [showPasswordInput]="!isSocialLogin()"
           (openLocationModal)="openLocationModal()"
-          [showPasswordInput]="showPasswordInput()"
           (openAccountTypeModal)="openAccountTypeModal()"
         />
       </div>
@@ -91,7 +92,7 @@
         @for (step of steps(); track step) {
           <div
             class="rounded-full transition-all duration-200"
-            [ngClass]="step === currentStep() ? 'w-8 h-2 bg-black' : step < currentStep() ? 'w-2 h-2 bg-black' : 'w-2 h-2 bg-gray-300'"
+            [class]="step === currentStep() ? 'w-8 h-2 bg-black' : step < currentStep() ? 'w-2 h-2 bg-black' : 'w-2 h-2 bg-gray-300'"
           ></div>
         }
       </div>

@@ -14,28 +14,48 @@ interface IUserSocials {
 }
 
 export interface IUser {
-  title?: string;
+  id?: string;
+  dob?: string;
   name?: string;
+  title?: string;
   email?: string;
   mobile?: string;
-  username?: string;
-  dob?: string;
-  account_type?: number;
   address?: string;
   latitude?: number;
+  username?: string;
   longitude?: number;
-  college_university_name?: string;
-  settings?: IUserSettings;
-  socials?: IUserSocials;
-  company_name?: string;
+  is_admin?: boolean;
   description?: string;
-  fcm_tokens?: string;
-  image_url?: string;
+  company_name?: string;
+  firebase_uid?: string;
+  account_type?: string;
+  fcm_tokens?: string[];
+  socials?: IUserSocials;
   thumbnail_url?: string;
+  settings?: IUserSettings;
+  image_url?: File | string;
+  stripe_account_id?: string;
+  stripe_customer_id?: string;
+  total_events_liked?: number;
+  total_events_hosted?: number;
+  total_events_spoken?: number;
+  total_events_staffed?: number;
+  total_events_cohosted?: number;
+  total_events_attended?: number;
+  college_university_name?: string;
+  total_gamification_points?: number;
+  total_gamification_points_weekly?: number;
 }
 
 export interface IUserResponse {
-  data?: IUser;
   message: string;
   success: boolean;
+  data?: { user?: IUser };
+}
+
+export interface VibeItem {
+  id: string;
+  name: string;
+  icon: string;
+  description?: string;
 }

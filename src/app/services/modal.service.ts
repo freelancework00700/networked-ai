@@ -348,7 +348,7 @@ export class ModalService {
     return data;
   }
 
-  async openOtpModal(mobile: string, type: 'email' | 'mobile' = 'mobile'): Promise<boolean> {
+  async openOtpModal(email: string, mobile: string): Promise<boolean> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -357,7 +357,7 @@ export class ModalService {
       backdropDismiss: false,
       component: VerifyOtpModal,
       cssClass: 'auto-hight-modal',
-      componentProps: { mobile, type }
+      componentProps: { email, mobile }
     });
 
     await modal.present();

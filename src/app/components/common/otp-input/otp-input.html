@@ -1,11 +1,24 @@
-<div class="text-center pb-4 pt-6">
-  <div class="body-14M neutral-03">Enter verification code sent to</div>
-  <div class="body-14M neutral-03">{{ maskedMobile() }}</div>
-</div>
+@if (mobile()) {
+  <div class="text-center pb-4 pt-6">
+    <div class="body-14M neutral-03">Enter verification code sent to</div>
+    <div class="body-14M neutral-03">{{ maskedMobile() }}</div>
+  </div>
 
-<div class="flex justify-center gap-3 mb-4">
-  <ng-otp-input (onInputChange)="otpChange.emit($event)" [config]="otpConfig()" />
-</div>
+  <div class="flex justify-center gap-3 mb-4">
+    <ng-otp-input (onInputChange)="mobileOtpChange.emit($event)" [config]="otpConfig()" />
+  </div>
+}
+
+@if (email()) {
+  <div class="text-center pb-4 pt-6">
+    <div class="body-14M neutral-03">Enter verification code sent to</div>
+    <div class="body-14M neutral-03">{{ maskedEmail() }}</div>
+  </div>
+
+  <div class="flex justify-center gap-3 mb-4">
+    <ng-otp-input (onInputChange)="emailOtpChange.emit($event)" [config]="otpConfig()" />
+  </div>
+}
 
 <div class="text-center body-12R neutral-03 pb-9 pt-7">
   <span>Didn't receive the code? </span>

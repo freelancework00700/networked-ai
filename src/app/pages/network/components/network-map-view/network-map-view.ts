@@ -1,6 +1,5 @@
 import * as Maptiler from '@maptiler/sdk';
 import { Feature, Polygon } from 'geojson';
-// import '@maptiler/sdk/dist/maptiler-sdk.css';
 import { ModalService } from '@/services/modal.service';
 import { environment } from 'src/environments/environment';
 import { input, inject, effect, Component, viewChild, OnDestroy, ElementRef, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';

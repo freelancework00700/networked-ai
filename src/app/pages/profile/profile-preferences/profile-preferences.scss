@@ -1,0 +1,21 @@
+.vibe-card {
+  display: flex;
+  cursor: pointer;
+  min-height: 140px;
+  padding: 20px 16px;
+  border-radius: 12px;
+  flex-direction: column;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: 1px solid var(--neutral-05);
+
+  &.selected {
+    background: var(--brand-07);
+    border-color: var(--brand-03);
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

@@ -22,6 +22,7 @@ import { AddNetwork } from '@/pages/network/components/add-network';
 import { CreateGroup } from '@/pages/messages/components/create-group';
 import { QuestionnaireResponse } from '@/pages/questionnaire-response';
 import { UserList } from '@/pages/event-analytics/components/user-list';
+import { ProfilePreferences } from '@/pages/profile/profile-preferences';
 import { QuestionnaireUserList } from '@/pages/questionnaire-response/components/questionnaire-user-list';
 
 export const appRoutes: Routes = [
@@ -51,6 +52,7 @@ export const appRoutes: Routes = [
   { path: 'group-invitation/:id', component: ChatInfo },
   { path: 'forgot-password', component: ForgotPassword },
   { path: 'event-analytics/:id', component: EventAnalytics },
+  { path: 'profile/preferences', component: ProfilePreferences },
   { path: 'questionnaire-response/:id', component: QuestionnaireResponse },
   { path: 'questionnaire-response/user-list/:id', component: QuestionnaireUserList },
   { path: 'login', component: Login, canActivate: [onboardingGuard] },

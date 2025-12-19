@@ -24,7 +24,7 @@
   </div>
 
   <!-- email input -->
-  <email-input [checkAvailability]="true" />
+  <email-input [checkAvailability]="!emailVerified()" />
 
   <!-- password input - only show during signup -->
   @if (showPasswordInput()) {

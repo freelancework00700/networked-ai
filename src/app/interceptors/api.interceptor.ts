@@ -1,10 +1,10 @@
 import { inject } from '@angular/core';
+import { AuthService } from '@/services/auth.service';
 import { HttpInterceptorFn } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
-import { KEYS, LocalStorageService } from '@/services/localstorage.service';
 
 export const apiInterceptor: HttpInterceptorFn = (req, next) => {
-  const localStorageService = inject(LocalStorageService);
+  const authService = inject(AuthService);
 
   // URLs that should skip token addition (e.g., login)
   const skipUrls = ['api/auth/login', 'https://api.maptiler.com'];
@@ -22,15 +22,15 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
     return next(clonedReq);
   }
 
-  // get the API token from storage
-  const apiToken = localStorageService.getItem(KEYS.TOKEN);
+  // get the API token from the first user in the array
+  const bearerToken = authService.getCurrentToken();
 
   // clone the request with base URL and add the Authorization header if token exists
-  const clonedReq = apiToken
+  const clonedReq = bearerToken
     ? req.clone({
         url: apiUrl,
         setHeaders: {
-          Authorization: `Bearer ${apiToken}`
+          Authorization: `Bearer ${bearerToken}`
         }
       })
     : req.clone({ url: apiUrl });

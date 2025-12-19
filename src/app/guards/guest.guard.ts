@@ -1,13 +1,14 @@
 import { inject } from '@angular/core';
 import { CanActivateFn } from '@angular/router';
+import { AuthService } from '@/services/auth.service';
 import { NavController } from '@ionic/angular/standalone';
-import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 export const guestGuard: CanActivateFn = async (route, state) => {
   const navCtrl = inject(NavController);
-  const { user } = await FirebaseAuthentication.getCurrentUser();
+  const authService = inject(AuthService);
+  const token = authService.getCurrentToken();
 
-  if (user) {
+  if (token) {
     // user is logged in, redirect to home page
     navCtrl.navigateRoot('/');
     return false; // deny access to login pages

@@ -1,5 +1,5 @@
-import { maskPhoneNumber } from '@/utils/helper';
 import { NgOtpInputComponent } from 'ng-otp-input';
+import { maskEmail, maskPhoneNumber } from '@/utils/helper';
 import { input, output, signal, Component, OnInit } from '@angular/core';
 
 @Component({
@@ -10,18 +10,22 @@ import { input, output, signal, Component, OnInit } from '@angular/core';
 })
 export class OtpInput implements OnInit {
   // inputs
-  mobile = input.required<string>();
-  isLoading = input.required<boolean>();
+  email = input('');
+  mobile = input('');
+  isLoading = input(false);
 
   // outputs
   resendOtp = output<void>();
-  otpChange = output<string>();
+  emailOtpChange = output<string>();
+  mobileOtpChange = output<string>();
 
   // signals
+  maskedEmail = signal<string>('');
   maskedMobile = signal<string>('');
   otpConfig = signal({ length: 6, placeholder: '', allowNumbersOnly: true });
 
   ngOnInit(): void {
+    this.maskedEmail.set(maskEmail(this.email()));
     this.maskedMobile.set(maskPhoneNumber(this.mobile()));
   }
 }

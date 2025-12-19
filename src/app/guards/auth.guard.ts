@@ -1,13 +1,14 @@
 import { inject } from '@angular/core';
 import { CanActivateFn } from '@angular/router';
+import { AuthService } from '@/services/auth.service';
 import { NavController } from '@ionic/angular/standalone';
-import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 export const authGuard: CanActivateFn = async (route, state) => {
   const navCtrl = inject(NavController);
-  const { user } = await FirebaseAuthentication.getCurrentUser();
+  const authService = inject(AuthService);
+  const token = authService.getCurrentToken();
 
-  if (user) {
+  if (token) {
     return true; // allow access if the user is authenticated
   } else {
     // store the attempted url as a query parameter for redirection after login

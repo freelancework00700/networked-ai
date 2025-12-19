@@ -16,6 +16,7 @@ import { UserSettingToggle } from '@/components/form/user-setting-toggle';
 })
 export class UserPersonalInfo {
   // inputs
+  emailVerified = input(false);
   isSubmitted = input.required<boolean>();
   showPasswordInput = input.required<boolean>();
   formGroup = input.required<FormGroup<IUserForm>>();

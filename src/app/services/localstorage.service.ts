@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 export enum KEYS {
-  TOKEN = 'token'
+  USERS = 'users'
 }
 
 @Injectable({ providedIn: 'root' })

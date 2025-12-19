@@ -3,6 +3,7 @@ import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { NavController } from '@ionic/angular/standalone';
 import { ToasterService } from '@/services/toaster.service';
+import { BaseApiService } from '@/services/base-api.service';
 
 @Component({
   selector: 'social-login-buttons',
@@ -19,19 +20,16 @@ export class SocialLoginButtons {
   async loginWithGoogle() {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
-      const { user, isNewUser } = await this.authService.signInWithGoogle();
-      await this.authService.loginWithFirebaseToken();
-
-      // new user -> profile page
-      // existing user -> home page
-      if (isNewUser) {
-        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(user)) } });
+      await this.authService.signInWithGoogle();
+      const { data } = await this.authService.loginWithFirebaseToken();
+      if (data.is_new_user) {
+        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(data.user)) } });
       } else {
         this.navCtrl.navigateForward('/');
       }
-    } catch (error: any) {
-      console.error('Google login error', error);
-      this.toasterService.showError(error.message || 'Failed to sign in with Google.');
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to sign in with Google.');
+      this.toasterService.showError(message);
     } finally {
       await this.modalService.close();
     }
@@ -40,19 +38,16 @@ export class SocialLoginButtons {
   async loginWithApple() {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
-      const { user, isNewUser } = await this.authService.signInWithApple();
-      await this.authService.loginWithFirebaseToken();
-
-      // new user -> profile page
-      // existing user -> home page
-      if (isNewUser) {
-        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(user)) } });
+      await this.authService.signInWithApple();
+      const { data } = await this.authService.loginWithFirebaseToken();
+      if (data.is_new_user) {
+        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(data.user)) } });
       } else {
         this.navCtrl.navigateForward('/');
       }
-    } catch (error: any) {
-      console.error('Apple login error', error);
-      this.toasterService.showError(error.message || 'Failed to sign in with Apple.');
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to sign in with Apple.');
+      this.toasterService.showError(message);
     } finally {
       await this.modalService.close();
     }
@@ -61,19 +56,16 @@ export class SocialLoginButtons {
   async loginWithFacebook() {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
-      const { user, isNewUser } = await this.authService.signInWithFacebook();
-      await this.authService.loginWithFirebaseToken();
-
-      // new user -> profile page
-      // existing user -> home page
-      if (isNewUser) {
-        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(user)) } });
+      await this.authService.signInWithFacebook();
+      const { data } = await this.authService.loginWithFirebaseToken();
+      if (data.is_new_user) {
+        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(data.user)) } });
       } else {
         this.navCtrl.navigateForward('/');
       }
-    } catch (error: any) {
-      console.error('Facebook login error', error);
-      this.toasterService.showError(error.message || 'Failed to sign in with Facebook.');
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to sign in with Facebook.');
+      this.toasterService.showError(message);
     } finally {
       await this.modalService.close();
     }

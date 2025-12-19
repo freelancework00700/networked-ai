@@ -1,5 +1,5 @@
 import { Router } from '@angular/router';
-import { NgClass } from '@angular/common';
+import { IAuthUser } from '@/interfaces/IAuth';
 import { Button } from '@/components/form/button';
 import { IUserForm } from '@/interfaces/IUserForm';
 import { AuthService } from '@/services/auth.service';
@@ -7,14 +7,13 @@ import { UserService } from '@/services/user.service';
 import { ModalService } from '@/services/modal.service';
 import { validateFields } from '@/utils/form-validation';
 import { ToasterService } from '@/services/toaster.service';
-import { FirebaseService } from '@/services/firebase.service';
+import { BaseApiService } from '@/services/base-api.service';
 import { UserPersonalInfo } from '@/components/common/user-personal-info';
 import { ProfileImageInput } from '@/components/form/profile-image-input';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { UserAdditionalInfo } from '@/components/common/user-additional-info';
-import { User, FirebaseAuthentication } from '@capacitor-firebase/authentication';
-import { signal, inject, Component, AfterViewInit, ViewChild } from '@angular/core';
 import { IonFooter, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
+import { signal, inject, Component, viewChild, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
 
 const PROFILE_STEPS = {
   PERSONAL_INFO: 1,
@@ -24,7 +23,7 @@ const PROFILE_STEPS = {
 };
 
 interface State {
-  user?: User;
+  user?: IAuthUser;
 }
 
 interface NetworkSuggestion {
@@ -39,18 +38,8 @@ interface NetworkSuggestion {
   selector: 'signup',
   styleUrl: './signup.scss',
   templateUrl: './signup.html',
-  imports: [
-    Button,
-    NgClass,
-    IonHeader,
-    IonFooter,
-    IonToolbar,
-    IonContent,
-    UserPersonalInfo,
-    ProfileImageInput,
-    UserAdditionalInfo,
-    ReactiveFormsModule
-  ]
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Button, IonHeader, IonFooter, IonToolbar, IonContent, UserPersonalInfo, ProfileImageInput, UserAdditionalInfo, ReactiveFormsModule]
 })
 export class Signup implements AfterViewInit {
   // services
@@ -61,11 +50,10 @@ export class Signup implements AfterViewInit {
   private userService = inject(UserService);
   private modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
-  private firebaseService = inject(FirebaseService);
 
   // signals
-  currentStep = signal<number>(PROFILE_STEPS.PERSONAL_INFO);
   steps = signal([1, 2, 3, 4]);
+  currentStep = signal<number>(PROFILE_STEPS.PERSONAL_INFO);
 
   emailLinked = signal(false);
   phoneLinked = signal(false);
@@ -74,12 +62,18 @@ export class Signup implements AfterViewInit {
 
   isLoading = signal(false);
   isSubmitted = signal(false);
-  showPasswordInput = signal(false);
   selectedSuggestions = signal<Set<string>>(new Set());
-  profileForm = signal<FormGroup<IUserForm>>(this.fb.group({}));
+  profileForm = signal<FormGroup<IUserForm>>(
+    this.fb.group({
+      latitude: [''],
+      longitude: ['']
+    }) as FormGroup<IUserForm>
+  );
+  emailVerified = signal(false); // don't verify email if social login
+  isSocialLogin = signal(false); // if true, then save user instead of register
 
   // view child
-  @ViewChild(UserPersonalInfo) userPersonalInfo?: UserPersonalInfo;
+  userPersonalInfo = viewChild(UserPersonalInfo);
 
   // variables
   readonly networkSuggestions: NetworkSuggestion[] = [
@@ -94,77 +88,17 @@ export class Signup implements AfterViewInit {
   ];
 
   async ngAfterViewInit(): Promise<void> {
+    // auto fill email and disable email input if social login
     const state = this.router.currentNavigation()?.extras?.state as State;
-    await this.initializeUserLinkStatus();
-
-    if (state?.user) {
-      this.initializeSocialLoginUser(state.user);
-    } else {
-      this.showPasswordInput.set(true);
-    }
-  }
-
-  private async initializeUserLinkStatus(): Promise<void> {
-    const { user: currentUser } = await FirebaseAuthentication.getCurrentUser();
-    if (!currentUser) return;
-
-    const { email, phoneNumber } = currentUser;
-
-    if (email) {
-      this.emailLinked.set(true);
-      setTimeout(() => this.disableFieldIfLinked('email', email), 0);
-    }
-
-    if (phoneNumber) {
-      this.phoneLinked.set(true);
-      setTimeout(() => this.disableFieldIfLinked('mobile', phoneNumber), 0);
-    }
-  }
-
-  private initializeSocialLoginUser(user: User): void {
-    const { email, phoneNumber, displayName, photoUrl } = user;
-    const hasEmail = !!email;
-    const hasPhone = !!phoneNumber;
-
-    if (photoUrl) {
-      this.profileForm().patchValue({ image_url: photoUrl });
-      this.profileForm().patchValue({ thumbnail_url: photoUrl });
-    }
-
-    if (displayName) {
-      const [first_name, last_name] = displayName.split(' ');
-      this.profileForm().patchValue({ first_name, last_name });
-    }
-
-    if (hasEmail && !hasPhone && !this.phoneLinked()) {
-      this.needsPhoneLink.set(true);
-      this.setFormField(email, 'email', true);
-    } else if (hasPhone && !hasEmail && !this.emailLinked()) {
-      this.needsEmailLink.set(true);
-      this.setFormField(phoneNumber, 'mobile', true);
-    } else {
-      if (email) this.setFormField(email, 'email', true);
-      if (phoneNumber) this.setFormField(phoneNumber, 'mobile', true);
-    }
-  }
-
-  private setFormField(value: string, fieldName: string, disable = false): void {
-    this.profileForm().patchValue({ [fieldName]: value }, { emitEvent: false });
-    if (disable) {
-      const control = this.profileForm().get(fieldName);
-      if (control && !control.disabled) {
-        control.disable({ emitEvent: false });
+    console.log('state as', state);
+    if (state && state.user) {
+      this.isSocialLogin.set(true);
+      const { email } = state.user;
+      if (email) {
+        this.emailVerified.set(true);
+        this.profileForm().patchValue({ email }, { emitEvent: false });
+        this.profileForm().get('email')?.disable({ emitEvent: false });
       }
-    }
-  }
-
-  private disableFieldIfLinked(fieldName: 'email' | 'mobile', value?: string): void {
-    const control = this.profileForm().get(fieldName);
-    if (control && !control.disabled) {
-      if (value) {
-        this.profileForm().patchValue({ [fieldName]: value }, { emitEvent: false });
-      }
-      control.disable({ emitEvent: false });
     }
   }
 
@@ -172,7 +106,7 @@ export class Signup implements AfterViewInit {
     const fields = ['title', 'first_name', 'last_name', 'email', 'mobile', 'username', 'dob', 'account_type', 'address'];
 
     // add password for signup scenario
-    if (this.showPasswordInput()) {
+    if (!this.isSocialLogin()) {
       fields.push('password');
     }
 
@@ -191,129 +125,17 @@ export class Signup implements AfterViewInit {
     return fields;
   }
 
-  private async handleAccountLinking(): Promise<void> {
-    if (this.showPasswordInput()) {
-      await this.handleSignupAccountLinking();
+  private async handleSubmit(): Promise<void> {
+    const payload = this.profileForm().getRawValue() as Partial<IAuthUser>;
+    payload.mobile = this.userPersonalInfo()?.getPhoneNumber();
+
+    // save user if social login, otherwise register
+    if (this.isSocialLogin()) {
+      await this.authService.loginWithFirebaseToken();
+      await this.userService.updateCurrentUser(payload);
+    } else {
+      await this.authService.register(payload);
     }
-
-    if (this.needsPhoneLink() && !this.phoneLinked()) {
-      await this.linkPhoneNumber();
-      return;
-    }
-
-    if (this.needsEmailLink() && !this.emailLinked()) {
-      await this.linkEmailAddress();
-    }
-  }
-
-  private async handleSignupAccountLinking(): Promise<void> {
-    const mobile = this.userPersonalInfo?.getPhoneNumber();
-    const { email, password } = this.profileForm().getRawValue();
-
-    await this.checkUserLinkStatus();
-
-    if (!this.phoneLinked() && !this.emailLinked()) {
-      await this.authService.createUserWithEmailAndPassword(email!, password!);
-      this.emailLinked.set(true);
-      this.disableFieldIfLinked('email', email!);
-    }
-
-    if (mobile && !this.phoneLinked()) {
-      await this.linkPhoneNumber(mobile);
-    }
-  }
-
-  private async linkPhoneNumber(mobile?: string): Promise<void> {
-    const phoneNumber = mobile || this.userPersonalInfo?.getPhoneNumber();
-    if (!phoneNumber) return;
-
-    await this.authService.sendOtpForPhoneLink(phoneNumber);
-    const isPhoneLinked = await this.modalService.openOtpModal(phoneNumber, 'mobile');
-    if (!isPhoneLinked) return;
-
-    await this.checkUserLinkStatus();
-  }
-
-  private async linkEmailAddress(): Promise<void> {
-    const { email } = this.profileForm().getRawValue();
-    if (!email) return;
-
-    await this.authService.linkEmailToAccount(email);
-    this.emailLinked.set(true);
-    this.disableFieldIfLinked('email', email);
-  }
-
-  private async checkUserLinkStatus(): Promise<void> {
-    try {
-      const { user } = await FirebaseAuthentication.getCurrentUser();
-      if (!user) return;
-
-      if (user.phoneNumber) {
-        this.phoneLinked.set(true);
-        this.needsPhoneLink.set(false);
-        const mobileValue = this.profileForm().get('mobile')?.value || this.userPersonalInfo?.getPhoneNumber();
-        if (mobileValue) {
-          this.disableFieldIfLinked('mobile', mobileValue);
-        }
-      }
-
-      if (user.email) {
-        this.emailLinked.set(true);
-        this.needsEmailLink.set(false);
-        const emailValue = this.profileForm().get('email')?.value || user.email;
-        if (emailValue) {
-          this.disableFieldIfLinked('email', emailValue);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking user link status:', error);
-    }
-  }
-
-  private async handleImageUploads(): Promise<void> {
-    try {
-      const { image_url } = this.profileForm().getRawValue();
-      if (!image_url) return;
-
-      const timestamp = Date.now();
-      const profileImageUrl = await this.uploadProfileImage(image_url, timestamp);
-
-      if (profileImageUrl) {
-        const thumbnailUrl = await this.uploadThumbnail(image_url, profileImageUrl, timestamp);
-        if (thumbnailUrl) {
-          this.profileForm().patchValue({ thumbnail_url: thumbnailUrl });
-        }
-      }
-    } catch (error: any) {
-      console.error('Error uploading images:', error);
-    }
-  }
-
-  private async uploadProfileImage(imageUrl: string | File, timestamp: number): Promise<string | null> {
-    if (imageUrl instanceof File) {
-      const url = await this.firebaseService.uploadProfileImage(imageUrl, false, timestamp);
-      this.profileForm().patchValue({ image_url: url });
-      return url;
-    }
-
-    if (typeof imageUrl === 'string' && imageUrl.trim()) {
-      return imageUrl;
-    }
-
-    return null;
-  }
-
-  private async uploadThumbnail(imageUrl: string | File, profileImageUrl: string, timestamp: number): Promise<string | null> {
-    const thumbnailFile = await this.firebaseService.createThumbnail(imageUrl instanceof File ? imageUrl : profileImageUrl);
-    return await this.firebaseService.uploadProfileImage(thumbnailFile, true, timestamp);
-  }
-
-  private async saveProfile(): Promise<void> {
-    const payload = this.profileForm().getRawValue();
-    payload.mobile = this.userPersonalInfo?.getPhoneNumber();
-
-    await this.authService.loginWithFirebaseToken();
-    await this.userService.saveUser(payload);
   }
 
   addSuggestion(id: string): void {
@@ -340,25 +162,53 @@ export class Signup implements AfterViewInit {
           this.toasterService.showError('Please fill all required fields.');
           return;
         }
-        await this.handleAccountLinking();
-        await this.saveProfile();
         this.currentStep.set(PROFILE_STEPS.ADDITIONAL_INFO);
       } else if (this.currentStep() === PROFILE_STEPS.ADDITIONAL_INFO) {
         this.currentStep.set(PROFILE_STEPS.PROFILE_IMAGE);
-        await this.saveProfile();
       } else if (this.currentStep() === PROFILE_STEPS.PROFILE_IMAGE) {
-        await this.handleImageUploads();
+        const email = this.profileForm().get('email')?.value;
+        const mobile = this.userPersonalInfo()?.getPhoneNumber();
+
+        // if email is verified via social login, skip email OTP
+        if (this.emailVerified() && email) {
+          if (mobile) {
+            await this.authService.sendOtp({ mobile });
+            const result = await this.modalService.openOtpModal('', mobile);
+            if (!result) return;
+          }
+        } else {
+          // send otp for both email and mobile when new registration
+          await this.sendVerificationCode();
+          const result = await this.modalService.openOtpModal(email || '', mobile || '');
+          if (!result) return;
+        }
+
+        await this.handleSubmit();
         this.currentStep.set(PROFILE_STEPS.NETWORK_SUGGESTIONS);
-        await this.saveProfile();
       } else {
-        await this.saveProfile();
         this.navCtrl.navigateRoot('/');
       }
-    } catch (error: any) {
-      const message = error?.message || 'Failed to save profile. Please try again.';
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to save/register user.');
       this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  private async sendVerificationCode(): Promise<void> {
+    try {
+      const email = this.profileForm().get('email')?.value;
+      const mobile = this.userPersonalInfo()?.getPhoneNumber();
+      if (!email && !mobile) {
+        throw new Error('Email or mobile number is required for verification.');
+      }
+
+      if (email) await this.authService.sendOtp({ email });
+      if (mobile) await this.authService.sendOtp({ mobile });
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to send verification code.');
+      throw new Error(message);
     }
   }
 

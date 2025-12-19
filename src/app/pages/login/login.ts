@@ -6,8 +6,9 @@ import { validateFields } from '@/utils/form-validation';
 import { EmailInput } from '@/components/form/email-input';
 import { ToasterService } from '@/services/toaster.service';
 import { MobileInput } from '@/components/form/mobile-input';
+import { BaseApiService } from '@/services/base-api.service';
 import { PasswordInput } from '@/components/form/password-input';
-import { signal, inject, Component, ViewChild } from '@angular/core';
+import { signal, inject, Component, viewChild } from '@angular/core';
 import { SocialLoginButtons } from '@/components/common/social-login-buttons';
 import { IonContent, NavController, ModalController } from '@ionic/angular/standalone';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -34,7 +35,7 @@ export class Login {
   toasterService = inject(ToasterService);
 
   // view child
-  @ViewChild(MobileInput) mobileInput?: MobileInput;
+  mobileInput = viewChild(MobileInput);
 
   // signals
   otpSent = signal<boolean>(false);
@@ -44,6 +45,76 @@ export class Login {
   isSubmitted = signal<boolean>(false);
   activeTab = signal<'email' | 'mobile'>('email');
   loginForm = signal<FormGroup<LoginForm>>(this.fb.group<LoginForm>({}));
+
+  private async loginWithEmail() {
+    try {
+      // validate email and password
+      if (!(await validateFields(this.loginForm(), ['email', 'password']))) {
+        this.toasterService.showError('Please enter the email and password.');
+        return;
+      }
+
+      // set loading state
+      this.isLoading.set(true);
+      await this.modalService.openLoadingModal('Signing you in...');
+
+      // login with email and password
+      const { email, password } = this.loginForm().value;
+      await this.authService.login({ email: email!, password: password! });
+      this.navCtrl.navigateForward('/');
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to login.');
+      this.toasterService.showError(message);
+    } finally {
+      this.isLoading.set(false);
+      await this.modalService.close();
+    }
+  }
+
+  private async sendOtp() {
+    // get full phone number and validate phone number
+    const mobile = this.mobileInput()?.getPhoneNumber();
+    if (!(await validateFields(this.loginForm(), ['mobile'])) || !mobile) {
+      this.toasterService.showError('Please enter a valid phone number.');
+      return;
+    }
+
+    try {
+      this.isLoading.set(true);
+      await this.authService.sendOtp({ mobile });
+
+      // store phone number and create masked version
+      this.otpSent.set(true);
+      this.phoneNumber.set(mobile);
+      this.isSubmitted.set(false); // reset submission state for otp input
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to send OTP.');
+      this.toasterService.showError(message);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  private async verifyOtp() {
+    const otp = this.otp();
+    if (!otp || otp.length !== 6) {
+      this.toasterService.showError('Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    try {
+      this.isLoading.set(true);
+      await this.modalService.openLoadingModal('Signing you in...');
+      await this.authService.login({ mobile: this.phoneNumber(), otp });
+      this.navCtrl.navigateForward('/');
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Invalid OTP. Please try again.');
+      this.toasterService.showError(message);
+    } finally {
+      this.isLoading.set(false);
+      await this.modalService.close();
+    }
+  }
 
   async login() {
     this.isSubmitted.set(true);
@@ -59,110 +130,16 @@ export class Login {
     }
   }
 
-  private async loginWithEmail() {
-    try {
-      // validate email login form fields
-      const fields = ['email', 'password'];
-      if (!(await validateFields(this.loginForm(), fields))) {
-        this.toasterService.showError('Please enter the email and password.');
-        return;
-      }
-
-      // set loading state
-      this.isLoading.set(true);
-      await this.modalService.openLoadingModal('Signing you in...');
-
-      // login with email and password
-      const { email, password } = this.loginForm().value;
-      const { user, isNewUser } = await this.authService.signInWithEmailAndPassword(email!, password!);
-      await this.authService.loginWithFirebaseToken();
-
-      // new user -> profile page
-      // existing user -> home page
-      if (isNewUser) {
-        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(user)) } });
-      } else {
-        this.navCtrl.navigateForward('/');
-      }
-    } catch (error: any) {
-      console.error(error);
-      this.toasterService.showError(error.message || 'Login failed. Please try again.');
-    } finally {
-      this.isLoading.set(false);
-      await this.modalService.close();
-    }
-  }
-
-  private async sendOtp() {
-    // get full phone number with country code from mobile input
-    const fullPhoneNumber = this.mobileInput?.getPhoneNumber();
-
-    // validate phone number step-1 fields
-    if (!(await validateFields(this.loginForm(), ['mobile'])) || !fullPhoneNumber) {
-      this.toasterService.showError('Please enter a valid phone number.');
-      return;
-    }
-
-    try {
-      this.isLoading.set(true);
-      await this.authService.sendOtpForPhoneLogin(fullPhoneNumber);
-
-      // store phone number and create masked version
-      this.phoneNumber.set(fullPhoneNumber);
-      this.otpSent.set(true);
-      this.isSubmitted.set(false); // reset submission state for otp input
-    } catch (error: any) {
-      console.error(error);
-      this.toasterService.showError(error.message || 'Failed to send OTP. Please try again.');
-    } finally {
-      this.isLoading.set(false);
-    }
-  }
-
-  private async verifyOtp() {
-    // validate otp step-2 fields
-    const otp = this.otp();
-    if (!otp || otp.length !== 6) {
-      this.toasterService.showError('Please enter a valid 6-digit OTP');
-      return;
-    }
-
-    try {
-      this.isLoading.set(true);
-      await this.modalService.openLoadingModal('Signing you in...');
-
-      // verify otp
-      const { user, isNewUser } = await this.authService.verifyPhoneOTP(otp);
-      await this.authService.loginWithFirebaseToken();
-
-      // new user -> profile page
-      // existing user -> home page
-      if (isNewUser) {
-        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(user)) } });
-      } else {
-        this.navCtrl.navigateForward('/');
-      }
-    } catch (error: any) {
-      console.error('OTP verification error:', error);
-      this.toasterService.showError(error.message || 'Invalid OTP. Please try again.');
-    } finally {
-      this.isLoading.set(false);
-      await this.modalService.close();
-    }
-  }
-
   async resendOtp() {
-    if (!this.phoneNumber()) {
-      return;
-    }
+    if (!this.phoneNumber()) return;
 
     try {
       this.isLoading.set(true);
-      await this.authService.sendOtpForPhoneLogin(this.phoneNumber());
+      await this.authService.sendOtp({ mobile: this.phoneNumber() });
       this.toasterService.showSuccess('OTP resent successfully.');
-    } catch (error: any) {
-      console.error('Resend OTP error:', error);
-      this.toasterService.showError(error.message || 'Failed to resend OTP. Please try again.');
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to resend OTP.');
+      this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
     }

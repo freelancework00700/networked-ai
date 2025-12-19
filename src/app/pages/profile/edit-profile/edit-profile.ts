@@ -1,54 +1,58 @@
 import { Button } from '@/components/form/button';
 import { IUserForm } from '@/interfaces/IUserForm';
-import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
 import { ModalService } from '@/services/modal.service';
+import { validateFields } from '@/utils/form-validation';
 import { ToasterService } from '@/services/toaster.service';
-import { signal, inject, Component, ViewChild } from '@angular/core';
+import { BaseApiService } from '@/services/base-api.service';
 import { ProfileImageInput } from '@/components/form/profile-image-input';
 import { UserPersonalInfo } from '@/components/common/user-personal-info';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { UserAdditionalInfo } from '@/components/common/user-additional-info';
-import {
-  IonFooter,
-  IonHeader,
-  IonToolbar,
-  IonContent,
-  NavController,
-  IonSegment,
-  IonSegmentButton,
-  SegmentValue,
-  SegmentCustomEvent,
-  IonIcon
-} from '@ionic/angular/standalone';
-import { InputIcon } from 'primeng/inputicon';
+import { signal, inject, OnInit, effect, Component, viewChild } from '@angular/core';
+import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
+import { IonFooter, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
+
+type Tab = 'profile' | 'preferences';
 
 @Component({
   selector: 'edit-profile',
   styleUrl: './edit-profile.scss',
   templateUrl: './edit-profile.html',
   imports: [
-    IonIcon,
-    IonSegmentButton,
-    IonSegment,
     Button,
     IonHeader,
     IonFooter,
     IonToolbar,
     IonContent,
+    SegmentButton,
     UserPersonalInfo,
     ProfileImageInput,
     UserAdditionalInfo,
-    ReactiveFormsModule,
-    InputIcon
-  ]
+    ReactiveFormsModule
+]
 })
-export class EditProfile {
-  segmentValue: SegmentValue = 'events';
+export class EditProfile implements OnInit {
+  tab = signal<Tab>('profile');
+
+  tabItems: SegmentButtonItem[] = [
+    {
+      value: 'profile',
+      label: 'Profile Details',
+      icon: '/assets/svg/profile-details.svg',
+      activeIcon: '/assets/svg/profile-details-active.svg'
+    },
+    {
+      value: 'preferences',
+      label: 'Preferences',
+      icon: '/assets/svg/preferences.svg',
+      activeIcon: '/assets/svg/preferences-active.svg'
+    }
+  ];
+
   // services
   private fb = inject(FormBuilder);
   private navCtrl = inject(NavController);
-  private authService = inject(AuthService);
   private userService = inject(UserService);
   private modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
@@ -59,18 +63,44 @@ export class EditProfile {
   profileForm = signal<FormGroup<IUserForm>>(this.fb.group({}));
 
   // view child
-  @ViewChild(UserPersonalInfo) userPersonalInfo?: UserPersonalInfo;
+  userPersonalInfo = viewChild(UserPersonalInfo);
+
+  constructor() {
+    effect(() => {
+      const user = this.userService.currentUser();
+      if (user) this.patchFormWithUserData();
+    });
+  }
+
+  async ngOnInit(): Promise<void> {
+    try {
+      this.isLoading.set(true);
+      await this.userService.getCurrentUser();
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to load user data.');
+      this.toasterService.showError(message);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
 
   goBack(): void {
     this.navCtrl.back();
   }
 
   private async saveUserDetails(): Promise<void> {
-    const payload = this.profileForm().getRawValue();
-    payload.mobile = this.userPersonalInfo?.getPhoneNumber();
+    const formValue = this.profileForm().getRawValue();
+    const payload = this.userService.formDataToUser(formValue);
+    payload.mobile = this.userPersonalInfo()?.getPhoneNumber();
+    await this.userService.updateCurrentUser(payload);
+  }
 
-    await this.authService.loginWithFirebaseToken();
-    await this.userService.saveUser(payload);
+  private patchFormWithUserData(): void {
+    const user = this.userService.currentUser();
+    if (!user) return;
+
+    const formData = this.userService.userToFormData(user);
+    this.profileForm().patchValue(formData);
   }
 
   async save(): Promise<void> {
@@ -78,15 +108,16 @@ export class EditProfile {
       this.isLoading.set(true);
       this.isSubmitted.set(true);
 
-      // if (!(await validateFields(this.profileForm(), this.getStep1ValidationFields()))) {
-      //   this.toasterService.showError('Please fill all required fields.');
-      //   return;
-      // }
+      const fields = ['title', 'first_name', 'last_name', 'email', 'mobile', 'username', 'dob', 'account_type', 'address'];
+      if (!(await validateFields(this.profileForm(), fields))) {
+        this.toasterService.showError('Please fill all required fields.');
+        return;
+      }
 
       await this.saveUserDetails();
       this.navCtrl.navigateRoot('/');
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to save profile. Please try again.';
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to save profile. Please try again.');
       this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
@@ -117,7 +148,7 @@ export class EditProfile {
     this.profileForm().patchValue({ address, latitude, longitude });
   }
 
-  onSegmentChange(event: SegmentCustomEvent) {
-    this.segmentValue = event.detail.value ?? 'events';
+  onSegmentChange(value: string): void {
+    this.tab.set(value as Tab);
   }
 }
