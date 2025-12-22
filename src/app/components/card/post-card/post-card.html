@@ -1,0 +1,107 @@
+<div class="flex flex-col gap-3 py-3 bg-neutral-07 border-b border-[#dbdbdb]" (click)="onComment.emit()">
+  <div class="flex items-start gap-2 w-full">
+    <img src="assets/images/profile.jpeg" alt="avatar" class="w-[40px] h-[40px] rounded-full object-cover" />
+
+    <div class="flex flex-col gap-3 w-full">
+      <div>
+        <div class="flex justify-between gap-4">
+          <div class="flex flex-col gap-1 w-full">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1">
+                <span class="body-14SB neutral-01">Sammy K.</span>
+                <span class="body-12 neutral-04"> {{ getTimeAgo(post().createdAt, post().updatedAt) }}</span>
+              </div>
+
+              <div class="neutral-03 body-10">Suggested for you</div>
+            </div>
+          </div>
+          <div class="pi pi-ellipsis-h neutral-03 !text-[16px]" (click)="$event.stopPropagation(); openMenu()"></div>
+        </div>
+        @if (post().text) {
+          <div class="body-12 mt-1 break-all whitespace-pre-wrap" [innerHTML]="renderCommentText(post().text)"></div>
+        }
+      </div>
+
+      @if (post().media?.length) {
+        <div #swiperEl class="swiper relative">
+          <div class="swiper-wrapper">
+            @for (item of post().media; track item.id) {
+              <div class="swiper-slide">
+                <div class="slide-content">
+                  <div class="slide-image">
+                    @if (item.type === 'image' || item.type === 'gif') {
+                      <img [src]="item.url" (click)="$event.stopPropagation(); openFullscreen($index)" />
+                    }
+
+                    @if (item.type === 'video') {
+                      <video [src]="item.url" controls></video>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="swiper-pagination"></div>
+        </div>
+      }
+
+      @if (post().eid?.length) {
+        <div class="rounded-[12px] border border-[#e5e5e5] bg-neutral-07 overflow-hidden">
+          <div class="p-3 flex flex-col gap-3">
+            <div class="w-full">
+              <img
+                class="rounded-[8px] overflow-hidden h-[160px] w-full object-cover"
+                src="https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80"
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <div class="body-14SB neutral-01">
+                {{ getEvent(post().eid[0])?.title }}
+              </div>
+
+              <div class="flex items-center gap-1.5 body-12 neutral-03">
+                <i class="pi pi-map-marker !text-[14px]"></i>
+                <span>{{ getEvent(post().eid[0])?.location }}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 body-12 neutral-03">
+              <i class="pi pi-calendar !text-[14px]"></i>
+              <span>{{ getEvent(post().eid[0])?.date }}</span>
+            </div>
+
+            <app-button label="RSVP Now" height="40px" />
+          </div>
+        </div>
+      }
+
+      <!-- ACTIONS -->
+      <div class="flex items-center gap-4 neutral-03 pt-2">
+        <div class="flex items-center gap-1.5 cursor-pointer select-none" (click)="$event.stopPropagation(); onLike.emit()">
+          <i
+            class="pi !text-[16px]"
+            [class.pi-heart-fill]="post().isLikedByYou"
+            [class.pi-heart]="!post().isLikedByYou"
+            [class.accent-red]="post().isLikedByYou"
+            [class.text-neutral-04]="!post().isLikedByYou"
+          ></i>
+
+          <span class="body-14M transition-colors" [class.accent-red]="post().isLikedByYou" [class.text-neutral-04]="!post().isLikedByYou">
+            {{ post().like_count }}
+          </span>
+        </div>
+
+        <div class="flex items-center gap-1.5" (click)="$event.stopPropagation(); onComment.emit()">
+          <i class="pi pi-comment !text-[16px]"></i>
+          <span class="body-14M">{{ post().comment_count }}</span>
+        </div>
+
+        <div class="flex items-center gap-1.5" (click)="$event.stopPropagation(); sharePost()">
+          <i class="pi pi-send !text-[16px]"></i>
+          <span class="body-14M">{{ post().share_count }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

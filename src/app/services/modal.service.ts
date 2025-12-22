@@ -10,11 +10,14 @@ import { LocationModal } from '@/components/modal/location-modal';
 import { DateTimeModal } from '@/components/modal/date-time-modal';
 import { UserDetail } from '@/pages/network/components/user-detail';
 import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
+import { PostEventModal } from '@/components/modal/post-event-modal';
 import { ShareGroup } from '@/pages/messages/components/share-group';
 import { GifGalleryModal } from '@/components/modal/gif-gallery-modal';
-import { ShareEventModal } from '@/components/modal/share-event-modal';
+import { BlockModal } from '@/components/modal/block-modal/block-modal';
+import { ShareModal } from '@/components/modal/share-modal/share-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
 import { GuestFilterModal } from '@/components/modal/guest-filter-modal';
+import { ReportModal } from '@/components/modal/report-modal/report-modal';
 import { ImageGalleryModal } from '@/components/modal/image-gallery-modal';
 import { EventCategoryModal } from '@/components/modal/event-category-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
@@ -28,6 +31,7 @@ import { TicketForm, TicketFormData } from '@/pages/create-event/components/tick
 import { ManageRoleModal } from '@/components/modal/manage-role-modal/manage-role-modal';
 import { NetworkTagModal, NetworkTag } from '@/pages/create-event/components/network-tag';
 import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confirm-modal';
+import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
 import { PromoCodeForm, PromoCodeFormData } from '@/pages/create-event/components/promo-code-form';
 
 @Injectable({ providedIn: 'root' })
@@ -287,7 +291,7 @@ export class ModalService {
     description: string;
     iconBgColor?: string;
     confirmButtonLabel: string;
-    cancelButtonLabel: string;
+    cancelButtonLabel?: string;
     confirmButtonColor?: string;
     iconPosition?: 'left' | 'center';
   }): Promise<{ data: any; role: string } | null> {
@@ -547,15 +551,65 @@ export class ModalService {
     return data;
   }
 
-  async openShareEventModal(eventId: any): Promise<any | null> {
+  async openShareModal(eventId: any, type: 'Event' | 'Post'): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      component: ShareEventModal,
+      component: ShareModal,
       cssClass: 'auto-hight-modal',
-      componentProps: { eventId }
+      componentProps: { eventId, type }
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
+  async openPostEventModal(): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: PostEventModal
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
+  async openImagePreviewModal(url: string): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      component: ImagePreviewModal,
+      componentProps: { url }
+    });
+    await modal.present();
+  }
+
+  async openReportModal(): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: ReportModal,
+      cssClass: 'auto-hight-modal'
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
+  async openBlockModal(): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: BlockModal,
+      cssClass: 'auto-hight-modal'
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();

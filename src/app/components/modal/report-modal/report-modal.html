@@ -1,0 +1,20 @@
+<div class="p-6">
+  <form [formGroup]="reportForm" class="flex flex-col gap-2">
+    <div class="flex items-center justify-between pb-3">
+      <div class="body-16SB neutral-01">Report Post</div>
+      <i class="pi pi-times" (click)="close()"></i>
+    </div>
+    @for (reason of reportReasons; track reason) {
+      <div class="field-checkbox">
+        <p-radiobutton [inputId]="reason" formControlName="reason" [value]="reason" name="reason"> </p-radiobutton>
+        <label [for]="reason" class="ml-2">{{ reason }}</label>
+      </div>
+    }
+
+    <div class="p-field my-3">
+      <text-input controlName="additionalComment" [required]="false" label="Additional comment" placeholder="Write your comment here (Optional)" />
+    </div>
+  </form>
+
+  <app-button label="Report" (click)="submitReport()" />
+</div>

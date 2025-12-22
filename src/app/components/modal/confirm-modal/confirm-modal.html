@@ -24,7 +24,9 @@
   </div>
   <!-- Buttons -->
   <div class="flex gap-3">
-    <app-button [label]="cancelButtonLabel" color="secondary" (click)="cancel()" class="flex-1" />
+    @if (cancelButtonLabel) {
+      <app-button [label]="cancelButtonLabel" color="secondary" (click)="cancel()" class="flex-1" />
+    }
     <app-button [label]="confirmButtonLabel" (click)="confirm()" class="flex-1" [color]="confirmButtonColor" />
   </div>
 </div>

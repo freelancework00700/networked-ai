@@ -30,7 +30,7 @@ type Tab = 'profile' | 'preferences';
     ProfileImageInput,
     UserAdditionalInfo,
     ReactiveFormsModule
-]
+  ]
 })
 export class EditProfile implements OnInit {
   tab = signal<Tab>('profile');

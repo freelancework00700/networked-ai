@@ -8,15 +8,15 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Component, Input, computed, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 
 @Component({
-  selector: 'share-event-modal',
-  styleUrl: './share-event-modal.scss',
-  templateUrl: './share-event-modal.html',
+  selector: 'share-modal',
+  styleUrl: './share-modal.scss',
+  templateUrl: './share-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [IonIcon, Searchbar, Checkbox, ReactiveFormsModule, Button]
 })
-export class ShareEventModal {
+export class ShareModal {
   @Input() eventId: any;
-
+  @Input() type: 'Event' | 'Post' = 'Event';
   modalCtrl = inject(ModalController);
   toasterService = inject(ToasterService);
 
@@ -118,7 +118,7 @@ export class ShareEventModal {
   }
 
   shareEvent() {
-    this.toasterService.showSuccess('Event shared successfully');
+    this.toasterService.showSuccess(`${this.type} shared successfully`);
     this.modalCtrl.dismiss();
   }
 }

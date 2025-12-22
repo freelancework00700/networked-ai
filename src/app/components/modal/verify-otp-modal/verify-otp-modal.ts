@@ -40,7 +40,6 @@ export class VerifyOtpModal {
     return false;
   });
 
-
   async resendOtp() {
     try {
       this.isLoading.set(true);
@@ -64,8 +63,8 @@ export class VerifyOtpModal {
     try {
       this.isLoading.set(true);
       if (this.hasBoth()) {
-        await this.authService.verifyOtp({ email: this.email, code: this.emailOtp()});
-        await this.authService.verifyOtp({ mobile: this.mobile, code: this.mobileOtp()});
+        await this.authService.verifyOtp({ email: this.email, code: this.emailOtp() });
+        await this.authService.verifyOtp({ mobile: this.mobile, code: this.mobileOtp() });
       } else {
         const code = this.email ? this.emailOtp() : this.mobileOtp();
         await this.authService.verifyOtp({ email: this.email, mobile: this.mobile, code });

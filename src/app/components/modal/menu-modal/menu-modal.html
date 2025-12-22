@@ -8,7 +8,7 @@
 
       <!-- PRIME ICON -->
       @if (item.iconType === 'pi') {
-        <i [class]="item.icon"></i>
+        <div [class]="item.icon + ' !text-xl'"></div>
       }
 
       <span class="body-16M">{{ item.label }}</span>

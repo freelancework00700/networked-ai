@@ -1,0 +1,213 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
+      <div class="pi pi-times pr-2" (click)="navCtrl.back()"></div>
+      <div class="body-14M">Leave a Comment</div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+<ion-content [fullscreen]="true">
+  <div class="min-h-full">
+    <div class="w-full max-w-[672px] mx-auto p-4 flex flex-col gap-4">
+      <post-card [post]="post()" (onLike)="onLike()" />
+      <!-- Comments Section -->
+      <div class="w-full bg-white rounded-lg flex flex-col gap-2">
+        <!-- Comments List -->
+        @if (comments().length) {
+          <div class="body-14M text-center">All Comments ({{ comments().length }})</div>
+        }
+
+        @for (comment of comments(); track comment.comment_id) {
+          <div class="border-b border-gray-300 px-4 py-2">
+            <div class="flex justify-between items-start gap-4">
+              <div class="flex items-start gap-2">
+                <img
+                  [src]="comment.userPhoto || 'assets/images/profile.jpeg'"
+                  class="w-10 h-10 rounded-full cursor-pointer"
+                  (click)="menu.toggle($event)"
+                />
+
+                <p-menu #menu [popup]="true" [model]="menuItems" appendTo="body"> </p-menu>
+
+                <div>
+                  <div class="flex items-center gap-1">
+                    <span class="body-14SB">{{ comment.userName || 'Jonathan L.' }}</span>
+                    <span class="text-gray-400 text-xs pl-1">{{ getTimeAgo(comment.createdAt) }}</span>
+                  </div>
+                  <div class="body-12 mt-1 break-all whitespace-pre-wrap" [innerHTML]="renderCommentText(comment.text)"></div>
+                </div>
+              </div>
+
+              <div class="flex gap-3 text-gray-400 items-center text-start">
+                <span class="cursor-pointer text-[12px]" (click)="onReplyClick(comment)"> Reply </span>
+
+                <div class="flex flex-col items-center cursor-pointer select-none" (click)="onLikeComment(comment)">
+                  <div
+                    class="pi !text-[12px]"
+                    [class.pi-heart-fill]="comment.isLiked"
+                    [class.pi-heart]="!comment.isLiked"
+                    [class.accent-red]="comment.isLiked"
+                    [class.text-neutral-04]="!comment.isLiked"
+                  ></div>
+
+                  <span
+                    class="body-12M transition-colors text-center"
+                    [class.accent-red]="comment.isLiked"
+                    [class.text-neutral-04]="!comment.isLiked"
+                  >
+                    {{ comment.like_count }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            @if (comment.replies?.length) {
+              <div class="ml-12 mt-2 text-[12px] text-gray-500 cursor-pointer select-none" (click)="toggleReplies(comment)">
+                @if (!comment.isRepliesOpen) {
+                  View {{ comment.replies.length }} replies
+                } @else {
+                  Hide replies
+                }
+              </div>
+            }
+            @if (comment.isRepliesOpen) {
+              @for (reply of comment.replies; track reply.comment_id) {
+                <div class="ml-12 mt-2 body-12 gap-4 flex justify-between items-start">
+                  <div class="flex items-start gap-2 my-2">
+                    <img
+                      [src]="comment.userPhoto || 'assets/images/profile.jpeg'"
+                      class="w-10 h-10 rounded-full cursor-pointer"
+                      (click)="menu.toggle($event)"
+                    />
+
+                    <p-menu #menu [popup]="true" [model]="menuItems" appendTo="body"> </p-menu>
+
+                    <div>
+                      <div class="flex items-center gap-1">
+                        <span class="body-14SB">{{ reply.userName || 'Jonathan L.' }}</span>
+                        <span class="text-gray-400 text-xs pl-1">
+                          {{ getTimeAgo(reply.createdAt) }}
+                        </span>
+                      </div>
+
+                      <div class="body-12 mt-1 break-all whitespace-pre-wrap" [innerHTML]="renderCommentText(reply.text)"></div>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col items-center cursor-pointer select-none text-gray-400 my-2" (click)="onLikeComment(reply, true)">
+                    <div
+                      class="pi !text-[12px]"
+                      [class.pi-heart-fill]="reply.isLiked"
+                      [class.pi-heart]="!reply.isLiked"
+                      [class.accent-red]="reply.isLiked"
+                      [class.text-neutral-04]="!reply.isLiked"
+                    ></div>
+
+                    <span class="body-12M transition-colors text-center" [class.accent-red]="reply.isLiked" [class.text-neutral-04]="!reply.isLiked">
+                      {{ reply.like_count }}
+                    </span>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        } @empty {
+          <div class="text-center py-12">
+            <div class="heading-h2">No comments yet</div>
+            <div class="body-14M text-surface-400">Start the conversation!</div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</ion-content>
+<ion-footer mode="md">
+  <ion-toolbar>
+    <div class="pt-6 max-w-[672px] mx-auto">
+      @if (replyingTo()) {
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg border-l-[3px] border-primary-500">
+          <img
+            [src]="replyingTo()?.userPhoto || 'assets/images/profile.jpeg'"
+            alt="User avatar"
+            class="w-[35px] h-[35px] rounded-full object-cover"
+          />
+
+          <div class="w-[2px] h-5 bg-primary-500 rounded"></div>
+
+          <div class="flex items-center gap-1 flex-1">
+            <span class="body-14M text-neutral-04"> Replying to </span>
+
+            <span class="body-14SB text-black">
+              {{ replyingTo()?.userName }}
+            </span>
+          </div>
+
+          <i class="pi pi-times" (click)="clearReply()"></i>
+        </div>
+      }
+
+      <div class="flex items-center gap-4 mt-0 p-6 pt-0">
+        <div class="flex-1 flex items-center gap-2 border border-gray-300 rounded-lg px-2">
+          <img src="assets/images/profile.jpeg" class="w-10 h-10 rounded-full" />
+
+          <div class="relative-block-container">
+            <div>
+              <textarea
+                #textareaRef
+                class="w-full py-2 px-4 border-none outline-none resize-none"
+                [formControl]="textCtrl"
+                [placeholder]="replyingTo() ? 'Reply as user_name' : 'Reply to this post...'"
+                wrap="hard"
+              ></textarea>
+
+              <ngx-mentions
+                [textInputElement]="textareaRef"
+                [menuTemplate]="menuTemplate"
+                [mentionsConfig]="mentionsConfig"
+                [searchRegexp]="searchRegexp"
+                [mentions]="mentions"
+                [removeWholeTagOnBackspace]="true"
+                (search)="loadChoices($event)"
+                (selectedChoicesChange)="onSelectedChoicesChange($event)"
+                (menuShow)="onMenuShow()"
+                (menuHide)="onMenuHide()"
+              ></ngx-mentions>
+
+              <ng-template #menuTemplate let-selectChoice="selectChoice">
+                <ul
+                  class="ngx-selectable-list"
+                  ngxKbListNavigation
+                  [choices]="choices"
+                  (selectChoice)="selectChoice($event)"
+                  [class.loader-only]="!choices.length && loading"
+                >
+                  @for (user of choices; track user.id) {
+                    <li class="ngx-selectable-list-item flex items-center justify-between gap-2" (click)="selectChoice(user)">
+                      <!-- Left: avatar + name -->
+                      <div class="flex items-center gap-2">
+                        <img [src]="user.thumbnail || 'assets/images/profile.jpeg'" class="w-8 h-8 rounded-full object-cover" />
+                        <span title="{{ user.name }}">{{ user.name }}</span>
+                      </div>
+
+                      <!-- Right: Networked chip -->
+                      @if (user.isNetwork) {
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium"> Networked </span>
+                      }
+                    </li>
+                  }
+                </ul>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+        <app-button
+          (click)="sendComment()"
+          [iconName]="'pi pi-send'"
+          [isLoading]="loading()"
+          [disabled]="loading() || !textCtrl.value?.trim()"
+          width="50px"
+          height="50px"
+        />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-footer>

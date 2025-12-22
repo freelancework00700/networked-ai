@@ -94,7 +94,7 @@ export class EventCard {
   viewTapToPay() {}
 
   async shareEvent() {
-    const result = await this.modalService.openShareEventModal('1111');
+    const result = await this.modalService.openShareModal('1111', 'Event');
     if (result) {
       this.toasterService.showSuccess('Event shared');
     }

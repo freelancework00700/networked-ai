@@ -2,6 +2,7 @@ import { Home } from '@/pages/home';
 import { Login } from '@/pages/login';
 import { Routes } from '@angular/router';
 import { EventQr } from '@/pages/event-qr';
+import { NewPost } from '@/pages/new-post';
 import { Messages } from '@/pages/messages';
 import { NotFound } from '@/pages/not-found';
 import { Signup } from '@/pages/signup/signup';
@@ -22,6 +23,7 @@ import { AddNetwork } from '@/pages/network/components/add-network';
 import { CreateGroup } from '@/pages/messages/components/create-group';
 import { QuestionnaireResponse } from '@/pages/questionnaire-response';
 import { UserList } from '@/pages/event-analytics/components/user-list';
+import { PostComments } from '@/pages/new-post/components/post-comments';
 import { ProfilePreferences } from '@/pages/profile/profile-preferences';
 import { QuestionnaireUserList } from '@/pages/questionnaire-response/components/questionnaire-user-list';
 
@@ -38,6 +40,7 @@ export const appRoutes: Routes = [
     ]
   },
   { path: 'new-chat', component: NewChat },
+  { path: 'new-post', component: NewPost },
   { path: 'not-found', component: NotFound },
   { path: 'event-qr/:id', component: EventQr },
   { path: 'add-network', component: AddNetwork },
@@ -48,6 +51,7 @@ export const appRoutes: Routes = [
   { path: 'create-group', component: CreateGroup },
   { path: 'profile/edit', component: EditProfile },
   { path: 'create-event', component: CreateEvent },
+  { path: 'comments/:id', component: PostComments },
   { path: 'create-group/:id', component: CreateGroup },
   { path: 'group-invitation/:id', component: ChatInfo },
   { path: 'forgot-password', component: ForgotPassword },

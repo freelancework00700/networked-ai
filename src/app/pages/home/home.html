@@ -14,10 +14,12 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content fullscreen="true">
-  @if (tab() === 'events') {
-    <home-event />
-  } @else {
-    <home-feed />
-  }
+<ion-content>
+  <div class="w-full max-w-[672px] mx-auto p-4 pt-0 relative h-full">
+    @if (tab() === 'events') {
+      <home-event />
+    } @else {
+      <home-feed />
+    }
+  </div>
 </ion-content>

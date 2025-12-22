@@ -40,7 +40,7 @@ export class BaseApiService {
       const apiError: ApiError = {
         error: error.error,
         status: error.status,
-        message: error.error?.message || error.message || 'An error occurred',
+        message: error.error?.message || error.message || 'An error occurred'
       };
 
       console.error(`API Error [${error.status}]:`, apiError.message, apiError.error);
@@ -49,7 +49,7 @@ export class BaseApiService {
 
     const apiError: ApiError = {
       error: error,
-      message: error instanceof Error ? error.message : 'An unexpected error occurred',
+      message: error instanceof Error ? error.message : 'An unexpected error occurred'
     };
 
     console.error('API Error:', apiError.message, apiError.error);

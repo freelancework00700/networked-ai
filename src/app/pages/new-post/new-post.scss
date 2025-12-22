@@ -1,0 +1,140 @@
+.thumbnail-container {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 5px;
+  scroll-behavior: smooth;
+}
+
+.thumbnail {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  position: relative;
+  cursor: grab;
+
+  img,
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+}
+
+/* Smooth drag preview */
+.cdk-drag-preview {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper-wrapper {
+  height: 100%;
+}
+
+.swiper-slide {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  flex-direction: column;
+  padding: 10px;
+  justify-content: space-between;
+}
+.slide-image {
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 1 / 1;    
+  max-height: 30vh;        
+  display: flex;
+  margin: 0 auto 40px;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide-image img,
+.slide-image video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;     
+}
+.custom-textarea {
+  font-family: Manrope;
+  width: 100%;
+  min-height: 24px;
+  resize: none;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 0;
+  background-color: transparent;
+  overflow: hidden;
+}
+
+.relative-block-container {
+  position: relative;
+  width: 100%;
+}
+
+.ngx-mentions {
+  position: absolute !important;
+  bottom: 100% !important;
+  left: 0;
+  margin-bottom: 6px;
+  z-index: 9999;
+  top: auto !important;
+}
+
+.ngx-selectable-list {
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 4px 0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.ngx-selectable-list-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.ngx-selectable-list-item:hover,
+.ngx-selectable-list-item.active {
+  background-color: #f3f4f6;
+}
