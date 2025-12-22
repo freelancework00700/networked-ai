@@ -1,8 +1,20 @@
+import {
+  input,
+  inject,
+  effect,
+  Inject,
+  DOCUMENT,
+  Component,
+  viewChild,
+  OnDestroy,
+  ElementRef,
+  AfterViewInit,
+  ChangeDetectionStrategy
+} from '@angular/core';
 import * as Maptiler from '@maptiler/sdk';
 import { Feature, Polygon } from 'geojson';
 import { ModalService } from '@/services/modal.service';
 import { environment } from 'src/environments/environment';
-import { input, inject, effect, Component, viewChild, OnDestroy, ElementRef, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
 
 type MapCenter = [number, number];
 
@@ -22,6 +34,7 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
 
   // services
   private modalService = inject(ModalService);
+  @Inject(DOCUMENT) private document = inject(DOCUMENT);
 
   // map state
   private map: Maptiler.Map | null = null;
@@ -165,10 +178,10 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   }
 
   private createMarkerElement(user: any): HTMLDivElement {
-    const container = document.createElement('div');
+    const container = this.document.createElement('div');
     container.className = 'custom-marker-container';
 
-    const img = document.createElement('div');
+    const img = this.document.createElement('div');
     img.className = 'custom-marker';
     img.style.backgroundImage = `url(${user.avatar || 'assets/images/profile.jpeg'})`;
 

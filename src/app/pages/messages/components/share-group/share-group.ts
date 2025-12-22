@@ -1,8 +1,8 @@
 import { Button } from '@/components/form/button';
+import { IonIcon } from '@ionic/angular/standalone';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
-import { Component, Input, inject, signal } from '@angular/core';
-import { IonIcon } from '@ionic/angular/standalone';
+import { Input, signal, inject, Inject, DOCUMENT, Component } from '@angular/core';
 
 @Component({
   selector: 'share-group',
@@ -14,6 +14,7 @@ export class ShareGroup {
   @Input() data: any;
   private modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
+  @Inject(DOCUMENT) private document = inject(DOCUMENT);
   group = signal<any | null>(null);
   isDownloading = signal(false);
 
@@ -43,15 +44,15 @@ export class ShareGroup {
 
       // Create downloadable link
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = this.document.createElement('a');
 
       a.href = url;
       a.download = `${this.group()?.name || 'qr-code'}.png`;
-      document.body.appendChild(a);
+      this.document.body.appendChild(a);
       a.click();
 
       // Cleanup
-      document.body.removeChild(a);
+      this.document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('QR download failed', err);

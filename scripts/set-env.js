@@ -3,11 +3,16 @@ dotenv.config();
 
 const setEnv = () => {
   const fs = require('fs');
-  const writeFile = fs.writeFile;
-  // configure Angular `environment.ts` file path
-  const targetPath = './src/environments/environment.ts';
-  require('dotenv').config({ path: 'src/environments/.env' });
-  // `environment.ts` file structure
+  const path = require('path');
+  
+  const targetDir = './src/environments';
+  const targetPath = path.join(targetDir, 'environment.ts');
+  
+  // create directory if it doesn't exist
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+  
   const envConfigFile = `export const environment = {
     apiUrl: '${process.env['API_URL']}',
     openaiKey: '${process.env['OPEN_AI_API_KEY']}',
@@ -25,15 +30,9 @@ const setEnv = () => {
     }
   };
 `;
-  console.log('The file `environment.ts` will be written with the following content: \n');
-  writeFile(targetPath, envConfigFile, (err: any) => {
-    if (err) {
-      console.error(err);
-      throw err;
-    } else {
-      console.log(`Angular environment.ts file generated correctly at ${targetPath} \n`);
-    }
-  });
+  
+  fs.writeFileSync(targetPath, envConfigFile, 'utf8');
+  console.log(`Environment file generated at ${targetPath}`);
 };
 
 setEnv();

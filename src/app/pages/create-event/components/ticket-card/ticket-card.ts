@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { IonReorder } from '@ionic/angular/standalone';
-import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
+import { input, output, Inject, computed, DOCUMENT, Component, ChangeDetectionStrategy } from '@angular/core';
 
 export interface Ticket {
   id?: string;
@@ -30,7 +30,7 @@ export class TicketCard {
   edit = output<void>();
   delete = output<void>();
 
-  constructor() {}
+  constructor(@Inject(DOCUMENT) private document: Document) {}
 
   private formatDate(dateString: string | null | undefined): string {
     if (!dateString) return 'Not set';
@@ -140,7 +140,7 @@ export class TicketCard {
     if (!ticketDescription) {
       return 'Insert one or two lines of the description here.';
     }
-    const tempDiv = document.createElement('div');
+    const tempDiv = this.document.createElement('div');
     tempDiv.innerHTML = ticketDescription;
     const plainText = tempDiv.textContent || tempDiv.innerText || '';
     return plainText.trim() || 'Insert one or two lines of the description here.';

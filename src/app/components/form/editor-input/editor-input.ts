@@ -1,8 +1,8 @@
 import { Editor } from 'primeng/editor';
 import { CommonModule } from '@angular/common';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { input, OnInit, inject, Component, ChangeDetectionStrategy } from '@angular/core';
-import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
+import { input, OnInit, Inject, inject, DOCUMENT, Component, ChangeDetectionStrategy } from '@angular/core';
+import { FormGroup, Validators, FormBuilder, ValidatorFn, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'editor-input',
@@ -30,7 +30,8 @@ export class EditorInput implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private parentContainer: ControlContainer
+    private parentContainer: ControlContainer,
+    @Inject(DOCUMENT) private document: Document
   ) {}
 
   get control(): AbstractControl {
@@ -52,7 +53,7 @@ export class EditorInput implements OnInit {
       }
 
       // Create a temporary DOM element to parse HTML
-      const tempDiv = document.createElement('div');
+      const tempDiv = this.document.createElement('div');
       tempDiv.innerHTML = control.value;
 
       // Get text content and trim whitespace

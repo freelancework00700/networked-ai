@@ -1,11 +1,13 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { KEYS, LocalStorageService } from '@/services/localstorage.service';
 
 export const onboardingGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
+  const localStorageService = inject(LocalStorageService);
 
   // check if user has completed onboarding
-  const onboarded = localStorage.getItem('onboarded');
+  const onboarded = localStorageService.getItem(KEYS.ONBOARDED);
 
   // if not onboarded, redirect to onboarding page
   if (!onboarded || onboarded !== 'true') {

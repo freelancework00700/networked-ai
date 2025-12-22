@@ -34,7 +34,7 @@ import { SubscriptionInput } from '@/pages/create-event/components/subscription-
 import { RepeatingEventItem } from '@/pages/create-event/components/repeating-event-item';
 import { ParticipantInput, User } from '@/pages/create-event/components/participant-input';
 import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { signal, computed, inject, Component, Input, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+import { Input, signal, Inject, inject, DOCUMENT, computed, Component, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 @Component({
   selector: 'create-event',
   styleUrl: './create-event.scss',
@@ -79,6 +79,7 @@ export class CreateEvent {
   navCtrl = inject(NavController);
   modalService = inject(ModalService);
   modalCtrl = inject(ModalController);
+  @Inject(DOCUMENT) document = inject(DOCUMENT);
 
   // validators
   atLeastOneTagValidator = (control: any) => {
@@ -422,7 +423,7 @@ export class CreateEvent {
       descriptionControl.setValue(generatedDescription);
       descriptionControl.markAsTouched();
 
-      const tempDiv = document.createElement('div');
+      const tempDiv = this.document.createElement('div');
       tempDiv.innerHTML = generatedDescription;
       const plainText = tempDiv.textContent || tempDiv.innerText || '';
       this.descriptionLength.set(plainText.trim().length);

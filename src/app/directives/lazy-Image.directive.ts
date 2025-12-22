@@ -1,4 +1,4 @@
-import { OnInit, signal, effect, OnDestroy, Directive, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { OnInit, signal, effect, Inject, DOCUMENT, OnDestroy, Directive, ElementRef, ChangeDetectorRef } from '@angular/core';
 
 @Directive({ selector: 'img[lazyImage]' })
 export class LazyImageDirective implements OnInit, OnDestroy {
@@ -11,7 +11,8 @@ export class LazyImageDirective implements OnInit, OnDestroy {
 
   constructor(
     private cdr: ChangeDetectorRef,
-    private el: ElementRef<HTMLImageElement>
+    private el: ElementRef<HTMLImageElement>,
+    @Inject(DOCUMENT) private document: Document
   ) {
     // watch for loading state changes
     effect(() => {
@@ -124,7 +125,7 @@ export class LazyImageDirective implements OnInit, OnDestroy {
     if (!parent) return;
 
     // create skeleton element
-    this.skeletonElement = document.createElement('div');
+    this.skeletonElement = this.document.createElement('div');
     this.skeletonElement.style.zIndex = '1';
     this.skeletonElement.className = 'absolute inset-0 bg-neutral-05 animate-pulse rounded-lg';
 
@@ -139,13 +140,13 @@ export class LazyImageDirective implements OnInit, OnDestroy {
     if (!parent) return;
 
     // create error placeholder element
-    this.errorPlaceholder = document.createElement('div');
+    this.errorPlaceholder = this.document.createElement('div');
     this.errorPlaceholder.style.zIndex = '2';
     this.errorPlaceholder.style.display = 'none';
     this.errorPlaceholder.className = 'absolute inset-0 bg-neutral-06 rounded-lg flex items-center justify-center';
 
     // create img element for the SVG
-    const svgImg = document.createElement('img');
+    const svgImg = this.document.createElement('img');
     svgImg.style.objectFit = 'contain';
     svgImg.src = 'assets/svg/no-image.svg';
     svgImg.className = 'w-12 h-12 opacity-50';

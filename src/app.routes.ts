@@ -1,31 +1,11 @@
 import { Home } from '@/pages/home';
-import { Login } from '@/pages/login';
 import { Routes } from '@angular/router';
-import { EventQr } from '@/pages/event-qr';
-import { NewPost } from '@/pages/new-post';
 import { Messages } from '@/pages/messages';
 import { NotFound } from '@/pages/not-found';
-import { Signup } from '@/pages/signup/signup';
 import { TabLayout } from '@/layout/tab-layout';
-import { Onboarding } from '@/pages/onboarding';
-import { GuestList } from '@/pages/guest-list';
 import { Profile } from '@/pages/profile/profile';
 import { Network } from '@/pages/network/network';
-import { CreateEvent } from '@/pages/create-event';
-import { EventAnalytics } from '@/pages/event-analytics';
-import { ForgotPassword } from '@/pages/forgot-password';
-import { EditProfile } from '@/pages/profile/edit-profile';
 import { onboardingGuard } from '@/guards/onboarding.guard';
-import { NewChat } from '@/pages/messages/components/new-chat';
-import { ChatRoom } from '@/pages/messages/components/chat-room';
-import { ChatInfo } from '@/pages/messages/components/chat-info';
-import { AddNetwork } from '@/pages/network/components/add-network';
-import { CreateGroup } from '@/pages/messages/components/create-group';
-import { QuestionnaireResponse } from '@/pages/questionnaire-response';
-import { UserList } from '@/pages/event-analytics/components/user-list';
-import { PostComments } from '@/pages/new-post/components/post-comments';
-import { ProfilePreferences } from '@/pages/profile/profile-preferences';
-import { QuestionnaireUserList } from '@/pages/questionnaire-response/components/questionnaire-user-list';
 
 export const appRoutes: Routes = [
   {
@@ -39,28 +19,103 @@ export const appRoutes: Routes = [
       { path: 'messages', component: Messages }
     ]
   },
-  { path: 'new-chat', component: NewChat },
-  { path: 'new-post', component: NewPost },
+  // authentication routes (lazy loaded)
+  {
+    path: 'login',
+    canActivate: [onboardingGuard],
+    loadComponent: () => import('@/pages/login').then((m) => m.Login)
+  },
+  {
+    path: 'signup',
+    canActivate: [onboardingGuard],
+    loadComponent: () => import('@/pages/signup/signup').then((m) => m.Signup)
+  },
+  {
+    path: 'onboarding',
+    canActivate: [onboardingGuard],
+    loadComponent: () => import('@/pages/onboarding').then((m) => m.Onboarding)
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () => import('@/pages/forgot-password').then((m) => m.ForgotPassword)
+  },
+  // event routes (lazy loaded)
+  {
+    path: 'create-event',
+    loadComponent: () => import('@/pages/create-event').then((m) => m.CreateEvent)
+  },
+  {
+    path: 'event-qr/:id',
+    loadComponent: () => import('@/pages/event-qr').then((m) => m.EventQr)
+  },
+  {
+    path: 'event-analytics/:id',
+    loadComponent: () => import('@/pages/event-analytics').then((m) => m.EventAnalytics)
+  },
+  {
+    path: 'guest-list/:id',
+    loadComponent: () => import('@/pages/guest-list').then((m) => m.GuestList)
+  },
+  {
+    path: 'user-list/:id',
+    loadComponent: () => import('@/pages/event-analytics/components/user-list').then((m) => m.UserList)
+  },
+  {
+    path: 'questionnaire-response/:id',
+    loadComponent: () => import('@/pages/questionnaire-response').then((m) => m.QuestionnaireResponse)
+  },
+  {
+    path: 'questionnaire-response/user-list/:id',
+    loadComponent: () => import('@/pages/questionnaire-response/components/questionnaire-user-list').then((m) => m.QuestionnaireUserList)
+  },
+  // message routes (lazy loaded)
+  {
+    path: 'new-chat',
+    loadComponent: () => import('@/pages/messages/components/new-chat').then((m) => m.NewChat)
+  },
+  {
+    path: 'chat-room/:id',
+    loadComponent: () => import('@/pages/messages/components/chat-room').then((m) => m.ChatRoom)
+  },
+  {
+    path: 'chat-info/:id',
+    loadComponent: () => import('@/pages/messages/components/chat-info').then((m) => m.ChatInfo)
+  },
+  {
+    path: 'create-group',
+    loadComponent: () => import('@/pages/messages/components/create-group').then((m) => m.CreateGroup)
+  },
+  {
+    path: 'create-group/:id',
+    loadComponent: () => import('@/pages/messages/components/create-group').then((m) => m.CreateGroup)
+  },
+  {
+    path: 'group-invitation/:id',
+    loadComponent: () => import('@/pages/messages/components/chat-info').then((m) => m.ChatInfo)
+  },
+  // profile routes (lazy loaded)
+  {
+    path: 'profile/edit',
+    loadComponent: () => import('@/pages/profile/edit-profile').then((m) => m.EditProfile)
+  },
+  {
+    path: 'profile/preferences',
+    loadComponent: () => import('@/pages/profile/profile-preferences').then((m) => m.ProfilePreferences)
+  },
+  // network routes (lazy loaded)
+  {
+    path: 'add-network',
+    loadComponent: () => import('@/pages/network/components/add-network').then((m) => m.AddNetwork)
+  },
+  {
+    path: 'comments/:id',
+    loadComponent: () => import('@/pages/new-post/components/post-comments').then((m) => m.PostComments)
+  },
+  {
+    path: 'new-post',
+    loadComponent: () => import('@/pages/new-post').then((m) => m.NewPost)
+  },
+  // Not found (keep eager as it's small and always needed)
   { path: 'not-found', component: NotFound },
-  { path: 'event-qr/:id', component: EventQr },
-  { path: 'add-network', component: AddNetwork },
-  { path: 'user-list/:id', component: UserList },
-  { path: 'chat-room/:id', component: ChatRoom },
-  { path: 'chat-info/:id', component: ChatInfo },
-  { path: 'guest-list/:id', component: GuestList },
-  { path: 'create-group', component: CreateGroup },
-  { path: 'profile/edit', component: EditProfile },
-  { path: 'create-event', component: CreateEvent },
-  { path: 'comments/:id', component: PostComments },
-  { path: 'create-group/:id', component: CreateGroup },
-  { path: 'group-invitation/:id', component: ChatInfo },
-  { path: 'forgot-password', component: ForgotPassword },
-  { path: 'event-analytics/:id', component: EventAnalytics },
-  { path: 'profile/preferences', component: ProfilePreferences },
-  { path: 'questionnaire-response/:id', component: QuestionnaireResponse },
-  { path: 'questionnaire-response/user-list/:id', component: QuestionnaireUserList },
-  { path: 'login', component: Login, canActivate: [onboardingGuard] },
-  { path: 'signup', component: Signup, canActivate: [onboardingGuard] },
-  { path: 'onboarding', component: Onboarding, canActivate: [onboardingGuard] },
   { path: '**', redirectTo: '/not-found' }
 ];

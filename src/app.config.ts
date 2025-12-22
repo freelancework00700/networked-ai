@@ -4,8 +4,7 @@ import {
   PreloadAllModules,
   RouteReuseStrategy,
   withInMemoryScrolling,
-  withComponentInputBinding,
-  withEnabledBlockingInitialNavigation
+  withComponentInputBinding
 } from '@angular/router';
 import { appRoutes } from './app.routes';
 import CustomPreset from './custom-preset';
@@ -27,12 +26,11 @@ export const appConfig: ApplicationConfig = {
       appRoutes,
       withComponentInputBinding(),
       withPreloading(PreloadAllModules),
-      withEnabledBlockingInitialNavigation(),
       withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' })
     ),
     provideAnimationsAsync(),
-    provideHttpClient(withFetch(), withInterceptors([apiInterceptor])),
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    provideHttpClient(withFetch(), withInterceptors([apiInterceptor])),
     providePrimeNG({ theme: { preset: CustomPreset, options: { darkModeSelector: '.app-dark' } } })
   ]
 };
