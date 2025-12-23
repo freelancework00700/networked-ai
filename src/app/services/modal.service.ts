@@ -231,7 +231,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: TicketForm,
-      cssClass: 'auto-hight-modal',
+      cssClass: 'modal-600px-height',
       backdropDismiss: false,
       componentProps: {
         ticketType,
@@ -271,7 +271,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: PromoCodeForm,
-      cssClass: 'auto-hight-modal',
+      cssClass: 'modal-600px-height',
       backdropDismiss: false,
       componentProps: {
         initialData
@@ -319,7 +319,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: CreateEvent,
-      // cssClass: 'auto-hight-modal',
+      cssClass: 'modal-80-percent-height',
       backdropDismiss: false,
       componentProps: {
         isModalMode: true,
@@ -616,8 +616,8 @@ export class ModalService {
     return data;
   }
 
-  async close(data?: any): Promise<void> {
+  async close(data?: any, role?: string): Promise<void> {
     const modal = await this.modalCtrl.getTop();
-    if (modal) await modal.dismiss(data);
+    if (modal) await modal.dismiss(data, role);
   }
 }

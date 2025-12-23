@@ -1,8 +1,7 @@
-import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
-import { ModalController } from '@ionic/angular/standalone';
-import { Component, inject, ChangeDetectionStrategy, Input } from '@angular/core';
+import { IonFooter, IonToolbar } from '@ionic/angular/standalone';
+import { Input, inject, Component, ChangeDetectionStrategy } from '@angular/core';
 
 export interface ConfirmModalConfig {
   icon?: string; // SVG path
@@ -10,39 +9,38 @@ export interface ConfirmModalConfig {
   iconName?: string;
   iconBgColor?: string;
   description?: string;
-  confirmButtonLabel?: string;
   cancelButtonLabel?: string;
+  confirmButtonLabel?: string;
   confirmButtonColor?: 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null;
 }
 
 @Component({
   selector: 'confirm-modal',
-  templateUrl: './confirm-modal.html',
   styleUrl: './confirm-modal.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, Button]
+  templateUrl: './confirm-modal.html',
+  imports: [Button, IonFooter, IonToolbar],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ConfirmModal {
-  private modalCtrl = inject(ModalController);
+  // services
   private modalService = inject(ModalService);
 
-  @Input() icon: string = '';
+  // inputs
+  @Input() icon = '';
+  @Input() iconName = '';
+  @Input() description = '';
+  @Input() title = 'Confirm';
   @Input() iconBgColor?: string;
-  @Input() iconName: string = '';
-  @Input() title: string = 'Confirm';
-  @Input() description: string = '';
-  @Input() cancelButtonLabel: string = '';
-  @Input() confirmButtonLabel: string = 'Confirm';
+  @Input() cancelButtonLabel = '';
+  @Input() confirmButtonLabel = 'Confirm';
   @Input() iconPosition: 'left' | 'center' = 'center';
   @Input() confirmButtonColor: 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' = 'primary';
 
   confirm(): void {
-    this.modalCtrl.dismiss(true, 'confirm');
-    this.modalService.close();
+    this.modalService.close(true, 'confirm');
   }
 
   cancel(): void {
-    this.modalCtrl.dismiss(false, 'cancel');
-    this.modalService.close();
+    this.modalService.close(false, 'cancel');
   }
 }

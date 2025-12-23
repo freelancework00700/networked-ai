@@ -1,16 +1,17 @@
 import { Button } from '@/components/form/button';
-import { Component, Input, inject, signal } from '@angular/core';
-import { ModalController, IonPicker, IonPickerColumn, IonPickerColumnOption } from '@ionic/angular/standalone';
+import { ModalService } from '@/services/modal.service';
+import { Input, inject, signal, Component } from '@angular/core';
+import { IonPicker, IonFooter, IonHeader, IonToolbar, IonPickerColumn, IonPickerColumnOption } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'event-category-modal',
   styleUrl: './event-category-modal.scss',
   templateUrl: './event-category-modal.html',
-  imports: [Button, IonPicker, IonPickerColumn, IonPickerColumnOption]
+  imports: [Button, IonFooter, IonHeader, IonPicker, IonToolbar, IonPickerColumn, IonPickerColumnOption]
 })
 export class EventCategoryModal {
   // services
-  modalCtrl = inject(ModalController);
+  private modalService = inject(ModalService);
 
   // inputs
   @Input() value: string = 'business';
@@ -28,6 +29,6 @@ export class EventCategoryModal {
   ]);
 
   async dismiss() {
-    await this.modalCtrl.dismiss(this.value);
+    await this.modalService.close(this.value);
   }
 }

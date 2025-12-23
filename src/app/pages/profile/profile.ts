@@ -1,6 +1,7 @@
 import Swiper from 'swiper';
 import { Scrollbar } from 'swiper/modules';
 import { Button } from '@/components/form/button';
+import { isPlatformBrowser } from '@angular/common';
 import { ProfileLink } from '@/pages/profile/components/profile-link';
 import { ProfileAchievement } from '@/pages/profile/components/profile-achievement';
 import { ProfileLikedEvents } from '@/pages/profile/components/profile-liked-events';
@@ -8,8 +9,8 @@ import { ProfilePosts } from '@/pages/profile/components/profile-posts/profile-p
 import { ProfileHostedEvents } from '@/pages/profile/components/profile-hosted-events';
 import { ProfileUpcomingEvents } from '@/pages/profile/components/profile-upcoming-events';
 import { ProfileAttendedEvents } from '@/pages/profile/components/profile-attended-events';
-import { inject, Component, AfterViewInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { IonIcon, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
+import { inject, Component, AfterViewInit, signal, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement' | 'liked-events';
 
@@ -41,6 +42,7 @@ interface TabConfig {
 })
 export class Profile implements AfterViewInit {
   navCtrl = inject(NavController);
+  private platformId = inject(PLATFORM_ID);
   currentSlide = signal<ProfileTabs>('hosted-events');
   swiper?: Swiper;
 
@@ -104,21 +106,23 @@ export class Profile implements AfterViewInit {
   ngAfterViewInit(): void {
     const initialSlide = this.tabs.indexOf(this.currentSlide());
 
-    this.swiper = new Swiper('.swiper-profile', {
-      initialSlide,
-      spaceBetween: 0,
-      slidesPerView: 1,
-      autoHeight: true,
-      modules: [Scrollbar],
-      scrollbar: {
-        el: '.swiper-scrollbar'
-      },
-      on: {
-        slideChange: (swiper) => {
-          const newTab = this.tabs[swiper.activeIndex];
-          if (newTab) this.currentSlide.set(newTab);
+    if (isPlatformBrowser(this.platformId)) {
+      this.swiper = new Swiper('.swiper-profile', {
+        initialSlide,
+        spaceBetween: 0,
+        slidesPerView: 1,
+        autoHeight: true,
+        modules: [Scrollbar],
+        scrollbar: {
+          el: '.swiper-scrollbar'
+        },
+        on: {
+          slideChange: (swiper) => {
+            const newTab = this.tabs[swiper.activeIndex];
+            if (newTab) this.currentSlide.set(newTab);
+          }
         }
-      }
-    });
+      });
+    }
   }
 }

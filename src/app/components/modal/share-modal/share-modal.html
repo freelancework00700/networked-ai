@@ -1,20 +1,25 @@
-<div class="p-6 space-y-3">
-  <!-- Search -->
-  <searchbar
-    [placeholder]="'Search for a user'"
-    [searchQuery]="searchQuery()"
-    (searchChange)="searchQuery.set($event)"
-    (clear)="searchQuery.set('')"
-  />
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4">
+      <!-- search your network -->
+      <searchbar
+        (clear)="searchQuery.set('')"
+        [searchQuery]="searchQuery()"
+        [placeholder]="'Search for a user'"
+        (searchChange)="searchQuery.set($event)"
+      />
 
-  <!-- Checkbox -->
-  <div class="flex items-center gap-2 pt-2">
-    <p-checkbox [binary]="true" [formControl]="selectAllNetworkCtrl()" />
+      <!-- checkbox for sending to entire network -->
+      <div class="flex items-center gap-2 pt-2">
+        <p-checkbox [binary]="true" [formControl]="selectAllNetworkCtrl()" />
+        <div class="body-14R">Send to Entire Network</div>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
 
-    <div class="body-14R">Send to Entire Network</div>
-  </div>
-
-  <!-- Previous Attendees -->
+<div class="inner-content px-4 space-y-3">
+  <!-- previous event attendees -->
   <div class="space-y-2">
     @if (filteredPreviousAttendees().length && type === 'Event') {
       <div class="body-16SB">Previous Event Attendees</div>
@@ -46,7 +51,7 @@
     }
   </div>
 
-  <!-- Your Network -->
+  <!-- your network -->
   <div class="space-y-2">
     @if (filteredYourNetwork().length) {
       <div class="body-16SB">Your Network</div>
@@ -81,29 +86,35 @@
       <div class="body-14R text-center py-4">No users found</div>
     }
   </div>
+</div>
 
-  @if (selectedUsers().length) {
-    <app-button [label]="`Share ${type}`" (click)="shareEvent()" />
-  } @else {
-    <!-- Actions -->
-    <div class="flex justify-around border-t border-gray-200 pt-4">
-      @for (action of actions; track action.label) {
-        <div class="flex flex-col items-center gap-1 text-[11px] text-gray-600">
-          <div class="flex items-center justify-center h-6 w-6">
-            @if (action.type === 'i') {
-              <div [class]="action.icon + ' !text-[16px] text-black'"></div>
-            } @else if (action.type === 'ion') {
-              <ion-icon [name]="action.icon" class="h-6 w-6"></ion-icon>
-            } @else if (action.type === 'svg') {
-              <ion-icon [src]="action.icon" class="h-5 w-5" />
-            }
-          </div>
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4">
+      @if (selectedUsers().length) {
+        <app-button [label]="`Share ${type}`" (click)="shareEvent()" />
+      } @else {
+        <!-- Actions -->
+        <div class="flex justify-around border-t border-gray-200 pt-4">
+          @for (action of actions; track action.label) {
+            <div class="flex flex-col items-center gap-1 text-[11px] text-gray-600">
+              <div class="flex items-center justify-center h-6 w-6">
+                @if (action.type === 'i') {
+                  <div [class]="action.icon + ' !text-[16px] text-black'"></div>
+                } @else if (action.type === 'ion') {
+                  <ion-icon [name]="action.icon" class="h-6 w-6"></ion-icon>
+                } @else if (action.type === 'svg') {
+                  <ion-icon [src]="action.icon" class="h-5 w-5" />
+                }
+              </div>
 
-          <span class="text-center leading-tight">
-            {{ action.label }}
-          </span>
+              <span class="text-center leading-tight">
+                {{ action.label }}
+              </span>
+            </div>
+          }
         </div>
       }
     </div>
-  }
-</div>
+  </ion-toolbar>
+</ion-footer>

@@ -1,28 +1,31 @@
 import { Button } from '@/components/form/button';
-import { ModalController } from '@ionic/angular/standalone';
-import { Component, inject, ChangeDetectionStrategy, Input } from '@angular/core';
+import { ModalService } from '@/services/modal.service';
+import { IonFooter, IonHeader, IonToolbar } from '@ionic/angular/standalone';
+import { Input, inject, Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
-  imports: [Button],
-  selector: 'app-profile-image-confirm-modal',
+  selector: 'profile-image-confirm-modal',
   styleUrl: './profile-image-confirm-modal.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './profile-image-confirm-modal.html'
+  templateUrl: './profile-image-confirm-modal.html',
+  imports: [Button, IonHeader, IonFooter, IonToolbar]
 })
 export class ProfileImageConfirmModal {
-  private modalCtrl = inject(ModalController);
+  // services
+  private modalService = inject(ModalService);
 
+  // inputs
   @Input() imageDataUrl: string = '';
 
   close(): void {
-    this.modalCtrl.dismiss({ action: 'cancel' });
+    this.modalService.close({ action: 'cancel' });
   }
 
   retake(): void {
-    this.modalCtrl.dismiss({ action: 'retake' });
+    this.modalService.close({ action: 'retake' });
   }
 
   confirm(): void {
-    this.modalCtrl.dismiss({ action: 'confirm', imageDataUrl: this.imageDataUrl });
+    this.modalService.close({ action: 'confirm', imageDataUrl: this.imageDataUrl });
   }
 }

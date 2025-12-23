@@ -1,29 +1,29 @@
-<div class="p-6">
-  <!-- title -->
-  <div class="flex items-center justify-center mb-4 text-center">
-    <div class="heading-h3 neutral-01">{{ title }}</div>
-  </div>
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4">
+      <!-- title -->
+      <div class="pb-2 text-center heading-h3 neutral-01">{{ title }}</div>
+  
+      <p-iconfield>
+        <!-- search icon -->
+        <p-inputicon class="pi pi-search" />
+  
+        <!-- search input -->
+        <input pInputText [value]="searchQuery()" class="w-full h-[44px]" (input)="onSearchInput($event)" placeholder="Search for a location..." />
+  
+        <!-- spinner when searching, clear icon when not searching and has value -->
+        @if (isSearching()) {
+          <p-inputicon class="pi pi-spin pi-spinner" />
+        } @else if (searchQuery()) {
+          <p-inputicon class="pi pi-times cursor-pointer" (click)="clearSearch()" />
+        }
+      </p-iconfield>
+    </div>
+  </ion-toolbar>
+</ion-header>
 
-  <!-- location search input -->
-  <div>
-    <p-iconfield>
-      <!-- search icon -->
-      <p-inputicon class="pi pi-search" />
-
-      <!-- search input -->
-      <input pInputText [value]="searchQuery()" class="w-full h-[44px]" (input)="onSearchInput($event)" placeholder="Search for a location..." />
-
-      <!-- spinner when searching, clear icon when not searching and has value -->
-      @if (isSearching()) {
-        <p-inputicon class="pi pi-spin pi-spinner" />
-      } @else if (searchQuery()) {
-        <p-inputicon class="pi pi-times cursor-pointer" (click)="clearSearch()" />
-      }
-    </p-iconfield>
-  </div>
-
-  <!-- search results -->
-  <div class="mt-6 max-h-[400px] overflow-y-auto">
+<ion-content>
+  <div class="px-4">
     @for (result of searchResults(); track result.latitude + result.longitude) {
       <div
         class="flex items-start relative border-b border-[#DBDBDB] py-3 gap-2 cursor-pointer hover:bg-surface-50 transition-colors"
@@ -53,4 +53,4 @@
       </div>
     }
   </div>
-</div>
+</ion-content>

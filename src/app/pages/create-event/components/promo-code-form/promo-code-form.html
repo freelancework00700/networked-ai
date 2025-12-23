@@ -1,87 +1,95 @@
-<!-- Header -->
-<div class="flex items-center justify-between p-4">
-  <div class="body-16SB">Create New Promo Code</div>
-  <button (click)="close()" class="text-surface-500 hover:text-surface-900">
-    <i class="pi pi-times text-lg"></i>
-  </button>
-</div>
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex items-center justify-between">
+      <div class="heading-h3 neutral-01">Create New Promo Code</div>
+      <i class="pi pi-times" (click)="close()"></i>
+    </div>
+  </ion-toolbar>
+</ion-header>
 
 <!-- Form Content -->
-<div class="p-4">
-  <form [formGroup]="promoForm()" class="flex flex-col gap-4">
-    <!-- Promo Code Name -->
-    <text-input controlName="promoCode" label="Promo Code" placeholder="Promo Code Name" />
+<ion-content>
+  <div class="px-4">
+    <form [formGroup]="promoForm()" class="flex flex-col gap-4">
+      <!-- Promo Code Name -->
+      <text-input controlName="promoCode" label="Promo Code" placeholder="Promo Code Name" />
 
-    <!-- Promotion Type -->
-    <div class="w-full">
-      <label class="neutral-02 body-14M">Promotion Type</label>
+      <!-- Promotion Type -->
       <div class="w-full">
-        <div class="flex gap-2 mt-1">
-          <!-- Percentage Chip -->
-          <chip
-            [type]="'percentage'"
-            [color]="promotionType() === 'percentage' ? 'lgold' : ''"
-            (selectedType)="setPromotionType('percentage')"
-            class="w-full"
-          >
-            <div class="flex justify-between">
-              <span>Percentage Off</span>
-              <span>%</span>
-            </div>
-          </chip>
+        <label class="neutral-02 body-14M">Promotion Type</label>
+        <div class="w-full">
+          <div class="flex gap-2 mt-1">
+            <!-- Percentage Chip -->
+            <chip
+              class="w-full"
+              [type]="'percentage'"
+              (selectedType)="setPromotionType('percentage')"
+              [color]="promotionType() === 'percentage' ? 'lgold' : ''"
+            >
+              <div class="flex justify-between">
+                <span>Percentage Off</span>
+                <span>%</span>
+              </div>
+            </chip>
 
-          <!-- Fixed Chip -->
-          <chip [type]="'fixed'" [color]="promotionType() === 'fixed' ? 'lgold' : ''" (selectedType)="setPromotionType('fixed')" class="w-full">
-            <div class="flex justify-between">
-              <span>Fixed Amount Off</span>
-              <span>$</span>
-            </div>
-          </chip>
+            <!-- Fixed Chip -->
+            <chip [type]="'fixed'" [color]="promotionType() === 'fixed' ? 'lgold' : ''" (selectedType)="setPromotionType('fixed')" class="w-full">
+              <div class="flex justify-between">
+                <span>Fixed Amount Off</span>
+                <span>$</span>
+              </div>
+            </chip>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Discount Amount Section (Dynamic Based on Promotion Type) -->
-    <div>
-      <!-- If PERCENTAGE -->
-      @if (promotionType() === 'percentage') {
-        <div class="flex gap-3">
-          <number-input
-            label="Discount Amount"
-            controlName="promoPresent"
-            placeholder="10"
-            class="w-full"
-            [iconName]="'pi-percentage'"
-            [position]="'right'"
-          />
-          <number-input
-            label="Capped at"
-            controlName="capped_amount"
-            placeholder="0.00"
-            [required]="false"
-            class="w-full"
-            [allowDecimal]="true"
-            [iconName]="'pi-dollar'"
-          />
-        </div>
-      }
+      <!-- Discount Amount Section (Dynamic Based on Promotion Type) -->
+      <div>
+        <!-- If PERCENTAGE -->
+        @if (promotionType() === 'percentage') {
+          <div class="flex gap-3">
+            <number-input
+              class="w-full"
+              placeholder="10"
+              [position]="'right'"
+              label="Discount Amount"
+              controlName="promoPresent"
+              [iconName]="'pi-percentage'"
+            />
 
-      <!-- If FIXED AMOUNT -->
-      @if (promotionType() === 'fixed') {
-        <number-input label="Discount Amount" controlName="promoPresent" placeholder="0.00" [allowDecimal]="true" [iconName]="'pi-dollar'" />
-      }
-    </div>
+            <number-input
+              class="w-full"
+              label="Capped at"
+              [required]="false"
+              placeholder="0.00"
+              [allowDecimal]="true"
+              [iconName]="'pi-dollar'"
+              controlName="capped_amount"
+            />
+          </div>
+        }
 
-    <!-- Redemption Limit -->
-    <number-input label="Redemption Limit" controlName="redemption_limit" placeholder="400" [required]="false" />
+        <!-- If FIXED AMOUNT -->
+        @if (promotionType() === 'fixed') {
+          <number-input label="Discount Amount" controlName="promoPresent" placeholder="0.00" [allowDecimal]="true" [iconName]="'pi-dollar'" />
+        }
+      </div>
 
-    <!-- Max use(s) per user -->
-    <number-input label="Max use(s) per user" controlName="max_use_per_user" placeholder="1" [required]="false" />
-  </form>
-</div>
+      <!-- Redemption Limit -->
+      <number-input label="Redemption Limit" controlName="redemption_limit" placeholder="400" [required]="false" />
+
+      <!-- Max use(s) per user -->
+      <number-input label="Max use(s) per user" controlName="max_use_per_user" placeholder="1" [required]="false" />
+    </form>
+  </div>
+</ion-content>
 
 <!-- Footer -->
-<div class="p-4 flex gap-3">
-  <app-button label="Cancel" (click)="close()" color="secondary" class="flex-1" />
-  <app-button label="Save" (click)="savePromoCode()" color="primary" class="flex-1" />
-</div>
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex gap-2">
+      <app-button label="Cancel" (click)="close()" color="secondary" class="flex-1" />
+      <app-button label="Save" (click)="savePromoCode()" color="primary" class="flex-1" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

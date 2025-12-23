@@ -1,32 +1,39 @@
-<form [formGroup]="form()" class="p-4">
-  <!-- Header -->
-  <div class="flex items-center justify-between px-4">
-    <div class="heading-h3">Filter</div>
-    <div class="pi pi-times cursor-pointer" (click)="close()"></div>
-  </div>
-
-  <!-- Sections -->
-  @for (section of filterSections(); track section.title) {
-    <div class="p-3">
-      <div class="body-14SB mb-2">{{ section.title }}</div>
-
-      <div class="grid gap-2">
-        @for (option of section.options; track option.control) {
-          <div class="flex items-center gap-2">
-            <p-checkbox binary="true" [formControlName]="option.control"></p-checkbox>
-
-            <label class="body-14 cursor-pointer">
-              {{ option.label }}
-            </label>
-          </div>
-        }
-      </div>
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex items-center justify-between">
+      <div class="heading-h3 neutral-01">Filter</div>
+      <div class="pi pi-times cursor-pointer" (click)="close()"></div>
     </div>
-  }
+  </ion-toolbar>
+</ion-header>
 
-  <!-- Actions -->
-  <div class="flex gap-2 mt-4">
-    <app-button label="Cancel" class="flex-1" color="secondary" (click)="close()" />
-    <app-button label="Apply" class="flex-1" (click)="apply()" />
-  </div>
-</form>
+<div class="inner-content px-4">
+  <form [formGroup]="form()">
+    @for (section of filterSections(); track section.title) {
+      <div class="py-3">
+        <div class="body-14SB mb-2">{{ section.title }}</div>
+
+        <div class="grid grid-cols-2 gap-2">
+          @for (option of section.options; track option.control) {
+            <div class="flex items-center gap-2">
+              <p-checkbox binary="true" [formControlName]="option.control"></p-checkbox>
+
+              <label class="body-14 cursor-pointer">
+                {{ option.label }}
+              </label>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </form>
+</div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex gap-2">
+      <app-button label="Cancel" class="flex-1" color="secondary" (click)="close()" />
+      <app-button label="Apply" class="flex-1" (click)="apply()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

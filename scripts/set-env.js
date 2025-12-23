@@ -4,15 +4,15 @@ dotenv.config();
 const setEnv = () => {
   const fs = require('fs');
   const path = require('path');
-  
+
   const targetDir = './src/environments';
   const targetPath = path.join(targetDir, 'environment.ts');
-  
+
   // create directory if it doesn't exist
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
   }
-  
+
   const envConfigFile = `export const environment = {
     apiUrl: '${process.env['API_URL']}',
     openaiKey: '${process.env['OPEN_AI_API_KEY']}',
@@ -30,7 +30,7 @@ const setEnv = () => {
     }
   };
 `;
-  
+
   fs.writeFileSync(targetPath, envConfigFile, 'utf8');
   console.log(`Environment file generated at ${targetPath}`);
 };

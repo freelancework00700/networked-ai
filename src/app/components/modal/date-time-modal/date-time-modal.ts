@@ -1,14 +1,14 @@
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
-import { IonDatetime, ModalController } from '@ionic/angular/standalone';
 import { Input, inject, OnInit, Component, ChangeDetectionStrategy } from '@angular/core';
+import { IonFooter, IonHeader, IonToolbar, IonDatetime, ModalController } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'date-time-modal',
-  imports: [Button, IonDatetime],
   styleUrl: './date-time-modal.scss',
   templateUrl: './date-time-modal.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Button, IonHeader, IonFooter, IonToolbar, IonDatetime]
 })
 export class DateTimeModal implements OnInit {
   // inputs

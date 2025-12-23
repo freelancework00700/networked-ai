@@ -1,7 +1,7 @@
-import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
-import { ModalController, IonGrid, IonRow } from '@ionic/angular/standalone';
-import { Component, inject, ChangeDetectionStrategy, signal, OnInit, Input } from '@angular/core';
+import { ModalService } from '@/services/modal.service';
+import { IonRow, IonGrid, IonHeader, IonFooter, IonToolbar } from '@ionic/angular/standalone';
+import { Input, inject, signal, OnInit, Component, ChangeDetectionStrategy } from '@angular/core';
 
 export interface NetworkTag {
   name: string;
@@ -14,17 +14,20 @@ export interface NetworkTag {
   styleUrl: './network-tag.scss',
   templateUrl: './network-tag.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, CommonModule, IonGrid, IonRow]
+  imports: [Button, IonRow, IonGrid, IonHeader, IonFooter, IonToolbar]
 })
 export class NetworkTagModal implements OnInit {
-  private modalCtrl = inject(ModalController);
+  // services
+  modalService = inject(ModalService);
 
-  @Input() title = 'Networked Meta Tags';
-  @Input() subtitle = 'Select up to 5';
-  @Input() tags: NetworkTag[] = [];
-  @Input() initialSelectedTags: string[] = [];
+  // inputs
   @Input() maxSelections = 5;
+  @Input() tags: NetworkTag[] = [];
+  @Input() subtitle = 'Select up to 5';
+  @Input() title = 'Networked Meta Tags';
+  @Input() initialSelectedTags: string[] = [];
 
+  // signals
   selectedTags = signal<string[]>([]);
 
   ngOnInit(): void {
@@ -55,10 +58,10 @@ export class NetworkTagModal implements OnInit {
   }
 
   close(): void {
-    this.modalCtrl.dismiss();
+    this.modalService.close();
   }
 
   confirm(): void {
-    this.modalCtrl.dismiss(this.selectedTags());
+    this.modalService.close(this.selectedTags());
   }
 }

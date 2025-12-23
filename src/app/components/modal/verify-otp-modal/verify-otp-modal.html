@@ -1,4 +1,4 @@
-<div class="p-6 max-w-[672px] mx-auto">
+<div class="inner-content px-4 pt-4">
   <otp-input
     [email]="email"
     [mobile]="mobile"
@@ -7,5 +7,12 @@
     (emailOtpChange)="emailOtp.set($event)"
     (mobileOtpChange)="mobileOtp.set($event)"
   />
-  <app-button label="Verify OTP" [isLoading]="isLoading()" (click)="verifyOtp()" />
 </div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4">
+      <app-button label="Verify OTP" [isLoading]="isLoading()" (click)="verifyOtp()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

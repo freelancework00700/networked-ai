@@ -6,7 +6,7 @@ import { environment } from 'src/environments/environment';
 import { LazyImageDirective } from '@/directives/lazy-image.directive';
 import { of, Subject, switchMap, catchError, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Input, inject, OnInit, signal, Component, ChangeDetectionStrategy } from '@angular/core';
-import { IonFooter, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
+import { IonHeader, IonFooter, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
 
 interface TenorGif {
   id: string;
@@ -26,16 +26,16 @@ interface TenorSearchResponse {
   styleUrl: './gif-gallery-modal.scss',
   templateUrl: './gif-gallery-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Searchbar, IonFooter, IonContent, IonToolbar, IonInfiniteScroll, LazyImageDirective, IonInfiniteScrollContent]
+  imports: [Button, IonHeader, Searchbar, IonFooter, IonContent, IonToolbar, IonInfiniteScroll, LazyImageDirective, IonInfiniteScrollContent]
 })
 export class GifGalleryModal implements OnInit {
-  // inputs
-  @Input() multiSelect = false;
-  @Input() title = 'Select GIF';
-
   // services
   private http = inject(HttpClient);
   private modalService = inject(ModalService);
+
+  // inputs
+  @Input() multiSelect = false;
+  @Input() title = 'Select GIF';
 
   // observables
   private searchSubject = new Subject<string>();

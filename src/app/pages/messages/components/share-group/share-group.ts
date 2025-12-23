@@ -7,8 +7,8 @@ import { Input, signal, inject, Inject, DOCUMENT, Component } from '@angular/cor
 @Component({
   selector: 'share-group',
   imports: [IonIcon, Button],
-  templateUrl: './share-group.html',
-  styleUrl: './share-group.scss'
+  styleUrl: './share-group.scss',
+  templateUrl: './share-group.html'
 })
 export class ShareGroup {
   @Input() data: any;

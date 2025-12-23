@@ -1,24 +1,31 @@
 import { Button } from '@/components/form/button';
-import { Component, inject } from '@angular/core';
 import { ModalService } from '@/services/modal.service';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TextInput } from '@/components/form/text-input';
-import { ModalController } from '@ionic/angular/standalone';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { inject, signal, Component } from '@angular/core';
+import { IonHeader, IonFooter, IonToolbar } from '@ionic/angular/standalone';
+import { FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'report-modal',
-  standalone: true,
-  imports: [Button, RadioButtonModule, ReactiveFormsModule, TextInput],
+  styleUrl: './report-modal.scss',
   templateUrl: './report-modal.html',
-  styleUrls: ['./report-modal.scss']
+  imports: [Button, TextInput, IonHeader, IonFooter, IonToolbar, RadioButtonModule, ReactiveFormsModule]
 })
 export class ReportModal {
+  // services
   private fb = inject(FormBuilder);
-  private modalCtrl = inject(ModalController);
   private modalService = inject(ModalService);
 
-  reportReasons: string[] = [
+  // signals  
+  form = signal<FormGroup>(
+    this.fb.group({
+      additionalComment: [''],
+      reason: [null, Validators.required]
+    })
+  );
+
+  reasons = [
     'Violent event',
     'Hateful or abusive event',
     'Harassment or bullying',
@@ -31,22 +38,15 @@ export class ReportModal {
     'Others'
   ];
 
-  reportForm: FormGroup = this.fb.group({
-    reason: [null, Validators.required],
-    additionalComment: ['']
-  });
-
   submitReport() {
-    if (this.reportForm.valid) {
-      this.modalCtrl.dismiss(true, 'report');
-      this.modalService.close();
+    if (this.form().valid) {
+      this.modalService.close(true, 'report');
     } else {
-      this.reportForm.markAllAsTouched();
+      this.form().markAllAsTouched();
     }
   }
 
   close(): void {
-    this.modalCtrl.dismiss(false, 'report');
-    this.modalService.close();
+    this.modalService.close(false, 'report');
   }
 }

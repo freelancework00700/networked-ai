@@ -1,21 +1,26 @@
 import { SelectModule } from 'primeng/select';
-import { ModalController } from '@ionic/angular/standalone';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Component, Input, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { ModalService } from '@/services/modal.service';
+import { IonHeader, IonToolbar } from '@ionic/angular/standalone';
+import { FormGroup, FormArray, FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { Input, inject, signal, OnInit, Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'manage-role-modal',
   styleUrl: './manage-role-modal.scss',
   templateUrl: './manage-role-modal.html',
-  imports: [ReactiveFormsModule, SelectModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [IonHeader, IonToolbar, SelectModule, ReactiveFormsModule]
 })
 export class ManageRoleModal implements OnInit {
+  // services
+  private fb = inject(FormBuilder);
+  private modalService = inject(ModalService);
+
+  // inputs
   @Input() users: any[] = [];
   @Input() eventId: string = '';
-  fb = inject(FormBuilder);
-  modalCtrl = inject(ModalController);
 
+  // signals
   form = signal<FormGroup>(
     this.fb.group({
       users: this.fb.array([])
@@ -52,7 +57,7 @@ export class ManageRoleModal implements OnInit {
   }
 
   close() {
-    this.modalCtrl.dismiss();
+    this.modalService.close();
   }
 
   changeRole(index: number, role: string) {

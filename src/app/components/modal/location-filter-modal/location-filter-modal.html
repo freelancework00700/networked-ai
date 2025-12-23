@@ -1,10 +1,18 @@
-<div class="p-4">
-  <div class="body-16M">Filter</div>
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex items-center justify-between">
+      <div class="heading-h3 neutral-01">Filter</div>
+      <div class="pi pi-times cursor-pointer" (click)="modalService.close(distance())"></div>
+    </div>
+  </ion-toolbar>
+</ion-header>
 
-  <div class="input-relative" [formGroup]="form()">
+<div class="inner-content px-4">
+  <div [formGroup]="form()">
     <text-input
       label="Location"
       [readonly]="true"
+      [isSubmitted]="false"
       controlName="location"
       iconName="pi-map-marker"
       placeholder="Search location"
@@ -19,9 +27,13 @@
   <ion-range min="0" max="50" (ionChange)="onRangeChange($event)" [value]="distance()"></ion-range>
 
   <div class="body-medium-16">{{ distance() }} miles</div>
-
-  <div class="flex mt-4 gap-4">
-    <app-button label="Reset" color="secondary" (click)="reset()" class="flex-1" />
-    <app-button label="Apply" (click)="modalService.close(distance())" class="flex-1" />
-  </div>
 </div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex gap-2">
+      <app-button label="Reset" color="secondary" (click)="reset()" class="flex-1" />
+      <app-button label="Apply" (click)="modalService.close(distance())" class="flex-1" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

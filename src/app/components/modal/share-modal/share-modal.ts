@@ -1,29 +1,33 @@
 import { Checkbox } from 'primeng/checkbox';
 import { Button } from '@/components/form/button';
-import { IonIcon } from '@ionic/angular/standalone';
+import { ModalService } from '@/services/modal.service';
 import { Searchbar } from '@/components/common/searchbar';
 import { ToasterService } from '@/services/toaster.service';
-import { ModalController } from '@ionic/angular/standalone';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Component, Input, computed, signal, ChangeDetectionStrategy, inject } from '@angular/core';
+import { IonIcon, IonHeader, IonFooter, IonToolbar } from '@ionic/angular/standalone';
+import { Input, inject, signal, computed, Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'share-modal',
   styleUrl: './share-modal.scss',
   templateUrl: './share-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonIcon, Searchbar, Checkbox, ReactiveFormsModule, Button]
+  imports: [Button, IonIcon, Checkbox, IonFooter, Searchbar, IonHeader, IonToolbar, ReactiveFormsModule]
 })
 export class ShareModal {
+  // services
+  private modalService = inject(ModalService);
+  private toasterService = inject(ToasterService);
+
+  // inputs
   @Input() eventId: any;
   @Input() type: 'Event' | 'Post' = 'Event';
-  modalCtrl = inject(ModalController);
-  toasterService = inject(ToasterService);
 
+  // signals
   searchQuery = signal<string>('');
   isChecked = signal<boolean>(false);
-  selectAllNetworkCtrl = signal<FormControl>(new FormControl(false));
   selectedUsers = signal<{ name: string; avatar: string }[]>([]);
+  selectAllNetworkCtrl = signal<FormControl>(new FormControl(false));
 
   previousAttendees = signal([
     { name: 'Kathryn M.', avatar: 'assets/images/profile.jpeg' },
@@ -119,6 +123,6 @@ export class ShareModal {
 
   shareEvent() {
     this.toasterService.showSuccess(`${this.type} shared successfully`);
-    this.modalCtrl.dismiss();
+    this.modalService.close();
   }
 }

@@ -4,6 +4,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { ModalService } from '@/services/modal.service';
 import { environment } from 'src/environments/environment';
+import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
 import { of, Subject, catchError, switchMap, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Input, inject, OnInit, signal, Component, ChangeDetectionStrategy } from '@angular/core';
 
@@ -53,7 +54,7 @@ interface MapTilerGeocodingResponse {
   selector: 'location-modal',
   templateUrl: './location-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconFieldModule, InputIconModule, InputTextModule]
+  imports: [IonHeader, IonToolbar, IonContent, IconFieldModule, InputIconModule, InputTextModule]
 })
 export class LocationModal implements OnInit {
   // inputs

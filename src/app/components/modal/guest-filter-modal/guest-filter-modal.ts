@@ -1,19 +1,26 @@
 import { Button } from '@/components/form/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ModalService } from '@/services/modal.service';
-import { CheckboxModule, Checkbox } from 'primeng/checkbox';
-import { ModalController } from '@ionic/angular/standalone';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { Component, inject, Input, signal, ChangeDetectionStrategy } from '@angular/core';
+import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { IonFooter, IonHeader, IonToolbar } from '@ionic/angular/standalone';
+import { Input, signal, inject, Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'guest-filter-modal',
   styleUrl: './guest-filter-modal.scss',
   templateUrl: './guest-filter-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Checkbox, ReactiveFormsModule, CheckboxModule, Button]
+  imports: [Button, IonHeader, IonFooter, IonToolbar, CheckboxModule, ReactiveFormsModule]
 })
 export class GuestFilterModal {
-  fb = inject(FormBuilder);
+  // services
+  private fb = inject(FormBuilder);
+  private modalService = inject(ModalService);
+
+  // inputs
+  @Input() filter: any;
+
+  // signals
   form = signal<FormGroup<any>>(
     this.fb.group({
       attending: false,
@@ -31,11 +38,6 @@ export class GuestFilterModal {
       sponsor: false
     })
   );
-  private modalCtrl = inject(ModalController);
-  private modalService = inject(ModalService);
-
-  @Input() filter: any;
-
   filterSections = signal<any[]>([
     {
       title: 'Guest Status',
@@ -82,11 +84,10 @@ export class GuestFilterModal {
   }
 
   apply() {
-    this.modalCtrl.dismiss(this.form().value);
+    this.modalService.close(this.form().value);
   }
 
   close() {
-    this.modalCtrl.dismiss();
     this.modalService.close();
   }
 }

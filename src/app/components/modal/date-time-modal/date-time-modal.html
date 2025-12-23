@@ -1,8 +1,10 @@
-<div class="p-6 max-w-[672px] mx-auto">
-  <div class="text-center">
-    <div class="heading-h3 neutral-01">{{ title }}</div>
-  </div>
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 text-center heading-h3 neutral-01">{{ title }}</div>
+  </ion-toolbar>
+</ion-header>
 
+<div class="inner-content px-4">
   <div class="flex items-center justify-center">
     <ion-datetime
       mode="md"
@@ -15,6 +17,12 @@
       (ionChange)="value = $any($event).detail.value"
     />
   </div>
-
-  <app-button label="Confirm" (click)="dismiss()" />
 </div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4">
+      <app-button label="Confirm" (click)="dismiss()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

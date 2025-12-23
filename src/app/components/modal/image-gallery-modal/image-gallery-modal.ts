@@ -6,7 +6,7 @@ import { environment } from 'src/environments/environment';
 import { LazyImageDirective } from '@/directives/lazy-image.directive';
 import { of, Subject, switchMap, catchError, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Input, inject, OnInit, signal, Component, ChangeDetectionStrategy } from '@angular/core';
-import { IonFooter, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
+import { IonHeader, IonFooter, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
 
 interface UnsplashPhoto {
   id: string;
@@ -26,7 +26,7 @@ interface UnsplashSearchResponse {
   styleUrl: './image-gallery-modal.scss',
   templateUrl: './image-gallery-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Searchbar, IonFooter, IonContent, IonToolbar, IonInfiniteScroll, LazyImageDirective, IonInfiniteScrollContent]
+  imports: [Button, IonHeader, Searchbar, IonFooter, IonContent, IonToolbar, IonInfiniteScroll, LazyImageDirective, IonInfiniteScrollContent]
 })
 export class ImageGalleryModal implements OnInit {
   // inputs

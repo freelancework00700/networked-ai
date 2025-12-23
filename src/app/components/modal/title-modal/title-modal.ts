@@ -1,20 +1,22 @@
 import { Button } from '@/components/form/button';
+import { ModalService } from '@/services/modal.service';
 import { Input, signal, inject, Component } from '@angular/core';
-import { IonPicker, ModalController, IonPickerColumn, IonPickerColumnOption } from '@ionic/angular/standalone';
+import { IonFooter, IonPicker, IonHeader, IonToolbar, IonPickerColumn, IonPickerColumnOption } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'title-modal',
   styleUrl: './title-modal.scss',
   templateUrl: './title-modal.html',
-  imports: [Button, IonPicker, IonPickerColumn, IonPickerColumnOption]
+  imports: [Button, IonFooter, IonHeader, IonPicker, IonToolbar, IonPickerColumn, IonPickerColumnOption]
 })
 export class TitleModal {
+  // services
+  private modalService = inject(ModalService);
+
   // inputs
   @Input() value = 'Mr.';
 
-  // services
-  modalCtrl = inject(ModalController);
-
+  // signals
   options = signal([
     { value: 'Mr.', label: 'Mr.' },
     { value: 'Mrs.', label: 'Mrs.' },
@@ -22,6 +24,6 @@ export class TitleModal {
   ]);
 
   async dismiss() {
-    await this.modalCtrl.dismiss(this.value);
+    await this.modalService.close(this.value);
   }
 }

@@ -1,21 +1,23 @@
-<div class="p-8 flex flex-col gap-5">
-  @for (item of items; track item.label) {
-    <div class="flex items-center gap-3 cursor-pointer" [class.accent-red]="item.danger" (click)="onItemClick(item)">
-      <!-- SVG ICON -->
-      @if (item.iconType === 'svg') {
-        <img [src]="item.icon" class="w-6 h-6" />
+<div class="inner-content p-4">
+  <div class="flex flex-col gap-5">
+    @for (item of items; track item.label) {
+      <div class="flex items-center gap-3 cursor-pointer" [class.accent-red]="item.danger" (click)="onItemClick(item)">
+        <!-- svg icon -->
+        @if (item.iconType === 'svg') {
+          <ion-icon [src]="item.icon" class="w-6 h-6" />
+        }
+
+        <!-- icon from prime icons -->
+        @if (item.iconType === 'pi') {
+          <div [class]="item.icon + ' !text-xl'"></div>
+        }
+
+        <span class="body-16M">{{ item.label }}</span>
+      </div>
+
+      @if (item.label === 'Mute notifications') {
+        <div class="h-px bg-gray-300 my-1"></div>
       }
-
-      <!-- PRIME ICON -->
-      @if (item.iconType === 'pi') {
-        <div [class]="item.icon + ' !text-xl'"></div>
-      }
-
-      <span class="body-16M">{{ item.label }}</span>
-    </div>
-
-    @if (item.label === 'Mute notifications') {
-      <div class="h-px bg-gray-300 my-1"></div>
     }
-  }
+  </div>
 </div>

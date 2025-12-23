@@ -3,13 +3,14 @@ import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { OtpInput } from '@/components/common/otp-input';
 import { ToasterService } from '@/services/toaster.service';
+import { IonFooter, IonToolbar } from '@ionic/angular/standalone';
 import { Input, inject, signal, computed, Component } from '@angular/core';
 
 @Component({
-  imports: [Button, OtpInput],
   selector: 'verify-otp-modal',
   styleUrl: './verify-otp-modal.scss',
-  templateUrl: './verify-otp-modal.html'
+  templateUrl: './verify-otp-modal.html',
+  imports: [Button, OtpInput, IonFooter, IonToolbar]
 })
 export class VerifyOtpModal {
   // inputs

@@ -1,12 +1,11 @@
-import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
 import { NumberInput } from '@/components/form/number-input';
 import { TextAreaInput } from '@/components/form/text-area-input';
-import { ModalController, IonCheckbox } from '@ionic/angular/standalone';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Component, inject, ChangeDetectionStrategy, signal, OnInit, Input, computed } from '@angular/core';
+import { FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { IonHeader, IonFooter, IonContent, IonToolbar, IonCheckbox } from '@ionic/angular/standalone';
+import { Input, OnInit, inject, signal, computed, Component, ChangeDetectionStrategy } from '@angular/core';
 
 export interface TicketFormData {
   name: string;
@@ -27,17 +26,19 @@ export interface TicketFormData {
   styleUrl: './ticket-form.scss',
   templateUrl: './ticket-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, Button, TextInput, IonCheckbox, NumberInput, TextAreaInput]
+  imports: [ReactiveFormsModule, Button, TextInput, IonCheckbox, NumberInput, TextAreaInput, IonHeader, IonToolbar, IonContent, IonFooter]
 })
 export class TicketForm implements OnInit {
+  // services
   private fb = inject(FormBuilder);
-  private modalCtrl = inject(ModalController);
   private modalService = inject(ModalService);
 
+  // inputs
   @Input() ticketType: 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard' = 'free';
   @Input() initialData?: Partial<TicketFormData> | null;
   @Input() eventDate?: string | null;
 
+  // signals
   ticketForm = signal<FormGroup>(
     this.fb.group({
       free_for_subscribers: false,
@@ -203,7 +204,7 @@ export class TicketForm implements OnInit {
       return;
     }
 
-    this.modalCtrl.dismiss({ ...form.value, ticket_type: this.ticketType }, 'save');
+    this.modalService.close({ ...form.value, ticket_type: this.ticketType }, 'save');
   }
 
   async openDateModal(type: 'sale_start_date' | 'sale_end_date' = 'sale_start_date'): Promise<void> {
@@ -248,6 +249,6 @@ export class TicketForm implements OnInit {
   }
 
   close(): void {
-    this.modalCtrl.dismiss(null, 'cancel');
+    this.modalService.close(null, 'cancel');
   }
 }

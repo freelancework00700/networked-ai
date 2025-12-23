@@ -1,34 +1,37 @@
-import { CommonModule } from '@angular/common';
 import { Chip } from '@/components/common/chip';
 import { Button } from '@/components/form/button';
+import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
-import { ModalController } from '@ionic/angular/standalone';
 import { NumberInput } from '@/components/form/number-input';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Component, inject, ChangeDetectionStrategy, signal, Input } from '@angular/core';
+import { IonHeader, IonFooter, IonContent, IonToolbar } from '@ionic/angular/standalone';
+import { FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { Input, inject, signal, Component, ChangeDetectionStrategy } from '@angular/core';
 
 export interface PromoCodeFormData {
   promoCode: string;
-  promotion_type: 'percentage' | 'fixed';
   promoPresent: string;
+  max_use_per_user?: number;
   capped_amount?: string | null;
   redemption_limit?: number | null;
-  max_use_per_user?: number;
+  promotion_type: 'percentage' | 'fixed';
 }
 
 @Component({
   selector: 'promo-code-form',
-  templateUrl: './promo-code-form.html',
   styleUrl: './promo-code-form.scss',
+  templateUrl: './promo-code-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, Button, TextInput, NumberInput, Chip]
+  imports: [Chip, Button, IonFooter, TextInput, IonHeader, IonToolbar, IonContent, NumberInput, ReactiveFormsModule]
 })
 export class PromoCodeForm {
-  private modalCtrl = inject(ModalController);
+  // services
   private fb = inject(FormBuilder);
+  private modalService = inject(ModalService);
 
+  // inputs
   @Input() initialData?: Partial<PromoCodeFormData> | null;
 
+  // signals
   promoForm = signal<FormGroup>(
     this.fb.group({
       promotion_type: ['fixed', [Validators.required]],
@@ -78,10 +81,10 @@ export class PromoCodeForm {
       return;
     }
 
-    this.modalCtrl.dismiss(form.value, 'save');
+    this.modalService.close(form.value, 'save');
   }
 
   close(): void {
-    this.modalCtrl.dismiss(null, 'cancel');
+    this.modalService.close(null, 'cancel');
   }
 }

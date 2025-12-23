@@ -1,8 +1,8 @@
 .fullscreen-container {
   height: 100%;
-  background: black;
   display: flex;
   position: relative;
+  background: black;
 }
 
 img {
@@ -12,11 +12,11 @@ img {
 }
 
 .close-icon {
-  position: absolute;
   top: 12px;
   right: 12px;
-  font-size: 20px;
-  color: white;
   z-index: 999;
+  color: white;
+  font-size: 20px;
+  position: absolute;
   padding-top: env(safe-area-inset-top);
 }

@@ -2,15 +2,15 @@ import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { IonIcon, IonRange, ModalController } from '@ionic/angular/standalone';
 import { inject, signal, Component, ChangeDetectionStrategy } from '@angular/core';
+import { IonIcon, IonRange, IonFooter, IonHeader, IonToolbar } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'location-filter-modal',
   styleUrl: './location-filter-modal.scss',
   templateUrl: './location-filter-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonRange, Button, IonIcon, TextInput, ReactiveFormsModule]
+  imports: [Button, IonIcon, IonRange, TextInput, IonHeader, IonFooter, IonToolbar, ReactiveFormsModule]
 })
 export class LocationFilterModal {
   // services

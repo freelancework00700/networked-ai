@@ -1,8 +1,10 @@
-<div class="p-6 max-w-[672px] mx-auto">
-  <div class="text-center">
-    <div class="heading-h3 neutral-01">Event Category</div>
-  </div>
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 text-center heading-h3 neutral-01">Event Category</div>
+  </ion-toolbar>
+</ion-header>
 
+<div class="inner-content px-4">
   <ion-picker (ionChange)="value = $any($event).detail.value">
     <ion-picker-column name="column" [value]="value">
       @for (option of options(); track option.value) {
@@ -12,6 +14,12 @@
       }
     </ion-picker-column>
   </ion-picker>
-
-  <app-button label="Confirm" (click)="dismiss()" />
 </div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4">
+      <app-button label="Confirm" (click)="dismiss()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

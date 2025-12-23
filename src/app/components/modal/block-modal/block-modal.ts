@@ -1,18 +1,20 @@
-import { Component, inject } from '@angular/core';
+import { inject, Component } from '@angular/core';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
-import { ModalController } from '@ionic/angular/standalone';
+import { IonFooter, IonToolbar, ModalController } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'block-modal',
-  imports: [Button],
+  styleUrl: './block-modal.scss',
   templateUrl: './block-modal.html',
-  styleUrl: './block-modal.scss'
+  imports: [Button, IonFooter, IonToolbar]
 })
 export class BlockModal {
+  // services
   private modalCtrl = inject(ModalController);
   private modalService = inject(ModalService);
-  blockUser(): void {
+
+  blockUser() {
     this.modalCtrl.dismiss(true, 'block');
     this.modalService.close();
   }

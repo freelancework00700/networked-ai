@@ -1,29 +1,32 @@
-import { Component, inject, Input } from '@angular/core';
+import { IonIcon } from '@ionic/angular/standalone';
 import { ModalService } from '@/services/modal.service';
+import { Input, inject, Component } from '@angular/core';
 
 export interface MenuItem {
   label: string;
   icon?: string;
-  iconType?: 'svg' | 'pi';
-  danger?: boolean;
   action?: string;
+  danger?: boolean;
+  iconType?: 'svg' | 'pi';
 }
 
 @Component({
+  imports: [IonIcon],
   selector: 'menu-modal',
-  standalone: true,
-  templateUrl: './menu-modal.html',
-  styleUrl: './menu-modal.scss'
+  styleUrl: './menu-modal.scss',
+  templateUrl: './menu-modal.html'
 })
 export class MenuModal {
+  // services
   private modalService = inject(ModalService);
 
+  // inputs
   @Input() items: MenuItem[] = [];
 
   onItemClick(item: MenuItem) {
     this.modalService.close({
-      role: item.action,
-      data: item
+      data: item,
+      role: item.action
     });
   }
 }

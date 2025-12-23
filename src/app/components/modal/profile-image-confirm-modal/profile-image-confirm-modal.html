@@ -1,28 +1,26 @@
-<div class="p-6 flex flex-col items-center min-h-[385px] relative">
-  <!-- X Close Button -->
-  <button
-    type="button"
-    (click)="close()"
-    class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-surface-600 hover:text-surface-900 transition-colors z-10"
-  >
-    <i class="pi pi-times text-xl"></i>
-  </button>
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex items-center justify-between">
+      <div class="heading-h3 neutral-01">Confirm Profile Picture</div>
 
-  <!-- Title -->
-  <div class="flex items-center w-full mt-2">
-    <div class="theading-h3 neutral-01">Confirm Profile Picture</div>
-  </div>
+      <i class="pi pi-times" (click)="close()"></i>
+    </div>
+  </ion-toolbar>
+</ion-header>
 
-  <!-- Image Preview -->
+<div class="inner-content px-4">
   <div class="flex-1 flex items-center justify-center">
-    <div class="w-44 h-44 rounded-full overflow-hidden shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-4 border-white">
+    <div class="w-44 h-44 rounded-full overflow-hidden border-4 border-white">
       <img [src]="imageDataUrl" alt="Profile preview" class="w-full h-full object-cover" />
     </div>
   </div>
-
-  <!-- Action Buttons -->
-  <div class="flex w-full gap-2">
-    <app-button label="Choose Another" color="secondary" (click)="retake()" class="w-full !bg-neutral-06" />
-    <app-button label="Confirm" (click)="confirm()" class="w-full" />
-  </div>
 </div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex gap-2">
+      <app-button label="Choose Another" color="secondary" (click)="retake()" class="w-full" />
+      <app-button label="Confirm" (click)="confirm()" class="w-full" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

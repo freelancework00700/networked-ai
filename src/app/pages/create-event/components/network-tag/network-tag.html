@@ -1,9 +1,11 @@
-<div class="p-4">
-  <div class="text-center mb-4">
-    <p class="text-sm text-surface-600">{{ subtitle }}</p>
-  </div>
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 text-center text-sm text-surface-600">{{subtitle}}</div>
+  </ion-toolbar>
+</ion-header>
 
-  <ion-grid class="ion-padding-horizontal ion-padding-top">
+<div class="inner-content px-4">
+  <ion-grid>
     <ion-row>
       @for (tag of tags; track tag.value) {
         <div class="p-1">
@@ -18,6 +20,12 @@
       }
     </ion-row>
   </ion-grid>
-
-  <app-button label="Confirm" (click)="confirm()" />
 </div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4">
+      <app-button label="Confirm" (click)="confirm()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>
