@@ -115,6 +115,26 @@ export const appRoutes: Routes = [
     path: 'new-post',
     loadComponent: () => import('@/pages/new-post').then((m) => m.NewPost)
   },
+  {
+    path: 'terms',
+    loadComponent: () => import('@/pages/terms-of-service').then((m) => m.TermsOfService)
+  },
+  {
+    path: 'policy',
+    loadComponent: () => import('@/pages/privacy-policy').then((m) => m.PrivacyPolicy)
+  },
+  {
+    path: 'about-achievements',
+    loadComponent: () => import('@/pages/about-achievements').then((m) => m.AboutAchievements)
+  },
+  {
+    path: 'achievements',
+    loadComponent: () => import('@/pages/profile/components/profile-achievement').then((m) => m.ProfileAchievement)
+  },
+  {
+    path: 'leaderboard',
+    loadComponent: () => import('@/pages/leaderboard').then((m) => m.Leaderboard)
+  },
   // Not found (keep eager as it's small and always needed)
   { path: 'not-found', component: NotFound },
   { path: '**', redirectTo: '/not-found' }

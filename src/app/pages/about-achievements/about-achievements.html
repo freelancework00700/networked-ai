@@ -1,0 +1,198 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
+      <div class="pi pi-arrow-left" (click)="navCtrl.back()"></div>
+      <div class="body-14M neutral-02 text-center w-full">About Achievements</div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="min-h-full">
+    <div class="w-full p-6 max-w-[672px] mx-auto flex flex-col gap-4">
+      <div class="heading-h3">Welcome to Achievements on Networked AI !</div>
+
+      <div class="body-14M desc">
+        On Networked AI, the more you show up, the more you stand out. We're here to celebrate your influence as you grow your network, host events,
+        connect with others, and leave your mark in the community.
+      </div>
+
+      <div class="body-16SB">What's the Networked Level Score?</div>
+
+      <div>
+        <div class="body-14R desc">Your Networked Level Score reflects your overall activity and engagement across five core areas:</div>
+
+        <ul class="list-disc list-inside body-14R pl-4 desc">
+          <li>Events Hosted 🎤</li>
+          <li>Events Attended 🎟</li>
+          <li>Connections Made 🤝</li>
+          <li>QR Code Scans 📲</li>
+          <li>Messages Sent 💬</li>
+        </ul>
+      </div>
+
+      <div class="body-14M desc">
+        Each category contributes up to <span class="font-bold text-black">10,000 points,</span> for a total score of
+        <span class="font-bold text-black">50,000 possible points.</span> The more active you are, the more influence you build — and the more
+        exclusive badges you unlock.
+      </div>
+
+      <div class="body-14M desc">
+        Each action earns you points. As your points add up, so does your influence, visibility, and credibility. You don't need to be famous —
+        <span class="font-bold text-black">you just need to keep showing up.</span>
+      </div>
+
+      <div>
+        <div class="body-16SB">How You Earn Points</div>
+        <div class="body-14M desc">Here's how actions translate into progress:</div>
+      </div>
+
+      <div class="flex w-full">
+        <div class="flex-1">
+          @for (item of pointsActions; track item.action) {
+            <div class="body-14M">{{ item.action }}</div>
+          }
+        </div>
+        <div class="flex-1">
+          @for (item of pointsActions; track item.action) {
+            <div class="body-14M">{{ item.points }}</div>
+          }
+        </div>
+      </div>
+
+      <div>
+        <div class="body-16SB">Your Network, Your Score</div>
+        <div class="body-14M desc">You can earn up to <span class="font-bold">10,000 points</span> in each category.</div>
+        <div class="body-14M desc">
+          That means your total <span class="font-bold">Networked Level Score</span> can reach
+          <span class="font-bold">50,000 points.</span>
+        </div>
+      </div>
+
+      <div class="body-14M desc">
+        Each milestone unlocks <span class="font-bold">badges, diamonds, and recognition</span> to help people get to know who you are — and why
+        you're someone worth connecting with.
+      </div>
+
+      <div>
+        <div class="body-16SB">Network Level Diamonds</div>
+        <div class="body-14M desc">
+          As your total score grows, you move up through our <span class="font-bold text-black">diamond tiers.</span> These aren't just for show —
+          they're a signal to the community that you're here, you're active, and you're building something that matters.
+        </div>
+      </div>
+
+      <div class="grid grid-flow-col auto-cols-fr gap-2 w-full overflow-x-auto">
+        @for (diamond of diamondData; track diamond.points) {
+          <div class="bg-black rounded-lg flex flex-col items-center gap-1 px-3 py-2">
+            <img [src]="diamond.icon" />
+            <div class="text-white whitespace-nowrap">
+              {{ diamond.points }}
+            </div>
+          </div>
+        }
+      </div>
+      <div class="body-14M flex flex-col gap-2">
+        @for (tier of diamondTiers; track tier.color) {
+          <div class="flex justify-between items-center gap-2">
+            <div>
+              <div class="font-semibold">{{ tier.color }}</div>
+              <div class="desc">{{ tier.description }}</div>
+            </div>
+            <div>{{ tier.points }}</div>
+          </div>
+        }
+      </div>
+
+      <div>
+        <div class="body-16SB">Event Hosted</div>
+        <div class="body-14M desc">Your Event Hosting badge track shows your leadership in building community through events.</div>
+      </div>
+
+      <div class="grid grid-cols-5 w-full gap-4">
+        <div class="col-span-1">
+          <div class="body-14M desc">#Event</div>
+          @for (badge of eventHostedBadges; track badge.eventCount) {
+            <div class="body-14M">{{ badge.eventCount }}</div>
+          }
+        </div>
+
+        <div class="col-span-2">
+          <div class="body-14M desc">Badge</div>
+          @for (badge of eventHostedBadges; track badge.eventCount) {
+            <div class="body-14M">{{ badge.badge }}</div>
+          }
+        </div>
+
+        <div class="col-span-2">
+          <div class="body-14M desc">Title</div>
+          @for (badge of eventHostedBadges; track badge.eventCount) {
+            <div class="body-14M">{{ badge.title }}</div>
+          }
+        </div>
+      </div>
+
+      <div>
+        <div class="body-16SB">Category Badges</div>
+        <div class="body-14M desc">Every action you take within a category pushes you closer to mastery:</div>
+
+        <div class="flex w-full">
+          <div class="flex-1">
+            @for (badge of categoryBadges; track badge.percentage) {
+              <div class="body-14M">{{ badge.percentage }}</div>
+            }
+          </div>
+          <div class="flex-1">
+            @for (badge of categoryBadges; track badge.percentage) {
+              <div class="body-14M">{{ badge.title }}</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="body-14M desc">Each progress badge shows others how invested you are — not just in being seen, but in building something real.</div>
+
+      <div>
+        <div class="body-16SB">Event Hosting Progress</div>
+        <div class="body-14M desc">This progress bar shows how far you've come in unlocking all 10 event host milestones.</div>
+        <div class="body-14M desc">
+          Each time you hit a new hosting milestone — like 10, 50, or 1,000 events — you unlock a badge and move closer to 100%.
+        </div>
+        <div class="body-14M desc">Keep hosting and growing your influence in the Networked community!</div>
+      </div>
+
+      <div>
+        <div class="body-16SB">Top Networker Leaderboard</div>
+        <div class="body-14M desc">Want to see where you stand?</div>
+      </div>
+      <div>
+        <div class="body-14M desc">
+          Our <span class="font-bold text-black">Top Networker leaderboard</span> ranks the most active and engaged members of the Networked community
+          — based on their <span class="font-bold text-black">Networked Level Score.</span>
+        </div>
+        <ul class="list-disc list-inside body-14M desc pl-4">
+          <li>The more you host, connect, scan, attend, and message, the higher you climb.</li>
+          <li>Leaderboards reset <span class="font-bold text-black">weekly</span> to give everyone a fresh chance to rise.</li>
+          <li>You can also check your <span class="font-bold text-black">All-Time Rank</span> to see your long-term impact.</li>
+        </ul>
+        <div class="body-14M desc">
+          <span class="font-bold text-black">Ranks update in real-time,</span> so every action counts. Whether you're aiming for the crown or just
+          trying to crack the top 100, your journey starts now.
+        </div>
+      </div>
+
+      <div>
+        <div class="body-16SB">Why This Matters</div>
+        <div class="body-14M desc">This isn't just about points.</div>
+        <div class="body-14M desc">Every message, every scan, every handshake — it adds up.</div>
+        <div class="body-14M desc">
+          As you grow your score, you're also building real recognition. People reach out to you, invite you into deeper circles, and trust your
+          presence in the community.
+        </div>
+        <div class="body-14M desc">
+          This is your <span class="font-bold text-black">Networked journey</span> — and we're here to make every step count.
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>

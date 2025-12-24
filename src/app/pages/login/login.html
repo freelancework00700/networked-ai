@@ -123,8 +123,8 @@
         <!-- terms and privacy policy -->
         <div class="text-center text-sm">
           <span class="neutral-03 body-14R">By continuing, I agree to the </span>
-          <a class="body-14SB neutral-02 !underline cursor-pointer"> terms of service </a>and
-          <a class="body-14SB neutral-02 !underline cursor-pointer"> privacy policy. </a>
+          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navCtrl.navigateForward('/terms')"> terms of service </a>and
+          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navCtrl.navigateForward('/policy')"> privacy policy. </a>
         </div>
       </div>
     </div>

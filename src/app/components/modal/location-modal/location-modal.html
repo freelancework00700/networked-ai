@@ -3,14 +3,14 @@
     <div class="p-4">
       <!-- title -->
       <div class="pb-2 text-center heading-h3 neutral-01">{{ title }}</div>
-  
+
       <p-iconfield>
         <!-- search icon -->
         <p-inputicon class="pi pi-search" />
-  
+
         <!-- search input -->
         <input pInputText [value]="searchQuery()" class="w-full h-[44px]" (input)="onSearchInput($event)" placeholder="Search for a location..." />
-  
+
         <!-- spinner when searching, clear icon when not searching and has value -->
         @if (isSearching()) {
           <p-inputicon class="pi pi-spin pi-spinner" />

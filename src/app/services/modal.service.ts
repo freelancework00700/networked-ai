@@ -33,6 +33,7 @@ import { NetworkTagModal, NetworkTag } from '@/pages/create-event/components/net
 import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confirm-modal';
 import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
 import { PromoCodeForm, PromoCodeFormData } from '@/pages/create-event/components/promo-code-form';
+import { AchievementDetailModal } from '@/components/modal/achievement-detail-modal';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -610,6 +611,23 @@ export class ModalService {
       initialBreakpoint: 1,
       component: BlockModal,
       cssClass: 'auto-hight-modal'
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
+  async openAchievementDetailModal(achievement: any): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: AchievementDetailModal,
+      cssClass: 'auto-hight-modal',
+      componentProps: {
+        achievement
+      }
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();

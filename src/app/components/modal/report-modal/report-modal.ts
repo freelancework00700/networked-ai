@@ -17,7 +17,7 @@ export class ReportModal {
   private fb = inject(FormBuilder);
   private modalService = inject(ModalService);
 
-  // signals  
+  // signals
   form = signal<FormGroup>(
     this.fb.group({
       additionalComment: [''],

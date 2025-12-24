@@ -2,7 +2,9 @@ import Swiper from 'swiper';
 import { Scrollbar } from 'swiper/modules';
 import { Button } from '@/components/form/button';
 import { isPlatformBrowser } from '@angular/common';
+import { BusinessCard } from '@/components/card/business-card';
 import { ProfileLink } from '@/pages/profile/components/profile-link';
+import { NetworkingScoreCard } from '@/components/card/networking-score-card';
 import { ProfileAchievement } from '@/pages/profile/components/profile-achievement';
 import { ProfileLikedEvents } from '@/pages/profile/components/profile-liked-events';
 import { ProfilePosts } from '@/pages/profile/components/profile-posts/profile-posts';
@@ -32,9 +34,11 @@ interface TabConfig {
     IonContent,
     IonToolbar,
     ProfileLink,
+    BusinessCard,
     ProfilePosts,
     ProfileLikedEvents,
     ProfileAchievement,
+    NetworkingScoreCard,
     ProfileHostedEvents,
     ProfileAttendedEvents,
     ProfileUpcomingEvents

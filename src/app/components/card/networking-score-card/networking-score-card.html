@@ -1,0 +1,28 @@
+<div class="flex flex-col gap-2 w-full">
+  <div class="flex flex-col gap-3 p-4 rounded-[12px] bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
+    <div class="flex items-start justify-between">
+      <div class="flex items-start gap-3">
+        <div class="w-[48px] h-[48px] min-w-[48px]">
+          <img [src]="diamondPath()" alt="Networking score" class="w-full h-full object-contain" />
+        </div>
+        <div class="flex flex-col leading-tight">
+          <span class="body-12 neutral-07">Networking Score</span>
+          <span class="heading-h2 neutral-07">{{ score() | number }}</span>
+        </div>
+      </div>
+      <div class="pi pi-arrow-right neutral-07 !text-[16px]" (click)="navCtrl.navigateForward('/leaderboard')"></div>
+    </div>
+    @if (!isMaxTier()) {
+      <div class="flex items-center gap-3">
+        <div class="flex-1 h-[12px] rounded-full bg-[#2a2a2a] overflow-hidden">
+          <div class="h-full rounded-full bg-gradient-to-r" [ngClass]="progressBarColor()" [style.width.%]="progressPercentage()"></div>
+        </div>
+        <div class="flex items-center">
+          <img [src]="targetDiamondPath()" alt="Target" class="w-[30px] h-[30px] object-contain" />
+          <span class="body-16SB neutral-07">{{ targetDisplay() }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+<app-button label="Learn More About Achievements" variant="text" class="w-full" (click)="navCtrl.navigateForward('/about-achievements')" />

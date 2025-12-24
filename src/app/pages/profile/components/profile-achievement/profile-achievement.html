@@ -1,166 +1,114 @@
-<div class="flex justify-between items-center pb-4">
-  <div class="heading-h3 neutral-01">Achievements</div>
-  <div class="brand-02 body-14SB">See all</div>
-</div>
-
-<div class="flex justify-between items-center pb-3">
-  <div class="body-16M neutral-01">Events Hosted</div>
-  <div class="flex">
-    <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-      <div class="h-full w-[50%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
-    </div>
-    <div class="body-12M">144/250</div>
-  </div>
-</div>
-
-<div>
-  <div class="grid grid-cols-5 gap-2">
-    <!-- Achievement Card 1: 10K -->
-    <div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
-      <div class="relative w-16 h-16 flex items-center justify-center">
-        <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
-        <div class="relative z-10 flex flex-col items-center">
-          <span class="neutral-03 body-16SB">10K</span>
-          <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+@if (isStandalonePage) {
+  <ion-header>
+    <ion-toolbar>
+      <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 max-w-[672px] mx-auto">
+        <div class="pi pi-arrow-left cursor-pointer" (click)="navCtrl.back()"></div>
+        <div class="body-14M neutral-02 text-center w-full">Achievements</div>
+      </div>
+    </ion-toolbar>
+  </ion-header>
+}
+<div class="inner-content overflow-y-auto h-full">
+  <div class="w-full max-w-[672px] mx-auto" [class.p-4]="isStandalonePage">
+    @if (isStandalonePage) {
+      <div class="flex justify-between items-center pb-4">
+        <div class="heading-h3 neutral-01">Your Networking Score</div>
+      </div>
+    } @else {
+      <div class="flex justify-between items-center pb-4">
+        <div class="heading-h3 neutral-01">Achievements</div>
+        <div class="brand-02 body-14SB cursor-pointer" (click)="navigateToAchievements()">See all</div>
+      </div>
+    }
+    @if (isStandalonePage) {
+      <networking-score-card [score]="37890" />
+    }
+    <div class="mb-6">
+      <div class="flex items-center justify-between pb-3">
+        <div class="body-16M neutral-01">Events Hosted</div>
+        <div class="flex items-center gap-2">
+          @if (!isAllEventsHostedCompleted()) {
+            <div class="w-[120px] sm:w-[200px] h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+              <div
+                class="h-full rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"
+                [style.width.%]="getEventsHostedProgress()"
+              ></div>
+            </div>
+          }
+          @if (isAllEventsHostedCompleted()) {
+            <div class="flex items-center gap-2">
+              <i class="pi pi-check"></i>
+              <div class="body-16M neutral-01 font-semibold">{{ eventsHostedCount | number }}</div>
+            </div>
+          } @else {
+            <div class="body-16M neutral-01 font-semibold whitespace-nowrap">{{ eventsHostedCount | number }}/{{ eventsHostedTotal | number }}</div>
+          }
         </div>
       </div>
-      <span class="neutral-04 body-10">Locked</span>
-      <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-        <div class="h-full w-[50%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
-      </div>
-    </div>
-
-    <!-- Achievement Card 2: 5K -->
-    <div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
-      <div class="relative w-16 h-16 flex items-center justify-center">
-        <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
-        <div class="relative z-10 flex flex-col items-center">
-          <span class="neutral-03 body-16SB">5K</span>
-          <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
-        </div>
-      </div>
-      <span class="neutral-04 body-10">Locked</span>
-      <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-        <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
-      </div>
-    </div>
-
-    <!-- Achievement Card 3: 2K -->
-    <div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
-      <div class="relative w-16 h-16 flex items-center justify-center">
-        <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
-        <div class="relative z-10 flex flex-col items-center">
-          <span class="neutral-03 body-16SB">2K</span>
-          <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
-        </div>
-      </div>
-      <span class="neutral-04 body-10">Locked</span>
-      <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-        <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+      <div class="grid grid-cols-5 gap-2">
+        @for (achievement of eventsHostedAchievements; track achievement.id) {
+          <achievement-card [achievement]="achievement" (onClick)="openAchievementDetailModal($event)" />
+        }
       </div>
     </div>
 
-    <!-- Achievement Card 4: 1K -->
-    <div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
-      <div class="relative w-16 h-16 flex items-center justify-center">
-        <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
-        <div class="relative z-10 flex flex-col items-center">
-          <span class="neutral-03 body-16SB">1K</span>
-          <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+    <!-- Events Attended Section -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between pb-3">
+        <div class="body-16M neutral-01">Events Attended</div>
+        <div class="flex items-center gap-2">
+          @if (!isAllEventsAttendedCompleted()) {
+            <div class="w-[120px] sm:w-[200px] h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+              <div
+                class="h-full rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"
+                [style.width.%]="(getEventsAttendedCompleted() / getTotalAchievements()) * 100"
+              ></div>
+            </div>
+          }
+          @if (isAllEventsAttendedCompleted()) {
+            <div class="flex items-center gap-2">
+              <i class="pi pi-check"></i>
+              <div class="body-16M neutral-01 font-semibold">{{ eventsAttendedCount | number }}</div>
+            </div>
+          } @else {
+            <div class="body-16M neutral-01 font-semibold whitespace-nowrap">{{ getEventsAttendedCompleted() }}/{{ getTotalAchievements() }}</div>
+          }
         </div>
       </div>
-      <span class="neutral-04 body-10">Locked</span>
-      <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-        <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+      <div class="grid grid-cols-5 gap-2">
+        @for (achievement of eventsAttendedAchievements; track achievement.id) {
+          <achievement-card [achievement]="achievement" (onClick)="openAchievementDetailModal($event)" />
+        }
       </div>
     </div>
 
-    <!-- Achievement Card 5: 500 -->
-    <div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
-      <div class="relative w-16 h-16 flex items-center justify-center">
-        <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
-        <div class="relative z-10 flex flex-col items-center">
-          <span class="neutral-03 body-16SB">500</span>
-          <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
+    <!-- Networks Section -->
+    <div>
+      <div class="flex items-center justify-between pb-3">
+        <div class="body-16M neutral-01">Networks</div>
+        <div class="flex items-center gap-2">
+          @if (!isAllNetworksCompleted()) {
+            <div class="w-[120px] sm:w-[200px] h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+              <div
+                class="h-full rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"
+                [style.width.%]="getNetworksProgress()"
+              ></div>
+            </div>
+          }
+          @if (isAllNetworksCompleted()) {
+            <div class="flex items-center gap-2">
+              <i class="pi pi-check"></i>
+              <div class="body-16M neutral-01 font-semibold">{{ networksCount | number }}</div>
+            </div>
+          } @else {
+            <div class="body-16M neutral-01 font-semibold whitespace-nowrap">{{ networksCount | number }}/{{ networksTotal | number }}</div>
+          }
         </div>
       </div>
-      <span class="neutral-04 body-10">Locked</span>
-      <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-        <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
-      </div>
-    </div>
-    <!-- Achievement Card 6: 10K -->
-    <div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
-      <div class="relative w-16 h-16 flex items-center justify-center">
-        <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
-        <div class="relative z-10 flex flex-col items-center">
-          <span class="neutral-03 body-16SB">10K</span>
-          <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
-        </div>
-      </div>
-      <span class="neutral-04 body-10">Locked</span>
-      <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-        <div class="h-full w-[50%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
-      </div>
-    </div>
-
-    <!-- Achievement Card 7: 5K -->
-    <div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
-      <div class="relative w-16 h-16 flex items-center justify-center">
-        <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
-        <div class="relative z-10 flex flex-col items-center">
-          <span class="neutral-03 body-16SB">5K</span>
-          <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
-        </div>
-      </div>
-      <span class="neutral-04 body-10">Locked</span>
-      <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-        <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
-      </div>
-    </div>
-
-    <!-- Achievement Card 8: 2K -->
-    <div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
-      <div class="relative w-16 h-16 flex items-center justify-center">
-        <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
-        <div class="relative z-10 flex flex-col items-center">
-          <span class="neutral-03 body-16SB">2K</span>
-          <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
-        </div>
-      </div>
-      <span class="neutral-04 body-10">Locked</span>
-      <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-        <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
-      </div>
-    </div>
-
-    <!-- Achievement Card 9: 1K -->
-    <div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
-      <div class="relative w-16 h-16 flex items-center justify-center">
-        <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
-        <div class="relative z-10 flex flex-col items-center">
-          <span class="neutral-03 body-16SB">1K</span>
-          <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
-        </div>
-      </div>
-      <span class="neutral-04 body-10">Locked</span>
-      <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-        <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
-      </div>
-    </div>
-
-    <!-- Achievement Card 10: 500 -->
-    <div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]">
-      <div class="relative w-16 h-16 flex items-center justify-center">
-        <img src="/assets/images/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
-        <div class="relative z-10 flex flex-col items-center">
-          <span class="neutral-03 body-16SB">500</span>
-          <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
-        </div>
-      </div>
-      <span class="neutral-04 body-10">Locked</span>
-      <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-        <div class="h-full w-[8%] rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"></div>
+      <div class="grid grid-cols-5 gap-2">
+        @for (achievement of networksAchievements; track achievement.id) {
+          <achievement-card [achievement]="achievement" (onClick)="openAchievementDetailModal($event)" />
+        }
       </div>
     </div>
   </div>

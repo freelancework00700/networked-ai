@@ -1,0 +1,38 @@
+<div class="inner-content px-4">
+  <div class="text-center">
+    <div class="flex flex-col items-center gap-4 p-6">
+      @if (achievement) {
+        <div class="relative w-50 h-50 flex items-center justify-center">
+          @if (achievement.isLocked) {
+            <img src="/assets/svg/gamification/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
+          } @else {
+            <img [src]="getPolygonIcon()" [alt]="'Polygon ' + achievement.threshold" class="absolute inset-0 w-full h-full object-contain" />
+          }
+          <div class="relative z-10 flex flex-col items-center gap-2">
+            <span class="text-6xl font-bold leading-none" [ngClass]="achievement.isLocked ? 'neutral-03' : 'text-black'">{{
+              achievement.threshold
+            }}</span>
+            @if (achievement.isLocked) {
+              <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-4xl"></ion-icon>
+            } @else if (getTypeIcon()) {
+              <ion-icon [src]="getTypeIcon()" class="text-black text-4xl"></ion-icon>
+            }
+          </div>
+        </div>
+        <div class="heading-h3">{{ getTitle() }}</div>
+        @if (achievement.achievedDate) {
+          <div class="body-14R neutral-03">{{ formatDate(achievement.achievedDate) }}</div>
+        }
+        <div class="body-14R">{{ getDescription() }}</div>
+      }
+    </div>
+  </div>
+</div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex gap-2">
+      <app-button label="Close" (click)="close()" class="flex-1" />
+    </div>
+  </ion-toolbar>
+</ion-footer>
