@@ -45,3 +45,40 @@ ion-item {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   background: linear-gradient(138.06deg, #ababab 8.51%, #545454 85.69%);
 }
+
+.filter-button {
+  flex-shrink: 0;
+  height: 2rem;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 20px;
+  border: 1px solid;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  font-family: 'Manrope', sans-serif;
+  white-space: nowrap;
+  padding: 0 1rem;
+
+  &.active {
+    font-weight: 600;
+    color: var(--brand-02);
+    border-color: #e1910e;
+    background-color: var(--brand-07);
+  }
+
+  &:not(.active) {
+    font-weight: 500;
+    border-color: #d7d7d7;
+    color: var(--neutral-03);
+    background-color: var(--neutral-07);
+  }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

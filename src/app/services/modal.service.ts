@@ -295,6 +295,7 @@ export class ModalService {
     cancelButtonLabel?: string;
     confirmButtonColor?: string;
     iconPosition?: 'left' | 'center';
+    customColor?: string;
   }): Promise<{ data: any; role: string } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',

@@ -1,0 +1,171 @@
+<form>
+  <div class="flex flex-col gap-6">
+    <div class="heading-h3 neutral-01 text-center">{{ getFieldValue('title') }}</div>
+
+    <!-- Plan Selection -->
+    <div class="flex flex-col gap-3">
+      <div class="flex gap-4">
+        @for (plan of availablePlans(); track plan.type) {
+          <div class="flex-1 flex flex-col gap-3">
+            @if (planType() === 'sponsor') {
+              <div
+                class="relative rounded-xl p-[2px] transition cursor-pointer"
+                [style.background]="
+                  selectedPlan() === plan.type
+                    ? 'linear-gradient(90deg, #9E8F76 0%, #7A6A50 14.28%, #F6D9AB 24.09%, #9D7F4E 40.5%, #C9A770 60.46%, #796A52 86.52%)'
+                    : '#D1D5DB'
+                "
+                (click)="selectPlan(plan.type)"
+              >
+                <div
+                  class="relative rounded-xl px-4 pt-8 pb-4 h-full"
+                  [style.background-color]="selectedPlan() === plan.type ? planColors().background : '#FFFFFF'"
+                >
+                  @if (hasAnnualPlan()) {
+                    <!-- Radio Button -->
+                    <div class="absolute top-3 right-3">
+                      <p-radiobutton
+                        [inputId]="plan.inputId"
+                        [value]="plan.type"
+                        [formControl]="planControl"
+                        (onClick)="selectPlan(plan.type)"
+                      ></p-radiobutton>
+                    </div>
+                  }
+
+                  @if (plan.showBadge) {
+                    <!-- Badge -->
+                    <div
+                      class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-lg px-4 py-1 text-sm font-semibold text-white shadow"
+                      [style.background]="
+                        'linear-gradient(90deg, #9E8F76 0%, #7A6A50 14.28%, #F6D9AB 24.09%, #9D7F4E 40.5%, #C9A770 60.46%, #796A52 86.52%)'
+                      "
+                    >
+                      @if (discountType() === 'percentage') {
+                        {{ discountPercentage() }}% OFF!
+                      } @else {
+                        SAVE ${{ amountSaved() | number: '1.0-0' }}!
+                      }
+                    </div>
+                  }
+
+                  <!-- Content -->
+                  <div class="text-center">
+                    <div class="body-14SB neutral-01">{{ plan.label }}</div>
+                    <div class="body-16SB neutral-01">
+                      ${{ plan.price | number: '1.2-2' }} <span class="text-gray-500 body-14R">{{ plan.period }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <div
+                class="relative rounded-xl border-2 px-4 pt-8 pb-4 transition cursor-pointer"
+                [style.border-color]="selectedPlan() === plan.type ? planColors().border : '#D1D5DB'"
+                [style.background-color]="selectedPlan() === plan.type ? planColors().background : '#FFFFFF'"
+                (click)="selectPlan(plan.type)"
+              >
+                @if (hasAnnualPlan()) {
+                  <!-- Radio Button -->
+                  <div class="absolute top-3 right-3">
+                    <p-radiobutton
+                      [inputId]="plan.inputId"
+                      [value]="plan.type"
+                      formControlName="plan"
+                      (onClick)="selectPlan(plan.type)"
+                    ></p-radiobutton>
+                  </div>
+                }
+
+                @if (plan.showBadge) {
+                  <!-- Badge -->
+                  <div
+                    class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-lg px-4 py-1 text-sm font-semibold text-white shadow"
+                    [style.background-color]="planColors().badge"
+                  >
+                    @if (discountType() === 'percentage') {
+                      {{ discountPercentage() }}% OFF!
+                    } @else {
+                      SAVE ${{ amountSaved() | number: '1.0-0' }}!
+                    }
+                  </div>
+                }
+
+                <!-- Content -->
+                <div class="text-center">
+                  <div class="body-14SB neutral-01">{{ plan.label }}</div>
+                  <div class="body-16SB neutral-01">
+                    ${{ plan.price | number: '1.2-2' }} <span class="text-gray-500 body-14R">{{ plan.period }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Features/Benefits -->
+    @if (benefits().length > 0) {
+      <div class="flex flex-col gap-2">
+        @for (benefit of benefits(); track benefit.id) {
+          @if (benefit.text) {
+            <div class="flex items-start gap-2">
+              <div class="pi pi-check flex-shrink-0 mt-0.5" [style.color]="planColors().link"></div>
+              <span class="body-14R neutral-01 break-words flex-1">{{ benefit.text }}</span>
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <!-- Included Events -->
+    @if (selectedEvents().length > 0) {
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div class="body-16M neutral-01">Included Events</div>
+          @if (hasMultipleEvents()) {
+            <button type="button" class="flex items-center gap-1 body-14SB" [style.color]="planColors().link">
+              <span>See all</span>
+              <i class="pi pi-arrow-right"></i>
+            </button>
+          }
+        </div>
+        @if (hasMultipleEvents()) {
+          <!-- Swiper for multiple events -->
+          <div #swiperEl class="swiper">
+            <div class="swiper-wrapper">
+              @for (eventId of selectedEvents(); track eventId) {
+                @if (getEventById(eventId); as event) {
+                  <div class="swiper-slide">
+                    <event-card [event]="convertToIEvent(event)" [variant]="'compact'" />
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        } @else {
+          <!-- Full width for single event -->
+          @if (getEventById(selectedEvents()[0]); as event) {
+            <event-card [event]="convertToIEvent(event)" [variant]="'compact'" class="w-full" />
+          }
+        }
+      </div>
+    }
+
+    <!-- Description -->
+    @if (getFieldValue('description')) {
+      <div class="flex flex-col gap-2">
+        <p class="body-14R neutral-03 transition-all">
+          {{ getTruncatedDescription() }}
+        </p>
+        @if (shouldShowReadMore()) {
+          <button type="button" class="flex items-center gap-1 body-14SB self-center" [style.color]="planColors().link" (click)="toggleDescription()">
+            <span>{{ isDescriptionExpanded() ? 'Read less' : 'Read more' }}</span>
+            <i [class]="isDescriptionExpanded() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+          </button>
+        }
+      </div>
+    }
+  </div>
+</form>

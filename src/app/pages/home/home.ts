@@ -1,8 +1,8 @@
 import { HomeFeed } from '@/pages/home/home-feed';
 import { HomeEvent } from '@/pages/home/home-event';
-import { signal, Component, ChangeDetectionStrategy } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
+import { signal, Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
+import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 
 type Tab = 'events' | 'feed';
 
@@ -15,7 +15,7 @@ type Tab = 'events' | 'feed';
 })
 export class Home {
   tab = signal<Tab>('events');
-
+  navCtrl = inject(NavController);
   tabItems: SegmentButtonItem[] = [
     {
       value: 'events',

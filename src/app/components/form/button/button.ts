@@ -21,6 +21,7 @@ export class Button {
   iconPos = input<'right' | 'left'>('left');
   color = input<'secondary' | 'primary' | 'success' | 'info' | 'warn' | 'danger' | 'help' | 'contrast'>('primary');
   variant = input<'outlined' | 'text' | undefined>(undefined);
+  customColor = input<string | undefined>(undefined);
 
   // outputs
   click = output<void>();

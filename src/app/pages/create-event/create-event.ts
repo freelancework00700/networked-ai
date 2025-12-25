@@ -161,7 +161,7 @@ export class CreateEvent {
   speakers = signal<User[]>([]);
   mediaItems = signal<any[]>([]);
   tickets = signal<Ticket[]>([]);
-  currentStep = signal<number>(1);
+  currentStep = signal<number>(3);
   conversation = signal<any[]>([]);
   repeatingEvents = signal<any[]>([]);
   promoCodes = signal<PromoCode[]>([]);

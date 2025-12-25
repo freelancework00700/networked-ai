@@ -13,7 +13,6 @@ import {
   NavController
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { Chip } from '@/components/common/chip';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { Searchbar } from '@/components/common/searchbar';
@@ -34,7 +33,6 @@ export interface Message {
 @Component({
   selector: 'messages',
   imports: [
-    Chip,
     Button,
     IonList,
     IonItem,
@@ -67,7 +65,15 @@ export class Messages {
     { id: 7, sender: 'Network People', text: 'Announcement made', time: '9:00 am', network: true }
   ]);
 
-  activeTab = signal('All');
+  tabs = [
+    { value: 'all', label: 'All' },
+    { value: 'unread', label: 'Unread' },
+    { value: 'group', label: 'Group' },
+    { value: 'event', label: 'Event' },
+    { value: 'network', label: 'Network' }
+  ];
+
+  activeTab = signal('all');
 
   searchInput = signal<string>('');
 
@@ -83,10 +89,10 @@ export class Messages {
 
       if (!matchesSearch) return false;
 
-      if (tab === 'Unread') return msg.unreadCount && msg.unreadCount > 0;
-      if (tab === 'Group') return msg.group === true;
-      if (tab === 'Event') return msg.event === true;
-      if (tab === 'Network') return msg.network === true;
+      if (tab === 'unread') return msg.unreadCount && msg.unreadCount > 0;
+      if (tab === 'group') return msg.group === true;
+      if (tab === 'event') return msg.event === true;
+      if (tab === 'network') return msg.network === true;
 
       return true;
     });

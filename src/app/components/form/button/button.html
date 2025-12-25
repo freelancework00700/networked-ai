@@ -7,7 +7,11 @@
   [disabled]="disabled()"
   (click)="onClick($event)"
   [icon]="iconName() ? 'pi ' + iconName() : ''"
-  [style]="{ width: width(), height: height(), borderRadius: radius() }"
+  [style]="
+    customColor()
+      ? { width: width(), height: height(), borderRadius: radius(), backgroundColor: customColor(), borderColor: customColor(), color: '#ffffff' }
+      : { width: width(), height: height(), borderRadius: radius() }
+  "
   styleClass="w-full h-[44px] body-14SB neutral-01"
 >
   @if (icon()) {

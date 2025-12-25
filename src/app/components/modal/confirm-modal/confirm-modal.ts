@@ -31,6 +31,7 @@ export class ConfirmModal {
   @Input() description = '';
   @Input() title = 'Confirm';
   @Input() iconBgColor?: string;
+  @Input() customColor?: string;
   @Input() cancelButtonLabel = '';
   @Input() confirmButtonLabel = 'Confirm';
   @Input() iconPosition: 'left' | 'center' = 'center';

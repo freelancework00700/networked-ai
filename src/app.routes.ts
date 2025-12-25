@@ -135,6 +135,15 @@ export const appRoutes: Routes = [
     path: 'leaderboard',
     loadComponent: () => import('@/pages/leaderboard').then((m) => m.Leaderboard)
   },
+  // subscription routes (lazy loaded)
+  {
+    path: 'create-plan',
+    loadComponent: () => import('@/pages/create-plan').then((m) => m.CreatePlan)
+  },
+  {
+    path: 'notification',
+    loadComponent: () => import('@/pages/notification').then((m) => m.Notification)
+  },
   // Not found (keep eager as it's small and always needed)
   { path: 'not-found', component: NotFound },
   { path: '**', redirectTo: '/not-found' }
