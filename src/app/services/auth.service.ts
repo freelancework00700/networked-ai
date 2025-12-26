@@ -146,7 +146,9 @@ export class AuthService extends BaseApiService {
     }
   }
 
-  async sendPasswordResetEmail(email: string): Promise<void> {}
+  async forgotPassword(email: string): Promise<void> {
+    await this.post('/auth/forgot-password', { email });
+  }
 
   async login(payload: ILoginPayload): Promise<IAuthResponse> {
     const response = await this.post<IAuthResponse>('/auth/login', payload);

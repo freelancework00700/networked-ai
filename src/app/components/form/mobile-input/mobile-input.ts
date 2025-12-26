@@ -1,3 +1,4 @@
+import { of } from 'rxjs';
 import intlTelInput, { Iti } from 'intl-tel-input';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -5,7 +6,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { UserService } from '@/services/user.service';
 import { availability } from '@/validations/availability';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, AsyncValidatorFn, ReactiveFormsModule } from '@angular/forms';
 import { input, inject, OnInit, signal, Component, ViewChild, ElementRef, afterNextRender, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
@@ -70,13 +71,14 @@ export class MobileInput implements OnInit {
     // if control is disabled, return true
     if (control.disabled) return true;
 
+    // // check if phone number is valid using intl-tel-input
+    // if (!this.iti.isValidNumber()) return false;
+
     // if control is enabled, check validity
     return control.valid;
   }
 
   get getErrorMessage(): string | null {
-    if (!this.isSubmitted()) return null;
-
     const control = this.control;
     if (!control.touched) return null;
 
@@ -128,9 +130,23 @@ export class MobileInput implements OnInit {
       validators.push(Validators.required);
     }
 
-    const asyncValidators = [];
+    const asyncValidators: AsyncValidatorFn[] = [];
     if (this.checkIfTaken() || this.checkIfExists()) {
-      asyncValidators.push(availability(this.userService, 'mobile', () => this.getPhoneNumber(), this.checkIfExists()));
+      // create a wrapper validator that only runs when isSubmitted is true and there are no validation errors
+      const availabilityValidator = availability(this.userService, 'mobile', () => this.getPhoneNumber(), this.checkIfExists());
+      asyncValidators.push((control: AbstractControl) => {
+        // don't run the API call if isSubmitted is false
+        if (!this.isSubmitted()) {
+          return of(null);
+        }
+
+        // don't run the API call if there is an error message
+        if (!!this.getErrorMessage) {
+          return of(null);
+        }
+
+        return availabilityValidator(control);
+      });
     }
 
     this.parentFormGroup.addControl(

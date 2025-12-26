@@ -6,6 +6,7 @@ import { validateFields } from '@/utils/form-validation';
 import { inject, signal, Component } from '@angular/core';
 import { EmailInput } from '@/components/form/email-input';
 import { ToasterService } from '@/services/toaster.service';
+import { BaseApiService } from '@/services/base-api.service';
 import { PasswordInput } from '@/components/form/password-input';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { IonHeader, IonFooter, IonContent, IonToolbar, NavController } from '@ionic/angular/standalone';
@@ -64,12 +65,13 @@ export class ForgotPassword {
       // send reset password link
       const { email } = this.forgotPasswordForm().value;
       this.maskedEmail.set(maskEmail(email!));
-      await this.authService.sendPasswordResetEmail(email!);
+      await this.authService.forgotPassword(email!);
 
       // open email app screen
       this.step.set(2);
     } catch (error: any) {
-      this.toasterService.showError(error.message || 'Failed to send reset password link.');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to send reset password link.');
+      this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
       await this.modalService.close();
@@ -77,6 +79,6 @@ export class ForgotPassword {
   }
 
   openEmailApp() {
-    window.open('https://mail.google.com/mail/u/0/#search/noreply%40networked-6f29b.firebaseapp.com', '_blank');
+    window.open('https://mail.google.com/mail/u/0/#search/do-not-reply%40net-worked.ai', '_blank');
   }
 }

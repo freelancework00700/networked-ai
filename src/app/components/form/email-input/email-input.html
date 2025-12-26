@@ -17,10 +17,10 @@
     class="w-full h-[44px]"
     (input)="onInput($event)"
     [attr.inputmode]="'email'"
-    [invalid]="!!getErrorMessage"
     [placeholder]="getPlaceholder"
     [formControlName]="controlName()"
-    [class.ng-invalid]="!!getErrorMessage"
+    [invalid]="!!getErrorMessage && isSubmitted()"
+    [class.ng-invalid]="!!getErrorMessage && isSubmitted()"
   />
 
   <!-- loader when checking email -->
@@ -36,6 +36,6 @@
 </p-iconField>
 
 <!-- validation -->
-@if (getErrorMessage) {
+@if (!!getErrorMessage && isSubmitted()) {
   <div class="accent-red pt-2 body-12M">{{ getErrorMessage }}</div>
 }

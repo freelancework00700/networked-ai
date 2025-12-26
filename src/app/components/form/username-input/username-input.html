@@ -11,10 +11,10 @@
     pInputText
     class="w-full h-[44px]"
     [placeholder]="placeholder()"
-    [invalid]="!!getErrorMessage"
     [formControlName]="controlName()"
-    [class.ng-invalid]="!!getErrorMessage"
-    [class.verified]="isUsernameValid && !isChecking()"
+    [class.verified]="isUsernameValid"
+    [invalid]="!!getErrorMessage && isSubmitted()"
+    [class.ng-invalid]="!!getErrorMessage && isSubmitted()"
     oninput="this.value = this.value = this.value.toLowerCase()"
   />
 
@@ -24,7 +24,7 @@
   }
 
   <!-- verify icon when username is valid and filled -->
-  @if (isUsernameValid && !isChecking()) {
+  @if (isUsernameValid) {
     <p-inputicon>
       <img src="assets/svg/verify.svg" />
     </p-inputicon>
@@ -32,6 +32,6 @@
 </p-iconfield>
 
 <!-- validation -->
-@if (!!getErrorMessage) {
+@if (!!getErrorMessage && isSubmitted()) {
   <div class="accent-red pt-2 body-12M">{{ getErrorMessage }}</div>
 }

@@ -1,3 +1,4 @@
+import { of } from 'rxjs';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
@@ -5,7 +6,7 @@ import { UserService } from '@/services/user.service';
 import { availability } from '@/validations/availability';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { input, signal, OnInit, inject, Component, ChangeDetectionStrategy } from '@angular/core';
-import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, AsyncValidatorFn, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'email-input',
@@ -73,14 +74,12 @@ export class EmailInput implements OnInit {
   }
 
   get getErrorMessage(): string | null {
-    if (!this.isSubmitted()) return null;
-
     const control = this.control;
     if (!control.touched) return null;
 
     if (control.errors?.['required']) {
       return 'Please enter your email address.';
-    } else if (control.errors?.['email']) {
+    } else if (control.errors?.['email'] || control.errors?.['pattern']) {
       return 'Please enter a valid email address.';
     } else if (control.errors?.['taken']) {
       return 'This email is already taken.';
@@ -94,13 +93,28 @@ export class EmailInput implements OnInit {
   ngOnInit(): void {
     const validators = [];
     if (this.required()) {
+      validators.push(Validators.email);
       validators.push(Validators.required);
+      validators.push(Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/));
     }
-    validators.push(Validators.email);
 
-    const asyncValidators = [];
+    const asyncValidators: AsyncValidatorFn[] = [];
     if (this.checkIfTaken() || this.checkIfExists()) {
-      asyncValidators.push(availability(this.userService, 'email', undefined, this.checkIfExists()));
+      // create a wrapper validator that only runs when isSubmitted is true and there are no validation errors
+      const availabilityValidator = availability(this.userService, 'email', undefined, this.checkIfExists());
+      asyncValidators.push((control: AbstractControl) => {
+        // don't run the API call if isSubmitted is false
+        if (!this.isSubmitted()) {
+          return of(null);
+        }
+
+        // don't run the API call if there is an error message
+        if (!!this.getErrorMessage) {
+          return of(null);
+        }
+
+        return availabilityValidator(control);
+      });
     }
 
     this.parentFormGroup.addControl(

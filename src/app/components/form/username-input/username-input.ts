@@ -1,10 +1,11 @@
+import { of } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { UserService } from '@/services/user.service';
 import { availability } from '@/validations/availability';
 import { input, signal, inject, OnInit, Component, ChangeDetectionStrategy } from '@angular/core';
-import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, AsyncValidatorFn, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'username-input',
@@ -53,7 +54,24 @@ export class UsernameInput implements OnInit {
   }
 
   ngOnInit() {
-    const asyncValidators = this.checkAvailability() ? [availability(this.userService, 'username')] : [];
+    const asyncValidators: AsyncValidatorFn[] = [];
+    if (this.checkAvailability()) {
+      // create a wrapper validator that only runs when isSubmitted is true and there are no validation errors
+      const availabilityValidator = availability(this.userService, 'username');
+      asyncValidators.push((control: AbstractControl) => {
+        // don't run the API call if isSubmitted is false
+        if (!this.isSubmitted()) {
+          return of(null);
+        }
+
+        // don't run the API call if there is an error message
+        if (!!this.getErrorMessage) {
+          return of(null);
+        }
+
+        return availabilityValidator(control);
+      });
+    }
 
     this.parentFormGroup.addControl(
       this.controlName(),
@@ -76,8 +94,6 @@ export class UsernameInput implements OnInit {
   }
 
   get getErrorMessage() {
-    if (!this.isSubmitted()) return null;
-
     const control = this.control;
     if (!control.touched) return null;
 
