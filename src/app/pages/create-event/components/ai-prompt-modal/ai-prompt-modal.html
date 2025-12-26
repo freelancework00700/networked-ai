@@ -1,18 +1,21 @@
-<div class="ai-prompt-modal-wrapper">
-  <!-- Header -->
-  <div class="ai-prompt-header">
-    <div class="header-content flex items-center justify-between">
-      <!-- Left Label -->
-      <div class="body-medium-16 natural-01">Customize event description</div>
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <!-- Header -->
+    <div class="ai-prompt-header">
+      <div class="header-content flex items-center justify-between">
+        <!-- Left Label -->
+        <div class="body-medium-16 natural-01">Customize event description</div>
 
-      <!-- Right Close Icon -->
-      <button class="flex items-center gap-1 text-primary" (click)="close()">
-        <i class="pi pi-times text-lg"></i>
-      </button>
+        <!-- Right Close Icon -->
+        <button class="flex items-center gap-1 text-primary" (click)="close()">
+          <i class="pi pi-times text-lg"></i>
+        </button>
+      </div>
     </div>
-  </div>
+  </ion-toolbar>
+</ion-header>
 
-  <!-- Content -->
+<ion-content>
   <div class="ai-prompt-content">
     <div class="left-chat chat-message">
       <div class="chat-container">
@@ -42,24 +45,22 @@
       </div>
     </div>
   </div>
-
-  <!-- Footer -->
-  <div class="ai-prompt-footer">
+</ion-content>
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
     @if (getConversationLength() > 2) {
       <div class="use-text-button-wrapper">
         <button type="button" class="use-text-button" (click)="handleSelectText()">Use this text</button>
       </div>
     }
-    <div class="chat-input mt-0">
-      <div class="inner-chat">
-        <textarea
-          rows="2"
-          class="message-input"
-          placeholder="Enter your description here"
-          [value]="prompt()"
-          (input)="handleInputChange($event)"
-        ></textarea>
-      </div>
+    <div class="mt-0 flex items-center gap-2 p-4">
+      <textarea
+        rows="2"
+        class="message-input w-full"
+        placeholder="Enter your description here"
+        [value]="prompt()"
+        (input)="handleInputChange($event)"
+      ></textarea>
       <button type="button" [class.send-icon-disable]="loading()" [class.send-icon]="!loading()" (click)="sendPromptToAI()" [disabled]="loading()">
         @if (loading()) {
           <ion-spinner name="crescent" [style.margin-inline]="'0px'"></ion-spinner>
@@ -68,5 +69,5 @@
         }
       </button>
     </div>
-  </div>
-</div>
+  </ion-toolbar>
+</ion-footer>

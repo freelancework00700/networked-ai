@@ -2,6 +2,7 @@ import { Chip } from '@/components/common/chip';
 import { Button } from '@/components/form/button';
 import { NavController } from '@ionic/angular/standalone';
 import { Searchbar } from '@/components/common/searchbar';
+import { EmptyState } from '@/components/common/empty-state';
 import { IonContent, IonToolbar, IonHeader } from '@ionic/angular/standalone';
 import { ViewResponse } from '@/pages/questionnaire-response/components/view-response';
 import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
@@ -12,7 +13,7 @@ import { AnalyticsQuestion, QuestionnaireAnalytics } from '@/pages/questionnaire
   styleUrl: './questionnaire-response.scss',
   templateUrl: './questionnaire-response.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonToolbar, IonContent, IonHeader, Chip, Searchbar, Button, ViewResponse, QuestionnaireAnalytics]
+  imports: [IonToolbar, IonContent, IonHeader, Chip, Searchbar, Button, ViewResponse, QuestionnaireAnalytics, EmptyState]
 })
 export class QuestionnaireResponse {
   navCtrl = inject(NavController);

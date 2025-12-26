@@ -1,10 +1,10 @@
-import { Button } from '@/components/form/button';
 import { input, output, Component } from '@angular/core';
+import { EmptyState } from '@/components/common/empty-state';
 import { UserCardList } from '@/components/card/user-card-list';
 
 @Component({
   selector: 'network-list-view',
-  imports: [Button, UserCardList],
+  imports: [EmptyState, UserCardList],
   styleUrl: './network-list-view.scss',
   templateUrl: './network-list-view.html'
 })

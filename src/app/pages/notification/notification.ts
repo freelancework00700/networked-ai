@@ -1,4 +1,5 @@
 import { Button } from '@/components/form/button';
+import { EmptyState } from '@/components/common/empty-state';
 import { INotification, NotificationFilter } from '@/interfaces/INotification';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { IonContent, IonHeader, IonIcon, IonToolbar, NavController } from '@ionic/angular/standalone';
@@ -8,7 +9,7 @@ import { IonContent, IonHeader, IonIcon, IonToolbar, NavController } from '@ioni
   styleUrl: './notification.scss',
   templateUrl: './notification.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonIcon, IonContent, IonHeader, IonToolbar, Button]
+  imports: [IonIcon, IonContent, IonHeader, IonToolbar, Button, EmptyState]
 })
 export class Notification {
   private navCtrl = inject(NavController);

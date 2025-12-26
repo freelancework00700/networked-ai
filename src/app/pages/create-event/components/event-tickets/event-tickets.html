@@ -1,0 +1,136 @@
+<!-- Add Ticket Buttons -->
+<div class="flex flex-col gap-4 pb-4">
+  @if (!hasFreeTicket()) {
+    <ticket-type-item
+      icon="assets/svg/ticket/free-ticket.svg"
+      label="Create Free Ticket"
+      description="Allow guest to RSVP for free."
+      alt="Free Ticket"
+      (click)="createFreeTicket()"
+    />
+  }
+
+  <ticket-type-item
+    icon="assets/svg/ticket/paid-ticket.svg"
+    label="Create Paid Ticket"
+    description="Create a type of paid ticket for guests."
+    alt="Paid Ticket"
+    (click)="createPaidTicket()"
+  />
+</div>
+
+<!-- Ticket List Section -->
+@if (tickets().length > 0) {
+  <ion-reorder-group [disabled]="tickets().length <= 1" (ionItemReorder)="handleTicketReorder($event)">
+    @for (ticket of tickets(); track ticket.id || $index; let index = $index) {
+      <ticket-card
+        [ticket]="ticket"
+        [eventDate]="getFieldValue('date')"
+        [eventStartTime]="getFieldValue('start_time')"
+        (edit)="editTicket(index)"
+        (delete)="deleteTicket(index)"
+      />
+    }
+  </ion-reorder-group>
+}
+
+<!-- Subscription Section -->
+@if (tickets().length > 0 && !isEventCompletelyFree()) {
+  <subscription-input [plans]="storedPlans()" [onCreateSubscription]="navigateToSubscriptionPlans" />
+}
+
+<!-- Promo Code Section -->
+@if (tickets().length > 0) {
+  <div class="py-4" [class.opacity-50]="isEventCompletelyFree()">
+    <div
+      class="flex items-center justify-between cursor-pointer"
+      (click)="!isEventCompletelyFree() && promoCodeSectionOpen.set(!promoCodeSectionOpen())"
+    >
+      <div class="body-medium-16" [class.natural-03]="isEventCompletelyFree()" [class.natural-01]="!isEventCompletelyFree()">Promo Code(s)</div>
+
+      @if (!isEventCompletelyFree()) {
+        <i [class]="promoCodeSectionOpen() ? 'pi pi-chevron-up text-lg' : 'pi pi-chevron-down text-lg'"></i>
+      }
+    </div>
+
+    @if (promoCodeSectionOpen() || isEventCompletelyFree()) {
+      <div class="mt-3">
+        @if (isEventCompletelyFree()) {
+          <div class="body-regular-14 natural-03">Unapplicable to free events</div>
+        } @else {
+          @if (promoCodes().length > 0) {
+            <div class="flex flex-col gap-3">
+              @for (promo of promoCodes(); track promo.promoCode) {
+                <promo-code-card
+                  [promo]="promo"
+                  (edit)="editPromoCode(getPromoCodeOriginalIndex(promo))"
+                  (delete)="deletePromoCode(getPromoCodeOriginalIndex(promo))"
+                />
+              }
+            </div>
+          }
+
+          <div class="flex justify-center pb-4">
+            <button class="body-medium-14 brand-02" (click)="resetPromoForm()">
+              <i class="pi pi-plus"></i>
+              Create New
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}
+
+<!-- Advanced Settings Section -->
+@if (tickets().length > 0) {
+  <div class="py-4" [class.opacity-50]="isEventCompletelyFree()" [class.pointer-events-none]="isEventCompletelyFree()">
+    <div
+      class="flex items-center justify-between"
+      [class.cursor-pointer]="!isEventCompletelyFree()"
+      [class.cursor-not-allowed]="isEventCompletelyFree()"
+      (click)="!isEventCompletelyFree() && advancedSettingsOpen.set(!advancedSettingsOpen())"
+    >
+      <div class="body-medium-16" [class.natural-03]="isEventCompletelyFree()" [class.natural-01]="!isEventCompletelyFree()">Advanced Settings</div>
+
+      @if (!isEventCompletelyFree()) {
+        <i [class]="advancedSettingsOpen() ? 'pi pi-chevron-up text-lg' : 'pi pi-chevron-down text-lg'"></i>
+      }
+    </div>
+
+    @if (advancedSettingsOpen() || isEventCompletelyFree()) {
+      <div class="mt-3">
+        @if (isEventCompletelyFree()) {
+          <div class="body-regular-14 natural-03">Unapplicable to free events</div>
+        } @else {
+          <div class="w-full border-l-2 border-neutral-300 pl-4" [formGroup]="eventForm()">
+            @if (!getFieldValue('host_pays_fees')) {
+              <div class="flex items-center gap-4 mb-2">
+                <ion-label class="body-regular-14 natural-01"> Additional fee for guests (%) </ion-label>
+                <ion-toggle formControlName="guest_fee_enabled" />
+              </div>
+
+              @if (getFieldValue('guest_fee_enabled')) {
+                <div class="w-[100px]">
+                  <number-input
+                    [formGroup]="eventForm()"
+                    controlName="additional_fees"
+                    placeholder="0%"
+                    [max]="100"
+                    [min]="0"
+                    [required]="getFieldValue('guest_fee_enabled') ?? false"
+                  />
+                </div>
+              }
+            }
+            <div class="flex items-center gap-3 mt-4">
+              <ion-checkbox formControlName="host_pays_fees"></ion-checkbox>
+
+              <div class="body-regular-14 natural-01">Hosts will pay the platform fees</div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}

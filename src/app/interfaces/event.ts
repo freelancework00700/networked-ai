@@ -1,7 +1,7 @@
 import { FormControl } from '@angular/forms';
 
 export interface EventForm {
-  images?: FormControl<string | File[] | null>;
+  medias?: FormControl<any>;
   title?: FormControl<string | null>;
   date?: FormControl<string | null>;
   start_time?: FormControl<string | null>;

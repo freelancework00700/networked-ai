@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Clipboard } from '@capacitor/clipboard';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
-import { ModalController, IonSpinner, ToastController } from '@ionic/angular/standalone';
+import { ModalController, IonSpinner, ToastController, IonToolbar, IonHeader, IonFooter, IonContent } from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy, Input, signal, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 
 interface Message {
@@ -16,12 +16,12 @@ interface Message {
   styleUrl: './ai-prompt-modal.scss',
   templateUrl: './ai-prompt-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, IonSpinner]
+  imports: [IonContent, IonFooter, IonHeader, IonToolbar, CommonModule, IonSpinner]
 })
 export class AIPromptModal implements OnInit, AfterViewInit {
-  private modalCtrl = inject(ModalController);
-  private http = inject(HttpClient);
-  private toastCtrl = inject(ToastController);
+  modalCtrl = inject(ModalController);
+  http = inject(HttpClient);
+  toastCtrl = inject(ToastController);
 
   @Input() conversation: any[] = [];
   @Input() isEvent: boolean = false;
@@ -32,7 +32,7 @@ export class AIPromptModal implements OnInit, AfterViewInit {
   loading = signal<boolean>(false);
   conversationData = signal<Message[]>([]);
 
-  private getInitialSystemMessage(): string {
+  getInitialSystemMessage(): string {
     return this.isEvent
       ? 'You are a helpful assistant. When describing events, always provide responses in structured HTML format with appropriate headings, paragraphs, and lists. Ensure that all text is wrapped in HTML tags, with headings as <h2> or <h3>, paragraphs as <p>, and lists as <ul> or <ol> with <li> for list items. Avoid returning plain text without HTML tags.'
       : 'You are a helpful assistant. Provide short responses in plain text without HTML formatting.';
@@ -52,7 +52,6 @@ export class AIPromptModal implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Initialize textarea height
     this.autoGrowTextArea();
   }
 
@@ -61,7 +60,6 @@ export class AIPromptModal implements OnInit, AfterViewInit {
   }
 
   async close(): Promise<void> {
-    // Preserve conversation history when closing
     await this.modalCtrl.dismiss({
       type: 'data',
       data: this.conversationData()
@@ -174,7 +172,7 @@ export class AIPromptModal implements OnInit, AfterViewInit {
     }
   }
 
-  private async copyToWebClipboard(html: string): Promise<void> {
+  async copyToWebClipboard(html: string): Promise<void> {
     try {
       const blob = new Blob([html], { type: 'text/html' });
       const clipboardItem = new ClipboardItem({ 'text/html': blob });

@@ -204,17 +204,13 @@
         </div>
       </div>
     } @empty {
-      <div class="flex flex-col gap-4 items-center justify-center py-12 w-full">
-        <div class="w-16 h-16 flex items-center justify-center bg-[#545454] border border-[#ABABAB] rounded-[18px] p-5">
-          <ion-icon src="assets/svg/notification/alert-white-icon.svg" class="w-6 h-6 text-white" />
-        </div>
-        <div class="flex flex-col items-center justify-center text-center gap-2">
-          <div class="heading-h3 neutral-01 m-0">{{ getEmptyStateMessage().title }}</div>
-          <div class="body-14R text-neutral-03 m-0">
-            {{ getEmptyStateMessage().description }}
-          </div>
-        </div>
-      </div>
+      <app-empty-state
+        [title]="getEmptyStateMessage().title"
+        [message]="getEmptyStateMessage().description"
+        icon="assets/svg/notification/alert-white-icon.svg"
+        iconStyle="notification"
+        minHeight="py-12"
+      />
     }
   </div>
 </ion-content>

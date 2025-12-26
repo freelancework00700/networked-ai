@@ -5,6 +5,7 @@ import { Button } from '@/components/form/button';
 import { PostCard } from '@/components/card/post-card';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
+import { EmptyState } from '@/components/common/empty-state';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { NgxMentionsModule, ChoiceWithIndices } from 'ngx-mentions';
@@ -16,7 +17,19 @@ import { IonToolbar, IonHeader, IonContent, NavController, IonFooter } from '@io
   styleUrl: './post-comments.scss',
   templateUrl: './post-comments.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, PostCard, IonFooter, IonHeader, MenuModule, IonContent, IonToolbar, CommonModule, NgxMentionsModule, ReactiveFormsModule]
+  imports: [
+    Button,
+    PostCard,
+    EmptyState,
+    IonFooter,
+    IonHeader,
+    MenuModule,
+    IonContent,
+    IonToolbar,
+    CommonModule,
+    NgxMentionsModule,
+    ReactiveFormsModule
+  ]
 })
 export class PostComments {
   navCtrl = inject(NavController);

@@ -245,7 +245,6 @@ export class TicketForm implements OnInit {
         form.patchValue({ sale_end_time: time });
       }
     }
-    console.log(form.value);
   }
 
   close(): void {

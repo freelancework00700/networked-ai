@@ -22,7 +22,7 @@
   margin-top: 8px;
   border-radius: 2px;
   cursor: grab;
-  
+
   &:active {
     cursor: grabbing;
   }
@@ -89,11 +89,11 @@
   word-wrap: break-word;
   position: relative;
   width: 100%;
-  
+
   &.user-message {
     border: none;
   }
-  
+
   &.assistant-message {
     border: 1px solid var(--surface-border);
   }
@@ -112,25 +112,10 @@
   align-items: center;
   gap: 4px;
   color: #333;
-  
+
   i {
     font-size: 16px;
   }
-
-}
-
-.chat-input {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  padding: 8px;
-  border-top: 1px solid var(--surface-border);
-}
-
-.inner-chat {
-  flex: 1;
-  display: flex;
-  align-items: center;
 }
 
 .message-input {
@@ -144,7 +129,7 @@
   outline: none;
   background: var(--surface-0);
   color: var(--text-color);
-  
+
   &:focus {
     border-color: var(--primary-color);
   }
@@ -164,28 +149,21 @@
   height: 44px;
   min-width: 44px;
   transition: opacity 0.2s;
-  
+
   i {
     font-size: 20px;
   }
-  
+
   &:hover:not(:disabled) {
     opacity: 0.9;
   }
-  
+
   &:disabled,
   &.send-button-disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
 }
-
-.ai-prompt-footer {
-  border-top: 1px solid var(--surface-border);
-  padding: 1rem;
-  flex-shrink: 0;
-}
-
 .use-text-button-wrapper {
   margin-bottom: 1rem;
   display: flex;

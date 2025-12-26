@@ -45,6 +45,14 @@ export const appRoutes: Routes = [
     loadComponent: () => import('@/pages/create-event').then((m) => m.CreateEvent)
   },
   {
+    path: 'city-events',
+    loadComponent: () => import('@/pages/home/city-events').then((m) => m.CityEvents)
+  },
+  {
+    path: 'all-events',
+    loadComponent: () => import('@/pages/home/all-events').then((m) => m.AllEvents)
+  },
+  {
     path: 'event-qr/:id',
     loadComponent: () => import('@/pages/event-qr').then((m) => m.EventQr)
   },

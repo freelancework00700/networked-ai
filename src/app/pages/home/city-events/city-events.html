@@ -1,0 +1,59 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="relative w-full h-[140px] p-2 max-w-[672px] mx-auto">
+      <div
+        class="absolute inset-0 bg-cover bg-center events-bg"
+        style="background-image: url('https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80')"
+      ></div>
+
+      <div class="absolute inset-0 bg-black/40"></div>
+
+      <div class="relative z-10 flex flex-col h-full px-6 pt-safe pb-6">
+        <div
+          class="w-12 h-12 rounded-full flex items-center justify-center bg-black/35 backdrop-blur-md border border-white/15 cursor-pointer"
+          (click)="goBack()"
+        >
+          <i class="pi pi-arrow-left text-white text-[20px]"></i>
+        </div>
+
+        <div class="flex flex-1 flex-col items-center justify-center gap-1 cursor-pointer">
+          <span class="text-white text-sm opacity-90"> Events in </span>
+
+          <div class="flex items-center gap-2" (click)="openCitySelection()">
+            <div class="pi pi-map-marker text-white !text-[20px]"></div>
+
+            <span class="text-white text-xl font-semibold">
+              {{ selectedCity().fullName }}
+            </span>
+
+            <div class="pi pi-chevron-down text-white"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="min-h-full">
+    <div class="w-full max-w-[672px] mx-auto p-6">
+      <div class="mb-4">
+        <searchbar [searchQuery]="searchQuery()" [placeholder]="'Search events'" (searchChange)="onSearchChange($event)" (clear)="onSearchClear()" />
+      </div>
+
+      <div class="flex flex-col gap-4">
+        @for (event of displayedEvents(); track event.image + event.title + $index) {
+          <event-card [event]="event" />
+        } @empty {
+          <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
+        }
+      </div>
+
+      @if (hasMoreEvents()) {
+        <div class="flex justify-center mt-6">
+          <button type="button" class="body-14SB brand-02 py-2 px-4" (click)="loadMore()">Load more</button>
+        </div>
+      }
+    </div>
+  </div>
+</ion-content>

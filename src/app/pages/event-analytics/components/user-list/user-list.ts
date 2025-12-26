@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { Searchbar } from '@/components/common/searchbar';
+import { EmptyState } from '@/components/common/empty-state';
 import { IonContent, IonHeader, IonToolbar, NavController, IonIcon } from '@ionic/angular/standalone';
 import { Component, inject, signal, effect, ChangeDetectionStrategy, computed } from '@angular/core';
 
@@ -9,7 +10,7 @@ import { Component, inject, signal, effect, ChangeDetectionStrategy, computed } 
   styleUrl: './user-list.scss',
   templateUrl: './user-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonIcon, IonToolbar, IonHeader, IonContent, CommonModule, Searchbar, Button]
+  imports: [IonIcon, IonToolbar, IonHeader, IonContent, CommonModule, Searchbar, Button, EmptyState]
 })
 export class UserList {
   navCtrl = inject(NavController);

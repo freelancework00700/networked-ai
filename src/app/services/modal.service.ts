@@ -16,15 +16,18 @@ import { GifGalleryModal } from '@/components/modal/gif-gallery-modal';
 import { BlockModal } from '@/components/modal/block-modal/block-modal';
 import { ShareModal } from '@/components/modal/share-modal/share-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
+import { EventFilterModal } from '@/components/modal/event-filter-modal';
 import { GuestFilterModal } from '@/components/modal/guest-filter-modal';
 import { ReportModal } from '@/components/modal/report-modal/report-modal';
 import { ImageGalleryModal } from '@/components/modal/image-gallery-modal';
+import { CitySelectionModal } from '@/components/modal/city-selection-modal';
 import { EventCategoryModal } from '@/components/modal/event-category-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
 import { GroupInvitation } from '@/pages/messages/components/group-invitation';
 import { LocationFilterModal } from '@/components/modal/location-filter-modal';
 import { AIPromptModal } from '@/pages/create-event/components/ai-prompt-modal';
 import { TicketTypeModal } from '@/pages/create-event/components/ticket-type-modal';
+import { AchievementDetailModal } from '@/components/modal/achievement-detail-modal';
 import { QuestionnaireForm } from '@/pages/create-event/components/questionnaire-form';
 import { PhoneEmailVerifiedModal } from '@/components/modal/phone-email-verified-modal';
 import { TicketForm, TicketFormData } from '@/pages/create-event/components/ticket-form';
@@ -33,7 +36,6 @@ import { NetworkTagModal, NetworkTag } from '@/pages/create-event/components/net
 import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confirm-modal';
 import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
 import { PromoCodeForm, PromoCodeFormData } from '@/pages/create-event/components/promo-code-form';
-import { AchievementDetailModal } from '@/components/modal/achievement-detail-modal';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -211,6 +213,7 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
+      cssClass: 'modal-600px-height',
       component: AIPromptModal,
       componentProps: {
         conversation,
@@ -637,6 +640,42 @@ export class ModalService {
     await modal.present();
     const { data } = await modal.onWillDismiss();
     return data;
+  }
+
+  async openEventFilterModal(initialValues?: {
+    location?: string;
+    eventDate?: string;
+    distance?: number;
+  }): Promise<{ location?: string; eventDate?: string; distance?: number } | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      cssClass: 'auto-hight-modal',
+      component: EventFilterModal,
+      componentProps: { initialValues }
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data || null;
+  }
+
+  async openCitySelectionModal(): Promise<{ city: string; state: string; fullName: string } | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      backdropDismiss: true,
+      component: CitySelectionModal,
+      cssClass: 'modal-80-percent-height'
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    return data || null;
   }
 
   async close(data?: any, role?: string): Promise<void> {

@@ -1,0 +1,29 @@
+<div class="flex items-center justify-center h-full" [class]="minHeight()">
+  <div class="flex flex-col items-center justify-center gap-3 text-center">
+    <div
+      class="w-14 h-14 rounded-[12px] bg-[linear-gradient(138deg,#ABABAB_8.51%,#545454_85.69%)] shadow-[0_12px_24px_rgba(9,70,103,0.30)] flex items-center justify-center"
+    >
+      <div class="w-10 h-10 rounded-[12px] bg-neutral-04/40 flex items-center justify-center">
+        <ion-icon [src]="icon()" class="text-[24px]" />
+      </div>
+    </div>
+    <div
+      class="text-[20px] font-semibold neutral-01"
+      [class.heading-h3]="iconStyle() === 'notification'"
+      [class.m-0]="iconStyle() === 'notification'"
+    >
+      {{ title() }}
+    </div>
+    <div
+      class="body-14M text-surface-600"
+      [class.body-14R]="iconStyle() === 'notification'"
+      [class.text-neutral-03]="iconStyle() === 'notification'"
+      [class.m-0]="iconStyle() === 'notification'"
+    >
+      {{ message() }}
+    </div>
+    @if (showClearButton()) {
+      <app-button (click)="onClear()" [label]="clearButtonLabel()" [color]="clearButtonColor()" />
+    }
+  </div>
+</div>

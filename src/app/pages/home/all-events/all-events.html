@@ -1,0 +1,39 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="p-4 max-w-[672px] mx-auto grid grid-cols-3 items-center">
+      <div class="pi pi-arrow-left cursor-pointer justify-self-start" (click)="goBack()"></div>
+      <div class="body-16SB neutral-01 text-center">Browse Events</div>
+      <div></div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="w-full p-4 max-w-[672px] mx-auto">
+    <div class="flex items-center gap-2 mb-6">
+      <searchbar
+        [searchQuery]="searchQuery()"
+        [placeholder]="'Search events'"
+        (searchChange)="onSearchChange($event)"
+        (clear)="onSearchClear()"
+        class="flex-1"
+      />
+      <app-button icon="/assets/svg/network/filterIcon.svg" color="secondary" (click)="openFilter()" />
+    </div>
+    <!-- Events list -->
+    <div class="flex flex-col gap-4">
+      @for (event of displayedEvents(); track event.image + event.title + $index) {
+        <event-card [event]="event" />
+      } @empty {
+        <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
+      }
+    </div>
+
+    <!-- Load more button -->
+    @if (hasMoreEvents()) {
+      <div class="flex justify-center mt-6">
+        <button type="button" class="body-14SB brand-02 py-2 px-4" (click)="loadMore()">Load more</button>
+      </div>
+    }
+  </div>
+</ion-content>

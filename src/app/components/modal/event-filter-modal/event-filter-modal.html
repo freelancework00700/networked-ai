@@ -1,0 +1,52 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-6 flex items-center justify-between">
+      <div class="heading-h3 neutral-01">Filter</div>
+      <div class="pi pi-times cursor-pointer" (click)="close()"></div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<div class="inner-content px-6">
+  <div [formGroup]="form()" class="flex flex-col gap-2">
+    <text-input
+      label="Location"
+      [readonly]="true"
+      [isSubmitted]="false"
+      controlName="location"
+      iconName="pi-map-marker"
+      endIconName="pi-chevron-right"
+      placeholder="Select location"
+      (click)="openLocationModal()"
+    />
+
+    <text-input
+      label="Event Date"
+      [readonly]="true"
+      [isSubmitted]="false"
+      controlName="eventDate"
+      iconName="pi-calendar"
+      endIconName="pi-chevron-right"
+      placeholder="Select Date"
+      (click)="openDateModal()"
+      class="mt-4"
+    />
+  </div>
+
+  <div class="body-regular-14 mt-6">Show events that are within:</div>
+
+  <ion-icon src="assets/svg/mapFilterChart.svg" class="h-32 w-full mt-2" />
+
+  <ion-range min="0" max="50" (ionChange)="onRangeChange($event)" [value]="distanceSignal()"></ion-range>
+
+  <div class="body-medium-16 mt-2">{{ distanceSignal() }} miles</div>
+</div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex gap-2">
+      <app-button label="Reset" color="secondary" (click)="reset()" class="flex-1" />
+      <app-button label="Apply" (click)="apply()" class="flex-1" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

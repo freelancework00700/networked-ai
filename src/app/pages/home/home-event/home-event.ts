@@ -2,12 +2,13 @@ import { Swiper } from 'swiper';
 import { SwiperOptions } from 'swiper/types';
 import { Button } from '@/components/form/button';
 import { UserCard } from '@/components/card/user-card';
+import { NavController } from '@ionic/angular/standalone';
 import { CityCard, ICity } from '@/components/card/city-card';
 import { EventCard, IEvent } from '@/components/card/event-card';
 import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
 import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
-import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy } from '@angular/core';
+import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy, inject } from '@angular/core';
 
 interface FeedPost {
   id: string;
@@ -37,6 +38,7 @@ interface NetworkSuggestion {
   imports: [Button, UserCard, CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard]
 })
 export class HomeEvent {
+  navCtrl = inject(NavController);
   filter = signal<'browse' | 'upcoming'>('browse');
   upcomingEvents = signal<IEvent[]>([]);
 

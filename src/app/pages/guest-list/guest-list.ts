@@ -4,6 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { Searchbar } from '@/components/common/searchbar';
+import { EmptyState } from '@/components/common/empty-state';
 import { NavController, IonIcon } from '@ionic/angular/standalone';
 import { IonContent, IonToolbar, IonHeader } from '@ionic/angular/standalone';
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
@@ -12,7 +13,7 @@ import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@a
   styleUrl: './guest-list.scss',
   templateUrl: './guest-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonHeader, IonToolbar, IonContent, Button, Searchbar, IonIcon, MenuModule, ButtonModule]
+  imports: [IonHeader, IonToolbar, IonContent, Button, Searchbar, IonIcon, MenuModule, ButtonModule, EmptyState]
 })
 export class GuestList {
   navCtrl = inject(NavController);
