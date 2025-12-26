@@ -1,0 +1,21 @@
+.header-section {
+  padding: 24px 24px 16px;
+  max-width: 672px;
+  margin: 0 auto;
+}
+
+.icon-container {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(138deg, #ababab 8.51%, #545454 85.69%);
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}

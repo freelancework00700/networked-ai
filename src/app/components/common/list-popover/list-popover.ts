@@ -49,15 +49,13 @@ export class ListPopover implements OnInit {
           firstUserId = users[0].id || null;
 
           users.forEach((user: any) => {
-            if (user.name) {
-              accountList.push({
-                label: user.name,
-                icon: 'pi-user',
-                type: 'account',
-                data: user,
-                avatar: user.thumbnail_url
-              });
-            }
+            accountList.push({
+              label: user.name || user.username,
+              icon: 'pi-user',
+              type: 'account',
+              data: user,
+              avatar: user.thumbnail_url
+            });
           });
         }
       } catch (error) {

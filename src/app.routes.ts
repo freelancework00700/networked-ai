@@ -160,6 +160,18 @@ export const appRoutes: Routes = [
     path: 'profile-setup',
     loadComponent: () => import('@/pages/profile-setup').then((m) => m.ProfileSetup)
   },
+  {
+    path: 'settings',
+    loadChildren: () => import('@/pages/settings/settings.routes').then((m) => m.default)
+  },
+  {
+    path: 'subscription-plans',
+    loadComponent: () => import('@/pages/subscription-plans').then((m) => m.SubscriptionPlans)
+  },
+  {
+    path: 'subscriptions',
+    loadComponent: () => import('@/pages/subscriptions').then((m) => m.Subscriptions)
+  },
   // Not found (keep eager as it's small and always needed)
   { path: 'not-found', component: NotFound },
   { path: '**', redirectTo: '/not-found' }

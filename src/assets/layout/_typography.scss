@@ -166,6 +166,13 @@ p {
   font-family: 'Manrope', sans-serif;
 }
 
+.body-18SB {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 28px;
+  font-family: 'Manrope', sans-serif;
+}
+
 // colors
 .neutral-01 {
   color: var(--neutral-01);
@@ -331,4 +338,7 @@ p {
 }
 .bg-party-theme-gradient-7 {
   background: linear-gradient(150deg, #77482d 56.59%, #b56f47 69.05%, #473124 81.5%);
+}
+.accent-blue {
+  color: var(--accent-blue);
 }

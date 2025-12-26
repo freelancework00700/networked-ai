@@ -1,0 +1,75 @@
+<div class="inner-content pt-10">
+  <div class="w-full px-6 max-w-[672px] mx-auto">
+    <!-- Icon -->
+    <div class="flex mb-4">
+      <div class="bg-white rounded-2xl shadow-md p-3 flex items-center">
+        <div class="icon-container bg-[#c73838]">
+          <i class="pi pi-trash text-white !text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <div class="flex flex-col gap-2 mb-6">
+      <div class="heading-h2 neutral-01">Delete Account?</div>
+      <div class="body-14R neutral-02">
+        Are you sure you want to delete your account? This action cannot be undone. All your data will be removed and cannot be recovered.
+      </div>
+    </div>
+
+    <!-- What happens section -->
+    <div class="mb-6">
+      <div class="body-16SB neutral-01 mb-3">What happens when you delete your account</div>
+      <ul class="flex flex-col gap-2">
+        <li class="flex items-start gap-2">
+          <span class="body-14R neutral-02">• Your profile and all data will be permanently erased</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="body-14R neutral-02">• You will lose access to all your content</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="body-14R neutral-02">• This action cannot be undone</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Password Input -->
+    <form [formGroup]="form()" class="mb-4!">
+      <password-input
+        [controlName]="'password'"
+        [isSubmitted]="isSubmitted()"
+        [label]="'Current Password*'"
+      />
+    </form>
+
+    <!-- Instructional Text -->
+    <div class="mb-6 body-12R neutral-03">
+      We require you to enter your password to verify that you are sure you want to permanently delete your account. If you forgot your password, you can
+      <span class="body-12SB accent-blue cursor-pointer" (click)="onForgotPassword()">request a password reset link here</span>.
+    </div>
+  </div>
+</div>
+
+<ion-footer mode="md">
+  <ion-toolbar>
+    <div class="p-6 max-w-[672px] mx-auto">
+      <div class="flex gap-3">
+        <app-button
+          label="Cancel"
+          color="secondary"
+          (click)="cancel()"
+          class="flex-1"
+          [disabled]="isLoading()"
+        />
+        <app-button
+          label="Delete Account"
+          color="danger"
+          (click)="confirm()"
+          class="flex-1"
+          [isLoading]="isLoading()"
+          [disabled]="!form().valid || isLoading()"
+        />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-footer>

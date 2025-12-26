@@ -1,0 +1,35 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="flex items-center px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
+      <i class="pi pi-arrow-left neutral-03" (click)="back()"></i>
+      <div class="body-14M text-center w-full">Permissions</div>
+      <div class="w-6"></div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="w-full max-w-[672px] mx-auto">
+    <div class="p-5">
+      <div class="bg-neutral-07 border border-neutral-300 rounded-3xl">
+        @for (permission of permissions(); track permission.id) {
+          <div class="permission-item">
+            <div class="flex items-center gap-3 flex-1">
+              <i [class]="permission.icon + ' !text-[20px] settings-icon p-[6px] rounded-xl brand-02 bg-brand-07'"></i>
+              <div class="flex-1">
+                <div class="body-14R neutral-01 mb-1">{{ permission.name }}</div>
+                <div class="body-12 neutral-03">{{ permission.description }}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <ion-toggle [(ngModel)]="permission.enabled" (ionChange)="onToggleChange(permission.id, $event)" (click)="$event.stopPropagation()" />
+            </div>
+          </div>
+          @if (!$last) {
+            <div class="h-px bg-neutral-05"></div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+</ion-content>

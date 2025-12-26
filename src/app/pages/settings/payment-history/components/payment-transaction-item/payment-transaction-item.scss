@@ -1,0 +1,15 @@
+.transaction-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(138deg, #ABABAB 8.51%, #545454 85.69%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.transaction-icon-payout {
+  background: linear-gradient(138deg, #52D193 8.51%, #0A9E57 85.69%);
+}

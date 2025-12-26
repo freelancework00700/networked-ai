@@ -1,0 +1,54 @@
+.subscription-card {
+  padding: 10px;
+  border-radius: 16px;
+  background: var(--neutral-07);
+
+  &.card-event {
+    border: 1px solid var(--event-plan-border);
+  }
+
+  &.card-sponsor {
+    border: 1px solid var(--gold-flat);
+  }
+}
+
+.plan-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.icon-event {
+  border-radius: 12px;
+  border: 2px solid var(--event-plan-icon-border);
+  background: linear-gradient(138deg, #6188f5 8.51%, #0a329e 85.69%);
+  box-shadow: 0 12px 24px 0 rgba(9, 70, 103, 0.3);
+  color: var(--neutral-07) !important;
+}
+
+.icon-sponsor {
+  border-radius: 12px;
+  border: 2px solid var(--gold-flat);
+  background: radial-gradient(
+    194% 128.52% at 9.38% -7.14%,
+    #f9f2e6 13.46%,
+    #f4d7a9 38.63%,
+    rgba(201, 164, 105, 0.94) 69.52%,
+    #bf9e69 88.87%,
+    rgba(195, 167, 121, 0.9) 100%
+  );
+  background-blend-mode: normal;
+  box-shadow:
+    0 8.322px 13.408px 0 rgba(0, 0, 0, 0.11),
+    0 4.762px 7.672px 0 rgba(0, 0, 0, 0.09),
+    0 2.89px 4.657px 0 rgba(0, 0, 0, 0.08),
+    0 1.742px 2.806px 0 rgba(0, 0, 0, 0.07),
+    0 0.97px 1.562px 0 rgba(0, 0, 0, 0.06),
+    0 0.417px 0.672px 0 rgba(0, 0, 0, 0.04);
+  color: var(--sponsor) !important;
+}

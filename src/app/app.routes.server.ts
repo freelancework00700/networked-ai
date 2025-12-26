@@ -104,6 +104,38 @@ export const serverRoutes: ServerRoute[] = [
     path: 'new-post',
     renderMode: RenderMode.Server
   },
+  {
+    path: 'settings',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'settings/account',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'settings/change-account-info/:type',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'settings/verify-otp',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'settings/payment-history',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'settings/permissions',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'subscription-plans',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'subscriptions',
+    renderMode: RenderMode.Client
+  },
   // catch-all for any other routes
   {
     path: '**',

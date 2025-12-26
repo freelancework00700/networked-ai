@@ -1,0 +1,66 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="flex items-center px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
+      <i class="pi pi-arrow-left neutral-03" (click)="back()"></i>
+      <div class="body-14M text-center w-full">My Subscriptions</div>
+      <div class="w-6"></div>
+    </div>
+
+    <segment-button [items]="segmentItems" [value]="segmentValue()" (valueChange)="onSegmentChange($event)" />
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="w-full max-w-[672px] mx-auto h-full">
+    <div class="p-5 h-full">
+      @if (hasPlans()) {
+        <div class="flex flex-col gap-4 mb-6">
+          @for (plan of currentPlans(); track plan.id) {
+            <app-subscription-card [data]="plan" mode="plan" (manage)="onManage($event)" (events)="onEvents($event)" />
+          }
+        </div>
+      } @else {
+        <div class="flex items-center justify-center h-full min-h-[400px]">
+          <div class="flex flex-col items-center justify-center gap-1 text-center px-5">
+            <div class="flex items-center gap-4 mb-6">
+              <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center">
+                <div class="icon-container icon-event">
+                  <i class="pi pi-crown text-white text-3xl!"></i>
+                </div>
+              </div>
+              <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center">
+                <div class="icon-container icon-sponsor">
+                  <ion-icon src="/assets/svg/subscription/sponsorIcon.svg" class="text-4xl!"></ion-icon>
+                </div>
+              </div>
+            </div>
+            <div class="heading-h2 neutral-01 mb-2">Start a Subscription Model</div>
+            <div class="body-14M neutral-02 mb-6">
+              Let members pay you monthly for a more premium experience, or create a sponsorship plan for sponsors to pay regularly to sponsor your
+              events!
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    @if (hasPlans()) {
+      <div class="p-5 max-w-[672px] mx-auto">
+        <app-button
+          iconName="pi-plus"
+          [label]="segmentValue() === 'event' ? 'Create New Event Plan' : 'Create New Sponsor Plan'"
+          [color]="segmentValue() === 'event' ? 'info' : 'primary'"
+        />
+      </div>
+    } @else {
+      <div class="flex flex-col gap-2 w-full p-3">
+        <app-button label="Create Event Subscription Plan" color="info" iconName="pi-crown" />
+        <app-button label="Create Sponsor Subscription Plan" color="primary" iconName="pi-crown" />
+      </div>
+    }
+  </ion-toolbar>
+</ion-footer>

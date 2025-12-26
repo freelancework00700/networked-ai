@@ -36,6 +36,8 @@ import { NetworkTagModal, NetworkTag } from '@/pages/create-event/components/net
 import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confirm-modal';
 import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
 import { PromoCodeForm, PromoCodeFormData } from '@/pages/create-event/components/promo-code-form';
+import { SuccessModal } from '@/components/modal/success-modal/success-modal';
+import { DeleteAccountModal } from '@/components/modal/delete-account-modal';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -87,6 +89,42 @@ export class ModalService {
     });
 
     await modal.present();
+  }
+
+  async openSuccessModal(config: {
+    title: string;
+    description?: string;
+    buttonLabel?: string;
+    navigateBack?: boolean;
+    navigateTo?: string;
+  }): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      backdropDismiss: false,
+      cssClass: 'auto-hight-modal',
+      component: SuccessModal,
+      componentProps: config
+    });
+
+    await modal.present();
+  }
+
+  async openDeleteAccountModal(): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      backdropDismiss: false,
+      cssClass: 'auto-hight-modal',
+      component: DeleteAccountModal
+    });
+
+    await modal.present();
+    await modal.onWillDismiss();
   }
 
   async openTitleModal(value: string): Promise<string> {

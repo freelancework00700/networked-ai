@@ -25,6 +25,7 @@ export class PasswordInput implements OnInit {
   label = input('Password');
   isSubmitted = input(true);
   controlName = input('password');
+  customError = input<string>('');
 
   constructor(
     private fb: FormBuilder,

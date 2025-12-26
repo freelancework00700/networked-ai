@@ -1,0 +1,16 @@
+<div class="flex items-center justify-between w-full py-3 cursor-pointer" (click)="onItemClick()">
+  <div class="flex items-center gap-3 flex-1">
+    @if (item().icon) {
+      <i [class]="item().icon + ' !text-[20px] settings-icon p-[6px] rounded-xl brand-02 bg-brand-07'"></i>
+    }
+    <span class="body-14R neutral-01">{{ item().label }}</span>
+  </div>
+  <div class="flex items-center gap-2">
+    @if (item().value) {
+      <span class="body-16R neutral-03">{{ item().value }}</span>
+    }
+    @if (showChevron() && (item().route || item().action)) {
+      <i class="pi pi-angle-right !text-[20px] neutral-04"></i>
+    }
+  </div>
+</div>

@@ -1,0 +1,115 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="flex items-center p-6 max-w-[672px] mx-auto">
+      <i class="pi pi-arrow-left cursor-pointer neutral-03" (click)="navCtrl.back()"></i>
+      @if (isPassword()) {
+        <div class="body-14M neutral-01 text-center w-full">Change Password</div>
+      }
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="w-full px-4 max-w-[672px] mx-auto py-4 h-full flex flex-col">
+    @if (!isPassword()) {
+        <div class="mb-6">
+          <h1 class="heading-h2 neutral-01 mb-2">{{ title() }}</h1>
+        </div>
+    }
+
+    <form [formGroup]="form()" (ngSubmit)="onConfirm()" class="flex flex-col flex-1 justify-between">
+      <div>
+        @if (isPassword()) {
+          <!-- Password Change Fields -->
+          <div class="mb-4">
+            <password-input
+              [controlName]="'currentValue'"
+              [isSubmitted]="isSubmitted()"
+              [label]="'Current Password'"
+              [customError]="wrongCurrentPassword() ? 'Your current password is incorrect.' : ''"
+            />
+          </div>
+
+          <div class="mb-4">
+            <password-input
+              [controlName]="'newValue'"
+              [isSubmitted]="isSubmitted()"
+              [label]="'New Password'"
+            />
+          </div>
+
+          <div class="mb-4">
+            <password-input
+              [controlName]="'confirmNewValue'"
+              [isSubmitted]="isSubmitted()"
+              [label]="'Confirm New Password'"
+              [customError]="passwordsDontMatch() ? 'The passwords you entered do not match.' : ''"
+            />
+          </div>
+        } @else {
+          <!-- Current Value -->
+          <div class="mb-4">
+            @if (isEmail()) {
+              <email-input
+                [controlName]="'currentValue'"
+                [isSubmitted]="isSubmitted()"
+                [required]="false"
+                [placeholder]="currentValue()"
+                [label]="currentLabel()"
+              />
+            } @else if (isPhone()) {
+              <mobile-input
+                [controlName]="'currentValue'"
+                [isSubmitted]="isSubmitted()"
+                [required]="false"
+                [label]="currentLabel()"
+              />
+            } @else {
+              <text-input
+                [controlName]="'currentValue'"
+                [isSubmitted]="isSubmitted()"
+                [required]="false"
+                [readonly]="true"
+                [label]="currentLabel()"
+              />
+            }
+          </div>
+
+          <!-- New Value -->
+          <div class="mb-4">
+            @if (isEmail()) {
+              <email-input
+                [controlName]="'newValue'"
+                [isSubmitted]="isSubmitted()"
+                [placeholder]="'Enter new email'"
+                [label]="newLabel()"
+              />
+            } @else if (isPhone()) {
+              <mobile-input
+                #newPhoneInput
+                [controlName]="'newValue'"
+                [isSubmitted]="isSubmitted()"
+                [label]="newLabel()"
+              />
+            } @else {
+              <username-input
+                [controlName]="'newValue'"
+                [isSubmitted]="isSubmitted()"
+                [label]="newLabel()"
+                [checkAvailability]="true"
+              />
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Confirm Button -->
+      <div class="mt-auto pb-4">
+        <app-button
+          [label]="confirmButtonLabel()"
+          (click)="onConfirm()"
+        />
+      </div>
+    </form>
+  </div>
+</ion-content>
