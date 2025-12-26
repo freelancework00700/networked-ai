@@ -97,6 +97,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
+    path: 'event/detail',
+    renderMode: RenderMode.Server
+  },
+  {
     path: 'new-post',
     renderMode: RenderMode.Server
   },

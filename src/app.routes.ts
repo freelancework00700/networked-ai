@@ -144,6 +144,10 @@ export const appRoutes: Routes = [
     path: 'notification',
     loadComponent: () => import('@/pages/notification').then((m) => m.Notification)
   },
+  {
+    path: 'event/detail',
+    loadComponent: () => import('@/pages/create-event/event-detail').then((m) => m.EventDetail)
+  },
   // Not found (keep eager as it's small and always needed)
   { path: 'not-found', component: NotFound },
   { path: '**', redirectTo: '/not-found' }

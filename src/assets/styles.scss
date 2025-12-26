@@ -217,3 +217,24 @@ ion-footer.footer-toolbar-padding ion-toolbar:last-of-type {
 .tier-overview-card.ticket-type-standard-paid {
   border: 2px solid #dbdbdb;
 }
+.swiper-event-detail .swiper-pagination-bullet {
+  background: var(--neutral-04) !important;
+  opacity: 1 !important;
+}
+.swiper-event-detail .swiper-pagination-bullet-active {
+  width: 32px;
+  border-radius: 32px;
+  background: var(--neutral-07) !important;
+}
+@supports ((-webkit-backdrop-filter: blur(0)) or (backdrop-filter: blur(0))) {
+  .header-translucent-ios ion-toolbar {
+    --opacity: 1;
+    --background: transparent;
+  }
+}
+@supports ((-webkit-backdrop-filter: blur(0)) or (backdrop-filter: blur(0))) {
+  .header-background {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
