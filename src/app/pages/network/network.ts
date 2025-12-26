@@ -3,6 +3,8 @@ import { ModalService } from '@/services/modal.service';
 import { Searchbar } from '@/components/common/searchbar';
 import { NetworkMapView } from '@/pages/network/components/network-map-view';
 import { NetworkListView } from '@/pages/network/components/network-list-view';
+import { AuthEmptyState } from '@/components/common/auth-empty-state';
+import { AuthService } from '@/services/auth.service';
 import { inject, signal, computed, Component, ChangeDetectionStrategy } from '@angular/core';
 import { IonIcon, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 
@@ -11,7 +13,7 @@ import { IonIcon, IonHeader, IonToolbar, IonContent, NavController } from '@ioni
   styleUrl: './network.scss',
   templateUrl: './network.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonIcon, IonHeader, Searchbar, IonToolbar, IonContent, NetworkMapView, NetworkListView]
+  imports: [Button, IonIcon, IonHeader, Searchbar, IonToolbar, IonContent, NetworkMapView, NetworkListView, AuthEmptyState]
 })
 export class Network {
   // signals
@@ -22,6 +24,10 @@ export class Network {
   // services
   private navCtrl = inject(NavController);
   private modalService = inject(ModalService);
+  private authService = inject(AuthService);
+
+  // computed
+  isLoggedIn = computed(() => !!this.authService.currentUser());
 
   filteredSuggestions = computed(() => {
     const search = this.searchQuery().toLowerCase().trim();

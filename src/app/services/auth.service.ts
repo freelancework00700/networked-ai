@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
 import { KEYS, LocalStorageService } from './localstorage.service';
 import { FirebaseAuthError } from '@/utils/firebase-error-message';
@@ -10,6 +10,13 @@ import { IAuthUser, IAuthResponse, ILoginPayload, IRegisterPayload } from '@/int
 export class AuthService extends BaseApiService {
   // services
   private localStorageService = inject(LocalStorageService);
+
+  currentUser = signal<IAuthUser | null>(null);
+
+  constructor() {
+    super();
+    this.getFirstUser();
+  }
 
   // user management methods
   private getUsers(): IAuthUser[] {
@@ -54,6 +61,7 @@ export class AuthService extends BaseApiService {
 
   private getFirstUser(): IAuthUser | null {
     const users = this.getUsers();
+    this.currentUser.set(users[0] || null);
     return users.length > 0 ? users[0] : null;
   }
 
@@ -63,6 +71,38 @@ export class AuthService extends BaseApiService {
     if (user?.id) {
       this.removeUser(user.id);
     }
+  }
+
+  switchAccount(userId: string): void {
+    const users = this.getUsers();
+    const userIndex = users.findIndex((u) => u.id === userId);
+    
+    if (userIndex === -1) {
+      console.warn(`User with id ${userId} not found`);
+      return;
+    }
+    
+    if (userIndex > 0) {
+      const [selectedUser] = users.splice(userIndex, 1);
+      users.unshift(selectedUser);
+      this.setUsers(users);
+    }
+  }
+
+  // Update current user data (used when user data is updated from API)
+  updateCurrentUserData(userData: Partial<IAuthUser>): void {
+    const users = this.getUsers();
+    if (users.length === 0) return;
+
+    const currentUser = users[0];
+    const updatedUser: IAuthUser = {
+      ...currentUser,
+      ...userData,
+      token: currentUser.token // Preserve token
+    } as IAuthUser;
+
+    users[0] = updatedUser;
+    this.setUsers(users);
   }
 
   async signInWithGoogle(): Promise<void> {

@@ -1,6 +1,7 @@
 import { Button } from '@/components/form/button';
 import { ReactiveFormsModule } from '@angular/forms';
 import { UserService } from '@/services/user.service';
+import { AuthService } from '@/services/auth.service';
 import { ProfileFormService } from '@/services/profile-form.service';
 import { ProfileImageInput } from '@/components/form/profile-image-input';
 import { UserPersonalInfo } from '@/components/common/user-personal-info';
@@ -32,11 +33,12 @@ export class EditProfile implements AfterViewInit {
   // services
   navCtrl = inject(NavController);
   private userService = inject(UserService);
+  private authService = inject(AuthService);
   private profileFormService = inject(ProfileFormService);
 
   // signals
   tab = signal<Tab>('profile');
-  currentUser = this.userService.currentUser;
+  currentUser = this.authService.currentUser;
 
   // view children
   userPersonalInfo = viewChild(UserPersonalInfo);
@@ -73,7 +75,7 @@ export class EditProfile implements AfterViewInit {
   async ngAfterViewInit(): Promise<void> {
     try {
       await this.profileFormService.initializeForm();
-      const user = await this.userService.getCurrentUser();
+      const user = await this.userService.getCurrentUser(true);
       const userData = user();
       if (userData) {
         this.profileFormService.initializeFields(this.userPersonalInfo(), userData);

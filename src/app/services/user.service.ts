@@ -1,17 +1,19 @@
 import { of, Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { map, catchError } from 'rxjs/operators';
-import { inject, signal, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
 import { IUser, VibeItem, IUserResponse } from '@/interfaces/IUser';
+import { IAuthUser } from '@/interfaces/IAuth';
 
 @Injectable({ providedIn: 'root' })
 export class UserService extends BaseApiService {
   // services
   private authService = inject(AuthService);
 
-  // signal state for current user
-  currentUser = signal<IUser | null>(null);
+  get currentUser() {
+    return this.authService.currentUser;
+  }
 
   // split name into first_name and last_name
   private splitName(name?: string): { first_name: string; last_name: string } {
@@ -68,19 +70,22 @@ export class UserService extends BaseApiService {
     return filteredUser;
   }
 
-  async getCurrentUser(force = false): Promise<typeof this.currentUser> {
-    if (force || !this.currentUser()) {
+  async getCurrentUser(force = false): Promise<typeof this.authService.currentUser> {
+    if (force || !this.authService.currentUser()) {
       try {
         const id = this.authService.getCurrentUserId();
-        const user = await this.getUser(id!);
-        this.currentUser.set(user);
+        if (!id) {
+          throw new Error('No current user ID found');
+        }
+        const user = await this.getUser(id);
+        this.authService.updateCurrentUserData(user as IAuthUser);
       } catch (error) {
         console.error('Error fetching current user:', error);
         throw error;
       }
     }
 
-    return this.currentUser;
+    return this.authService.currentUser;
   }
 
   async getUser(idOrUsername: string): Promise<IUser> {
@@ -98,7 +103,13 @@ export class UserService extends BaseApiService {
 
   async updateCurrentUser(payload: Partial<IUser>): Promise<IUserResponse> {
     const response = await this.put<IUserResponse>(`/users`, payload);
-    await this.getCurrentUser(true);
+    
+    if (response?.data?.user) {
+      this.authService.updateCurrentUserData(response.data.user as IAuthUser);
+    } else {
+      await this.getCurrentUser(true);
+    }
+    
     return response;
   }
 

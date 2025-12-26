@@ -12,7 +12,10 @@ import { ProfileHostedEvents } from '@/pages/profile/components/profile-hosted-e
 import { ProfileUpcomingEvents } from '@/pages/profile/components/profile-upcoming-events';
 import { ProfileAttendedEvents } from '@/pages/profile/components/profile-attended-events';
 import { IonIcon, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
-import { inject, Component, AfterViewInit, signal, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
+import { inject, Component, AfterViewInit, signal, computed, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
+import { PageHeader } from '@/components/common/page-header';
+import { AuthEmptyState } from '@/components/common/auth-empty-state';
+import { AuthService } from '@/services/auth.service';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement' | 'liked-events';
 
@@ -41,12 +44,18 @@ interface TabConfig {
     NetworkingScoreCard,
     ProfileHostedEvents,
     ProfileAttendedEvents,
-    ProfileUpcomingEvents
+    ProfileUpcomingEvents,
+    PageHeader,
+    AuthEmptyState
   ]
 })
 export class Profile implements AfterViewInit {
   navCtrl = inject(NavController);
   private platformId = inject(PLATFORM_ID);
+  private authService = inject(AuthService);
+
+  // computed
+  isLoggedIn = computed(() => !!this.authService.currentUser());
   currentSlide = signal<ProfileTabs>('hosted-events');
   swiper?: Swiper;
 

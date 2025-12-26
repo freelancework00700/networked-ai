@@ -3,6 +3,7 @@ import { VibeItem } from '@/interfaces/IUser';
 import { ActivatedRoute } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { UserService } from '@/services/user.service';
+import { AuthService } from '@/services/auth.service';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
 import { OnInit, signal, inject, computed, OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
@@ -22,6 +23,7 @@ export class ProfilePreferences implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private navCtrl = inject(NavController);
   private userService = inject(UserService);
+  private authService = inject(AuthService);
   private toasterService = inject(ToasterService);
 
   // signals
@@ -33,7 +35,7 @@ export class ProfilePreferences implements OnInit, OnDestroy {
   vibes = signal<VibeItem[]>([]);
   hobbies = signal<VibeItem[]>([]);
   interests = signal<VibeItem[]>([]);
-  currentUser = this.userService.currentUser();
+  currentUser = this.authService.currentUser();
   selectedVibesIds = signal<Set<string>>(new Set(this.currentUser?.vibe_ids || []));
   selectedHobbiesIds = signal<Set<string>>(new Set(this.currentUser?.hobby_ids || []));
   selectedInterestsIds = signal<Set<string>>(new Set(this.currentUser?.interest_ids || []));

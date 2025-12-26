@@ -16,6 +16,8 @@ import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { Searchbar } from '@/components/common/searchbar';
+import { AuthEmptyState } from '@/components/common/auth-empty-state';
+import { AuthService } from '@/services/auth.service';
 import { Component, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 
 export interface Message {
@@ -46,7 +48,8 @@ export interface Message {
     CommonModule,
     IonItemOption,
     IonItemOptions,
-    IonItemSliding
+    IonItemSliding,
+    AuthEmptyState
   ],
   styleUrl: './messages.scss',
   templateUrl: './messages.html',
@@ -55,6 +58,10 @@ export interface Message {
 export class Messages {
   private navCtrl = inject(NavController);
   private modalService = inject(ModalService);
+  private authService = inject(AuthService);
+
+  // computed
+  isLoggedIn = computed(() => !!this.authService.currentUser());
   messages = signal<Message[]>([
     { id: 1, sender: 'Kathryn Murphy', text: "Hey, what's up?", time: '8:07 pm', unreadCount: 1, isMuted: true },
     { id: 2, sender: 'Group Chat A', text: 'Janette: Hello!', time: '5:15 pm', unreadCount: 3, group: true },

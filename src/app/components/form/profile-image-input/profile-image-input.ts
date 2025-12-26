@@ -6,9 +6,9 @@ import {
   Component,
   ViewChild,
   ElementRef,
-  afterEveryRender,
   ChangeDetectorRef,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  afterNextRender
 } from '@angular/core';
 import { ModalService } from '@/services/modal.service';
 import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
@@ -47,7 +47,7 @@ export class ProfileImageInput implements OnInit {
     private modalService: ModalService,
     private parentContainer: ControlContainer
   ) {
-    afterEveryRender(() => this.updateImagePreview(this.control.value));
+    afterNextRender(() => this.updateImagePreview(this.control.value));
   }
 
   get control(): AbstractControl {
