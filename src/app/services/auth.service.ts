@@ -5,6 +5,7 @@ import { FirebaseAuthError } from '@/utils/firebase-error-message';
 import { ISendOtpPayload, IVerifyOtpPayload } from '@/interfaces/IAuth';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { IAuthUser, IAuthResponse, ILoginPayload, IRegisterPayload } from '@/interfaces/IAuth';
+import { IUserResponse } from '@/interfaces/IUser';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService extends BaseApiService {
@@ -31,6 +32,7 @@ export class AuthService extends BaseApiService {
 
   private setUsers(users: IAuthUser[]): void {
     this.localStorageService.setItem(KEYS.USERS, JSON.stringify(users));
+    this.currentUser.set(users[0] || null);
   }
 
   private addUser(user: IAuthUser): void {
@@ -105,6 +107,18 @@ export class AuthService extends BaseApiService {
     this.setUsers(users);
   }
 
+  // Fetch fresh user data from API and update localStorage
+  private async fetchAndUpdateUserData(userId: string): Promise<void> {
+    try {
+      const response = await this.get<IUserResponse>(`/users/${encodeURIComponent(userId)}`);
+      if (response?.data?.user) {
+        this.updateCurrentUserData(response.data.user as IAuthUser);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  }
+
   async signInWithGoogle(): Promise<void> {
     try {
       await FirebaseAuthentication.signInWithGoogle();
@@ -143,6 +157,11 @@ export class AuthService extends BaseApiService {
         token: response.data.token
       };
       this.addUser(userWithToken);
+      
+      // Fetch fresh user data from API after login
+      if (userWithToken.id) {
+        await this.fetchAndUpdateUserData(userWithToken.id);
+      }
     }
 
     return response;
@@ -159,6 +178,11 @@ export class AuthService extends BaseApiService {
       };
 
       this.addUser(userWithToken);
+      
+      // Fetch fresh user data from API after social login
+      if (userWithToken.id) {
+        await this.fetchAndUpdateUserData(userWithToken.id);
+      }
     }
 
     return response;
@@ -190,6 +214,11 @@ export class AuthService extends BaseApiService {
       };
 
       this.addUser(userWithToken);
+      
+      // Fetch fresh user data from API after registration
+      if (userWithToken.id) {
+        await this.fetchAndUpdateUserData(userWithToken.id);
+      }
     }
   }
 }
