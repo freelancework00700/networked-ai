@@ -1,16 +1,17 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal, Injector } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
 import { KEYS, LocalStorageService } from './localstorage.service';
 import { FirebaseAuthError } from '@/utils/firebase-error-message';
 import { ISendOtpPayload, IVerifyOtpPayload } from '@/interfaces/IAuth';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { IAuthUser, IAuthResponse, ILoginPayload, IRegisterPayload } from '@/interfaces/IAuth';
-import { IUserResponse } from '@/interfaces/IUser';
+import { UserService } from './user.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService extends BaseApiService {
   // services
   private localStorageService = inject(LocalStorageService);
+  private injector = inject(Injector);
 
   currentUser = signal<IAuthUser | null>(null);
 
@@ -110,10 +111,9 @@ export class AuthService extends BaseApiService {
   // Fetch fresh user data from API and update localStorage
   private async fetchAndUpdateUserData(userId: string): Promise<void> {
     try {
-      const response = await this.get<IUserResponse>(`/users/${encodeURIComponent(userId)}`);
-      if (response?.data?.user) {
-        this.updateCurrentUserData(response.data.user as IAuthUser);
-      }
+      const userService = this.injector.get(UserService);
+      const user = await userService.getUser(userId);
+      this.updateCurrentUserData(user as IAuthUser);
     } catch (error) {
       console.error('Error fetching user data:', error);
     }

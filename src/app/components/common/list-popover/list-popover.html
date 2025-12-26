@@ -9,7 +9,7 @@
       (click)="onItemClick(item)"
     >
       @if (item.avatar) {
-        <img [src]="item.avatar" [alt]="item.label" class="w-8 h-8 rounded-full object-cover" />
+        <img [src]="item.avatar" [alt]="item.label" class="w-10 h-10 rounded-full object-cover" />
       } @else {
         <div class="w-10 h-10 rounded-full bg-neutral-06 flex items-center justify-center">
           <div [class]="'pi ' + item.icon + ' neutral-02 !text-[16px] p-1'"></div>

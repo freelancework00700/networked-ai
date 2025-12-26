@@ -45,7 +45,6 @@ export class ListPopover implements OnInit {
     if (usersJson) {
       try {
         const users = JSON.parse(usersJson);
-        console.log('users', users);
         if (Array.isArray(users) && users.length > 0) {
           firstUserId = users[0].id || null;
 

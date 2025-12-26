@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, inject, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, inject, computed, signal } from '@angular/core';
 import { IonIcon, NavController, PopoverController } from '@ionic/angular/standalone';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
@@ -20,6 +20,8 @@ export class PageHeader {
     return currentUser?.name || 'User';
   });
 
+  isAccountsPopoverOpen = signal<boolean>(false);
+
   private navCtrl = inject(NavController);
   private popoverCtrl = inject(PopoverController);
   private authService = inject(AuthService);
@@ -39,7 +41,10 @@ export class PageHeader {
       }
     });
 
+    this.isAccountsPopoverOpen.set(true);
     await popover.present();
+
+    popover.onWillDismiss().then(() => this.isAccountsPopoverOpen.set(false));
 
     const { data } = await popover.onDidDismiss();
     if (data) {
