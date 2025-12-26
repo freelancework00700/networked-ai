@@ -1,6 +1,17 @@
+import {
+  input,
+  signal,
+  OnInit,
+  inject,
+  Component,
+  ViewChild,
+  ElementRef,
+  afterEveryRender,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy
+} from '@angular/core';
 import { ModalService } from '@/services/modal.service';
 import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
-import { input, signal, OnInit, inject, Component, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild, ElementRef } from '@angular/core';
 @Component({
   imports: [ReactiveFormsModule],
   selector: 'profile-image-input',
@@ -35,7 +46,9 @@ export class ProfileImageInput implements OnInit {
     private cdr: ChangeDetectorRef,
     private modalService: ModalService,
     private parentContainer: ControlContainer
-  ) {}
+  ) {
+    afterEveryRender(() => this.updateImagePreview(this.control.value));
+  }
 
   get control(): AbstractControl {
     return this.parentFormGroup.get(this.controlName())!;

@@ -21,9 +21,9 @@ export class SocialLoginButtons {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
       await this.authService.signInWithGoogle();
-      const { data } = await this.authService.loginWithFirebaseToken();
+      const { data } = await this.authService.socialLogin();
       if (data.is_new_user) {
-        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(data.user)) } });
+        this.navCtrl.navigateForward('/profile-setup');
       } else {
         this.navCtrl.navigateForward('/');
       }
@@ -39,9 +39,9 @@ export class SocialLoginButtons {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
       await this.authService.signInWithApple();
-      const { data } = await this.authService.loginWithFirebaseToken();
+      const { data } = await this.authService.socialLogin();
       if (data.is_new_user) {
-        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(data.user)) } });
+        this.navCtrl.navigateForward('/profile-setup');
       } else {
         this.navCtrl.navigateForward('/');
       }
@@ -57,9 +57,9 @@ export class SocialLoginButtons {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
       await this.authService.signInWithFacebook();
-      const { data } = await this.authService.loginWithFirebaseToken();
+      const { data } = await this.authService.socialLogin();
       if (data.is_new_user) {
-        this.navCtrl.navigateForward('/signup', { state: { user: JSON.parse(JSON.stringify(data.user)) } });
+        this.navCtrl.navigateForward('/profile-setup');
       } else {
         this.navCtrl.navigateForward('/');
       }

@@ -224,9 +224,9 @@ export class LocationModal implements OnInit {
     this.searchQuery.set(result.address);
     this.modalService.close({
       address: result.address,
-      latitude: result.latitude,
-      longitude: result.longitude,
-      distance: result.distance
+      distance: result.distance,
+      latitude: String(result.latitude),
+      longitude: String(result.longitude)
     });
   }
 

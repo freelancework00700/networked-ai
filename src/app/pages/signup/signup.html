@@ -1,105 +1,134 @@
-<ion-header>
-  <ion-toolbar>
-    <div class="flex items-center p-6 max-w-[672px] mx-auto">
-      <div class="pi pi-arrow-left cursor-pointer" (click)="goBack()"></div>
-      <div class="body-14M neutral-02 text-center w-full">Setup Your Profile</div>
-    </div>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content [fullscreen]="true">
-  <div class="w-full p-6 max-w-[672px] mx-auto">
-    <form [formGroup]="profileForm()" class="h-full">
-      <!-- step 1: personal information -->
-      <div [hidden]="currentStep() !== 1" class="flex flex-col gap-6">
-        <div class="heading-h2 neutral-01">Personal Details</div>
-        <user-personal-info
-          [formGroup]="profileForm()"
-          [isSubmitted]="isSubmitted()"
-          (openDateModal)="openDateModal()"
-          [emailVerified]="emailVerified()"
-          (openTitleModal)="openTitleModal()"
-          [showPasswordInput]="!isSocialLogin()"
-          (openLocationModal)="openLocationModal()"
-          (openAccountTypeModal)="openAccountTypeModal()"
-        />
-      </div>
+  <div class="h-full pt-safe">
+    <div class="w-full p-6 max-w-[672px] mx-auto">
+      <!-- logo and title -->
+      <div class="flex flex-col gap-5">
+        <div class="text-center">
+          <div class="flex justify-center">
+            <ion-icon src="assets/svg/logo.svg" class="w-[63px] h-[28px]" />
+          </div>
+          <div class="text-[10px] font-semibold pt-1">Networked AI</div>
+        </div>
 
-      <!-- step 2: additional information -->
-      <div [hidden]="currentStep() !== 2" class="space-y-4 flex flex-col gap-4">
-        <div class="heading-h2 neutral-01">More About You</div>
-        <user-additional-info [formGroup]="profileForm()" />
-      </div>
-
-      <!-- step 3: profile image -->
-      <div [hidden]="currentStep() !== 3" class="absolute inset-0 flex items-center justify-center min-h-screen">
-        <div class="flex flex-col items-center justify-center">
-          <div class="heading-h2 neutral-01 mb-8">Upload Photo</div>
-          <profile-image-input controlName="image_url" label="Profile Picture" [required]="false" (skipped)="save()" />
-          <button type="button" (click)="save()" class="body-14M neutral-03 mt-6">Skip Now</button>
+        <div class="text-center heading-h1 neutral-01">
+          <div class="">Get out,</div>
+          <div>
+            Get
+            <span class="bg-[linear-gradient(170deg,rgba(245,188,97,1)_0%,rgba(158,102,10,1)_94%)] bg-clip-text text-transparent">Networked.</span>
+          </div>
         </div>
       </div>
 
-      <!-- step 4: network suggestions -->
-      <div [hidden]="currentStep() !== 4" class="flex flex-col gap-4">
-        <div class="heading-h2 neutral-01">Network Suggestion</div>
+      <!-- social login buttons -->
+      <social-login-buttons />
 
-        <!-- network suggestions list -->
-        <div class="mb-4">
-          @for (suggestion of networkSuggestions; track suggestion.id) {
-            <div class="flex items-center gap-3 bg-surface-0 py-4">
-              <!-- profile picture -->
-              <div class="w-12 h-12 rounded-full bg-surface-100 border-2 border-surface-200 flex items-center justify-center flex-shrink-0">
-                <i class="pi pi-user text-surface-400 text-xl"></i>
-              </div>
-
-              <!-- name and details -->
-              <div class="flex-1 flex flex-col gap-1">
-                <div class="flex items-center gap-2">
-                  <div class="body-14SB neutral-01 truncate">{{ suggestion.name }}</div>
-                  <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full py-0 h-[20px]">
-                    <img src="assets/svg/diamondYellow.svg" alt="diamond" class="h-4 w-auto ml-1.5" />
-                    <span class="text-sm font-medium pr-2">{{ suggestion.value }}</span>
-                  </div>
-                </div>
-                <p class="body-12 neutral-03">{{ suggestion.jobTitle }}, {{ suggestion.company }}</p>
-              </div>
-
-              <!-- add button -->
-              <app-button
-                width="60px"
-                height="32px"
-                color="secondary"
-                (click)="addSuggestion(suggestion.id)"
-                [label]="isSelected(suggestion.id) ? 'Added' : 'Add'"
-              />
-            </div>
-          }
-        </div>
+      <!-- or separator -->
+      <div class="flex items-center gap-3 my-4">
+        <div class="flex-1 h-px bg-neutral-05"></div>
+        <span class="neutral-03 body-14M">or</span>
+        <div class="flex-1 h-px bg-neutral-05"></div>
       </div>
-    </form>
-  </div>
 
-  <!-- recaptcha container for phone authentication -->
-  <div id="recaptcha-container"></div>
-</ion-content>
+      <!-- sign in header -->
+      <div class="text-center mb-6">
+        <h2 class="body-16SB neutral-01">Create an account to continue.</h2>
+      </div>
 
-<ion-footer>
-  <ion-toolbar>
-    <div class="flex items-center justify-between p-6 max-w-[672px] mx-auto">
-      <!-- steps -->
-      <div class="flex items-center gap-1">
-        @for (step of steps(); track step) {
+      <!-- email/mobile tabs -->
+      <div class="flex items-center justify-center mb-6">
+        <!-- Email tab -->
+        <button (click)="switchSignupMethod('email')" class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full">
+          <div class="flex items-center gap-2">
+            <img [src]="activeTab() === 'email' ? 'assets/svg/email-theme.svg' : 'assets/svg/email.svg'" class="w-5 h-5" />
+            <span class="text-base font-medium" [class.brand-02]="activeTab() === 'email'" [class.neutral-03]="activeTab() !== 'email'">Email</span>
+          </div>
+
           <div
-            class="rounded-full transition-all duration-200"
-            [class]="step === currentStep() ? 'w-8 h-2 bg-black' : step < currentStep() ? 'w-2 h-2 bg-black' : 'w-2 h-2 bg-gray-300'"
+            [class.bg-brand-03]="activeTab() === 'email'"
+            [class.bg-neutral-05]="activeTab() !== 'email'"
+            class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
           ></div>
-        }
+        </button>
+
+        <!-- Mobile tab -->
+        <button
+          (click)="switchSignupMethod('mobile')"
+          class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full"
+        >
+          <div class="flex items-center gap-2">
+            <img [src]="activeTab() === 'mobile' ? 'assets/svg/call-theme.svg' : 'assets/svg/call.svg'" class="w-5 h-5" />
+            <span class="text-base font-medium" [class.brand-02]="activeTab() === 'mobile'" [class.neutral-03]="activeTab() !== 'mobile'"
+              >Mobile</span
+            >
+          </div>
+
+          <div
+            [class.bg-brand-03]="activeTab() === 'mobile'"
+            [class.bg-neutral-05]="activeTab() !== 'mobile'"
+            class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
+          ></div>
+        </button>
       </div>
-      <!-- navigation buttons -->
-      <div class="flex items-center gap-2">
-        <app-button width="96px" height="48px" label="Next" (click)="save()" [isLoading]="isLoading()" />
+
+      <!-- login form -->
+      <form [formGroup]="signupForm()" (ngSubmit)="signup()">
+        @if (activeTab() === 'email') {
+          <div class="min-h-[224px]">
+            @if (!otpSent()) {
+              <!-- email input -->
+              <email-input [checkIfTaken]="true" [showIcon]="true" [isSubmitted]="isSubmitted()" />
+
+              <!-- password input -->
+              <div class="pt-4">
+                <password-input [showIcon]="true" [isSubmitted]="isSubmitted()" />
+              </div>
+            } @else {
+              <!-- otp input section -->
+              <otp-input [isInvalidOtp]="isInvalidOtp()" [email]="email()" [isLoading]="isLoading()" (resendOtp)="resendOtp()" (emailOtpChange)="otp.set($event)" />
+            }
+          </div>
+        } @else {
+          <div class="min-h-[224px]">
+            @if (!otpSent()) {
+              <!-- phone input section -->
+              <mobile-input label="Mobile" [checkIfTaken]="true" [isSubmitted]="isSubmitted()" />
+            } @else {
+              <!-- otp input section -->
+              <otp-input [isInvalidOtp]="isInvalidOtp()" [mobile]="phoneNumber()" [isLoading]="isLoading()" (resendOtp)="resendOtp()" (mobileOtpChange)="otp.set($event)" />
+            }
+          </div>
+        }
+
+        @if (activeTab() === 'email') {
+          @if (!otpSent()) {
+            <app-button label="Send Verification Code" (click)="signup()" [isLoading]="isLoading()" />
+          } @else {
+            <app-button label="Verify & Create Account" (click)="signup()" [isLoading]="isLoading()" />
+          }
+        } @else {
+          @if (!otpSent()) {
+            <app-button label="Send OTP" (click)="signup()" [isLoading]="isLoading()" />
+          } @else {
+            <app-button label="Verify & Create Account" (click)="signup()" [isLoading]="isLoading()" />
+          }
+        }
+      </form>
+
+      <!-- footer links -->
+      <div class="flex flex-col items-center gap-4 mt-4">
+        <!-- create account link -->
+        <div class="text-center text-sm p-3">
+          <span class="neutral-03 body-14M">Already have an account? </span>
+          <a (click)="navCtrl.navigateForward('/login')" class="body-14SB brand-02 cursor-pointer"> Sign in here   </a>
+        </div>
+
+        <!-- terms and privacy policy -->
+        <div class="text-center text-sm">
+          <span class="neutral-03 body-14R">By continuing, I agree to the </span>
+          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navCtrl.navigateForward('/terms')"> terms of service </a>and
+          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navCtrl.navigateForward('/policy')"> privacy policy. </a>
+        </div>
       </div>
     </div>
-  </ion-toolbar>
-</ion-footer>
+  </div>
+</ion-content>

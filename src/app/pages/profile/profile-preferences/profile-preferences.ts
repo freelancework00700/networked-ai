@@ -1,9 +1,11 @@
+import { Subscription } from 'rxjs';
 import { VibeItem } from '@/interfaces/IUser';
+import { ActivatedRoute } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { UserService } from '@/services/user.service';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
-import { OnInit, signal, inject, computed, Component, ChangeDetectionStrategy } from '@angular/core';
+import { OnInit, signal, inject, computed, OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
 import { IonFooter, IonHeader, IonSpinner, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 
 export type PreferenceType = 'vibe' | 'hobby' | 'interest' | 'all';
@@ -15,7 +17,13 @@ export type PreferenceType = 'vibe' | 'hobby' | 'interest' | 'all';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Button, IonHeader, IonFooter, IonToolbar, IonContent, IonSpinner]
 })
-export class ProfilePreferences implements OnInit {
+export class ProfilePreferences implements OnInit, OnDestroy {
+  // services
+  private route = inject(ActivatedRoute);
+  private navCtrl = inject(NavController);
+  private userService = inject(UserService);
+  private toasterService = inject(ToasterService);
+
   // signals
   maxSelections = 3;
   isLoading = signal(false);
@@ -25,24 +33,25 @@ export class ProfilePreferences implements OnInit {
   vibes = signal<VibeItem[]>([]);
   hobbies = signal<VibeItem[]>([]);
   interests = signal<VibeItem[]>([]);
-  selectedVibes = signal<Set<string>>(new Set());
-  selectedHobbies = signal<Set<string>>(new Set());
-  selectedInterests = signal<Set<string>>(new Set());
+  currentUser = this.userService.currentUser();
+  selectedVibesIds = signal<Set<string>>(new Set(this.currentUser?.vibe_ids || []));
+  selectedHobbiesIds = signal<Set<string>>(new Set(this.currentUser?.hobby_ids || []));
+  selectedInterestsIds = signal<Set<string>>(new Set(this.currentUser?.interest_ids || []));
 
-  // services
-  private navCtrl = inject(NavController);
-  private userService = inject(UserService);
-  private toasterService = inject(ToasterService);
+  // subscriptions
+  private queryParamsSubscription?: Subscription;
 
-  steps = [
+
+  // variables
+  readonly steps = [
     {
-      type: 'vibe' as PreferenceType,
       title: "What's your vibe?",
+      type: 'vibe' as PreferenceType,
       description: 'Choose up to 3 vibes that best describe your world. These help us tailor your feed and connections.'
     },
     {
-      type: 'interest' as PreferenceType,
       title: 'Who to connect?',
+      type: 'interest' as PreferenceType,
       description: 'Select up to 3 types of people you want to meet through the app - from colleagues to hobby buddies.'
     },
     {
@@ -52,6 +61,7 @@ export class ProfilePreferences implements OnInit {
     }
   ];
 
+  // computed properties
   currentStepData = computed(() => {
     const step = this.steps[this.currentStep() - 1];
     return step || this.steps[0];
@@ -71,9 +81,9 @@ export class ProfilePreferences implements OnInit {
 
   currentSelected = computed(() => {
     const stepType = this.currentStepData().type;
-    if (stepType === 'vibe') return this.selectedVibes();
-    if (stepType === 'interest') return this.selectedInterests();
-    if (stepType === 'hobby') return this.selectedHobbies();
+    if (stepType === 'vibe') return this.selectedVibesIds();
+    if (stepType === 'hobby') return this.selectedHobbiesIds();
+    if (stepType === 'interest') return this.selectedInterestsIds();
 
     return new Set<string>();
   });
@@ -83,13 +93,31 @@ export class ProfilePreferences implements OnInit {
   totalSteps = computed(() => (this.isMultiStep() ? 3 : 1));
 
   async ngOnInit(): Promise<void> {
+    // check for type query parameter
+    this.queryParamsSubscription = this.route.queryParams.subscribe((params) => {
+      const typeParam = params['type'] as PreferenceType | undefined;
+
+      if (typeParam === 'vibe') {
+        this.currentStep.set(1);
+        this.type.set(typeParam);
+      } else if (typeParam === 'interest') {
+        this.currentStep.set(2);
+        this.type.set(typeParam);
+      } else if (typeParam === 'hobby') {
+        this.currentStep.set(3);
+        this.type.set(typeParam);
+      }
+    });
+
     await this.loadData();
+    this.sortItemsBySelection();
   }
 
   async loadData(): Promise<void> {
     this.isLoading.set(true);
     try {
       const preferenceType = this.type();
+
       if (preferenceType === 'all' || preferenceType === 'vibe') {
         const vibesData = await this.userService.getVibes();
         this.vibes.set(vibesData || []);
@@ -112,6 +140,22 @@ export class ProfilePreferences implements OnInit {
     }
   }
 
+  private sortItemsBySelection(): void {
+    // helper function to sort items by selection status
+    const sortBySelection = <T extends VibeItem>(items: T[], selectedIds: Set<string>): T[] => {
+      if (items.length === 0 || selectedIds.size === 0) return items;
+      return [...items].sort((a, b) => {
+        const aSelected = selectedIds.has(a.id);
+        const bSelected = selectedIds.has(b.id);
+        return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+      });
+    };
+
+    this.vibes.set(sortBySelection(this.vibes(), this.selectedVibesIds()));
+    this.hobbies.set(sortBySelection(this.hobbies(), this.selectedHobbiesIds()));
+    this.interests.set(sortBySelection(this.interests(), this.selectedInterestsIds()));
+  }
+
   isSelected(itemId: string): boolean {
     return this.currentSelected().has(itemId);
   }
@@ -122,31 +166,23 @@ export class ProfilePreferences implements OnInit {
 
   toggleItem(itemId: string): void {
     const stepType = this.currentStepData().type;
-    let selected: Set<string>;
+    let selectedSignal: typeof this.selectedVibesIds;
 
     if (stepType === 'vibe') {
-      selected = new Set(this.selectedVibes());
+      selectedSignal = this.selectedVibesIds;
     } else if (stepType === 'interest') {
-      selected = new Set(this.selectedInterests());
+      selectedSignal = this.selectedInterestsIds;
     } else {
-      selected = new Set(this.selectedHobbies());
+      selectedSignal = this.selectedHobbiesIds;
     }
 
+    const selected = new Set(selectedSignal());
     if (selected.has(itemId)) {
       selected.delete(itemId);
-    } else {
-      if (selected.size < this.maxSelections) {
-        selected.add(itemId);
-      }
+    } else if (selected.size < this.maxSelections) {
+      selected.add(itemId);
     }
-
-    if (stepType === 'vibe') {
-      this.selectedVibes.set(selected);
-    } else if (stepType === 'interest') {
-      this.selectedInterests.set(selected);
-    } else {
-      this.selectedHobbies.set(selected);
-    }
+    selectedSignal.set(selected);
   }
 
   skip(): void {
@@ -163,15 +199,15 @@ export class ProfilePreferences implements OnInit {
 
   async next(): Promise<void> {
     if (this.isMultiStep()) {
-      // Multi-step flow: move to next step or finish
+      // multi-step flow: move to next step or finish
       if (this.currentStep() < this.totalSteps()) {
         this.currentStep.set(this.currentStep() + 1);
       } else {
-        // Last step - save all preferences
+        // last step - save all preferences
         await this.savePreferences();
       }
     } else {
-      // Single type selection - save and go back
+      // single type selection - save and go back
       await this.savePreferences();
     }
   }
@@ -179,20 +215,30 @@ export class ProfilePreferences implements OnInit {
   async savePreferences(): Promise<void> {
     this.isLoading.set(true);
     try {
-      // TODO: Implement API call to save preferences
-      // const payload = {
-      //   vibes: Array.from(this.selectedVibes()),
-      //   interests: Array.from(this.selectedInterests()),
-      //   hobbies: Array.from(this.selectedHobbies())
-      // };
-      // await this.userService.savePreferences(payload);
+      await this.userService.updatePreferences(
+        Array.from(this.selectedVibesIds()),
+        Array.from(this.selectedInterestsIds()),
+        Array.from(this.selectedHobbiesIds())
+      );
+      this.toasterService.showSuccess('Preferences saved successfully.');
 
-      this.navCtrl.back();
+      const returnTo = this.route.snapshot.queryParams['returnTo'];
+      if (returnTo) {
+        this.navCtrl.navigateBack(returnTo);
+      } else {
+        this.navCtrl.navigateForward('/');
+      }
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to save preferences.');
       this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.queryParamsSubscription) {
+      this.queryParamsSubscription.unsubscribe();
     }
   }
 }

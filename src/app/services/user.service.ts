@@ -1,11 +1,15 @@
 import { of, Observable } from 'rxjs';
+import { AuthService } from './auth.service';
 import { map, catchError } from 'rxjs/operators';
-import { signal, Injectable } from '@angular/core';
+import { inject, signal, Injectable } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
 import { IUser, VibeItem, IUserResponse } from '@/interfaces/IUser';
 
 @Injectable({ providedIn: 'root' })
 export class UserService extends BaseApiService {
+  // services
+  private authService = inject(AuthService);
+
   // signal state for current user
   currentUser = signal<IUser | null>(null);
 
@@ -26,42 +30,50 @@ export class UserService extends BaseApiService {
     return parts.join(' ').trim();
   }
 
-  userToFormData(user: IUser): Record<string, any> {
+  getUserFromApiResponse(user: IUser): Record<string, any> {
     const { name, ...userWithoutName } = user;
     const { first_name, last_name } = this.splitName(name);
 
-    const formData: Record<string, any> = {};
+    const payload: Record<string, any> = {};
 
     Object.entries(userWithoutName).forEach(([key, value]) => {
       if (value !== undefined) {
-        formData[key] = value ?? null;
+        payload[key] = value ?? null;
       }
     });
 
-    formData['last_name'] = last_name || null;
-    formData['first_name'] = first_name || null;
+    payload['last_name'] = last_name || null;
+    payload['first_name'] = first_name || null;
 
-    return formData;
+    return payload;
   }
 
-  formDataToUser(formData: Record<string, any> & { first_name?: string | null; last_name?: string | null }): Partial<IUser> {
-    const { first_name, last_name, ...userData } = formData;
+  generateUserPayload(payload: Record<string, any> & { first_name?: string | null; last_name?: string | null }): Partial<IUser> {
+    const { first_name, last_name, ...user } = payload;
 
+    // Filter out null, undefined, and empty string values
+    const filteredUser: Partial<IUser> = {};
+    Object.entries(user).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        filteredUser[key as keyof IUser] = value;
+      }
+    });
+
+    // Add name if it can be combined from first_name and last_name
     const name = this.combineName(first_name, last_name);
     if (name) {
-      (userData as Partial<IUser>).name = name;
+      filteredUser.name = name;
     }
 
-    return userData as Partial<IUser>;
+    return filteredUser;
   }
 
   async getCurrentUser(force = false): Promise<typeof this.currentUser> {
     if (force || !this.currentUser()) {
       try {
-        const response = await this.get<IUserResponse>('/users/me');
-        if (response?.data?.user) {
-          this.currentUser.set(response.data.user);
-        }
+        const id = this.authService.getCurrentUserId();
+        const user = await this.getUser(id!);
+        this.currentUser.set(user);
       } catch (error) {
         console.error('Error fetching current user:', error);
         throw error;
@@ -71,14 +83,44 @@ export class UserService extends BaseApiService {
     return this.currentUser;
   }
 
-  async updateCurrentUser(payload: Partial<IUser>): Promise<IUserResponse> {
-    const response = await this.putFormData<IUserResponse>('/users', payload);
+  async getUser(idOrUsername: string): Promise<IUser> {
+    try {
+      const response = await this.get<IUserResponse>(`/users/${encodeURIComponent(idOrUsername)}`);
+      if (response?.data?.user) {
+        return response.data.user;
+      }
+      throw new Error('User not found');
+    } catch (error) {
+      console.error('Error fetching user by ID or username:', error);
+      throw error;
+    }
+  }
 
-    if (response?.data?.user) {
-      this.currentUser.set(response.data.user);
+  async updateCurrentUser(payload: Partial<IUser>): Promise<IUserResponse> {
+    const response = await this.put<IUserResponse>(`/users`, payload);
+    await this.getCurrentUser(true);
+    return response;
+  }
+
+  // update preferences (vibes, interests, hobbies) while preserving all other user data
+  async updatePreferences(vibes: string[], interests: string[], hobbies: string[]): Promise<IUserResponse> {
+    // get current user data to preserve all existing fields
+    const currentUser = await this.getCurrentUser();
+    const userData = currentUser();
+
+    if (!userData) {
+      throw new Error('User data not found.');
     }
 
-    return response;
+    // convert user data to payload format and merge with new preferences
+    const payload = this.generateUserPayload(userData);
+    
+    // update with new preferences
+    payload['vibe_ids'] = vibes;
+    payload['hobby_ids'] = hobbies;
+    payload['interest_ids'] = interests;
+
+    return await this.updateCurrentUser(payload);
   }
 
   // check email, username, phone availability
@@ -87,7 +129,7 @@ export class UserService extends BaseApiService {
       return of(false); // default to false (unavailable)
     }
 
-    return this.getObservable<boolean>(`/users/check/${value}`).pipe(
+    return this.getObservable<boolean>(`/users/check?value=${encodeURIComponent(value)}`).pipe(
       map((response) => !response), // API returns false if available, true if taken
       catchError((error) => {
         console.error('Error checking availability:', error);

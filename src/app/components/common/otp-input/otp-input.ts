@@ -13,6 +13,7 @@ export class OtpInput implements OnInit {
   email = input('');
   mobile = input('');
   isLoading = input(false);
+  isInvalidOtp = input(false);
 
   // outputs
   resendOtp = output<void>();

@@ -4,7 +4,7 @@ import { KEYS, LocalStorageService } from './localstorage.service';
 import { FirebaseAuthError } from '@/utils/firebase-error-message';
 import { ISendOtpPayload, IVerifyOtpPayload } from '@/interfaces/IAuth';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
-import { IAuthUser, IAuthResponse, ILoginPayload } from '@/interfaces/IAuth';
+import { IAuthUser, IAuthResponse, ILoginPayload, IRegisterPayload } from '@/interfaces/IAuth';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService extends BaseApiService {
@@ -45,6 +45,11 @@ export class AuthService extends BaseApiService {
   getCurrentToken(): string | null {
     const users = this.getUsers();
     return users.length > 0 && users[0].token ? users[0].token : null;
+  }
+
+  getCurrentUserId(): string | null {
+    const user = this.getFirstUser();
+    return user?.id || null;
   }
 
   private getFirstUser(): IAuthUser | null {
@@ -103,9 +108,20 @@ export class AuthService extends BaseApiService {
     return response;
   }
 
-  async loginWithFirebaseToken(): Promise<IAuthResponse> {
+  async socialLogin(): Promise<IAuthResponse> {
     const { token: firebase_token } = await FirebaseAuthentication.getIdToken();
-    return this.login({ firebase_token });
+    const response = await this.post<IAuthResponse>('/auth/social-login', { firebase_token });
+
+    if (response?.data?.token && response?.data?.user) {
+      const userWithToken = {
+        ...response.data.user,
+        token: response.data.token
+      };
+
+      this.addUser(userWithToken);
+    }
+
+    return response;
   }
 
   async sendOtp({ email, mobile }: ISendOtpPayload): Promise<void> {
@@ -116,15 +132,24 @@ export class AuthService extends BaseApiService {
     await this.post('/auth/send-verification-otp', payload);
   }
 
-  async verifyOtp({ email, mobile, code }: IVerifyOtpPayload): Promise<void> {
+  async verifyOtp({ email, mobile, code }: IVerifyOtpPayload): Promise<boolean> {
     const payload: IVerifyOtpPayload = { code };
     if (email) payload.email = email;
     if (mobile) payload.mobile = mobile;
 
-    await this.post('/auth/verify-otp', payload);
+    return await this.post<boolean>('/auth/verify-otp', payload);
   }
 
-  async register(payload: Partial<IAuthUser>): Promise<void> {
-    await this.postFormData('/auth/register', payload);
+  async register(payload: IRegisterPayload): Promise<void> {
+    const response = await this.post<IAuthResponse>('/auth/register', payload);
+
+    if (response?.data?.token && response?.data?.user) {
+      const userWithToken = {
+        ...response.data.user,
+        token: response.data.token
+      };
+
+      this.addUser(userWithToken);
+    }
   }
 }

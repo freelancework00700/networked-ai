@@ -4,9 +4,9 @@
     label="Title"
     [readonly]="true"
     controlName="title"
+    (click)="openTitleModal()"
     placeholder="Select title"
     [isSubmitted]="isSubmitted()"
-    (click)="openTitleModal.emit()"
     endIconName="pi-chevron-right"
   />
 
@@ -24,26 +24,21 @@
   </div>
 
   <!-- email input -->
-  <email-input [checkAvailability]="!emailVerified()" />
-
-  <!-- password input - only show during signup -->
-  @if (showPasswordInput()) {
-    <password-input controlName="password" [isSubmitted]="isSubmitted()" />
-  }
+  <email-input [checkIfTaken]="true" [showVerifiedIcon]="true" [isSubmitted]="isSubmitted()" />
 
   <!-- phone input -->
-  <mobile-input [checkAvailability]="true" />
+  <mobile-input [checkIfTaken]="true" [showVerifiedIcon]="true" [isSubmitted]="isSubmitted()" />
 
   <!-- username input -->
-  <username-input />
+  <username-input [isSubmitted]="isSubmitted()" />
 
   <!-- birthdate input -->
   <text-input
     [readonly]="true"
-    label="Birth Date"
     controlName="dob"
+    label="Birth Date"
+    (click)="openDateModal()"
     placeholder="Select Date"
-    (click)="openDateModal.emit()"
     [isSubmitted]="isSubmitted()"
     endIconName="pi-chevron-right"
   />
@@ -56,8 +51,8 @@
     controlName="account_type"
     [isSubmitted]="isSubmitted()"
     endIconName="pi-chevron-right"
+    (click)="openAccountTypeModal()"
     placeholder="Select account type"
-    (click)="openAccountTypeModal.emit()"
   />
 
   <!-- location & location setting -->
@@ -71,8 +66,8 @@
       controlName="address"
       iconName="pi pi-map-marker"
       [isSubmitted]="isSubmitted()"
+      (click)="openLocationModal()"
       placeholder="Select location"
-      (click)="openLocationModal.emit()"
     />
 
     <!-- user setting toggle -->

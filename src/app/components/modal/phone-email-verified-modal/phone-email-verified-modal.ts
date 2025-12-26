@@ -1,6 +1,6 @@
 import { Button } from '@/components/form/button';
-import { inject, Component } from '@angular/core';
 import { ModalService } from '@/services/modal.service';
+import { Input, inject, Component } from '@angular/core';
 import { IonFooter, IonToolbar } from '@ionic/angular/standalone';
 
 @Component({
@@ -12,4 +12,7 @@ import { IonFooter, IonToolbar } from '@ionic/angular/standalone';
 export class PhoneEmailVerifiedModal {
   // services
   modalService = inject(ModalService);
+
+  // inputs
+  @Input() type: 'email' | 'mobile' = 'email';
 }

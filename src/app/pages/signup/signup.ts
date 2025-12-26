@@ -1,246 +1,223 @@
-import { Router } from '@angular/router';
-import { IAuthUser } from '@/interfaces/IAuth';
+import { Subscription } from 'rxjs';
 import { Button } from '@/components/form/button';
-import { IUserForm } from '@/interfaces/IUserForm';
 import { AuthService } from '@/services/auth.service';
-import { UserService } from '@/services/user.service';
 import { ModalService } from '@/services/modal.service';
+import { Router, ActivatedRoute } from '@angular/router';
+import { OtpInput } from '@/components/common/otp-input';
 import { validateFields } from '@/utils/form-validation';
+import { EmailInput } from '@/components/form/email-input';
 import { ToasterService } from '@/services/toaster.service';
+import { MobileInput } from '@/components/form/mobile-input';
 import { BaseApiService } from '@/services/base-api.service';
-import { UserPersonalInfo } from '@/components/common/user-personal-info';
-import { ProfileImageInput } from '@/components/form/profile-image-input';
-import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { UserAdditionalInfo } from '@/components/common/user-additional-info';
-import { IonFooter, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
-import { signal, inject, Component, viewChild, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
+import { PasswordInput } from '@/components/form/password-input';
+import { SocialLoginButtons } from '@/components/common/social-login-buttons';
+import { signal, inject, Component, viewChild, OnInit, OnDestroy } from '@angular/core';
+import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { IonIcon, IonContent, NavController, ModalController } from '@ionic/angular/standalone';
 
-const PROFILE_STEPS = {
-  PERSONAL_INFO: 1,
-  ADDITIONAL_INFO: 2,
-  PROFILE_IMAGE: 3,
-  NETWORK_SUGGESTIONS: 4
-};
-
-interface State {
-  user?: IAuthUser;
+interface SignupForm {
+  email?: FormControl<string | null>;
+  mobile?: FormControl<string | null>;
+  password?: FormControl<string | null>;
 }
 
-interface NetworkSuggestion {
-  id: string;
-  name: string;
-  value: number;
-  company: string;
-  jobTitle: string;
-}
+type SignupMethod = 'email' | 'mobile';
 
 @Component({
   selector: 'signup',
   styleUrl: './signup.scss',
   templateUrl: './signup.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonHeader, IonFooter, IonToolbar, IonContent, UserPersonalInfo, ProfileImageInput, UserAdditionalInfo, ReactiveFormsModule]
+  imports: [Button, IonIcon, OtpInput, IonContent, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule]
 })
-export class Signup implements AfterViewInit {
+export class Signup implements OnInit, OnDestroy {
   // services
-  private router = inject(Router);
-  private fb = inject(FormBuilder);
-  private navCtrl = inject(NavController);
-  private authService = inject(AuthService);
-  private userService = inject(UserService);
-  private modalService = inject(ModalService);
-  private toasterService = inject(ToasterService);
-
-  // signals
-  steps = signal([1, 2, 3, 4]);
-  currentStep = signal<number>(PROFILE_STEPS.PERSONAL_INFO);
-
-  emailLinked = signal(false);
-  phoneLinked = signal(false);
-  needsEmailLink = signal(false);
-  needsPhoneLink = signal(false);
-
-  isLoading = signal(false);
-  isSubmitted = signal(false);
-  selectedSuggestions = signal<Set<string>>(new Set());
-  profileForm = signal<FormGroup<IUserForm>>(
-    this.fb.group({
-      latitude: [''],
-      longitude: ['']
-    }) as FormGroup<IUserForm>
-  );
-  emailVerified = signal(false); // don't verify email if social login
-  isSocialLogin = signal(false); // if true, then save user instead of register
+  router = inject(Router);
+  fb = inject(FormBuilder);
+  route = inject(ActivatedRoute);
+  navCtrl = inject(NavController);
+  authService = inject(AuthService);
+  modalCtrl = inject(ModalController);
+  modalService = inject(ModalService);
+  toasterService = inject(ToasterService);
 
   // view child
-  userPersonalInfo = viewChild(UserPersonalInfo);
+  mobileInput = viewChild(MobileInput);
 
-  // variables
-  readonly networkSuggestions: NetworkSuggestion[] = [
-    { id: '1', name: 'Kathryn Murphy', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '2', name: 'Esther Howard', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '3', name: 'Arlene McCoy', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '4', name: 'Darlene Robertson', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '5', name: 'Ronald Richards', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '6', name: 'Albert Flores', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '7', name: 'Eleanor Pena', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '8', name: 'Savannah Nguyen', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' }
-  ];
+  // signals
+  isInvalidOtp = signal(false);
+  otpSent = signal<boolean>(false);
+  phoneNumber = signal<string>('');
+  email = signal<string>('');
+  otp = signal<string | null>(null);
+  isLoading = signal<boolean>(false);
+  isSubmitted = signal<boolean>(false);
+  activeTab = signal<SignupMethod>('email');
+  signupForm = signal<FormGroup<SignupForm>>(this.fb.group<SignupForm>({}));
 
-  async ngAfterViewInit(): Promise<void> {
-    // auto fill email and disable email input if social login
-    const state = this.router.currentNavigation()?.extras?.state as State;
-    console.log('state as', state);
-    if (state && state.user) {
-      this.isSocialLogin.set(true);
-      const { email } = state.user;
-      if (email) {
-        this.emailVerified.set(true);
-        this.profileForm().patchValue({ email }, { emitEvent: false });
-        this.profileForm().get('email')?.disable({ emitEvent: false });
+  // subscriptions
+  private queryParamsSubscription!: Subscription;
+
+  ngOnInit() {
+    this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
+      const method = params.get('method');
+      if (method === 'mobile') {
+        this.activeTab.set('mobile');
+      } else {
+        this.activeTab.set('email');
+      }
+    });
+  }
+
+  switchSignupMethod(method: SignupMethod) {
+    // don't switch if the method is already active
+    if (this.activeTab() === method) return;
+
+    // reset otp state when switching
+    this.otp.set(null);
+    this.email.set('');
+    this.otpSent.set(false);
+    this.phoneNumber.set('');
+    this.isSubmitted.set(false);
+
+    // set the active tab
+    this.activeTab.set(method);
+
+    // navigate to the signup page with the new method
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { method },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  private async sendVerificationCode() {
+    if (this.activeTab() === 'email') {
+      // validate email and password
+      if (!(await validateFields(this.signupForm(), ['email', 'password']))) return;
+
+      const { email, password } = this.signupForm().value;
+      if (!email || !password) return;
+
+      // check if account exists (validation is handled by checkIfTaken)
+      // if validation passes, account doesn't exist, proceed to send OTP
+      try {
+        this.isLoading.set(true);
+        await this.authService.sendOtp({ email });
+        
+        // store email and password for later registration
+        this.email.set(email);
+        this.otpSent.set(true);
+        this.isSubmitted.set(false); // reset submission state for otp input
+      } catch (error) {
+        const message = BaseApiService.getErrorMessage(error, 'Failed to send verification code.');
+        this.toasterService.showError(message);
+      } finally {
+        this.isLoading.set(false);
+      }
+    } else {
+      // validate mobile
+      const mobile = this.mobileInput()?.getPhoneNumber();
+      if (!(await validateFields(this.signupForm(), ['mobile'])) || !mobile) return;
+
+      // check if account exists (validation is handled by checkIfTaken)
+      // if validation passes, account doesn't exist, proceed to send OTP
+      try {
+        this.isLoading.set(true);
+        await this.authService.sendOtp({ mobile });
+        
+        // store phone number for later registration
+        this.otpSent.set(true);
+        this.phoneNumber.set(mobile);
+        this.isSubmitted.set(false); // reset submission state for otp input
+      } catch (error) {
+        const message = BaseApiService.getErrorMessage(error, 'Failed to send verification code.');
+        this.toasterService.showError(message);
+      } finally {
+        this.isLoading.set(false);
       }
     }
   }
 
-  private getStep1ValidationFields(): string[] {
-    const fields = ['title', 'first_name', 'last_name', 'email', 'mobile', 'username', 'dob', 'account_type', 'address'];
-
-    // add password for signup scenario
-    if (!this.isSocialLogin()) {
-      fields.push('password');
+  private async verifyAndRegister() {
+    const otp = this.otp();
+    if (!otp || otp.length !== 6) {
+      this.toasterService.showError('Please enter a valid 6-digit OTP');
+      return;
     }
 
-    // remove email if already linked or being linked
-    if (this.needsPhoneLink() || this.phoneLinked()) {
-      const emailIndex = fields.indexOf('email');
-      if (emailIndex > -1) fields.splice(emailIndex, 1);
-    }
-
-    // remove mobile if already linked or being linked
-    if (this.needsEmailLink() || this.emailLinked()) {
-      const mobileIndex = fields.indexOf('mobile');
-      if (mobileIndex > -1) fields.splice(mobileIndex, 1);
-    }
-
-    return fields;
-  }
-
-  private async handleSubmit(): Promise<void> {
-    const payload = this.profileForm().getRawValue() as Partial<IAuthUser>;
-    payload.mobile = this.userPersonalInfo()?.getPhoneNumber();
-
-    // save user if social login, otherwise register
-    if (this.isSocialLogin()) {
-      await this.authService.loginWithFirebaseToken();
-      await this.userService.updateCurrentUser(payload);
-    } else {
-      await this.authService.register(payload);
-    }
-  }
-
-  addSuggestion(id: string): void {
-    const selected = new Set(this.selectedSuggestions());
-    if (selected.has(id)) {
-      selected.delete(id);
-    } else {
-      selected.add(id);
-    }
-    this.selectedSuggestions.set(selected);
-  }
-
-  isSelected(id: string): boolean {
-    return this.selectedSuggestions().has(id);
-  }
-
-  async save(): Promise<void> {
     try {
       this.isLoading.set(true);
-      this.isSubmitted.set(true);
+      await this.modalService.openLoadingModal('Creating your account...');
 
-      if (this.currentStep() === PROFILE_STEPS.PERSONAL_INFO) {
-        if (!(await validateFields(this.profileForm(), this.getStep1ValidationFields()))) {
-          this.toasterService.showError('Please fill all required fields.');
+      if (this.activeTab() === 'email') {
+        // verify OTP for email
+        const verified = await this.authService.verifyOtp({ email: this.email(), code: otp });
+        console.log('verified', verified);
+        if (!verified) {
+          this.isInvalidOtp.set(true);
+          this.toasterService.showError('Invalid OTP for email.');
           return;
         }
-        this.currentStep.set(PROFILE_STEPS.ADDITIONAL_INFO);
-      } else if (this.currentStep() === PROFILE_STEPS.ADDITIONAL_INFO) {
-        this.currentStep.set(PROFILE_STEPS.PROFILE_IMAGE);
-      } else if (this.currentStep() === PROFILE_STEPS.PROFILE_IMAGE) {
-        const email = this.profileForm().get('email')?.value;
-        const mobile = this.userPersonalInfo()?.getPhoneNumber();
-
-        // if email is verified via social login, skip email OTP
-        if (this.emailVerified() && email) {
-          if (mobile) {
-            await this.authService.sendOtp({ mobile });
-            const result = await this.modalService.openOtpModal('', mobile);
-            if (!result) return;
-          }
-        } else {
-          // send otp for both email and mobile when new registration
-          await this.sendVerificationCode();
-          const result = await this.modalService.openOtpModal(email || '', mobile || '');
-          if (!result) return;
-        }
-
-        await this.handleSubmit();
-        this.currentStep.set(PROFILE_STEPS.NETWORK_SUGGESTIONS);
+        
+        // register with email and password
+        const { password } = this.signupForm().value;
+        await this.authService.register({ email: this.email(), password: password! });
       } else {
-        this.navCtrl.navigateRoot('/');
+        // verify OTP for mobile
+        const verified = await this.authService.verifyOtp({ mobile: this.phoneNumber(), code: otp });
+        if (!verified) {
+          this.isInvalidOtp.set(true);
+          this.toasterService.showError('Invalid OTP for mobile.');
+          return;
+        }
+        
+        // register with mobile
+        await this.authService.register({ mobile: this.phoneNumber() });
       }
+
+      // after successful registration, navigate to profile setup
+      await this.modalService.close();
+      await this.modalService.openPhoneEmailVerifiedModal(this.activeTab());
+      this.navCtrl.navigateForward('/profile-setup');
     } catch (error) {
-      const message = BaseApiService.getErrorMessage(error, 'Failed to save/register user.');
+      const message = BaseApiService.getErrorMessage(error, 'Invalid OTP or failed to create account.');
+      this.toasterService.showError(message);
+    } finally {
+      this.isLoading.set(false);
+      await this.modalService.close();
+    }
+  }
+
+  async signup() {
+    this.isSubmitted.set(true);
+
+    if (!this.otpSent()) {
+      await this.sendVerificationCode();
+    } else {
+      await this.verifyAndRegister();
+    }
+  }
+
+  async resendOtp() {
+    try {
+      this.isLoading.set(true);
+      
+      if (this.activeTab() === 'email') {
+        await this.authService.sendOtp({ email: this.email() });
+      } else {
+        await this.authService.sendOtp({ mobile: this.phoneNumber() });
+      }
+      
+      this.toasterService.showSuccess('Verification code resent successfully.');
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to resend verification code.');
       this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  private async sendVerificationCode(): Promise<void> {
-    try {
-      const email = this.profileForm().get('email')?.value;
-      const mobile = this.userPersonalInfo()?.getPhoneNumber();
-      if (!email && !mobile) {
-        throw new Error('Email or mobile number is required for verification.');
-      }
-
-      if (email) await this.authService.sendOtp({ email });
-      if (mobile) await this.authService.sendOtp({ mobile });
-    } catch (error) {
-      const message = BaseApiService.getErrorMessage(error, 'Failed to send verification code.');
-      throw new Error(message);
-    }
-  }
-
-  goBack(): void {
-    if (this.currentStep() === PROFILE_STEPS.PERSONAL_INFO) {
-      this.navCtrl.navigateBack('/');
-    } else {
-      this.currentStep.set(this.currentStep() - 1);
-    }
-  }
-
-  async openTitleModal(): Promise<void> {
-    const value = this.profileForm().get('title')?.value || 'Mr.';
-    const title = await this.modalService.openTitleModal(value);
-    this.profileForm().patchValue({ title });
-  }
-
-  async openDateModal(): Promise<void> {
-    const value = this.profileForm().get('dob')?.value || '';
-    const dob = await this.modalService.openDateTimeModal('date', value);
-    this.profileForm().patchValue({ dob });
-  }
-
-  async openAccountTypeModal(): Promise<void> {
-    const value = this.profileForm().get('account_type')?.value || 'Individual';
-    const account_type = await this.modalService.openAccountTypeModal(value as 'Individual' | 'Business');
-    this.profileForm().patchValue({ account_type });
-  }
-
-  async openLocationModal(): Promise<void> {
-    const currentAddress = this.profileForm().get('address')?.value || '';
-    const { address, latitude, longitude } = await this.modalService.openLocationModal(currentAddress);
-    this.profileForm().patchValue({ address, latitude, longitude });
+  ngOnDestroy() {
+    this.queryParamsSubscription?.unsubscribe();
   }
 }

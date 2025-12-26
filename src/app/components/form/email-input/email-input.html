@@ -27,6 +27,12 @@
   @if (isChecking()) {
     <p-inputicon class="pi pi-spin pi-spinner" />
   }
+
+  @if (isEmailValid) {
+    <p-inputicon>
+      <img src="assets/svg/verify.svg" />
+    </p-inputicon>
+  }
 </p-iconField>
 
 <!-- validation -->

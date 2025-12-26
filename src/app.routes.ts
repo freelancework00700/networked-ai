@@ -148,6 +148,10 @@ export const appRoutes: Routes = [
     path: 'event/detail',
     loadComponent: () => import('@/pages/create-event/event-detail').then((m) => m.EventDetail)
   },
+  {
+    path: 'profile-setup',
+    loadComponent: () => import('@/pages/profile-setup').then((m) => m.ProfileSetup)
+  },
   // Not found (keep eager as it's small and always needed)
   { path: 'not-found', component: NotFound },
   { path: '**', redirectTo: '/not-found' }

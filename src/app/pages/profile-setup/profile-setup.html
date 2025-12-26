@@ -1,0 +1,62 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="flex items-center p-6 max-w-[672px] mx-auto">
+      <div class="pi pi-arrow-left cursor-pointer" (click)="goBack()"></div>
+      <div class="body-14M neutral-02 text-center w-full">Setup Your Profile</div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="w-full p-6 max-w-[672px] mx-auto">
+    @if (profileForm) {
+      <form [formGroup]="profileForm!" class="h-full">
+      <!-- step 1: personal information -->
+      <div [hidden]="currentStep() !== 1" class="flex flex-col gap-6">
+        <div class="heading-h2 neutral-01">Personal Details</div>
+        <user-personal-info [formGroup]="profileForm" [isSubmitted]="isSubmitted" />
+      </div>
+
+      <!-- step 2: additional information -->
+      <div [hidden]="currentStep() !== 2" class="space-y-4 flex flex-col gap-4">
+        <div class="heading-h2 neutral-01">More About You</div>
+        <user-additional-info [formGroup]="profileForm" />
+      </div>
+
+      <!-- step 3: profile image -->
+      <div [hidden]="currentStep() !== 3" class="absolute inset-0 flex items-center justify-center min-h-screen">
+        <div class="flex flex-col items-center justify-center">
+          <div class="heading-h2 neutral-01 mb-8">Upload Photo</div>
+          <profile-image-input controlName="image_url" label="Profile Picture" [required]="false" (skipped)="save()" />
+          <button type="button" (click)="save()" class="body-14M neutral-03 mt-6">Skip Now</button>
+        </div>
+      </div>
+
+      <!-- step 4: network suggestions -->
+      <div [hidden]="currentStep() !== 4">
+        <profile-setup-user-suggestion />
+      </div>
+    </form>
+    }
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <div class="flex items-center justify-between p-6 max-w-[672px] mx-auto">
+      <!-- steps -->
+      <div class="flex items-center gap-1">
+        @for (step of steps; track step) {
+          <div
+            class="rounded-full transition-all duration-200"
+            [class]="step === currentStep() ? 'w-8 h-2 bg-black' : step < currentStep() ? 'w-2 h-2 bg-black' : 'w-2 h-2 bg-gray-300'"
+          ></div>
+        }
+      </div>
+      <!-- navigation buttons -->
+      <div class="flex items-center gap-2">
+        <app-button width="96px" height="48px" label="Next" (click)="save()" [isLoading]="isLoading" />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-footer>

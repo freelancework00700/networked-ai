@@ -45,6 +45,12 @@ export interface IUser {
   college_university_name?: string;
   total_gamification_points?: number;
   total_gamification_points_weekly?: number;
+  vibe_ids?: string[];
+  vibes?: VibeItem[];
+  interest_ids?: string[];
+  interests?: VibeItem[];
+  hobby_ids?: string[];
+  hobbies?: VibeItem[];
 }
 
 export interface IUserResponse {

@@ -1,11 +1,11 @@
 <ion-content [fullscreen]="true">
-  <div class="h-full">
+  <div class="h-full pt-safe">
     <div class="w-full p-6 max-w-[672px] mx-auto">
       <!-- logo and title -->
       <div class="flex flex-col gap-5">
         <div class="text-center">
           <div class="flex justify-center">
-            <img src="assets/svg/logo.svg" />
+            <ion-icon src="assets/svg/logo.svg" class="w-[63px] h-[28px]" />
           </div>
           <div class="text-[10px] font-semibold pt-1">Networked AI</div>
         </div>
@@ -37,7 +37,7 @@
       <!-- email/mobile tabs -->
       <div class="flex items-center justify-center mb-6">
         <!-- Email tab -->
-        <button (click)="activeTab.set('email')" class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full">
+        <button (click)="switchLoginMethod('email')" class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full">
           <div class="flex items-center gap-2">
             <img [src]="activeTab() === 'email' ? 'assets/svg/email-theme.svg' : 'assets/svg/email.svg'" class="w-5 h-5" />
             <span class="text-base font-medium" [class.brand-02]="activeTab() === 'email'" [class.neutral-03]="activeTab() !== 'email'">Email</span>
@@ -52,7 +52,7 @@
 
         <!-- Mobile tab -->
         <button
-          (click)="activeTab.set('mobile'); switchToPhoneInput()"
+          (click)="switchLoginMethod('mobile')"
           class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full"
         >
           <div class="flex items-center gap-2">
@@ -74,7 +74,7 @@
       <form [formGroup]="loginForm()" (ngSubmit)="login()">
         @if (activeTab() === 'email') {
           <!-- email input -->
-          <email-input [showIcon]="true" [isSubmitted]="isSubmitted()" />
+          <email-input [checkIfExists]="true" [showIcon]="true" [isSubmitted]="isSubmitted()" />
 
           <!-- password input -->
           <div class="pt-4">
@@ -89,7 +89,7 @@
           <div class="min-h-[224px]">
             @if (!otpSent()) {
               <!-- phone input section -->
-              <mobile-input label="Mobile" [isSubmitted]="isSubmitted()" />
+              <mobile-input label="Mobile" [checkIfExists]="true" [isSubmitted]="isSubmitted()" />
             } @else {
               <!-- otp input section -->
               <otp-input [mobile]="phoneNumber()" [isLoading]="isLoading()" (resendOtp)="resendOtp()" (mobileOtpChange)="otp.set($event)" />
@@ -108,9 +108,6 @@
           }
         }
       </form>
-
-      <!-- recaptcha container for phone authentication -->
-      <div id="recaptcha-container"></div>
 
       <!-- footer links -->
       <div class="flex flex-col items-center gap-4 mt-4">

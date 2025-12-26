@@ -1,17 +1,19 @@
+import { Subscription } from 'rxjs';
 import { Button } from '@/components/form/button';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { OtpInput } from '@/components/common/otp-input';
 import { validateFields } from '@/utils/form-validation';
+import { Router, ActivatedRoute } from '@angular/router';
 import { EmailInput } from '@/components/form/email-input';
 import { ToasterService } from '@/services/toaster.service';
 import { MobileInput } from '@/components/form/mobile-input';
 import { BaseApiService } from '@/services/base-api.service';
 import { PasswordInput } from '@/components/form/password-input';
-import { signal, inject, Component, viewChild } from '@angular/core';
 import { SocialLoginButtons } from '@/components/common/social-login-buttons';
-import { IonContent, NavController, ModalController } from '@ionic/angular/standalone';
+import { signal, inject, Component, viewChild, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { IonIcon, IonContent, NavController, ModalController } from '@ionic/angular/standalone';
 
 interface LoginForm {
   email?: FormControl<string | null>;
@@ -19,15 +21,19 @@ interface LoginForm {
   password?: FormControl<string | null>;
 }
 
+type LoginMethod = 'email' | 'mobile';
+
 @Component({
   selector: 'login',
   styleUrl: './login.scss',
   templateUrl: './login.html',
-  imports: [Button, OtpInput, IonContent, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule]
+  imports: [Button, IonIcon, OtpInput, IonContent, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule]
 })
-export class Login {
+export class Login implements OnInit, OnDestroy {
   // services
+  router = inject(Router);
   fb = inject(FormBuilder);
+  route = inject(ActivatedRoute);
   navCtrl = inject(NavController);
   authService = inject(AuthService);
   modalCtrl = inject(ModalController);
@@ -38,21 +44,56 @@ export class Login {
   mobileInput = viewChild(MobileInput);
 
   // signals
+  isInvalidOtp = signal(false);
   otpSent = signal<boolean>(false);
   phoneNumber = signal<string>('');
   otp = signal<string | null>(null);
   isLoading = signal<boolean>(false);
   isSubmitted = signal<boolean>(false);
-  activeTab = signal<'email' | 'mobile'>('email');
+  activeTab = signal<LoginMethod>('email');
   loginForm = signal<FormGroup<LoginForm>>(this.fb.group<LoginForm>({}));
+
+  // subscriptions
+  private queryParamsSubscription!: Subscription;
+
+  ngOnInit() {
+    this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
+      const method = params.get('method');
+      if (method === 'mobile') {
+        this.activeTab.set('mobile');
+      } else {
+        this.activeTab.set('email');
+      }
+    });
+  }
+
+  switchLoginMethod(method: LoginMethod) {
+    // don't switch if the method is already active
+    if (this.activeTab() === method) return;
+
+    // reset otp state when switching back to phone input
+    if (method === 'mobile') {
+      this.otp.set(null);
+      this.otpSent.set(false);
+      this.phoneNumber.set('');
+      this.isSubmitted.set(false);
+    }
+
+    // set the active tab
+    this.activeTab.set(method);
+
+    // navigate to the login page with the new method
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { method },
+      queryParamsHandling: 'merge'
+    });
+  }
 
   private async loginWithEmail() {
     try {
       // validate email and password
-      if (!(await validateFields(this.loginForm(), ['email', 'password']))) {
-        this.toasterService.showError('Please enter the email and password.');
-        return;
-      }
+      if (!(await validateFields(this.loginForm(), ['email', 'password']))) return;
 
       // set loading state
       this.isLoading.set(true);
@@ -74,10 +115,7 @@ export class Login {
   private async sendOtp() {
     // get full phone number and validate phone number
     const mobile = this.mobileInput()?.getPhoneNumber();
-    if (!(await validateFields(this.loginForm(), ['mobile'])) || !mobile) {
-      this.toasterService.showError('Please enter a valid phone number.');
-      return;
-    }
+    if (!(await validateFields(this.loginForm(), ['mobile'])) || !mobile) return;
 
     try {
       this.isLoading.set(true);
@@ -108,7 +146,8 @@ export class Login {
       await this.authService.login({ mobile: this.phoneNumber(), otp });
       this.navCtrl.navigateForward('/');
     } catch (error) {
-      const message = BaseApiService.getErrorMessage(error, 'Invalid OTP. Please try again.');
+      this.isInvalidOtp.set(true);
+      const message = BaseApiService.getErrorMessage(error, 'Invalid or expired OTP.');
       this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
@@ -145,11 +184,7 @@ export class Login {
     }
   }
 
-  switchToPhoneInput() {
-    // reset otp state when switching back to phone input
-    this.otp.set(null);
-    this.otpSent.set(false);
-    this.phoneNumber.set('');
-    this.isSubmitted.set(false);
+  ngOnDestroy() {
+    this.queryParamsSubscription?.unsubscribe();
   }
 }

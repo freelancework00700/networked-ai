@@ -42,5 +42,13 @@
       background: var(--brand-07) !important;
       border: 1px solid var(--primary-color) !important;
     }
+
+  }
+
+  ng-otp-input.invalid-otp {
+    input {
+      background: transparent !important;
+      border: 1px solid var(--p-inputtext-invalid-border-color) !important;
+    }
   }
 }

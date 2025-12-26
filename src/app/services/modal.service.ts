@@ -55,18 +55,22 @@ export class ModalService {
     await modal.present();
   }
 
-  async openPhoneEmailVerifiedModal(): Promise<void> {
+  async openPhoneEmailVerifiedModal(type: 'email' | 'mobile'): Promise<boolean> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       backdropDismiss: false,
+      componentProps: { type },
       cssClass: 'auto-hight-modal',
       component: PhoneEmailVerifiedModal
     });
 
     await modal.present();
+
+    await modal.onDidDismiss();
+    return true;
   }
 
   async openPasswordSavedModal(): Promise<void> {
@@ -140,7 +144,7 @@ export class ModalService {
     return data || value;
   }
 
-  async openLocationModal(location = ''): Promise<{ address: string; latitude: number; longitude: number }> {
+  async openLocationModal(location = ''): Promise<{ address: string; latitude: string; longitude: string }> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -156,7 +160,7 @@ export class ModalService {
 
     const { data } = await modal.onDidDismiss();
     // return original value if dismissed via backdrop without data
-    return data || { address: location || '', latitude: 0, longitude: 0 };
+    return data || { address: location || '', latitude: '', longitude: '' };
   }
 
   async openEventCategoryModal(value?: string): Promise<string> {

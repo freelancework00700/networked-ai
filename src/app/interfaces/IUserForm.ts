@@ -9,9 +9,9 @@ export interface IUserForm {
   address?: FormControl<string | null>;
   username?: FormControl<string | null>;
   password?: FormControl<string | null>;
-  latitude?: FormControl<number | null>;
+  latitude?: FormControl<string | null>;
   last_name?: FormControl<string | null>;
-  longitude?: FormControl<number | null>;
+  longitude?: FormControl<string | null>;
   first_name?: FormControl<string | null>;
   account_type?: FormControl<'Individual' | 'Business'>;
 

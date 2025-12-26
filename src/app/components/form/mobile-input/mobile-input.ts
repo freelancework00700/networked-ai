@@ -27,7 +27,9 @@ export class MobileInput implements OnInit {
   isSubmitted = input(true);
   controlName = input('mobile');
   label = input('Mobile Number');
-  checkAvailability = input(false);
+  showVerifiedIcon = input(false);
+  checkIfExists = input(false); // for login - shows error if mobile doesn't exist
+  checkIfTaken = input(false); // for signup - shows error if mobile is already taken
 
   // services
   private userService = inject(UserService);
@@ -55,6 +57,23 @@ export class MobileInput implements OnInit {
     return this.parentContainer.control as FormGroup;
   }
 
+  get isMobileValid(): boolean {
+    // if verified icon is not shown, no need to validate
+    if (!this.showVerifiedIcon()) return false;
+
+    const control = this.control;
+    if (!control || !control.value || this.isChecking()) return false;
+
+    // if there are validation errors, it's invalid
+    if (this.getErrorMessage) return false;
+
+    // if control is disabled, return true
+    if (control.disabled) return true;
+
+    // if control is enabled, check validity
+    return control.valid;
+  }
+
   get getErrorMessage(): string | null {
     if (!this.isSubmitted()) return null;
 
@@ -65,6 +84,8 @@ export class MobileInput implements OnInit {
       return 'Please enter your mobile number.';
     } else if (control.errors?.['taken']) {
       return 'This mobile number is already taken.';
+    } else if (control.errors?.['notFound']) {
+      return 'No account found with this mobile number.';
     } else if (!this.iti?.isValidNumber()) {
       return 'Please enter a valid mobile number.';
     } else {
@@ -107,7 +128,10 @@ export class MobileInput implements OnInit {
       validators.push(Validators.required);
     }
 
-    const asyncValidators = this.checkAvailability() ? [availability(this.userService, 'mobile', () => this.getPhoneNumber())] : [];
+    const asyncValidators = [];
+    if (this.checkIfTaken() || this.checkIfExists()) {
+      asyncValidators.push(availability(this.userService, 'mobile', () => this.getPhoneNumber(), this.checkIfExists()));
+    }
 
     this.parentFormGroup.addControl(
       this.controlName(),

@@ -2,13 +2,13 @@
   <div class="onboarding-container max-w-[672px]">
     <!-- skip button -->
     @if (currentSlide() < 2) {
-      <div class="skip-button">
+      <div class="skip-button pt-safe">
         <button (click)="goToSlide(2)" class="skip-btn body-16SB neutral-05">Skip</button>
       </div>
     }
 
     <!-- progress bar -->
-    <div class="progress-bar mx-auto">
+    <div class="progress-bar mx-auto pt-safe">
       <div class="progress-segment" [class.active]="currentSlide() >= 0"></div>
       <div class="progress-segment" [class.active]="currentSlide() >= 1"></div>
       <div class="progress-segment" [class.active]="currentSlide() >= 2"></div>

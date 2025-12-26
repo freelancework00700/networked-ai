@@ -3,6 +3,7 @@ import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { OtpInput } from '@/components/common/otp-input';
 import { ToasterService } from '@/services/toaster.service';
+import { BaseApiService } from '@/services/base-api.service';
 import { IonFooter, IonToolbar } from '@ionic/angular/standalone';
 import { Input, inject, signal, computed, Component } from '@angular/core';
 
@@ -21,6 +22,7 @@ export class VerifyOtpModal {
   emailOtp = signal('');
   mobileOtp = signal('');
   isLoading = signal(false);
+  isInvalidOtp = signal(false);
 
   // services
   private authService = inject(AuthService);
@@ -62,18 +64,29 @@ export class VerifyOtpModal {
     }
 
     try {
+      let verified = false;
       this.isLoading.set(true);
+
       if (this.hasBoth()) {
-        await this.authService.verifyOtp({ email: this.email, code: this.emailOtp() });
-        await this.authService.verifyOtp({ mobile: this.mobile, code: this.mobileOtp() });
+        const emailVerified = await this.authService.verifyOtp({ email: this.email, code: this.emailOtp() });
+        const mobileVerified = await this.authService.verifyOtp({ mobile: this.mobile, code: this.mobileOtp() });
+        verified = emailVerified && mobileVerified;
       } else {
         const code = this.email ? this.emailOtp() : this.mobileOtp();
-        await this.authService.verifyOtp({ email: this.email, mobile: this.mobile, code });
+        verified = await this.authService.verifyOtp({ email: this.email, mobile: this.mobile, code });
       }
 
-      await this.modalService.close(true);
-    } catch (error: any) {
-      this.toasterService.showError(error.message || 'Failed to verify OTP. Please try again.');
+      // if verification failed, show error and return false
+      if (!verified) {
+        this.isInvalidOtp.set(true);
+        return;
+      }
+
+      // close modal and return true after successful verification
+      await this.modalService.close(verified);
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to verify verification code.');
+      this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
     }

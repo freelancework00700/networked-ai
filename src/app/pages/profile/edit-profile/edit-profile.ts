@@ -1,16 +1,12 @@
 import { Button } from '@/components/form/button';
-import { IUserForm } from '@/interfaces/IUserForm';
+import { ReactiveFormsModule } from '@angular/forms';
 import { UserService } from '@/services/user.service';
-import { ModalService } from '@/services/modal.service';
-import { validateFields } from '@/utils/form-validation';
-import { ToasterService } from '@/services/toaster.service';
-import { BaseApiService } from '@/services/base-api.service';
+import { ProfileFormService } from '@/services/profile-form.service';
 import { ProfileImageInput } from '@/components/form/profile-image-input';
 import { UserPersonalInfo } from '@/components/common/user-personal-info';
-import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { UserAdditionalInfo } from '@/components/common/user-additional-info';
-import { signal, inject, OnInit, effect, Component, viewChild } from '@angular/core';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
+import { signal, inject, Component, viewChild, AfterViewInit } from '@angular/core';
 import { IonFooter, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 
 type Tab = 'profile' | 'preferences';
@@ -32,9 +28,20 @@ type Tab = 'profile' | 'preferences';
     ReactiveFormsModule
   ]
 })
-export class EditProfile implements OnInit {
-  tab = signal<Tab>('profile');
+export class EditProfile implements AfterViewInit {
+  // services
+  navCtrl = inject(NavController);
+  private userService = inject(UserService);
+  private profileFormService = inject(ProfileFormService);
 
+  // signals
+  tab = signal<Tab>('profile');
+  currentUser = this.userService.currentUser;
+
+  // view children
+  userPersonalInfo = viewChild(UserPersonalInfo);
+
+  // variables
   tabItems: SegmentButtonItem[] = [
     {
       value: 'profile',
@@ -50,102 +57,40 @@ export class EditProfile implements OnInit {
     }
   ];
 
-  // services
-  private fb = inject(FormBuilder);
-  private navCtrl = inject(NavController);
-  private userService = inject(UserService);
-  private modalService = inject(ModalService);
-  private toasterService = inject(ToasterService);
+  // getters to access profile form service
+  get profileForm() {
+    return this.profileFormService.profileForm();
+  }
 
-  // signals
-  isLoading = signal(false);
-  isSubmitted = signal(false);
-  profileForm = signal<FormGroup<IUserForm>>(this.fb.group({}));
+  get isLoading() {
+    return this.profileFormService.isLoading();
+  }
 
-  // view child
-  userPersonalInfo = viewChild(UserPersonalInfo);
+  get isSubmitted() {
+    return this.profileFormService.isSubmitted();
+  }
 
-  constructor() {
-    effect(() => {
-      const user = this.userService.currentUser();
-      if (user) this.patchFormWithUserData();
+  async ngAfterViewInit(): Promise<void> {
+    try {
+      await this.profileFormService.initializeForm();
+      const user = await this.userService.getCurrentUser();
+      const userData = user();
+      if (userData) {
+        this.profileFormService.initializeFields(this.userPersonalInfo(), userData);
+      }
+    } catch (error) {}
+  }
+
+  editPreferences(type: 'vibe' | 'interest' | 'hobby'): void {
+    this.navCtrl.navigateForward('/profile/preferences', {
+      queryParams: { type: type as string, returnTo: '/profile/edit' }
     });
   }
 
-  async ngOnInit(): Promise<void> {
-    try {
-      this.isLoading.set(true);
-      await this.userService.getCurrentUser();
-    } catch (error) {
-      const message = BaseApiService.getErrorMessage(error, 'Failed to load user data.');
-      this.toasterService.showError(message);
-    } finally {
-      this.isLoading.set(false);
-    }
-  }
-
-  goBack(): void {
-    this.navCtrl.back();
-  }
-
-  private async saveUserDetails(): Promise<void> {
-    const formValue = this.profileForm().getRawValue();
-    const payload = this.userService.formDataToUser(formValue);
-    payload.mobile = this.userPersonalInfo()?.getPhoneNumber();
-    await this.userService.updateCurrentUser(payload);
-  }
-
-  private patchFormWithUserData(): void {
-    const user = this.userService.currentUser();
-    if (!user) return;
-
-    const formData = this.userService.userToFormData(user);
-    this.profileForm().patchValue(formData);
-  }
-
   async save(): Promise<void> {
-    try {
-      this.isLoading.set(true);
-      this.isSubmitted.set(true);
-
-      const fields = ['title', 'first_name', 'last_name', 'email', 'mobile', 'username', 'dob', 'account_type', 'address'];
-      if (!(await validateFields(this.profileForm(), fields))) {
-        this.toasterService.showError('Please fill all required fields.');
-        return;
-      }
-
-      await this.saveUserDetails();
-      this.navCtrl.navigateRoot('/');
-    } catch (error) {
-      const message = BaseApiService.getErrorMessage(error, 'Failed to save profile. Please try again.');
-      this.toasterService.showError(message);
-    } finally {
-      this.isLoading.set(false);
-    }
-  }
-
-  async openTitleModal(): Promise<void> {
-    const value = this.profileForm().get('title')?.value || 'Mr.';
-    const title = await this.modalService.openTitleModal(value);
-    this.profileForm().patchValue({ title });
-  }
-
-  async openDateModal(): Promise<void> {
-    const value = this.profileForm().get('dob')?.value || '';
-    const dob = await this.modalService.openDateTimeModal('date', value);
-    this.profileForm().patchValue({ dob });
-  }
-
-  async openAccountTypeModal(): Promise<void> {
-    const value = this.profileForm().get('account_type')?.value || 'Individual';
-    const account_type = await this.modalService.openAccountTypeModal(value as 'Individual' | 'Business');
-    this.profileForm().patchValue({ account_type });
-  }
-
-  async openLocationModal(): Promise<void> {
-    const currentAddress = this.profileForm().get('address')?.value || '';
-    const { address, latitude, longitude } = await this.modalService.openLocationModal(currentAddress);
-    this.profileForm().patchValue({ address, latitude, longitude });
+    this.profileFormService.isSubmitted.set(true);
+    const success = await this.profileFormService.save(this.userPersonalInfo());
+    if (success) this.navCtrl.back();
   }
 
   onSegmentChange(value: string): void {

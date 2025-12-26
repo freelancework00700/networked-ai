@@ -27,8 +27,10 @@ export class EmailInput implements OnInit {
   showIcon = input(false);
   isSubmitted = input(true);
   controlName = input('email');
-  checkAvailability = input(false);
+  showVerifiedIcon = input(false);
   placeholder = input('user@email.com');
+  checkIfExists = input(false); // for login - shows error if email doesn't exist
+  checkIfTaken = input(false); // for signup - shows error if email is already taken
 
   // services
   private userService = inject(UserService);
@@ -53,6 +55,23 @@ export class EmailInput implements OnInit {
     return this.placeholder() || `Enter ${this.label().toLowerCase()}`;
   }
 
+  get isEmailValid(): boolean {
+    // if verified icon is not shown, no need to validate
+    if (!this.showVerifiedIcon()) return false;
+
+    const control = this.control;
+    if (!control || !control.value || this.isChecking()) return false;
+
+    // if there are validation errors, it's invalid
+    if (this.getErrorMessage) return false;
+
+    // if control is disabled, return true
+    if (control.disabled) return true;
+
+    // if control is enabled, check validity
+    return control.valid;
+  }
+
   get getErrorMessage(): string | null {
     if (!this.isSubmitted()) return null;
 
@@ -65,6 +84,8 @@ export class EmailInput implements OnInit {
       return 'Please enter a valid email address.';
     } else if (control.errors?.['taken']) {
       return 'This email is already taken.';
+    } else if (control.errors?.['notFound']) {
+      return 'No account found with this email.';
     } else {
       return null;
     }
@@ -77,7 +98,10 @@ export class EmailInput implements OnInit {
     }
     validators.push(Validators.email);
 
-    const asyncValidators = this.checkAvailability() ? [availability(this.userService, 'email')] : [];
+    const asyncValidators = [];
+    if (this.checkIfTaken() || this.checkIfExists()) {
+      asyncValidators.push(availability(this.userService, 'email', undefined, this.checkIfExists()));
+    }
 
     this.parentFormGroup.addControl(
       this.controlName(),

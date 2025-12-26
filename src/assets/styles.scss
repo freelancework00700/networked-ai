@@ -238,3 +238,7 @@ ion-footer.footer-toolbar-padding ion-toolbar:last-of-type {
     backdrop-filter: none;
   }
 }
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top) !important;
+}
