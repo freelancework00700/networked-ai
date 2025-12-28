@@ -5,13 +5,14 @@ import { UserService } from '@/services/user.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
+import { NavigationService } from '@/services/navigation.service';
 import { ProfileFormService } from '@/services/profile-form.service';
 import { ProfileImageInput } from '@/components/form/profile-image-input';
 import { UserPersonalInfo } from '@/components/common/user-personal-info';
 import { UserAdditionalInfo } from '@/components/common/user-additional-info';
-import { ProfileSetupUserSuggestion } from './components/profile-setup-user-suggestion';
-import { IonFooter, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
-import { signal, inject, Component, viewChild, ChangeDetectionStrategy, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
+import { IonFooter, IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
+import { ProfileSetupUserSuggestion } from '@/pages/profile/components/profile-setup-user-suggestion';
+import { signal, inject, OnInit, Component, viewChild, OnDestroy, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
 
 const PROFILE_STEPS = {
   PERSONAL_INFO: 1,
@@ -42,9 +43,9 @@ export class ProfileSetup implements OnInit, OnDestroy, AfterViewInit {
   // services
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private navCtrl = inject(NavController);
   private userService = inject(UserService);
   private toasterService = inject(ToasterService);
+  private navigationService = inject(NavigationService);
   private profileFormService = inject(ProfileFormService);
 
   // signals
@@ -86,11 +87,8 @@ export class ProfileSetup implements OnInit, OnDestroy, AfterViewInit {
   async ngAfterViewInit(): Promise<void> {
     try {
       await this.profileFormService.initializeForm();
-      const user = await this.userService.getCurrentUser(true);
-      const userData = user();
-      if (userData) {
-        this.profileFormService.initializeFields(this.userPersonalInfo(), userData);
-      }
+      const currentUser = await this.userService.getCurrentUser();
+      this.profileFormService.initializeFields(this.userPersonalInfo(), currentUser);
     } catch (error) {
       // Error already handled in service
     }
@@ -139,7 +137,7 @@ export class ProfileSetup implements OnInit, OnDestroy, AfterViewInit {
 
       // step 4
       else {
-        this.navCtrl.navigateForward('/profile/preferences');
+        this.navigationService.navigateForward('/profile/preferences', true);
       }
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to update user profile.');
@@ -147,9 +145,9 @@ export class ProfileSetup implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  goBack(): void {
+  async goBack(): Promise<void> {
     if (this.currentStep() === PROFILE_STEPS.PERSONAL_INFO) {
-      this.navCtrl.navigateBack('/');
+      this.navigationService.back();
     } else {
       const previousStep = this.currentStep() - 1;
       this.navigateToStep(previousStep);

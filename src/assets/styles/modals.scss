@@ -1,0 +1,32 @@
+.auto-hight-modal {
+    --height: auto;
+    --max-width: 672px;
+    align-items: flex-end;
+    --border-radius: 32px;
+
+    .ion-page {
+        display: block;
+        contain: content;
+        position: relative;
+
+        .inner-content {
+            overflow: auto;
+            max-height: 80vh;
+            background: var(--neutral-07);
+        }
+    }
+}
+
+.modal-80-percent-height {
+    --height: 80%;
+    --max-width: 672px;
+    align-items: flex-end;
+    --border-radius: 32px;
+}
+
+.modal-600px-height {
+    --height: 600px;
+    --max-width: 672px;
+    align-items: flex-end;
+    --border-radius: 32px;
+}

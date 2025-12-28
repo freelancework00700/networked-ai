@@ -75,11 +75,8 @@ export class EditProfile implements AfterViewInit {
   async ngAfterViewInit(): Promise<void> {
     try {
       await this.profileFormService.initializeForm();
-      const user = await this.userService.getCurrentUser(true);
-      const userData = user();
-      if (userData) {
-        this.profileFormService.initializeFields(this.userPersonalInfo(), userData);
-      }
+      const user = await this.userService.getCurrentUser();
+      this.profileFormService.initializeFields(this.userPersonalInfo(), user);
     } catch (error) {}
   }
 

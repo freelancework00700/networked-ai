@@ -19,6 +19,8 @@ export const appRoutes: Routes = [
       { path: 'messages', component: Messages }
     ]
   },
+  { path: 'profile', loadChildren: () => import('@/pages/profile/profile.routes') },
+
   // authentication routes (lazy loaded)
   {
     path: 'login',
@@ -155,10 +157,6 @@ export const appRoutes: Routes = [
   {
     path: 'event/detail',
     loadComponent: () => import('@/pages/create-event/event-detail').then((m) => m.EventDetail)
-  },
-  {
-    path: 'profile-setup',
-    loadComponent: () => import('@/pages/profile-setup').then((m) => m.ProfileSetup)
   },
   {
     path: 'settings',

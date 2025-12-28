@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { Button } from '@/components/form/button';
+
 @Component({
   imports: [Button],
   selector: 'profile-setup-user-suggestion',

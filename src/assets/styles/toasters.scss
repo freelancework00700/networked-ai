@@ -1,0 +1,17 @@
+.error-toast,
+.success-toast,
+.warning-toast {
+    --box-shadow: none;
+}
+
+.success-toast::part(icon) {
+    color: var(--ion-color-success);
+}
+
+.warning-toast::part(icon) {
+    color: var(--ion-color-warning);
+}
+
+.error-toast::part(icon) {
+    color: var(--ion-color-danger);
+}

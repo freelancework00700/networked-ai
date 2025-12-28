@@ -14,7 +14,7 @@ interface IUserSocials {
 }
 
 export interface IUser {
-  id?: string;
+  id: string;
   dob?: string;
   name?: string;
   title?: string;
@@ -56,7 +56,7 @@ export interface IUser {
 export interface IUserResponse {
   message: string;
   success: boolean;
-  data?: { user?: IUser };
+  data: { user: IUser };
 }
 
 export interface VibeItem {

@@ -2,9 +2,12 @@ import Swiper from 'swiper';
 import { Scrollbar } from 'swiper/modules';
 import { Button } from '@/components/form/button';
 import { isPlatformBrowser } from '@angular/common';
+import { AuthService } from '@/services/auth.service';
 import { BusinessCard } from '@/components/card/business-card';
 import { ProfileLink } from '@/pages/profile/components/profile-link';
+import { AuthEmptyState } from '@/components/common/auth-empty-state';
 import { NetworkingScoreCard } from '@/components/card/networking-score-card';
+import { ProfileHeaderToolbar } from '@/components/common/profile-header-toolbar';
 import { ProfileAchievement } from '@/pages/profile/components/profile-achievement';
 import { ProfileLikedEvents } from '@/pages/profile/components/profile-liked-events';
 import { ProfilePosts } from '@/pages/profile/components/profile-posts/profile-posts';
@@ -13,9 +16,6 @@ import { ProfileUpcomingEvents } from '@/pages/profile/components/profile-upcomi
 import { ProfileAttendedEvents } from '@/pages/profile/components/profile-attended-events';
 import { IonIcon, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 import { inject, Component, AfterViewInit, signal, computed, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
-import { PageHeader } from '@/components/common/page-header';
-import { AuthEmptyState } from '@/components/common/auth-empty-state';
-import { AuthService } from '@/services/auth.service';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement' | 'liked-events';
 
@@ -39,29 +39,31 @@ interface TabConfig {
     ProfileLink,
     BusinessCard,
     ProfilePosts,
+    AuthEmptyState,
     ProfileLikedEvents,
     ProfileAchievement,
     NetworkingScoreCard,
     ProfileHostedEvents,
+    ProfileHeaderToolbar,
     ProfileAttendedEvents,
-    ProfileUpcomingEvents,
-    PageHeader,
-    AuthEmptyState
+    ProfileUpcomingEvents
   ]
 })
 export class Profile implements AfterViewInit {
+  // services
   navCtrl = inject(NavController);
   private platformId = inject(PLATFORM_ID);
   private authService = inject(AuthService);
 
-  // computed
-  isLoggedIn = computed(() => !!this.authService.currentUser());
+  // computed & signals
   currentSlide = signal<ProfileTabs>('hosted-events');
-  swiper?: Swiper;
+  isLoggedIn = computed(() => !!this.authService.currentUser());
 
+  // variables
+  swiper?: Swiper;
+  posts: unknown[] = [];
   hostedEvents: unknown[] = [];
   attendedEvents: unknown[] = [];
-  posts: unknown[] = [];
   events = [
     {
       title: 'Scheveningen',

@@ -10,10 +10,11 @@ import { ToasterService } from '@/services/toaster.service';
 import { MobileInput } from '@/components/form/mobile-input';
 import { BaseApiService } from '@/services/base-api.service';
 import { PasswordInput } from '@/components/form/password-input';
+import { NavigationService } from '@/services/navigation.service';
 import { SocialLoginButtons } from '@/components/common/social-login-buttons';
+import { IonIcon, IonContent, ModalController } from '@ionic/angular/standalone';
 import { signal, inject, Component, viewChild, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { IonIcon, IonContent, NavController, ModalController } from '@ionic/angular/standalone';
 
 interface SignupForm {
   email?: FormControl<string | null>;
@@ -34,11 +35,11 @@ export class Signup implements OnInit, OnDestroy {
   router = inject(Router);
   fb = inject(FormBuilder);
   route = inject(ActivatedRoute);
-  navCtrl = inject(NavController);
   authService = inject(AuthService);
   modalCtrl = inject(ModalController);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
+  navigationService = inject(NavigationService);
 
   // view child
   mobileInput = viewChild(MobileInput);
@@ -178,7 +179,7 @@ export class Signup implements OnInit, OnDestroy {
       // after successful registration, navigate to profile setup
       await this.modalService.close();
       await this.modalService.openPhoneEmailVerifiedModal(this.activeTab());
-      this.navCtrl.navigateForward('/profile-setup');
+      this.navigationService.navigateForward('/profile/setup', true);
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Invalid OTP or failed to create account.');
       this.toasterService.showError(message);

@@ -80,7 +80,7 @@
 
           <!-- forgot password -->
           <div class="flex items-center justify-end mb-8 py-3">
-            <div class="body-14SB brand-02 cursor-pointer" (click)="navCtrl.navigateForward(['/forgot-password'])">Forgot password?</div>
+            <div class="body-14SB brand-02 cursor-pointer" (click)="navigationService.navigateForward('/forgot-password')">Forgot password?</div>
           </div>
         } @else {
           <div class="min-h-[224px]">
@@ -111,14 +111,14 @@
         <!-- create account link -->
         <div class="text-center text-sm p-3">
           <span class="neutral-03 body-14M">Don't have an account? </span>
-          <a (click)="navCtrl.navigateForward('/signup')" class="body-14SB brand-02 cursor-pointer"> Create one here </a>
+          <a (click)="navigationService.navigateForward('/signup', true)" class="body-14SB brand-02 cursor-pointer"> Create one here </a>
         </div>
 
         <!-- terms and privacy policy -->
         <div class="text-center text-sm">
           <span class="neutral-03 body-14R">By continuing, I agree to the </span>
-          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navCtrl.navigateForward('/terms')"> terms of service </a>and
-          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navCtrl.navigateForward('/policy')"> privacy policy. </a>
+          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navigationService.navigateForward('/terms')"> terms of service </a>and
+          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navigationService.navigateForward('/policy')"> privacy policy. </a>
         </div>
       </div>
     </div>

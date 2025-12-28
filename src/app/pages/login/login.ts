@@ -10,10 +10,11 @@ import { ToasterService } from '@/services/toaster.service';
 import { MobileInput } from '@/components/form/mobile-input';
 import { BaseApiService } from '@/services/base-api.service';
 import { PasswordInput } from '@/components/form/password-input';
+import { NavigationService } from '@/services/navigation.service';
 import { SocialLoginButtons } from '@/components/common/social-login-buttons';
+import { IonIcon, IonContent, ModalController } from '@ionic/angular/standalone';
 import { signal, inject, Component, viewChild, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { IonIcon, IonContent, NavController, ModalController } from '@ionic/angular/standalone';
 
 interface LoginForm {
   email?: FormControl<string | null>;
@@ -34,11 +35,11 @@ export class Login implements OnInit, OnDestroy {
   router = inject(Router);
   fb = inject(FormBuilder);
   route = inject(ActivatedRoute);
-  navCtrl = inject(NavController);
   authService = inject(AuthService);
   modalCtrl = inject(ModalController);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
+  navigationService = inject(NavigationService);
 
   // view child
   mobileInput = viewChild(MobileInput);
@@ -102,7 +103,7 @@ export class Login implements OnInit, OnDestroy {
       // login with email and password
       const { email, password } = this.loginForm().value;
       await this.authService.login({ email: email!, password: password! });
-      this.navCtrl.navigateForward('/');
+      this.navigationService.navigateForward('/', true);
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to login.');
       this.toasterService.showError(message);
@@ -144,7 +145,7 @@ export class Login implements OnInit, OnDestroy {
       this.isLoading.set(true);
       await this.modalService.openLoadingModal('Signing you in...');
       await this.authService.login({ mobile: this.phoneNumber(), otp });
-      this.navCtrl.navigateForward('/');
+      this.navigationService.navigateForward('/', true);
     } catch (error) {
       this.isInvalidOtp.set(true);
       const message = BaseApiService.getErrorMessage(error, 'Invalid or expired OTP.');

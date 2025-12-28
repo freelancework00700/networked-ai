@@ -1,145 +1,161 @@
-import { inject, Injectable, signal, Injector } from '@angular/core';
+import { UserService } from '@/services/user.service';
 import { BaseApiService } from '@/services/base-api.service';
 import { KEYS, LocalStorageService } from './localstorage.service';
 import { FirebaseAuthError } from '@/utils/firebase-error-message';
+import { signal, inject, Injector, Injectable } from '@angular/core';
 import { ISendOtpPayload, IVerifyOtpPayload } from '@/interfaces/IAuth';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { IAuthUser, IAuthResponse, ILoginPayload, IRegisterPayload } from '@/interfaces/IAuth';
-import { UserService } from './user.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService extends BaseApiService {
   // services
-  private localStorageService = inject(LocalStorageService);
   private injector = inject(Injector);
+  private localStorageService = inject(LocalStorageService);
 
-  currentUser = signal<IAuthUser | null>(null);
+  // signals
+  allUsers = signal<IAuthUser[]>(this.getAccounts());
+  currentUser = signal<IAuthUser | null>(this.getActiveAccount());
 
-  constructor() {
-    super();
-    this.getFirstUser();
-  }
+  // ============================================================================
+  // MULTIPLE ACCOUNT MANAGEMENT
+  // ============================================================================
 
-  // user management methods
-  private getUsers(): IAuthUser[] {
-    const usersJson = this.localStorageService.getItem(KEYS.USERS);
-    if (!usersJson) return [];
-    try {
-      return JSON.parse(usersJson);
-    } catch {
-      return [];
-    }
-  }
-
-  private setUsers(users: IAuthUser[]): void {
-    this.localStorageService.setItem(KEYS.USERS, JSON.stringify(users));
-    this.currentUser.set(users[0] || null);
-  }
-
-  private addUser(user: IAuthUser): void {
-    const users = this.getUsers();
-    const existingIndex = users.findIndex((u) => u.id === user.id);
-    if (existingIndex >= 0) {
-      users[existingIndex] = user;
-    } else {
-      users.unshift(user);
-    }
-    this.setUsers(users);
-  }
-
-  private removeUser(userId: string): void {
-    const users = this.getUsers().filter((u) => u.id !== userId);
-    this.setUsers(users);
-  }
-
+  // returns the bearer token from the active account, or null if no account is active.
   getCurrentToken(): string | null {
-    const users = this.getUsers();
-    return users.length > 0 && users[0].token ? users[0].token : null;
+    const account = this.currentUser();
+    return account?.token || null;
   }
 
-  getCurrentUserId(): string | null {
-    const user = this.getFirstUser();
-    return user?.id || null;
+  // retrieves all stored user accounts from localStorage.
+  private getAccounts(): IAuthUser[] {
+    return JSON.parse(this.localStorageService.getItem(KEYS.USERS) || '[]');
   }
 
-  private getFirstUser(): IAuthUser | null {
-    const users = this.getUsers();
-    this.currentUser.set(users[0] || null);
-    return users.length > 0 ? users[0] : null;
+  // gets the currently active account (the first account in the stored accounts array).
+  private getActiveAccount(): IAuthUser | null {
+    return this.getAccounts()[0] || null;
   }
 
-  async signOut() {
-    // get current user's id to remove from users array
-    const user = this.getFirstUser();
-    if (user?.id) {
-      this.removeUser(user.id);
+  // sets the given account as active by moving it to the top.
+  setActiveAccount(account: IAuthUser) {
+    const accounts = this.getAccounts();
+
+    // remove if already exists
+    const filtered = accounts.filter((a) => a.id !== account.id);
+
+    // put active account at first position
+    filtered.unshift(account);
+
+    this.localStorageService.setItem(KEYS.USERS, JSON.stringify(filtered));
+
+    // update signals
+    this.allUsers.set(filtered);
+    this.currentUser.set(account);
+  }
+
+  // removes the active (first) account from localStorage and promotes the next account, if any, as active.
+  private removeActiveAccount(): void {
+    const accounts = this.getAccounts();
+    if (!accounts.length) return;
+
+    // remove active account (index 0)
+    accounts.shift();
+
+    this.localStorageService.setItem(KEYS.USERS, JSON.stringify(accounts));
+
+    // update signals
+    this.allUsers.set(accounts);
+    this.currentUser.set(accounts[0] || null);
+  }
+
+  // switches the active account to the given userId by moving it to the first position.
+  switchActiveAccount(userId: string) {
+    const accounts = this.getAccounts();
+    const index = accounts.findIndex((a) => a.id === userId);
+
+    if (index > 0) {
+      // remove selected account and put it at first position
+      const [selected] = accounts.splice(index, 1);
+      accounts.unshift(selected);
+
+      // update local storage
+      this.localStorageService.setItem(KEYS.USERS, JSON.stringify(accounts));
+
+      // update signals
+      this.allUsers.set(accounts);
+      this.currentUser.set(accounts[0]);
     }
   }
 
-  switchAccount(userId: string): void {
-    const users = this.getUsers();
-    const userIndex = users.findIndex((u) => u.id === userId);
-    
-    if (userIndex === -1) {
-      console.warn(`User with id ${userId} not found`);
-      return;
-    }
-    
-    if (userIndex > 0) {
-      const [selectedUser] = users.splice(userIndex, 1);
-      users.unshift(selectedUser);
-      this.setUsers(users);
-    }
-  }
+  // ============================================================================
+  // AUTH APIs
+  // ============================================================================
+  async register(payload: IRegisterPayload): Promise<void> {
+    const response = await this.post<IAuthResponse>('/auth/register', payload);
 
-  // Update current user data (used when user data is updated from API)
-  updateCurrentUserData(userData: Partial<IAuthUser>): void {
-    const users = this.getUsers();
-    if (users.length === 0) return;
-
-    const currentUser = users[0];
-    const updatedUser: IAuthUser = {
-      ...currentUser,
-      ...userData,
-      token: currentUser.token // Preserve token
-    } as IAuthUser;
-
-    users[0] = updatedUser;
-    this.setUsers(users);
-  }
-
-  // Fetch fresh user data from API and update localStorage
-  private async fetchAndUpdateUserData(userId: string): Promise<void> {
-    try {
+    // call get user and update active account with full user response
+    if (response?.data?.token && response?.data?.user) {
       const userService = this.injector.get(UserService);
-      const user = await userService.getUser(userId);
-      this.updateCurrentUserData(user as IAuthUser);
-    } catch (error) {
-      console.error('Error fetching user data:', error);
+      const user = await userService.getUser(response.data.user.id);
+      this.setActiveAccount({ ...user, token: response.data.token });
     }
   }
 
-  async signInWithGoogle(): Promise<void> {
+  async login(payload: ILoginPayload): Promise<IAuthResponse> {
+    const response = await this.post<IAuthResponse>('/auth/login', payload);
+
+    // call get user and update active account with full user response
+    if (response?.data?.token && response?.data?.user) {
+      const userService = this.injector.get(UserService);
+      const user = await userService.getUser(response.data.user.id);
+      this.setActiveAccount({ ...user, token: response.data.token });
+    }
+
+    return response;
+  }
+
+  private async socialLogin(firebase_token = ''): Promise<IAuthResponse> {
+    if (!firebase_token) {
+      throw new Error('Firebase token is required');
+    }
+
+    const response = await this.post<IAuthResponse>('/auth/social-login', { firebase_token });
+
+    // call get user and update active account with full user response
+    if (response?.data?.token && response?.data?.user) {
+      const userService = this.injector.get(UserService);
+      const user = await userService.getUser(response.data.user.id);
+      this.setActiveAccount({ ...user, token: response.data.token });
+    }
+
+    return response;
+  }
+
+  async signInWithGoogle(): Promise<IAuthResponse> {
     try {
-      await FirebaseAuthentication.signInWithGoogle();
+      const { credential } = await FirebaseAuthentication.signInWithGoogle();
+      return await this.socialLogin(credential?.idToken);
     } catch (error) {
       console.error('error: ', error);
       throw new Error(FirebaseAuthError(error));
     }
   }
 
-  async signInWithFacebook(): Promise<void> {
+  async signInWithFacebook(): Promise<IAuthResponse> {
     try {
-      await FirebaseAuthentication.signInWithFacebook();
+      const { credential } = await FirebaseAuthentication.signInWithFacebook();
+      return await this.socialLogin(credential?.idToken);
     } catch (error) {
       console.error('error: ', error);
       throw new Error(FirebaseAuthError(error));
     }
   }
 
-  async signInWithApple(): Promise<void> {
+  async signInWithApple(): Promise<IAuthResponse> {
     try {
-      await FirebaseAuthentication.signInWithApple();
+      const { credential } = await FirebaseAuthentication.signInWithApple();
+      return await this.socialLogin(credential?.idToken);
     } catch (error) {
       console.error('error: ', error);
       throw new Error(FirebaseAuthError(error));
@@ -148,46 +164,6 @@ export class AuthService extends BaseApiService {
 
   async forgotPassword(email: string): Promise<void> {
     await this.post('/auth/forgot-password', { email });
-  }
-
-  async login(payload: ILoginPayload): Promise<IAuthResponse> {
-    const response = await this.post<IAuthResponse>('/auth/login', payload);
-
-    if (response?.data?.token && response?.data?.user) {
-      const userWithToken = {
-        ...response.data.user,
-        token: response.data.token
-      };
-      this.addUser(userWithToken);
-      
-      // Fetch fresh user data from API after login
-      if (userWithToken.id) {
-        await this.fetchAndUpdateUserData(userWithToken.id);
-      }
-    }
-
-    return response;
-  }
-
-  async socialLogin(): Promise<IAuthResponse> {
-    const { token: firebase_token } = await FirebaseAuthentication.getIdToken();
-    const response = await this.post<IAuthResponse>('/auth/social-login', { firebase_token });
-
-    if (response?.data?.token && response?.data?.user) {
-      const userWithToken = {
-        ...response.data.user,
-        token: response.data.token
-      };
-
-      this.addUser(userWithToken);
-      
-      // Fetch fresh user data from API after social login
-      if (userWithToken.id) {
-        await this.fetchAndUpdateUserData(userWithToken.id);
-      }
-    }
-
-    return response;
   }
 
   async sendOtp({ email, mobile }: ISendOtpPayload): Promise<void> {
@@ -206,21 +182,7 @@ export class AuthService extends BaseApiService {
     return await this.post<boolean>('/auth/verify-otp', payload);
   }
 
-  async register(payload: IRegisterPayload): Promise<void> {
-    const response = await this.post<IAuthResponse>('/auth/register', payload);
-
-    if (response?.data?.token && response?.data?.user) {
-      const userWithToken = {
-        ...response.data.user,
-        token: response.data.token
-      };
-
-      this.addUser(userWithToken);
-      
-      // Fetch fresh user data from API after registration
-      if (userWithToken.id) {
-        await this.fetchAndUpdateUserData(userWithToken.id);
-      }
-    }
+  async signOut(): Promise<void> {
+    this.removeActiveAccount();
   }
 }

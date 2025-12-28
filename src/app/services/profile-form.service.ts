@@ -34,17 +34,13 @@ export class ProfileFormService {
   async initializeForm(): Promise<void> {
     try {
       this.isLoading.set(true);
-      const user = await this.userService.getCurrentUser();
-      const userData = user();
-
-      if (!userData) return;
-
-      const formValue = this.userService.getUserFromApiResponse(userData);
+      const currentUser = await this.userService.getCurrentUser();
+      const formValue = this.userService.getUserFromApiResponse(currentUser);
       this.profileForm().patchValue(formValue, { emitEvent: false });
 
       // store original email and mobile for comparison
-      this.originalEmail = userData.email || null;
-      this.originalMobile = userData.mobile || null;
+      this.originalEmail = currentUser.email || null;
+      this.originalMobile = currentUser.mobile || null;
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to load user data.');
       this.toasterService.showError(message);

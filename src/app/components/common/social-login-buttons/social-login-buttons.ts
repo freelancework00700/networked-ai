@@ -1,9 +1,9 @@
 import { inject, Component } from '@angular/core';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
-import { NavController } from '@ionic/angular/standalone';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
+import { NavigationService } from '@/services/navigation.service';
 
 @Component({
   selector: 'social-login-buttons',
@@ -12,20 +12,19 @@ import { BaseApiService } from '@/services/base-api.service';
 })
 export class SocialLoginButtons {
   // services
-  navCtrl = inject(NavController);
   authService = inject(AuthService);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
+  navigationService = inject(NavigationService);
 
   async loginWithGoogle() {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
-      await this.authService.signInWithGoogle();
-      const { data } = await this.authService.socialLogin();
+      const { data } = await this.authService.signInWithGoogle();
       if (data.is_new_user) {
-        this.navCtrl.navigateForward('/profile-setup');
+        this.navigationService.navigateForward('/profile/setup', true);
       } else {
-        this.navCtrl.navigateForward('/');
+        this.navigationService.navigateForward('/', true);
       }
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to sign in with Google.');
@@ -38,12 +37,11 @@ export class SocialLoginButtons {
   async loginWithApple() {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
-      await this.authService.signInWithApple();
-      const { data } = await this.authService.socialLogin();
+      const { data } = await this.authService.signInWithApple();
       if (data.is_new_user) {
-        this.navCtrl.navigateForward('/profile-setup');
+        this.navigationService.navigateForward('/profile/setup', true);
       } else {
-        this.navCtrl.navigateForward('/');
+        this.navigationService.navigateForward('/', true);
       }
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to sign in with Apple.');
@@ -56,12 +54,11 @@ export class SocialLoginButtons {
   async loginWithFacebook() {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
-      await this.authService.signInWithFacebook();
-      const { data } = await this.authService.socialLogin();
+      const { data } = await this.authService.signInWithFacebook();
       if (data.is_new_user) {
-        this.navCtrl.navigateForward('/profile-setup');
+        this.navigationService.navigateForward('/profile/setup', true);
       } else {
-        this.navCtrl.navigateForward('/');
+        this.navigationService.navigateForward('/', true);
       }
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to sign in with Facebook.');

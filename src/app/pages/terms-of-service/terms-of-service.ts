@@ -1,13 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { IonContent, IonHeader, IonToolbar, NavController } from '@ionic/angular/standalone';
+import { NavigationService } from '@/services/navigation.service';
+import { inject, Component, ChangeDetectionStrategy } from '@angular/core';
+import { IonHeader, IonContent, IonToolbar } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'terms-of-service',
   styleUrl: './terms-of-service.scss',
   templateUrl: './terms-of-service.html',
-  imports: [IonToolbar, IonHeader, IonContent],
+  imports: [IonHeader, IonToolbar, IonContent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TermsOfService {
-  navCtrl = inject(NavController);
+  // services
+  navigationService = inject(NavigationService);
 }

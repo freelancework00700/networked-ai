@@ -26,7 +26,11 @@ export interface IVerifyOtpPayload {
   mobile?: string;
 }
 
-export type ILoginPayload = { firebase_token: string } | { mobile: string; otp: string } | { email: string; password: string };
+export type ILoginPayload =
+  | { bearer_token: string }
+  | { firebase_token: string }
+  | { otp: string; mobile: string }
+  | { email: string; password: string };
 
 export interface IRegisterPayload {
   email?: string;

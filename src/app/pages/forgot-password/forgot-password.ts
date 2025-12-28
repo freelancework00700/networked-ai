@@ -8,8 +8,9 @@ import { EmailInput } from '@/components/form/email-input';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
 import { PasswordInput } from '@/components/form/password-input';
+import { NavigationService } from '@/services/navigation.service';
+import { IonHeader, IonFooter, IonContent, IonToolbar } from '@ionic/angular/standalone';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { IonHeader, IonFooter, IonContent, IonToolbar, NavController } from '@ionic/angular/standalone';
 
 interface ForgotPasswordForm {
   email?: FormControl<string | null>;
@@ -26,10 +27,10 @@ interface ForgotPasswordForm {
 export class ForgotPassword {
   // services
   fb = inject(FormBuilder);
-  navCtrl = inject(NavController);
   authService = inject(AuthService);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
+  navigationService = inject(NavigationService);
 
   // signals
   isLoading = signal(false);
@@ -44,7 +45,7 @@ export class ForgotPassword {
     } else if (this.step() === 3) {
       this.step.set(2);
     } else {
-      this.navCtrl.navigateBack('/login');
+      this.navigationService.back('/login');
     }
   }
 

@@ -6,8 +6,9 @@ import { UserService } from '@/services/user.service';
 import { AuthService } from '@/services/auth.service';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
+import { NavigationService } from '@/services/navigation.service';
+import { IonFooter, IonHeader, IonSpinner, IonToolbar, IonContent } from '@ionic/angular/standalone';
 import { OnInit, signal, inject, computed, OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
-import { IonFooter, IonHeader, IonSpinner, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 
 export type PreferenceType = 'vibe' | 'hobby' | 'interest' | 'all';
 
@@ -21,10 +22,10 @@ export type PreferenceType = 'vibe' | 'hobby' | 'interest' | 'all';
 export class ProfilePreferences implements OnInit, OnDestroy {
   // services
   private route = inject(ActivatedRoute);
-  private navCtrl = inject(NavController);
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private toasterService = inject(ToasterService);
+  private navigationService = inject(NavigationService);
 
   // signals
   maxSelections = 3;
@@ -188,14 +189,14 @@ export class ProfilePreferences implements OnInit, OnDestroy {
   }
 
   skip(): void {
-    this.navCtrl.back();
+    this.navigationService.navigateForward('/', true);
   }
 
   goBack(): void {
     if (this.isMultiStep() && this.currentStep() > 1) {
       this.currentStep.set(this.currentStep() - 1);
     } else {
-      this.navCtrl.back();
+      this.navigationService.back('/profile/edit');
     }
   }
 
@@ -226,9 +227,9 @@ export class ProfilePreferences implements OnInit, OnDestroy {
 
       const returnTo = this.route.snapshot.queryParams['returnTo'];
       if (returnTo) {
-        this.navCtrl.navigateBack(returnTo);
+        this.navigationService.back(returnTo);
       } else {
-        this.navCtrl.navigateForward('/');
+        this.navigationService.navigateForward('/', true);
       }
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to save preferences.');

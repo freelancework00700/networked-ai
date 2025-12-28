@@ -4,16 +4,11 @@ import { map, catchError } from 'rxjs/operators';
 import { inject, Injectable } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
 import { IUser, VibeItem, IUserResponse } from '@/interfaces/IUser';
-import { IAuthUser } from '@/interfaces/IAuth';
 
 @Injectable({ providedIn: 'root' })
 export class UserService extends BaseApiService {
   // services
   private authService = inject(AuthService);
-
-  get currentUser() {
-    return this.authService.currentUser;
-  }
 
   // split name into first_name and last_name
   private splitName(name?: string): { first_name: string; last_name: string } {
@@ -70,22 +65,34 @@ export class UserService extends BaseApiService {
     return filteredUser;
   }
 
-  async getCurrentUser(force = false): Promise<typeof this.authService.currentUser> {
-    if (force || !this.authService.currentUser()) {
+  async getCurrentUser(force = false): Promise<IUser> {
+    const currentUser = this.authService.currentUser();
+    
+    // if no current user exists, throw error
+    if (!currentUser?.id) {
+      throw new Error('No active user account found.');
+    }
+
+    // fetch user data if forced
+    if (force) {
       try {
-        const id = this.authService.getCurrentUserId();
-        if (!id) {
-          throw new Error('No current user ID found');
-        }
-        const user = await this.getUser(id);
-        this.authService.updateCurrentUserData(user as IAuthUser);
+        const user = await this.getUser(currentUser.id);
+
+        // merge fetched user data with existing token to preserve authentication
+        const updatedUser = {...user, token: currentUser.token};
+
+        // update localStorage and signals
+        this.authService.setActiveAccount(updatedUser);
+
+        return user;
       } catch (error) {
         console.error('Error fetching current user:', error);
         throw error;
       }
     }
 
-    return this.authService.currentUser;
+    // return existing user data
+    return currentUser;
   }
 
   async getUser(idOrUsername: string): Promise<IUser> {
@@ -103,13 +110,7 @@ export class UserService extends BaseApiService {
 
   async updateCurrentUser(payload: Partial<IUser>): Promise<IUserResponse> {
     const response = await this.put<IUserResponse>(`/users`, payload);
-    
-    if (response?.data?.user) {
-      this.authService.updateCurrentUserData(response.data.user as IAuthUser);
-    } else {
-      await this.getCurrentUser(true);
-    }
-    
+    await this.getCurrentUser(true);
     return response;
   }
 
@@ -117,14 +118,9 @@ export class UserService extends BaseApiService {
   async updatePreferences(vibes: string[], interests: string[], hobbies: string[]): Promise<IUserResponse> {
     // get current user data to preserve all existing fields
     const currentUser = await this.getCurrentUser();
-    const userData = currentUser();
-
-    if (!userData) {
-      throw new Error('User data not found.');
-    }
 
     // convert user data to payload format and merge with new preferences
-    const payload = this.generateUserPayload(userData);
+    const payload = this.generateUserPayload(currentUser);
     
     // update with new preferences
     payload['vibe_ids'] = vibes;

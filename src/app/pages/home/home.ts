@@ -1,10 +1,10 @@
 import { HomeFeed } from '@/pages/home/home-feed';
 import { HomeEvent } from '@/pages/home/home-event';
-import { signal, Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
-import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
-import { PageHeader } from '@/components/common/page-header';
-import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 import { AuthService } from '@/services/auth.service';
+import { ProfileHeaderToolbar } from '@/components/common/profile-header-toolbar';
+import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
+import { signal, inject, computed, Component, ChangeDetectionStrategy } from '@angular/core';
+import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 
 type Tab = 'events' | 'feed';
 
@@ -13,15 +13,18 @@ type Tab = 'events' | 'feed';
   styleUrl: './home.scss',
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HomeFeed, IonHeader, HomeEvent, IonToolbar, IonContent, SegmentButton, PageHeader]
+  imports: [HomeFeed, IonHeader, HomeEvent, IonToolbar, IonContent, SegmentButton, ProfileHeaderToolbar]
 })
 export class Home {
-  tab = signal<Tab>('events');
+  // services
   navCtrl = inject(NavController);
   private authService = inject(AuthService);
-  
+
+  // signals
+  tab = signal<Tab>('events');
   isLoggedIn = computed(() => !!this.authService.currentUser());
-  
+
+  // variables
   tabItems: SegmentButtonItem[] = [
     {
       value: 'events',
