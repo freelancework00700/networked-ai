@@ -1,6 +1,6 @@
-<ion-header>
-  <ion-toolbar>
-    <div class="p-6 max-w-[672px] mx-auto">
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="px-4 py-6 max-w-[672px] mx-auto">
       <div class="flex items-center justify-between">
         <div class="pi pi-arrow-left cursor-pointer" (click)="goBack()"></div>
         @if (isMultiStep()) {
@@ -17,7 +17,7 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <div class="w-full px-6 max-w-[672px] mx-auto">
+  <div class="w-full px-4 max-w-[672px] mx-auto">
     @if (isLoading()) {
       <!-- loading State -->
       <div class="flex flex-col items-center justify-center min-h-[400px]">
@@ -56,9 +56,9 @@
   </div>
 </ion-content>
 
-<ion-footer>
-  <ion-toolbar>
-    <div class="flex items-center justify-between p-6 max-w-[672px] mx-auto">
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="flex items-center justify-between px-4 py-6 max-w-[672px] mx-auto">
       @if (isMultiStep()) {
         <!-- steps -->
         <div class="flex items-center gap-1">

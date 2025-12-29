@@ -2,6 +2,7 @@ import { IUser } from '@/interfaces/IUser';
 import { IUserForm } from '@/interfaces/IUserForm';
 import { ModalService } from '@/services/modal.service';
 import { validateFields } from '@/utils/form-validation';
+import { DateInput } from '@/components/form/date-input';
 import { TextInput } from '@/components/form/text-input';
 import { EmailInput } from '@/components/form/email-input';
 import { MobileInput } from '@/components/form/mobile-input';
@@ -14,7 +15,7 @@ import { UserSettingToggle } from '@/components/form/user-setting-toggle';
   selector: 'user-personal-info',
   styleUrl: './user-personal-info.scss',
   templateUrl: './user-personal-info.html',
-  imports: [TextInput, EmailInput, MobileInput, UsernameInput, UserSettingToggle, ReactiveFormsModule]
+  imports: [TextInput, DateInput, EmailInput, MobileInput, UsernameInput, UserSettingToggle, ReactiveFormsModule]
 })
 export class UserPersonalInfo {
   // inputs
@@ -58,12 +59,6 @@ export class UserPersonalInfo {
     const value = this.formGroup().get('title')?.value || 'Mr.';
     const title = await this.modalService.openTitleModal(value);
     this.formGroup().patchValue({ title });
-  }
-
-  async openDateModal(): Promise<void> {
-    const value = this.formGroup().get('dob')?.value || '';
-    const dob = await this.modalService.openDateTimeModal('date', value);
-    this.formGroup().patchValue({ dob });
   }
 
   async openAccountTypeModal(): Promise<void> {

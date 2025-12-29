@@ -11,8 +11,6 @@ export class PopoverService {
     async openProfileOptionsPopover(event: Event): Promise<void> {
         const popover = await this.popoverCtrl.create({
             mode: 'md',
-            side: 'left',
-            alignment: 'start',
             event: event as MouseEvent,
             cssClass: 'common-popover-css',
             component: ProfileOptionsPopover
@@ -25,8 +23,6 @@ export class PopoverService {
     async openAccountSwitcherPopover(event: Event): Promise<void> {
         const popover = await this.popoverCtrl.create({
             mode: 'md',
-            side: 'left',
-            alignment: 'start',
             event: event as MouseEvent,
             cssClass: 'common-popover-css',
             component: AccountSwitcherPopover

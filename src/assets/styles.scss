@@ -68,19 +68,24 @@ ion-content {
   --background: var(--neutral-07);
 }
 
-ion-footer,
 ion-header {
   box-shadow: none !important;
 
   ion-toolbar {
     padding: 0px !important;
     --background: var(--neutral-07);
+    padding-top: env(safe-area-inset-top) !important;
   }
 }
 
-.header-ios ion-toolbar:last-of-type,
-ion-footer.footer-toolbar-padding ion-toolbar:last-of-type {
-  --border-width: 0 0 0;
+ion-footer {
+  box-shadow: none !important;
+
+  ion-toolbar {
+    padding: 0px !important;
+    --background: var(--neutral-07);
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
 }
 
 // ============================================================

@@ -1,0 +1,32 @@
+<!-- label -->
+@if (label() && showLabel()) {
+  <div class="flex items-center justify-between text-surface-900 mb-1">
+    <label class="neutral-02 body-14M">
+      {{ label() }}
+    </label>
+
+    @if (!required() && !readonly()) {
+      <span class="neutral-04 body-14R">Optional</span>
+    }
+  </div>
+}
+<!-- input -->
+<p-iconField>
+  <input
+    pInputText
+    [readonly]="true"
+    class="w-full h-[44px]"
+    (click)="openDateModal()"
+    [invalid]="isControlInvalid"
+    [placeholder]="getPlaceholder"
+    [class.ng-invalid]="isControlInvalid"
+    [value]="dateValue ? (dateValue | date:'dd MMM yyyy') : ''"
+  />
+
+  <p-inputIcon class="pi pi-chevron-right" />
+</p-iconField>
+
+<!-- validation -->
+@if (isControlInvalid) {
+  <div class="accent-red pt-2 body-12M">Please enter the {{ label().toLowerCase() }}.</div>
+}
