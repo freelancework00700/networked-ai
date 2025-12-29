@@ -7,7 +7,7 @@
   <div class="flex justify-center items-center flex-col gap-3 mb-4">
     <ng-otp-input [class.invalid-otp]="isInvalidOtp()" (onInputChange)="mobileOtpChange.emit($event)" [config]="otpConfig()" />
     @if (isInvalidOtp()) {
-      <div class="accent-red font-bold">Invalid code</div>
+      <div class="accent-red body-14M">Invalid code</div>
     }
   </div>
 }
@@ -21,7 +21,7 @@
   <div class="flex justify-center items-center flex-col gap-3 mb-4">
     <ng-otp-input [class.invalid-otp]="isInvalidOtp()" (onInputChange)="emailOtpChange.emit($event)" [config]="otpConfig()" />
     @if (isInvalidOtp()) {
-      <div class="accent-red font-bold">Invalid code</div>
+      <div class="accent-red body-14M">Invalid code</div>
     }
   </div>
 }

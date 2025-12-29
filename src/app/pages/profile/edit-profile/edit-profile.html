@@ -1,6 +1,6 @@
-<ion-header>
-  <ion-toolbar>
-    <div class="flex items-center p-6 max-w-[672px] mx-auto">
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="flex items-center px-4 py-6 max-w-[672px] mx-auto">
       <div class="pi pi-arrow-left cursor-pointer" (click)="navCtrl.back()"></div>
       <div class="body-14M neutral-02 text-center w-full">Edit Profile</div>
     </div>
@@ -11,7 +11,7 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <div class="w-full p-6 max-w-[672px] mx-auto">
+  <div class="w-full px-4 max-w-[672px] mx-auto">
     @if (profileForm) {
       <form [formGroup]="profileForm!" class="h-full">
         @if (tab() === 'profile') {
@@ -25,7 +25,7 @@
 
           <!-- additional information -->
           <div class="space-y-4 flex flex-col gap-4">
-            <div class="body-16SB neutral-01">Additional Information</div>
+            <div class="body-16SB neutral-01 mt-4">Additional Information</div>
             <user-additional-info [formGroup]="profileForm" />
           </div>
         }
@@ -45,7 +45,7 @@
                   <span class="body-14R neutral-03">No vibes selected</span>
                 } @else {
                   @for (vibe of currentUser()?.vibes; track vibe.id) {
-                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-neutral-05">
+                    <div class="preference-tag">
                       <span [innerHTML]="vibe.icon" class="text-base"></span>
                       <span class="body-14M neutral-01">{{ vibe.name }}</span>
                     </div>
@@ -67,7 +67,7 @@
                   <span class="body-14R neutral-03">No interests selected</span>
                 } @else {
                   @for (interest of currentUser()?.interests; track interest.id) {
-                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-neutral-05">
+                    <div class="preference-tag">
                       <span [innerHTML]="interest.icon" class="text-base"></span>
                       <span class="body-14M neutral-01">{{ interest.name }}</span>
                     </div>
@@ -89,7 +89,7 @@
                   <span class="body-14R neutral-03">No hobbies selected</span>
                 } @else {
                   @for (hobby of currentUser()?.hobbies; track hobby.id) {
-                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-neutral-05">
+                    <div class="preference-tag">
                       <span [innerHTML]="hobby.icon" class="text-base"></span>
                       <span class="body-14M neutral-01">{{ hobby.name }}</span>
                     </div>
@@ -104,9 +104,9 @@
   </div>
 </ion-content>
 
-<ion-footer>
-  <ion-toolbar>
-    <div class="p-6 max-w-[672px] mx-auto">
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="px-4 py-6 max-w-[672px] mx-auto">
       <app-button label="Save Changes" (click)="save()" [isLoading]="isLoading" />
     </div>
   </ion-toolbar>

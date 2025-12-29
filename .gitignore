@@ -42,6 +42,9 @@ testem.log
 .DS_Store
 Thumbs.db
 
+#package lock files
+package-lock.json
+
 # environment variables files
 src/environments
 .env

@@ -1,25 +1,25 @@
 <div class="flex flex-col gap-6">
   <!-- host your first event card -->
-  <div class="mt-4">
+  <div class="pt-4 px-4">
     <host-first-event-card />
   </div>
 
   <!-- filter buttons -->
-  <div class="flex gap-2">
+  <div class="flex gap-2 px-4">
     <button class="filter-button" (click)="filter.set('browse')" [class.active]="isBrowseMode()">Browse Events</button>
     <button class="filter-button" (click)="filter.set('upcoming')" [class.active]="isUpcomingMode()">My Upcoming Events</button>
   </div>
 
   <!-- no upcoming events -->
   @if (isUpcomingMode()) {
-    <div>
+    <div class="px-4">
       <no-upcoming-event-card (onBrowseClick)="filter.set('browse')" />
     </div>
   }
 
   <!-- my upcoming events -->
   @if (isUpcomingMode()) {
-    <div>
+    <div class="px-4">
       <div class="flex items-center justify-between">
         <div class="body-16SB neutral-01">My Upcoming Events</div>
         <button type="button" class="body-14SB brand-02" (click)="navCtrl.navigateForward('/all-events')">See all</button>
@@ -37,7 +37,7 @@
 
   @if (isBrowseMode()) {
     <!-- browse events by cities -->
-    <div>
+    <div class="px-4">
       <div class="flex items-center justify-between">
         <div class="body-16SB neutral-01">Browse events by cities</div>
         <button type="button" class="body-14SB brand-02" (click)="navCtrl.navigateForward('/city-events')">See all</button>
@@ -57,7 +57,7 @@
     </div>
 
     <!-- events for you -->
-    <div>
+    <div class="px-4">
       <div class="flex items-center justify-between">
         <div class="body-16SB neutral-01">Events for you</div>
         <button type="button" class="body-14SB brand-02" (click)="navCtrl.navigateForward('/all-events')">See all</button>
@@ -98,7 +98,7 @@
     </div>
 
     <!-- feed recommendations -->
-    <div>
+    <div class="px-4">
       @for (post of feedPosts; track post.id) {
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-3">
@@ -123,7 +123,7 @@
     </div>
 
     <!-- message recommendations -->
-    <div class="py-3 bg-neutral-06">
+    <div class="px-4 py-3 bg-neutral-06">
       @for (suggestion of networkSuggestions; track suggestion.id) {
         <div class="flex gap-4">
           <div class="flex-1 flex flex-col gap-3">
@@ -170,7 +170,7 @@
     </div>
 
     <!-- public events -->
-    <div>
+    <div class="px-4">
       <div class="flex items-center justify-between">
         <div class="body-16SB neutral-01">Public events</div>
         <button type="button" class="body-14SB brand-02" (click)="navCtrl.navigateForward('/all-events')">See all</button>

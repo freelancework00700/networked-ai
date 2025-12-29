@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Networked AI</string>
+	<string>$(APP_DISPLAY_NAME)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -61,7 +61,7 @@
 	<key>FacebookClientToken</key>
 	<string>f7fc6fbac1a5fa1ece706087a526f6db</string>
 	<key>FacebookDisplayName</key>
-	<string>Networked AI</string>
+	<string>$(APP_DISPLAY_NAME)</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>fbapi</string>
@@ -82,5 +82,30 @@
 	</array>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>This identifier will be used to request permission to track the user's activity.</string>
+
+	<!-- camera permissions -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Used to allow uploading of event listing media.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Used to allow uploading of event listing media.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Used to allow uploading of event listing media and ticket barcode scanning.</string>
+
+	<!-- location permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>$(APP_DISPLAY_NAME) requires access to your location to show you nearby networks friends.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>$(APP_DISPLAY_NAME) requires access to your location to show you nearby networks friends.</string>
+
+	<!-- contacts permissions -->
+	<key>NSContactsUsageDescription</key>
+	<string>$(APP_DISPLAY_NAME) requires access to your contacts to allow inviting your friends in events.</string>
+
+	<!-- allow http api calls -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

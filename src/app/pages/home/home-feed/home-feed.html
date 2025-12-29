@@ -1,9 +1,9 @@
-<div class="flex gap-2 py-4">
+<div class="flex gap-2 p-4">
   <button type="button" class="filter-button" [class.active]="feedFilter() === 'public'" (click)="feedFilter.set('public')">Public</button>
   <button type="button" class="filter-button" [class.active]="feedFilter() === 'networked'" (click)="feedFilter.set('networked')">Networked</button>
 </div>
 <!-- post composer -->
-<div class="flex items-center gap-2 py-3 bg-neutral-07 border-b border-[#dbdbdb]">
+<div class="flex items-center gap-2 p-4 bg-neutral-07 border-b border-[#dbdbdb]">
   <img src="assets/images/profile.jpeg" alt="avatar" class="w-[40px] h-[40px] rounded-full object-cover" />
 
   <div class="flex-1 flex flex-col" (click)="navCtrl.navigateForward('/new-post')">
@@ -34,5 +34,8 @@
       </div>
     </div>
   }
-  <post-card [post]="post" (onLike)="onLike(post.id)" (onComment)="onComment(post)" />
+
+  <div class="px-4">  
+    <post-card [post]="post" (onLike)="onLike(post.id)" (onComment)="onComment(post)" />
+  </div>
 }

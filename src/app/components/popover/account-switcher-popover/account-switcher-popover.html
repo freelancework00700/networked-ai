@@ -6,13 +6,15 @@
       [class.bg-neutral-06]="account.id === activeAccount()?.id"
       class="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg"
     >
-      @if (account.thumbnail_url) {
-        <img [src]="account.thumbnail_url" class="w-10 h-10 rounded-full object-cover" />
-      } @else {
-        <div class="w-10 h-10 rounded-full bg-neutral-06 flex items-center justify-center">
-          <div class="pi pi-user neutral-02 !text-[16px] p-1"></div>
-        </div>
-      }
+      <div class="relative w-10 h-10 rounded-full overflow-hidden">
+        <img 
+          fill 
+          placeholder
+          (error)="onImageError($event)"
+          class="rounded-full object-cover"
+          [ngSrc]="getImageUrl(account.thumbnail_url)" 
+        />
+      </div>
       <span class="body-14M neutral-01">{{ account.name }}</span>
     </div>
   }

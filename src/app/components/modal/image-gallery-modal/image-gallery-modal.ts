@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Button } from '@/components/form/button';
+import { NgOptimizedImage } from '@angular/common';
 import { ModalService } from '@/services/modal.service';
 import { Searchbar } from '@/components/common/searchbar';
 import { environment } from 'src/environments/environment';
-import { LazyImageDirective } from '@/directives/lazy-image.directive';
+import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { of, Subject, switchMap, catchError, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Input, inject, OnInit, signal, Component, ChangeDetectionStrategy } from '@angular/core';
 import { IonHeader, IonFooter, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
@@ -26,7 +27,7 @@ interface UnsplashSearchResponse {
   styleUrl: './image-gallery-modal.scss',
   templateUrl: './image-gallery-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonHeader, Searchbar, IonFooter, IonContent, IonToolbar, IonInfiniteScroll, LazyImageDirective, IonInfiniteScrollContent]
+  imports: [Button, IonHeader, Searchbar, IonFooter, IonContent, IonToolbar, NgOptimizedImage, IonInfiniteScroll, IonInfiniteScrollContent]
 })
 export class ImageGalleryModal implements OnInit {
   // inputs
@@ -196,5 +197,13 @@ export class ImageGalleryModal implements OnInit {
   clearSearch(): void {
     this.searchQuery.set('');
     this.searchSubject.next('');
+  }
+
+  onImageError(event: Event): void {
+    onImageError(event);
+  }
+
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
   }
 }

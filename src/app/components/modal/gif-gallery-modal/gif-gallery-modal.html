@@ -24,7 +24,14 @@
         (click)="selectGif(gif)"
         class="aspect-square cursor-pointer rounded-[4px] overflow-hidden hover:opacity-80 transition-opacity relative"
       >
-        <img [src]="getTinyGifUrl(gif)" class="w-full h-full object-cover" loading="lazy" lazyImage />
+        <img
+          fill
+          placeholder
+          class="object-cover"
+          (error)="onImageError($event)"
+          [ngSrc]="getImageUrl(getGifUrl(gif))"
+          [loaderParams]="{ thumbnail: getImageUrl(getTinyGifUrl(gif)) }"
+        />
         @if (multiSelect && isGifSelected(gif)) {
           <div
             class="absolute top-1 right-1 bg-brand-04 rounded-[4px] px-2 py-1 h-[20px] w-[20px] flex justify-center items-center body-14R neutral-01"
@@ -65,8 +72,13 @@
             class="flex items-center gap-2 overflow-x-auto py-2 max-sm:[&::-webkit-scrollbar]:hidden max-sm:[-ms-overflow-style:none] max-sm:[scrollbar-width:none]"
           >
             @for (gif of selectedGifs(); track gif.id) {
-              <div class="relative flex-shrink-0">
-                <img [src]="getTinyGifUrl(gif)" class="w-[48px] h-[48px] rounded-[4px] object-cover block" loading="lazy" lazyImage />
+              <div class="relative flex-shrink-0 w-[48px] h-[48px]">
+                <img 
+                  fill 
+                  (error)="onImageError($event)" 
+                  class="rounded-[4px] object-cover" 
+                  [ngSrc]="getImageUrl(getTinyGifUrl(gif))" 
+                />
 
                 <div
                   (click)="removeSelectedGif(gif)"
