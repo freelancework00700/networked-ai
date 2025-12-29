@@ -48,3 +48,8 @@ package-lock.json
 # environment variables files
 src/environments
 .env
+
+# Android keystore files (keep release-keystore.jks out of repo for security)
+android/keystore.properties
+android/release-keystore.jks
+android/app/release-keystore.jks
