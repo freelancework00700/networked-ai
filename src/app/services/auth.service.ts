@@ -115,7 +115,10 @@ export class AuthService extends BaseApiService {
     return response;
   }
 
-  private async socialLogin(firebase_token = ''): Promise<IAuthResponse> {
+  private async socialLogin(): Promise<IAuthResponse> {
+
+    const { token: firebase_token } = await FirebaseAuthentication.getIdToken();
+
     if (!firebase_token) {
       throw new Error('Firebase token is required');
     }
@@ -134,8 +137,8 @@ export class AuthService extends BaseApiService {
 
   async signInWithGoogle(): Promise<IAuthResponse> {
     try {
-      const { credential } = await FirebaseAuthentication.signInWithGoogle();
-      return await this.socialLogin(credential?.idToken);
+      await FirebaseAuthentication.signInWithGoogle();
+      return await this.socialLogin();
     } catch (error) {
       console.error('error: ', error);
       throw new Error(FirebaseAuthError(error));
@@ -144,8 +147,8 @@ export class AuthService extends BaseApiService {
 
   async signInWithFacebook(): Promise<IAuthResponse> {
     try {
-      const { credential } = await FirebaseAuthentication.signInWithFacebook();
-      return await this.socialLogin(credential?.idToken);
+      await FirebaseAuthentication.signInWithFacebook();
+      return await this.socialLogin();
     } catch (error) {
       console.error('error: ', error);
       throw new Error(FirebaseAuthError(error));
@@ -154,8 +157,8 @@ export class AuthService extends BaseApiService {
 
   async signInWithApple(): Promise<IAuthResponse> {
     try {
-      const { credential } = await FirebaseAuthentication.signInWithApple();
-      return await this.socialLogin(credential?.idToken);
+      await FirebaseAuthentication.signInWithApple();
+      return await this.socialLogin();
     } catch (error) {
       console.error('error: ', error);
       throw new Error(FirebaseAuthError(error));
