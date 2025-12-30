@@ -3,6 +3,7 @@ import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { UserService } from '@/services/user.service';
+import { AuthService } from '@/services/auth.service';
 import { availability } from '@/validations/availability';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { input, signal, OnInit, inject, Component, ChangeDetectionStrategy } from '@angular/core';
@@ -35,9 +36,11 @@ export class EmailInput implements OnInit {
 
   // services
   private userService = inject(UserService);
+  private authService = inject(AuthService);
 
   // signals
   isChecking = signal(false);
+  shouldValidate = signal(false);
 
   constructor(
     private fb: FormBuilder,
@@ -100,11 +103,11 @@ export class EmailInput implements OnInit {
 
     const asyncValidators: AsyncValidatorFn[] = [];
     if (this.checkIfTaken() || this.checkIfExists()) {
-      // create a wrapper validator that only runs when isSubmitted is true and there are no validation errors
-      const availabilityValidator = availability(this.userService, 'email', undefined, this.checkIfExists());
+      // create a wrapper validator that only runs when explicitly validated (form submission)
+      const availabilityValidator = availability(this.userService, this.authService, 'email', undefined, this.checkIfExists());
       asyncValidators.push((control: AbstractControl) => {
-        // don't run the API call if isSubmitted is false
-        if (!this.isSubmitted()) {
+        // Don't run the API call if shouldValidate flag is false
+        if (!this.shouldValidate()) {
           return of(null);
         }
 
@@ -117,6 +120,11 @@ export class EmailInput implements OnInit {
       });
     }
 
+    // Check if control already exists, remove it first to ensure clean state
+    if (this.parentFormGroup.get(this.controlName())) {
+      this.parentFormGroup.removeControl(this.controlName());
+    }
+    
     this.parentFormGroup.addControl(
       this.controlName(),
       this.fb.control('', {

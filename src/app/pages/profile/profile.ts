@@ -16,6 +16,8 @@ import { ProfileUpcomingEvents } from '@/pages/profile/components/profile-upcomi
 import { ProfileAttendedEvents } from '@/pages/profile/components/profile-attended-events';
 import { IonIcon, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 import { inject, Component, AfterViewInit, signal, computed, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { onImageError } from '@/utils/helper';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement' | 'liked-events';
 
@@ -46,7 +48,8 @@ interface TabConfig {
     ProfileHostedEvents,
     ProfileHeaderToolbar,
     ProfileAttendedEvents,
-    ProfileUpcomingEvents
+    ProfileUpcomingEvents,
+    NgOptimizedImage
   ]
 })
 export class Profile implements AfterViewInit {
@@ -58,6 +61,16 @@ export class Profile implements AfterViewInit {
   // computed & signals
   currentSlide = signal<ProfileTabs>('hosted-events');
   isLoggedIn = computed(() => !!this.authService.currentUser());
+  currentUser = this.authService.currentUser;
+  profileImage = computed(() => {
+    const user = this.currentUser();
+    if (user?.thumbnail_url) return user.thumbnail_url;
+    return '/assets/images/profile.jpeg';
+  });
+  eventsCount = computed(() => {
+    const user = this.currentUser();
+    return (user?.total_events_hosted || 0) + (user?.total_events_cohosted || 0) + (user?.total_events_sponsored || 0);
+  });
 
   // variables
   swiper?: Swiper;
@@ -139,5 +152,9 @@ export class Profile implements AfterViewInit {
         }
       });
     }
+  }
+
+  onImageError(event: Event): void {
+    onImageError(event);
   }
 }

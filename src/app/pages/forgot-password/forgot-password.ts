@@ -3,7 +3,7 @@ import { Button } from '@/components/form/button';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { validateFields } from '@/utils/form-validation';
-import { inject, signal, Component } from '@angular/core';
+import { inject, signal, Component, viewChild } from '@angular/core';
 import { EmailInput } from '@/components/form/email-input';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
@@ -38,6 +38,7 @@ export class ForgotPassword {
   step = signal<1 | 2 | 3>(1);
   maskedEmail = signal<string>('');
   forgotPasswordForm = signal<FormGroup<ForgotPasswordForm>>(this.fb.group({}));
+  emailInput = viewChild(EmailInput);
 
   goBack() {
     if (this.step() === 2) {
@@ -51,12 +52,16 @@ export class ForgotPassword {
 
   async sendResetPasswordLink() {
     this.isSubmitted.set(true);
+    this.emailInput()?.shouldValidate.set(true);
 
     // validate email login form fields
     if (!(await validateFields(this.forgotPasswordForm(), ['email']))) {
       this.toasterService.showError('Please enter the email and password.');
+      this.emailInput()?.shouldValidate.set(false);
       return;
     }
+
+    this.emailInput()?.shouldValidate.set(false);
 
     try {
       // set loading state

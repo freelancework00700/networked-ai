@@ -43,6 +43,7 @@ export class Login implements OnInit, OnDestroy {
 
   // view child
   mobileInput = viewChild(MobileInput);
+  emailInput = viewChild(EmailInput);
 
   // signals
   isInvalidOtp = signal(false);
@@ -93,8 +94,15 @@ export class Login implements OnInit, OnDestroy {
 
   private async loginWithEmail() {
     try {
+      this.emailInput()?.shouldValidate.set(true);
+      
       // validate email and password
-      if (!(await validateFields(this.loginForm(), ['email', 'password']))) return;
+      if (!(await validateFields(this.loginForm(), ['email', 'password']))) {
+        this.emailInput()?.shouldValidate.set(false);
+        return;
+      }
+      
+      this.emailInput()?.shouldValidate.set(false);
 
       // set loading state
       this.isLoading.set(true);
@@ -114,9 +122,19 @@ export class Login implements OnInit, OnDestroy {
   }
 
   private async sendOtp() {
+    console.log('sendOtp');
+    // Enable async validation on mobile input before validation
+    this.mobileInput()?.shouldValidate.set(true);
+    
     // get full phone number and validate phone number
     const mobile = this.mobileInput()?.getPhoneNumber();
-    if (!(await validateFields(this.loginForm(), ['mobile'])) || !mobile) return;
+    if (!(await validateFields(this.loginForm(), ['mobile'])) || !mobile) {
+      this.mobileInput()?.shouldValidate.set(false);
+      return;
+    }
+    
+    // Disable async validation after successful validation
+    this.mobileInput()?.shouldValidate.set(false);
 
     try {
       this.isLoading.set(true);

@@ -3,6 +3,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { UserService } from '@/services/user.service';
+import { AuthService } from '@/services/auth.service';
 import { availability } from '@/validations/availability';
 import { input, signal, inject, OnInit, Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, AsyncValidatorFn, ReactiveFormsModule } from '@angular/forms';
@@ -26,14 +27,16 @@ export class UsernameInput implements OnInit {
   label = input('Username');
   isSubmitted = input(true);
   controlName = input('username');
-  checkAvailability = input(true);
+  checkIfTaken = input(false);
   placeholder = input('ethan_cortazzo');
 
   // signals
   isChecking = signal(false);
+  shouldValidate = signal(false);
 
   // services
   private userService = inject(UserService);
+  private authService = inject(AuthService);
 
   constructor(
     private fb: FormBuilder,
@@ -55,12 +58,12 @@ export class UsernameInput implements OnInit {
 
   ngOnInit() {
     const asyncValidators: AsyncValidatorFn[] = [];
-    if (this.checkAvailability()) {
-      // create a wrapper validator that only runs when isSubmitted is true and there are no validation errors
-      const availabilityValidator = availability(this.userService, 'username');
+    if (this.checkIfTaken()) {
+      // create a wrapper validator that only runs when explicitly validated (form submission)
+      const availabilityValidator = availability(this.userService, this.authService, 'username', undefined, false);
       asyncValidators.push((control: AbstractControl) => {
-        // don't run the API call if isSubmitted is false
-        if (!this.isSubmitted()) {
+        // don't run the API call if shouldValidate flag is false
+        if (!this.shouldValidate()) {
           return of(null);
         }
 
@@ -73,6 +76,11 @@ export class UsernameInput implements OnInit {
       });
     }
 
+    // Check if control already exists, remove it first to ensure clean state
+    if (this.parentFormGroup.get(this.controlName())) {
+      this.parentFormGroup.removeControl(this.controlName());
+    }
+    
     this.parentFormGroup.addControl(
       this.controlName(),
       this.fb.control('', {

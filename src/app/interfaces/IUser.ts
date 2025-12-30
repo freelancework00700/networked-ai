@@ -41,6 +41,7 @@ export interface IUser {
   total_events_spoken?: number;
   total_events_staffed?: number;
   total_events_cohosted?: number;
+  total_events_sponsored?: number;
   total_events_attended?: number;
   college_university_name?: string;
   total_gamification_points?: number;
@@ -51,6 +52,7 @@ export interface IUser {
   interests?: VibeItem[];
   hobby_ids?: string[];
   hobbies?: VibeItem[];
+  networks?: number;
 }
 
 export interface IUserResponse {

@@ -43,6 +43,7 @@ export class Signup implements OnInit, OnDestroy {
 
   // view child
   mobileInput = viewChild(MobileInput);
+  emailInput = viewChild(EmailInput);
 
   // signals
   isInvalidOtp = signal(false);
@@ -93,8 +94,15 @@ export class Signup implements OnInit, OnDestroy {
 
   private async sendVerificationCode() {
     if (this.activeTab() === 'email') {
+      this.emailInput()?.shouldValidate.set(true);
+      
       // validate email and password
-      if (!(await validateFields(this.signupForm(), ['email', 'password']))) return;
+      if (!(await validateFields(this.signupForm(), ['email', 'password']))) {
+        this.emailInput()?.shouldValidate.set(false);
+        return;
+      }
+      
+      this.emailInput()?.shouldValidate.set(false);
 
       const { email, password } = this.signupForm().value;
       if (!email || !password) return;
@@ -118,7 +126,14 @@ export class Signup implements OnInit, OnDestroy {
     } else {
       // validate mobile
       const mobile = this.mobileInput()?.getPhoneNumber();
-      if (!(await validateFields(this.signupForm(), ['mobile'])) || !mobile) return;
+
+      this.mobileInput()?.shouldValidate.set(true);
+      if (!(await validateFields(this.signupForm(), ['mobile'])) || !mobile) {
+        this.mobileInput()?.shouldValidate.set(false);
+        return;
+      }
+
+      this.mobileInput()?.shouldValidate.set(false);
 
       // check if account exists (validation is handled by checkIfTaken)
       // if validation passes, account doesn't exist, proceed to send OTP
