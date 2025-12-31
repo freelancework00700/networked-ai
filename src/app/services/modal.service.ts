@@ -1,43 +1,50 @@
+import { Login } from '@/pages/login';
+import { Signup } from '@/pages/signup/signup';
 import { inject, Injectable } from '@angular/core';
 import { MenuItem } from '@/components/modal/menu-modal';
+import { RsvpModal } from '@/components/modal/rsvp-modal';
 import { MenuModal } from '@/components/modal/menu-modal';
 import { ModalController } from '@ionic/angular/standalone';
 import { TitleModal } from '@/components/modal/title-modal';
 import { LoadingModal } from '@/components/modal/loading-modal';
-import { CreateEvent } from '@/pages/create-event/create-event';
 import { ConfirmModal } from '@/components/modal/confirm-modal';
 import { LocationModal } from '@/components/modal/location-modal';
+import { AIPromptModal } from '@/components/modal/ai-prompt-modal';
 import { DateTimeModal } from '@/components/modal/date-time-modal';
 import { UserDetail } from '@/pages/network/components/user-detail';
 import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
 import { PostEventModal } from '@/components/modal/post-event-modal';
 import { ShareGroup } from '@/pages/messages/components/share-group';
 import { GifGalleryModal } from '@/components/modal/gif-gallery-modal';
+import { CreateEvent } from '@/pages/event/create-event/create-event';
 import { BlockModal } from '@/components/modal/block-modal/block-modal';
+import { TicketTypeModal } from '@/components/modal/ticket-type-modal';
 import { ShareModal } from '@/components/modal/share-modal/share-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
 import { EventFilterModal } from '@/components/modal/event-filter-modal';
 import { GuestFilterModal } from '@/components/modal/guest-filter-modal';
+import { ForgotPassword } from '@/pages/forgot-password/forgot-password';
+import { RsvpConfirmModal } from '@/components/modal/rsvp-confirm-modal';
 import { ReportModal } from '@/components/modal/report-modal/report-modal';
 import { ImageGalleryModal } from '@/components/modal/image-gallery-modal';
 import { CitySelectionModal } from '@/components/modal/city-selection-modal';
 import { EventCategoryModal } from '@/components/modal/event-category-modal';
+import { DeleteAccountModal } from '@/components/modal/delete-account-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
+import { SuccessModal } from '@/components/modal/success-modal/success-modal';
 import { GroupInvitation } from '@/pages/messages/components/group-invitation';
 import { LocationFilterModal } from '@/components/modal/location-filter-modal';
-import { AIPromptModal } from '@/pages/create-event/components/ai-prompt-modal';
-import { TicketTypeModal } from '@/pages/create-event/components/ticket-type-modal';
+import { NetworkTagModal, NetworkTag } from '@/components/modal/network-tag-modal';
 import { AchievementDetailModal } from '@/components/modal/achievement-detail-modal';
-import { QuestionnaireForm } from '@/pages/create-event/components/questionnaire-form';
+import { QuestionnaireFormModal } from '@/components/modal/questionnaire-form-modal';
 import { PhoneEmailVerifiedModal } from '@/components/modal/phone-email-verified-modal';
-import { TicketForm, TicketFormData } from '@/pages/create-event/components/ticket-form';
 import { ManageRoleModal } from '@/components/modal/manage-role-modal/manage-role-modal';
-import { NetworkTagModal, NetworkTag } from '@/pages/create-event/components/network-tag';
+import { TicketFormModal, TicketFormData } from '@/components/modal/ticket-form-modal';
+import { RsvpDetailsData, RsvpDetailsModal } from '@/components/modal/rsvp-details-modal';
 import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confirm-modal';
+import { QuestionnairePreviewModal } from '@/components/modal/questionnaire-preview-modal';
 import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
-import { PromoCodeForm, PromoCodeFormData } from '@/pages/create-event/components/promo-code-form';
-import { SuccessModal } from '@/components/modal/success-modal/success-modal';
-import { DeleteAccountModal } from '@/components/modal/delete-account-modal';
+import { PromoCodeFormModal, PromoCodeFormModalData } from '@/components/modal/promo-code-form-modal';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -276,7 +283,7 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      component: TicketForm,
+      component: TicketFormModal,
       cssClass: 'modal-600px-height',
       backdropDismiss: false,
       componentProps: {
@@ -293,7 +300,7 @@ export class ModalService {
     return data && role === 'save' ? { data, role } : null;
   }
 
-  async openTicketTypeModal(): Promise<'standard' | 'early-bird' | 'sponsor' | null> {
+  async openTicketTypeModal(isPaid: boolean = true, hasFreeTicket: boolean = false): Promise<'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard' | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -301,22 +308,23 @@ export class ModalService {
       initialBreakpoint: 1,
       component: TicketTypeModal,
       cssClass: 'auto-hight-modal',
-      backdropDismiss: true
+      backdropDismiss: true,
+      componentProps: { isPaid, hasFreeTicket }
     });
 
     await modal.present();
 
     const { data, role } = await modal.onWillDismiss();
-    return role === 'select' && data ? (data as 'standard' | 'early-bird' | 'sponsor') : null;
+    return role === 'select' && data ? (data as 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard') : null;
   }
 
-  async openPromoCodeModal(initialData?: Partial<PromoCodeFormData>): Promise<{ data: PromoCodeFormData; role: string } | null> {
+  async openPromoCodeModal(initialData?: Partial<PromoCodeFormModalData>): Promise<{ data: PromoCodeFormModalData; role: string } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      component: PromoCodeForm,
+      component: PromoCodeFormModal,
       cssClass: 'modal-600px-height',
       backdropDismiss: false,
       componentProps: {
@@ -380,13 +388,13 @@ export class ModalService {
     return data && role === 'save' ? { data, role } : null;
   }
 
-  async openQuestionnaireModal(type: 'pre_event' | 'post_event', initialData?: any): Promise<any> {
+  async openQuestionnaireFormModal(type: 'pre_event' | 'post_event', initialData?: any): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      component: QuestionnaireForm,
+      component: QuestionnaireFormModal,
       componentProps: {
         type,
         initialData
@@ -635,14 +643,15 @@ export class ModalService {
     await modal.present();
   }
 
-  async openReportModal(): Promise<any | null> {
+  async openReportModal(type: 'Post' | 'Event'): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: ReportModal,
-      cssClass: 'auto-hight-modal'
+      cssClass: 'auto-hight-modal',
+      componentProps: { type }
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();
@@ -699,6 +708,65 @@ export class ModalService {
     return data || null;
   }
 
+  async openRsvpModal(tickets: any[], eventTitle?: string, questionnaire?: any, promoCodes?: any[], subscriptionId?: string): Promise<any> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      cssClass: 'modal-600px-height',
+      component: RsvpModal,
+      componentProps: { tickets, eventTitle, questionnaire, promoCodes, subscriptionId }
+    });
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+    return data || null;
+  }
+
+  async openQuestionnairePreviewModal(
+    questions: any[],
+    isPreviewMode: boolean = false,
+    rsvpData?: RsvpDetailsData,
+    eventTitle?: string,
+    eventDate?: string,
+    eventLocation?: string,
+    subscriptionId?: string
+  ): Promise<any> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      cssClass: 'modal-600px-height',
+      component: QuestionnairePreviewModal,
+      componentProps: { questions, isPreviewMode, rsvpData, eventTitle, eventDate, eventLocation, subscriptionId }
+    });
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+    return data || null;
+  }
+
+  async openRsvpDetailsModal(
+    eventTitle: string,
+    eventDate: string,
+    eventLocation: string,
+    rsvpData: RsvpDetailsData,
+    subscriptionId?: string
+  ): Promise<any> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      cssClass: 'modal-600px-height',
+      component: RsvpDetailsModal,
+      componentProps: { eventTitle, eventDate, eventLocation, rsvpData, subscriptionId }
+    });
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+    return data || null;
+  }
+
   async openCitySelectionModal(): Promise<{ city: string; state: string; fullName: string } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -707,13 +775,99 @@ export class ModalService {
       initialBreakpoint: 1,
       backdropDismiss: true,
       component: CitySelectionModal,
-      cssClass: 'modal-80-percent-height'
+      cssClass: 'modal-600px-height'
     });
 
     await modal.present();
 
     const { data } = await modal.onDidDismiss();
     return data || null;
+  }
+
+  async openRsvpConfirmModal(rsvpData: RsvpDetailsModal): Promise<any> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: RsvpConfirmModal,
+      cssClass: 'auto-hight-modal',
+      componentProps: { rsvpData }
+    });
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+    return data || null;
+  }
+
+  async openLoginModal(): Promise<any> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      cssClass: 'auto-hight-modal',
+      component: Login,
+      componentProps: {
+        isRsvpModal: true,
+        onLoginSuccess: () => {
+          modal.dismiss();
+          this.close();
+        }
+      }
+    });
+
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data || null;
+  }
+
+  async openSignupModal(): Promise<any> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      cssClass: 'auto-hight-modal',
+      component: Signup,
+      componentProps: {
+        isRsvpModal: true,
+        onSignupSuccess: () => {
+          modal.dismiss();
+          this.close();
+        }
+      }
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data || null;
+  }
+
+  async openForgotPasswordModal(): Promise<any> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: ForgotPassword,
+      componentProps: {
+        isRsvpModal: true,
+        onForgotPasswordSuccess: () => {
+          modal.dismiss();
+          this.close();
+        }
+      }
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    return data || null;
+  }
+
+  async dismissAllModals(): Promise<void> {
+    let topModal = await this.modalCtrl.getTop();
+    while (topModal) {
+      await this.modalCtrl.dismiss();
+      topModal = await this.modalCtrl.getTop();
+    }
   }
 
   async close(data?: any, role?: string): Promise<void> {

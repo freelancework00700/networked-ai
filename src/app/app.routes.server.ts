@@ -28,22 +28,6 @@ export const serverRoutes: ServerRoute[] = [
   },
   // dynamic routes with params - must use server-side rendering
   {
-    path: 'event-qr/:id',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'event-analytics/:id',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'guest-list/:id',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'user-list/:id',
-    renderMode: RenderMode.Server
-  },
-  {
     path: 'chat-room/:id',
     renderMode: RenderMode.Server
   },
@@ -56,20 +40,60 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
+    path: 'comments/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/qr/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/guests/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/:id/guests',
+    renderMode: RenderMode.Server
+  },
+  {
     path: 'group-invitation/:id',
     renderMode: RenderMode.Server
   },
   {
-    path: 'questionnaire-response/:id',
+    path: 'event/questionnaire-response/:id',
     renderMode: RenderMode.Server
   },
   {
-    path: 'questionnaire-response/user-list/:id',
+    path: 'event/questionnaire-response/guests/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/analytics/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/analytics/guests/:id',
     renderMode: RenderMode.Server
   },
   // routes without params - can be server-rendered
   {
-    path: 'create-event',
+    path: 'event',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/edit',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/city',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/all',
     renderMode: RenderMode.Server
   },
   {
@@ -90,14 +114,6 @@ export const serverRoutes: ServerRoute[] = [
   },
   {
     path: 'add-network',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'comments/:id',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'event/detail',
     renderMode: RenderMode.Server
   },
   {

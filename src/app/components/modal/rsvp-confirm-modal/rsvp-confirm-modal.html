@@ -1,0 +1,19 @@
+<div class="inner-content px-4 pt-10 flex flex-col items-center justify-center text-center h-full w-full">
+  <div class="pi pi-check text-white bg-primary rounded p-4 mb-4"></div>
+
+  <div class="heading-h3 mb-2">RSVP Confirmed!</div>
+
+  <div class="body-14R neutral-03 max-w-sm">We’ve sent your booking details to your inbox, you can also check your profile &gt; upcoming events.</div>
+</div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex flex-col gap-2">
+      <div class="flex gap-2">
+        <app-button label="Share" (click)="share()" iconName="pi pi-upload" color="secondary" class="flex-1" />
+        <app-button label="Add Event" (click)="addEvent()" icon="/assets/svg/social-feed/calendar-plus.svg" color="secondary" class="flex-1" />
+      </div>
+      <app-button label="Done" (click)="done()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

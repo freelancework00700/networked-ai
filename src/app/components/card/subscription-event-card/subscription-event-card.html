@@ -25,6 +25,6 @@
 
   <!-- Checkbox -->
   <div class="flex items-center justify-center flex-shrink-0">
-    <ion-checkbox [checked]="selected()" (ionChange)="onToggle()"></ion-checkbox>
+    <p-checkbox [ngModel]="selected()" (ngModelChange)="onToggle()" [binary]="true"></p-checkbox>
   </div>
 </div>

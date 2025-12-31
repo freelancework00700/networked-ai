@@ -83,7 +83,7 @@ export class Profile implements AfterViewInit {
       organization: 'Networked AI',
       date: 'Fri 8/30, 7.00AM',
       location: 'Atlanta, GA',
-      views: '12 views',
+      views: '12',
       image: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Fri',
       day: '12'
@@ -93,7 +93,7 @@ export class Profile implements AfterViewInit {
       organization: 'Networked AI',
       date: 'Fri 8/30, 7.00AM',
       location: 'Atlanta, GA',
-      views: '12 views',
+      views: '12',
       image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Tue',
       day: '16'
@@ -103,7 +103,7 @@ export class Profile implements AfterViewInit {
       organization: 'Networked AI',
       date: 'Fri 8/30, 7.00AM',
       location: 'Atlanta, GA',
-      views: '12 views',
+      views: '12',
       image: 'https://images.unsplash.com/photo-1444840535719-195841cb6e2b?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Fri',
       day: '27'

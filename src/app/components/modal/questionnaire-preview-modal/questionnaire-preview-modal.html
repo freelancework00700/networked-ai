@@ -1,0 +1,146 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 text-center heading-h3 neutral-01">
+      {{ isPreviewMode ? 'Questionnaire Preview' : 'Event Questionnaire' }}
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content mode="md">
+  <div class="px-4">
+    <!-- Header Section -->
+    @if (!isPreviewMode) {
+      <div class="flex flex-col mb-8">
+        <p class="body-14R neutral-02">Please fill out this short questionnaire from the event host to complete your RSVP.</p>
+        @if (hasPrivateQuestions()) {
+          <div class="flex items-center gap-2">
+            <div class="pi pi-eye-slash neutral-04 body-14R"></div>
+            <span class="body-14R neutral-04">Only the host will see this information</span>
+          </div>
+        }
+      </div>
+    }
+
+    <form [formGroup]="form" class="space-y-6">
+      @for (question of questions; let i = $index; track i) {
+        <div class="flex flex-col gap-3">
+          <!-- Question Label - Show for all question types -->
+          <div class="flex items-start justify-between text-surface-900 mb-1">
+            <label class="neutral-02 body-14M">
+              {{ question.question }}
+            </label>
+            <div class="flex items-center gap-2">
+              @if (!question.required) {
+                <span class="neutral-04 body-14R">Optional</span>
+              }
+              @if (question.visibility === 'private') {
+                <div class="pi pi-eye-slash neutral-04 body-14R"></div>
+              }
+            </div>
+          </div>
+
+          <!-- Text Input -->
+          @if (question.type === 'text') {
+            <text-input
+              [controlName]="'question_' + i"
+              [label]="''"
+              [showLabel]="false"
+              [placeholder]="'Enter your answer'"
+              [required]="question.required"
+              [readonly]="isPreviewMode"
+            />
+          }
+
+          <!-- Phone Input -->
+          @if (question.type === 'phone') {
+            <div [class.opacity-50]="isPreviewMode" [class.pointer-events-none]="isPreviewMode">
+              <mobile-input [controlName]="'question_' + i" [label]="''" [required]="question.required" />
+            </div>
+          }
+
+          <!-- Number Input -->
+          @if (question.type === 'number') {
+            <div [class.opacity-50]="isPreviewMode" [class.pointer-events-none]="isPreviewMode">
+              <number-input
+                [controlName]="'question_' + i"
+                [label]="''"
+                [showLabel]="false"
+                [placeholder]="'Enter a number'"
+                [required]="question.required"
+                [min]="question.min"
+                [max]="question.max"
+              />
+            </div>
+          }
+
+          <!-- Single Choice (Radio Buttons) -->
+          @if (question.type === 'single' && question.options) {
+            <div class="flex flex-col">
+              @for (option of question.options; let oi = $index; track oi) {
+                <div class="flex items-center gap-3 py-1">
+                  <p-radioButton [inputId]="'radio_' + i + '_' + oi" [value]="option" formControlName="question_{{ i }}" />
+                  <label [for]="'radio_' + i + '_' + oi" class="body-14M neutral-01 flex-1 cursor-pointer">
+                    {{ option }}
+                  </label>
+                </div>
+              }
+            </div>
+            <!-- Validation Error for Single Choice -->
+            @if (getQuestionControl(i)?.invalid && getQuestionControl(i)?.touched && question.required) {
+              <div class="accent-red body-12M">Please select an option.</div>
+            }
+          }
+
+          <!-- Multiple Choice (Checkboxes) -->
+          @if (question.type === 'multiple' && question.options) {
+            <div formArrayName="question_{{ i }}" class="flex flex-col">
+              @for (option of question.options; let oi = $index; track oi) {
+                <div class="flex items-center gap-3 py-1">
+                  <p-checkbox [inputId]="'checkbox_' + i + '_' + oi" [formControlName]="oi" [binary]="true" />
+                  <label [for]="'checkbox_' + i + '_' + oi" class="body-14M neutral-01 flex-1 cursor-pointer">
+                    {{ option }}
+                  </label>
+                </div>
+              }
+              @if (getQuestionControl(i)?.invalid && getQuestionControl(i)?.touched) {
+                <div class="accent-red body-12M">Please select at least one option.</div>
+              }
+            </div>
+          }
+
+          <!-- Rating (1-10 Scale) -->
+          @if (question.type === 'rating') {
+            <div class="flex gap-2">
+              @for (rating of getRatingScale(question); track rating) {
+                <div
+                  class="w-10 h-10 rounded-full border-1 flex items-center justify-center body-12M transition-colors"
+                  [class.border-surface-300]="!isRatingSelected(i, rating)"
+                  [class.text-neutral-01]="!isRatingSelected(i, rating)"
+                  [class.border-primary]="isRatingSelected(i, rating)"
+                  [class.bg-primary]="isRatingSelected(i, rating)"
+                  [class.text-white]="isRatingSelected(i, rating)"
+                  [class.opacity-50]="isPreviewMode"
+                  [class.pointer-events-none]="isPreviewMode"
+                  (click)="selectRating(i, rating)"
+                >
+                  {{ rating }}
+                </div>
+              }
+            </div>
+            <!-- Validation Error for Rating -->
+            @if (getQuestionControl(i)?.invalid && getQuestionControl(i)?.touched && question.required) {
+              <div class="accent-red body-12M">Please select a rating.</div>
+            }
+          }
+        </div>
+      }
+    </form>
+  </div>
+</ion-content>
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4">
+      <app-button [label]="isPreviewMode ? 'Close' : 'Submit and Proceed'" (click)="dismiss()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

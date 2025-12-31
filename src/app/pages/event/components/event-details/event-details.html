@@ -1,0 +1,221 @@
+<div class="flex flex-col gap-6">
+  <!-- Media Upload Section -->
+  <div>
+    @if (mediaItems().length) {
+      <div #swiperEl class="swiper">
+        <div class="swiper-wrapper">
+          @for (item of mediaItems(); track item.id) {
+            <div class="swiper-slide">
+              <div class="slide-content">
+                <div class="slide-image">
+                  <!-- IMAGE -->
+                  @if (item.type === 'image' || item.type === 'gif') {
+                    <img [src]="item.url" />
+                  }
+
+                  <!-- VIDEO -->
+                  @if (item.type === 'video') {
+                    <video [src]="item.url" controls></video>
+                  }
+
+                  <div
+                    class="absolute top-2 right-2 bg-black/50 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
+                    (click)="deleteMedia($index)"
+                  >
+                    <i class="pi pi-times"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      <div #scrollContainer class="thumbnail-container" cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="drop($event)">
+        @for (item of mediaItems(); track item.id) {
+          <div class="thumbnail" cdkDrag [cdkDragBoundary]="scrollContainer" (click)="goToSlide($index)">
+            <!-- IMAGE -->
+            @if (item.type === 'image' || item.type === 'gif') {
+              <img [src]="item.url" />
+            }
+
+            <!-- VIDEO -->
+            @if (item.type === 'video') {
+              <video [src]="item.url" muted loop></video>
+            }
+            <!-- DELETE -->
+            <div class="delete-btn" (click)="deleteMedia($index)">×</div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div
+        class="border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-3 h-[150px] cursor-pointer"
+        [class.accent-red]="isSubmitted() && mediaItems().length === 0"
+        [class.border-surface-300]="!isSubmitted() || (isSubmitted() && mediaItems().length > 0 && mediaItems()[0].type === 'image')"
+        (click)="fileInput.click()"
+      >
+        <img src="assets/svg/imageUpload.svg" class="w-12 h-12" />
+
+        <div class="flex flex-col items-center gap-1">
+          <span class="body-16M text-primary">Browse files</span>
+          <div class="text-sm text-surface-500">JPG or PNG <span class="text-surface-300 text-lg">|</span> Max 10 photos, 5MB total</div>
+        </div>
+      </div>
+    }
+    @if (isSubmitted() && mediaItems().length === 0) {
+      <div class="accent-red body-12M mt-2">Please add at least one media item.</div>
+    } @else if (isSubmitted() && mediaItems().length > 0 && mediaItems()[0].type !== 'image' && mediaItems()[0].type !== 'gif') {
+      <div class="accent-red body-12M mt-2">First media should be an Image or GIF.</div>
+    }
+    @if (mediaItems().length > 0) {
+      <div class="mt-2">
+        <app-button label="Browse files" (click)="fileInput.click()" variant="text" class="w-full" />
+      </div>
+    }
+    <input
+      #fileInput
+      type="file"
+      multiple
+      accept="image/jpeg,image/png,video/mp4,video/webm,video/quicktime"
+      class="hidden"
+      (change)="onBrowseFiles($event)"
+    />
+    <div class="flex items-center gap-3 my-2">
+      <div class="flex-1 border-t border-surface-300"></div>
+      <div class="text-surface-500 body-14M">or</div>
+      <div class="flex-1 border-t border-surface-300"></div>
+    </div>
+
+    <div class="flex gap-2">
+      <app-button label="Networked Gallery" (click)="openNetworkedGallery()" color="secondary" class="w-full" />
+      <app-button label="Networked GIFs" (click)="openNetworkedGIFs()" color="secondary" class="w-full" />
+    </div>
+  </div>
+
+  <!-- Event Title -->
+  <text-input [formGroup]="eventForm()" controlName="title" label="Event Title" placeholder="Select title" [isSubmitted]="isSubmitted()" />
+
+  <!-- Date -->
+  <text-input
+    [formGroup]="eventForm()"
+    label="Date"
+    [readonly]="true"
+    controlName="date"
+    iconName="pi-calendar"
+    (click)="openDateModal()"
+    placeholder="Select date"
+    [isSubmitted]="isSubmitted()"
+  />
+
+  <!-- Duration -->
+  <div class="flex flex-col gap-1">
+    <label class="block neutral-02 body-14M">Duration</label>
+    <div class="flex items-center gap-2 w-full">
+      <!-- start time -->
+      <text-input
+        [formGroup]="eventForm()"
+        [readonly]="true"
+        placeholder="Start"
+        iconName="pi-clock"
+        label="Event Starts"
+        [showLabel]="false"
+        controlName="start_time"
+        (click)="openTimeModal('start_time')"
+        [isSubmitted]="isSubmitted()"
+        class="w-full"
+      />
+
+      <!-- end time -->
+      <text-input
+        [formGroup]="eventForm()"
+        [readonly]="true"
+        placeholder="End"
+        label="Event Ends"
+        iconName="pi-clock"
+        [showLabel]="false"
+        controlName="end_time"
+        [required]="!getFieldValue('until_finished')"
+        (click)="openTimeModal('end_time')"
+        [isSubmitted]="isSubmitted()"
+        class="w-full"
+      />
+    </div>
+    <div class="flex items-center gap-2" [formGroup]="eventForm()">
+      <p-checkbox inputId="until_finished" formControlName="until_finished" [binary]="true" />
+      <label for="until_finished" class="cursor-pointer">Until finished</label>
+    </div>
+  </div>
+
+  <!-- address -->
+  <text-input
+    [formGroup]="eventForm()"
+    label="Address"
+    [readonly]="true"
+    controlName="address"
+    iconName="pi-map-marker"
+    placeholder="Search location"
+    (click)="openLocationModal()"
+    [isSubmitted]="isSubmitted()"
+  />
+
+  <!-- Event Category -->
+  <text-input
+    [formGroup]="eventForm()"
+    [readonly]="true"
+    iconName="pi-tag"
+    controlName="category"
+    label="Event Category"
+    placeholder="Select category"
+    (click)="openEventCategoryModal()"
+    [isSubmitted]="isSubmitted()"
+  />
+
+  <!-- Networked Meta tags -->
+  <div class="flex flex-col gap-2">
+    <label class="block neutral-02 body-14M">Networked Meta tags</label>
+    <div
+      class="relative border rounded-lg min-h-[44px] p-2 cursor-pointer bg-surface-0"
+      [class.border-surface-300]="!isMetaTagsInvalid()"
+      [class.accent-red]="isMetaTagsInvalid()"
+      (click)="openNetworkTagModal()"
+    >
+      <div class="flex flex-wrap items-center gap-2 min-h-[28px]">
+        @if (selectedMetaTags().size === 0) {
+          <span class="text-surface-500 text-sm">Select up to 5</span>
+        } @else {
+          @for (tagValue of getSelectedTagValues(); track tagValue) {
+            @if (getTagByName(tagValue); as tag) {
+              <div
+                class="flex items-center gap-1 px-2 py-1 rounded-full bg-surface-100 border border-surface-300 text-surface-700 text-sm font-medium"
+              >
+                <span [innerHTML]="tag.icon"></span>
+                <span>{{ tag.name }}</span>
+              </div>
+            }
+          }
+        }
+      </div>
+      <i class="pi pi-chevron-right text-surface-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+    </div>
+    @if (isMetaTagsInvalid()) {
+      <div class="accent-red body-12M">Please select at least one meta tag.</div>
+    }
+  </div>
+
+  <!-- Description -->
+  <div class="flex flex-col gap-2">
+    <editor-input
+      [formGroup]="eventForm()"
+      controlName="description"
+      label="Description"
+      placeholder="Write description here"
+      [showGenerateButton]="true"
+      [isCustomize]="isCustomize()"
+      [onGenerateClick]="handleGenerateClick"
+      [isSubmitted]="isSubmitted()"
+    />
+    <div class="flex justify-end">
+      <span class="text-xs text-surface-500">{{ descriptionLength() }}/{{ maxDescriptionLength }}</span>
+    </div>
+  </div>
+</div>

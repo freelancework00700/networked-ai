@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { IonCheckbox } from '@ionic/angular/standalone';
+import { FormsModule } from '@angular/forms';
+import { CheckboxModule } from 'primeng/checkbox';
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'subscription-event-card',
-  imports: [CommonModule, IonCheckbox],
+  imports: [CommonModule, CheckboxModule, FormsModule],
   styleUrl: './subscription-event-card.scss',
   templateUrl: './subscription-event-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush

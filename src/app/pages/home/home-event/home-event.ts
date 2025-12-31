@@ -2,9 +2,9 @@ import { Swiper } from 'swiper';
 import { SwiperOptions } from 'swiper/types';
 import { Button } from '@/components/form/button';
 import { UserCard } from '@/components/card/user-card';
-import { NavController } from '@ionic/angular/standalone';
 import { CityCard, ICity } from '@/components/card/city-card';
 import { EventCard, IEvent } from '@/components/card/event-card';
+import { NavigationService } from '@/services/navigation.service';
 import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
 import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
@@ -38,7 +38,7 @@ interface NetworkSuggestion {
   imports: [Button, UserCard, CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard]
 })
 export class HomeEvent {
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   filter = signal<'browse' | 'upcoming'>('browse');
   upcomingEvents = signal<IEvent[]>([]);
 
@@ -84,7 +84,7 @@ export class HomeEvent {
       organization: 'Networked AI',
       date: 'Fri 8/30, 7.00AM',
       location: 'Atlanta, GA',
-      views: '12 views',
+      views: '12',
       image: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Fri',
       day: '12'
@@ -94,7 +94,7 @@ export class HomeEvent {
       organization: 'Networked AI',
       date: 'Fri 8/30, 7.00AM',
       location: 'Atlanta, GA',
-      views: '12 views',
+      views: '12',
       image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Tue',
       day: '16'
@@ -104,7 +104,7 @@ export class HomeEvent {
       organization: 'Networked AI',
       date: 'Fri 8/30, 7.00AM',
       location: 'Atlanta, GA',
-      views: '12 views',
+      views: '12',
       image: 'https://images.unsplash.com/photo-1444840535719-195841cb6e2b?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Fri',
       day: '27'
@@ -124,7 +124,7 @@ export class HomeEvent {
         organization: 'Networked AI',
         date: 'Fri 8/30, 7.00AM',
         location: 'Atlanta, GA',
-        views: '12 views',
+        views: '12',
         image: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80'
       }
     }

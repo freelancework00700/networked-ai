@@ -1,0 +1,38 @@
+ion-toolbar {
+  --border-width: 0;
+  --border-color: transparent;
+  --box-shadow: none;
+}
+
+.event-map {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.event-location-marker-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-location-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--brand-04);
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+.subscriber-chip {
+  background: radial-gradient(
+    161.73% 107.14% at 9.38% -7.14%,
+    #e6dac7 13.46%,
+    #f4d7a9 38.63%,
+    rgba(201, 164, 105, 0.94) 69.52%,
+    #bf9e69 88.87%,
+    rgba(195, 167, 121, 0.9) 100%
+  );
+  border-radius: 9999px;
+}

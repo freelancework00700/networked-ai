@@ -1,5 +1,5 @@
 <div
-  (click)="openMenu()"
+  (click)="viewEvent()"
   [style.background-image]="'url(' + event().image + ')'"
   class="relative w-full h-[320px] shrink-0 rounded-[16px] overflow-hidden bg-cover bg-center"
 >
@@ -20,7 +20,7 @@
     <div
       class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
     >
-      <div class="pi pi-upload text-white !text-[14px]"></div>
+      <div (click)="shareEvent(); $event.stopPropagation()" class="pi pi-upload text-white !text-[14px]"></div>
     </div>
 
     <div

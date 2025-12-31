@@ -121,6 +121,6 @@ export class ChatRoom {
   }
 
   navigateToNetwork() {
-    this.navCtrl.navigateForward('/questionnaire-response/1');
+    this.navCtrl.navigateForward('/event/questionnaire-response/1');
   }
 }

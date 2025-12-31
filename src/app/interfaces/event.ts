@@ -13,6 +13,7 @@ export interface EventForm {
   description?: FormControl<string | null>;
   tickets?: FormControl<Ticket[] | null>;
   promo_codes?: FormControl<PromoCode[] | null>;
+  subscribers_exclusive?: FormControl<boolean | null>;
   is_subscription?: FormControl<boolean | null>;
   subscription_plan?: FormControl<string | null>;
   host_pays_fees?: FormControl<boolean | null>;

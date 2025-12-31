@@ -1,0 +1,63 @@
+<div class="flex items-center justify-between">
+  <div class="neutral-02 body-14M flex-1">{{ label() }}</div>
+  @if (!isSearchbarVisible()) {
+    <app-button (click)="onAddClick()" [label]="'Add'" [iconName]="'pi pi-plus'" [variant]="'text'" iconPos="right" [height]="'10px'" class="p-0" />
+  }
+</div>
+
+<!-- Input section -->
+@if (showInput()) {
+  <div class="flex flex-col gap-1 mb-4 border-l-3 border-surface-200 pl-4 my-2">
+    @for (user of getUsers(); track $index) {
+      <div class="w-full relative">
+        @if (!user) {
+          <div class="flex gap-2 items-center relative">
+            <searchbar
+              class="w-full"
+              [searchQuery]="getSearchInput($index)"
+              (searchChange)="onSearchInput($index, $event)"
+              [placeholder]="'Search by username, email or phone'"
+            />
+
+            @if (getFilteredUsers($index).length > 0) {
+              <div
+                class="absolute top-full left-0 right-0 z-10 bg-white border border-surface-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto"
+              >
+                @for (filteredUser of getFilteredUsers($index); track filteredUser.uid) {
+                  <div class="flex items-center gap-3 p-3 cursor-pointer" (click)="onSelectUser($index, filteredUser)">
+                    <img
+                      [src]="filteredUser.thumbnail || 'assets/images/profile.jpeg'"
+                      [alt]="filteredUser.firstName"
+                      class="w-10 h-10 rounded-full object-cover"
+                    />
+                    <span class="body-regular-14"> {{ filteredUser.firstName }} {{ filteredUser.lastName }} </span>
+                  </div>
+                }
+              </div>
+            }
+
+            <app-button
+              (click)="onClear($index)"
+              [iconName]="'pi pi-times'"
+              [variant]="'text'"
+              iconPos="left"
+              [color]="'secondary'"
+              width="20px"
+              height="20px"
+            />
+          </div>
+        } @else {
+          <div class="flex items-center justify-between border border-surface-300 rounded-lg px-3 py-2 w-full mb-2">
+            <div class="flex items-center gap-3">
+              <img [src]="user.thumbnail || 'assets/images/profile.jpeg'" [alt]="user.firstName" class="w-10 h-10 rounded-full object-cover" />
+              <span class="body-regular-14"> {{ user.firstName }} {{ user.lastName }} </span>
+            </div>
+            <button type="button" class="p-0 m-0 bg-transparent border-none cursor-pointer flex-shrink-0" (click)="onClear($index)">
+              <i class="pi pi-times text-lg text-neutral-04"></i>
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}

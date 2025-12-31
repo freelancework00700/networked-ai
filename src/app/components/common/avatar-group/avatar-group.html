@@ -1,0 +1,10 @@
+<div class="flex">
+  <p-avatar-group>
+    @for (user of getVisibleUsers(); track user.id) {
+      <p-avatar [image]="getUserImage(user)" [size]="size()" [shape]="shape()" />
+    }
+    @if (shouldShowOverflow()) {
+      <p-avatar [label]="'+' + getRemainingCount()" [shape]="shape()" [size]="size()" class="!bg-neutral-02 !text-neutral-07" />
+    }
+  </p-avatar-group>
+</div>

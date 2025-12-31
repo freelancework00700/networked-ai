@@ -11,10 +11,10 @@ import { MobileInput } from '@/components/form/mobile-input';
 import { BaseApiService } from '@/services/base-api.service';
 import { PasswordInput } from '@/components/form/password-input';
 import { NavigationService } from '@/services/navigation.service';
+import { IonIcon, ModalController } from '@ionic/angular/standalone';
 import { SocialLoginButtons } from '@/components/common/social-login-buttons';
-import { IonIcon, IonContent, ModalController } from '@ionic/angular/standalone';
-import { signal, inject, Component, viewChild, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { signal, inject, Component, viewChild, OnInit, OnDestroy, Input } from '@angular/core';
 
 interface SignupForm {
   email?: FormControl<string | null>;
@@ -28,9 +28,11 @@ type SignupMethod = 'email' | 'mobile';
   selector: 'signup',
   styleUrl: './signup.scss',
   templateUrl: './signup.html',
-  imports: [Button, IonIcon, OtpInput, IonContent, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule]
+  imports: [Button, IonIcon, OtpInput, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule]
 })
 export class Signup implements OnInit, OnDestroy {
+  @Input() onSignupSuccess: () => void = () => {};
+  @Input() isRsvpModal: boolean = false;
   // services
   router = inject(Router);
   fb = inject(FormBuilder);
@@ -192,9 +194,13 @@ export class Signup implements OnInit, OnDestroy {
       }
 
       // after successful registration, navigate to profile setup
-      await this.modalService.close();
-      await this.modalService.openPhoneEmailVerifiedModal(this.activeTab());
-      this.navigationService.navigateForward('/profile/setup', true);
+      if (this.isRsvpModal) {
+        this.onSignupSuccess();
+      } else {
+        await this.modalService.close();
+        await this.modalService.openPhoneEmailVerifiedModal(this.activeTab());
+        this.navigationService.navigateForward('/profile/setup', true);
+      }
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Invalid OTP or failed to create account.');
       this.toasterService.showError(message);
@@ -231,6 +237,31 @@ export class Signup implements OnInit, OnDestroy {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  goToLogin() {
+    if (this.isRsvpModal) {
+      this.modalCtrl.dismiss();
+      this.modalService.openLoginModal();
+    } else {
+      this.navigationService.navigateForward('/login');
+    }
+  }
+
+  async goToTerms() {
+    if (this.isRsvpModal) {
+      await this.modalService.dismissAllModals();
+    }
+
+    this.navigationService.navigateForward('/terms');
+  }
+
+  async goToPrivacyPolicy() {
+    if (this.isRsvpModal) {
+      await this.modalService.dismissAllModals();
+    }
+
+    this.navigationService.navigateForward('/policy');
   }
 
   ngOnDestroy() {

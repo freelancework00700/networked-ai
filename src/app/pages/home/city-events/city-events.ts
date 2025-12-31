@@ -8,7 +8,7 @@ import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
-  selector: 'app-city-events',
+  selector: 'scity-events',
   styleUrl: './city-events.scss',
   templateUrl: './city-events.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,7 +33,7 @@ export class CityEvents {
       organization: 'Atlanta Tech Hub',
       date: 'Fri 8/30, 7:00 AM',
       location: 'Atlanta, GA',
-      views: '12 views',
+      views: '12',
       image: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Fri',
       day: '12'
@@ -43,7 +43,7 @@ export class CityEvents {
       organization: 'Atlanta Music Scene',
       date: 'Sat 9/1, 2:00 PM',
       location: 'Atlanta, GA',
-      views: '45 views',
+      views: '45',
       image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sat',
       day: '1'
@@ -53,7 +53,7 @@ export class CityEvents {
       organization: 'Atlanta Chamber',
       date: 'Wed 9/4, 6:00 PM',
       location: 'Atlanta, GA',
-      views: '28 views',
+      views: '28',
       image: 'https://images.unsplash.com/photo-1444840535719-195841cb6e2b?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Wed',
       day: '4'
@@ -63,7 +63,7 @@ export class CityEvents {
       organization: 'NYC Arts Council',
       date: 'Sun 9/2, 3:00 PM',
       location: 'New York, NJ',
-      views: '89 views',
+      views: '89',
       image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sun',
       day: '2'
@@ -73,7 +73,7 @@ export class CityEvents {
       organization: 'NYC Ventures',
       date: 'Thu 9/5, 7:00 PM',
       location: 'New York, NJ',
-      views: '156 views',
+      views: '156',
       image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Thu',
       day: '5'
@@ -83,7 +83,7 @@ export class CityEvents {
       organization: 'Denver Outdoors',
       date: 'Sat 9/7, 8:00 AM',
       location: 'Denver, CO',
-      views: '67 views',
+      views: '67',
       image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sat',
       day: '7'
@@ -93,7 +93,7 @@ export class CityEvents {
       organization: 'Denver Brewers',
       date: 'Sun 9/8, 12:00 PM',
       location: 'Denver, CO',
-      views: '234 views',
+      views: '234',
       image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sun',
       day: '8'
@@ -103,7 +103,7 @@ export class CityEvents {
       organization: 'Chicago Jazz Club',
       date: 'Fri 9/6, 9:00 PM',
       location: 'Chicago, IL',
-      views: '91 views',
+      views: '91',
       image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Fri',
       day: '6'
@@ -113,7 +113,7 @@ export class CityEvents {
       organization: 'Chicago Culinary',
       date: 'Sat 9/14, 11:00 AM',
       location: 'Chicago, IL',
-      views: '178 views',
+      views: '178',
       image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sat',
       day: '14'
@@ -123,7 +123,7 @@ export class CityEvents {
       organization: 'Arizona Photographers',
       date: 'Sun 9/15, 6:00 AM',
       location: 'Phoenix, AZ',
-      views: '34 views',
+      views: '34',
       image: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sun',
       day: '15'
@@ -133,7 +133,7 @@ export class CityEvents {
       organization: 'Phoenix Wellness',
       date: 'Mon 9/16, 7:00 AM',
       location: 'Phoenix, AZ',
-      views: '56 views',
+      views: '56',
       image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Mon',
       day: '16'
@@ -143,7 +143,7 @@ export class CityEvents {
       organization: 'Toronto Cinema',
       date: 'Thu 9/12, 7:30 PM',
       location: 'Toronto, CA',
-      views: '201 views',
+      views: '201',
       image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Thu',
       day: '12'
@@ -153,7 +153,7 @@ export class CityEvents {
       organization: 'Toronto Sports',
       date: 'Sat 9/21, 8:00 PM',
       location: 'Toronto, CA',
-      views: '312 views',
+      views: '312',
       image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sat',
       day: '21'
@@ -163,7 +163,7 @@ export class CityEvents {
       organization: 'Cleveland Music',
       date: 'Sun 9/22, 2:00 PM',
       location: 'Cleveland, OH',
-      views: '78 views',
+      views: '78',
       image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sun',
       day: '22'
@@ -173,7 +173,7 @@ export class CityEvents {
       organization: 'Cleveland Yacht Club',
       date: 'Sat 9/28, 10:00 AM',
       location: 'Cleveland, OH',
-      views: '43 views',
+      views: '43',
       image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sat',
       day: '28'
@@ -183,7 +183,7 @@ export class CityEvents {
       organization: 'Miami Sports',
       date: 'Sun 9/29, 9:00 AM',
       location: 'Miami, FL',
-      views: '145 views',
+      views: '145',
       image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sun',
       day: '29'
@@ -193,7 +193,7 @@ export class CityEvents {
       organization: 'Miami Nights',
       date: 'Fri 10/4, 10:00 PM',
       location: 'Miami, FL',
-      views: '267 views',
+      views: '267',
       image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Fri',
       day: '4'
@@ -203,7 +203,7 @@ export class CityEvents {
       organization: 'Seattle Roasters',
       date: 'Sat 10/5, 10:00 AM',
       location: 'Seattle, WA',
-      views: '89 views',
+      views: '89',
       image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sat',
       day: '5'
@@ -213,7 +213,7 @@ export class CityEvents {
       organization: 'Seattle Tech Hub',
       date: 'Wed 10/9, 6:30 PM',
       location: 'Seattle, WA',
-      views: '112 views',
+      views: '112',
       image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Wed',
       day: '9'
@@ -223,7 +223,7 @@ export class CityEvents {
       organization: 'Boston Heritage',
       date: 'Sun 10/6, 11:00 AM',
       location: 'Boston, MA',
-      views: '56 views',
+      views: '56',
       image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sun',
       day: '6'
@@ -233,7 +233,7 @@ export class CityEvents {
       organization: 'Boston Runners',
       date: 'Sat 10/12, 7:00 AM',
       location: 'Boston, MA',
-      views: '134 views',
+      views: '134',
       image: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sat',
       day: '12'
@@ -243,7 +243,7 @@ export class CityEvents {
       organization: 'LA Entertainment',
       date: 'Thu 10/10, 8:00 PM',
       location: 'Los Angeles, CA',
-      views: '423 views',
+      views: '423',
       image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Thu',
       day: '10'
@@ -253,7 +253,7 @@ export class CityEvents {
       organization: 'LA Beach Sports',
       date: 'Sun 10/13, 7:00 AM',
       location: 'Los Angeles, CA',
-      views: '298 views',
+      views: '298',
       image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Sun',
       day: '13'

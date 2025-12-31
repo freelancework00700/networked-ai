@@ -1,4 +1,16 @@
 ::ng-deep {
+  .p-editor .p-editor-toolbar {
+    overflow: visible !important;
+  }
+
+  .p-editor .ql-picker-options {
+    background-color: var(--p-editor-overlay-background, #fff) !important;
+    border: 1px solid var(--p-editor-overlay-border-color, #d1d5db);
+    box-shadow: var(--p-editor-overlay-shadow, 0 8px 24px rgba(0, 0, 0, 0.12));
+    border-radius: var(--p-editor-overlay-border-radius, 8px);
+    padding: var(--p-editor-overlay-padding, 8px 0);
+    z-index: 10000;
+  }
   .invalid-editor {
     .p-editor-toolbar {
       border: 1px solid var(--p-inputtext-invalid-border-color) !important;

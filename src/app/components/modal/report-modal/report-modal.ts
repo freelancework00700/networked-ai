@@ -2,7 +2,7 @@ import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TextInput } from '@/components/form/text-input';
-import { inject, signal, Component } from '@angular/core';
+import { inject, signal, Component, Input } from '@angular/core';
 import { IonHeader, IonFooter, IonToolbar } from '@ionic/angular/standalone';
 import { FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
@@ -17,6 +17,7 @@ export class ReportModal {
   private fb = inject(FormBuilder);
   private modalService = inject(ModalService);
 
+  @Input() type: 'Post' | 'Event' = 'Post';
   // signals
   form = signal<FormGroup>(
     this.fb.group({

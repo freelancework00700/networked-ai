@@ -1,0 +1,65 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
+      <div class="pi pi-arrow-left" (click)="navigationService.back()"></div>
+      <div class="body-14M neutral-02 text-center w-full">See User List</div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" mode="md">
+  <div class="min-h-full">
+    <div class="w-full max-w-[672px] mx-auto p-6">
+      <!-- Event Title -->
+      <div class="body-14R neutral-03 mb-4">Atlanta Makes Me Laugh</div>
+
+      <!-- Section Title -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="body-16SB neutral-01">{{ title() }}</div>
+        <div class="body-14M neutral-03">{{ users().length }}</div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="flex items-center justify-between pt-2 pb-4">
+        <searchbar
+          [placeholder]="'Search by username'"
+          [searchQuery]="searchQuery()"
+          (searchChange)="searchQuery.set($event)"
+          (clear)="searchQuery.set('')"
+          class="w-full"
+        />
+      </div>
+
+      <!-- User List -->
+      @for (user of filteredUsers(); track user.id; let i = $index) {
+        <div class="flex items-center gap-3 py-3 border-b border-gray-200">
+          <!-- Profile -->
+          <img [src]="getUserImage(user)" class="w-12 h-12 rounded-full object-cover" />
+          <!-- Details -->
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-medium truncate">{{ user.name }}</span>
+
+              <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
+                <img src="assets/svg/diamondYellow.svg" class="h-4" />
+                <span class="text-xs font-semibold">{{ getUserValue(user) }}</span>
+              </div>
+            </div>
+
+            <div class="text-xs text-gray-500">{{ getUserJobTitle(user) }}, {{ getUserCompany(user) }}</div>
+          </div>
+          <!-- Action Button -->
+          <div>
+            @if (i === 0) {
+              <app-button label="Message" color="secondary" [height]="'32px'" (click)="onMessage(user)" />
+            } @else {
+              <app-button label="Add" [height]="'32px'" (click)="onAdd(user)" />
+            }
+          </div>
+        </div>
+      } @empty {
+        <app-empty-state title="No users found" message="" />
+      }
+    </div>
+  </div>
+</ion-content>

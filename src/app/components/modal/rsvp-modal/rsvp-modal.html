@@ -1,0 +1,142 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex items-center justify-between">
+      <div class="heading-h3 neutral-01">{{ eventTitle }}</div>
+      <i class="pi pi-times cursor-pointer text-xl" (click)="close()"></i>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content mode="md">
+  <div class="px-4">
+    <div class="px-4 py-4 flex flex-col gap-4">
+      @for (ticket of ticketsData(); track ticket.id) {
+        <div
+          class="flex flex-col rounded-lg overflow-hidden mb-4"
+          [class.ticket-early-bird]="ticket.ticket_type === 'early-bird'"
+          [class.ticket-standard]="ticket.ticket_type === 'free' || ticket.ticket_type === 'standard'"
+          [class.ticket-sponsor]="ticket.ticket_type === 'sponsor'"
+        >
+          <!-- Ticket Type Banner -->
+          @if (ticket.ticket_type === 'early-bird') {
+            <div class="relative w-full">
+              <img [src]="getTicketChipImage(ticket.ticket_type)" class="w-full h-[30px] object-cover" />
+            </div>
+          }
+
+          <div class="p-4 flex flex-col gap-1">
+            <!-- Header: Name, Price, Status -->
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex flex-col flex-1">
+                <div class="flex items-center gap-2">
+                  <div class="body-16SB neutral-01">{{ ticket.name }}</div>
+                  @if (ticket.ticket_type === 'sponsor') {
+                    <ion-icon src="assets/svg/crown-sponsor.svg" class="w-[20px] h-[20px]" />
+                  }
+                </div>
+                <div class="body-16SB neutral-02">${{ formatPrice(ticket.price) }}</div>
+                @if (ticket.status === 'available' && ticket.remainingQuantity !== undefined && ticket.remainingQuantity <= 30) {
+                  <div class="text-sm font-semibold accent-red">{{ ticket.remainingQuantity }} tickets left</div>
+                }
+              </div>
+              <div class="flex items-center gap-3">
+                @if (ticket.status === 'available') {
+                  <div class="flex items-center">
+                    <app-button
+                      [label]="'−'"
+                      (click)="decrementQuantity(ticket)"
+                      [disabled]="!canDecrement(ticket)"
+                      variant="outlined"
+                      color="secondary"
+                      width="30px"
+                      height="30px"
+                    />
+                    <app-button [label]="ticket.selectedQuantity?.toString() ?? '0'" variant="text" color="contrast" width="30px" height="30px" />
+                    <app-button
+                      [label]="'+'"
+                      (click)="incrementQuantity(ticket)"
+                      [disabled]="!canIncrement(ticket)"
+                      variant="outlined"
+                      color="secondary"
+                      width="30px"
+                      height="30px"
+                    />
+                  </div>
+                } @else {
+                  <div [class]="'px-2 py-1 rounded-lg body-12M flex items-center gap-1 ' + getStatusBadgeClass(ticket.status)">
+                    @if (ticket.status === 'upcoming') {
+                      <i class="pi pi-clock text-xs" [class]="getStatusIconClass(ticket.status)"></i>
+                    }
+                    <span [class]="getStatusIconClass(ticket.status)">{{ getStatusText(ticket) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            @if (ticket.description) {
+              <div class="body-14R neutral-03">
+                {{ ticket.description }}
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Promo Code Section -->
+      @if (hasPromoCodes()) {
+        <div class="flex flex-col">
+          <!-- Promo Code Input -->
+          <div class="flex items-center gap-2 border border-surface-300 rounded-lg p-3">
+            <ion-icon src="assets/svg/ticket/ticket.svg" alt="ticket" class="w-[18px] h-[15px]" />
+            <input
+              type="text"
+              class="flex-1 border-none outline-none body-14R neutral-01 bg-transparent"
+              placeholder="Enter Promo Code"
+              [value]="promoCode()"
+              (input)="onPromoCodeChange($any($event.target).value)"
+            />
+            <button class="text-primary body-14M font-medium" (click)="applyPromoCode()">Apply</button>
+          </div>
+
+          <!-- Success Message -->
+          @if (isPromoCodeApplied()) {
+            <div class="flex items-center gap-3 p-2 text-primary">
+              <div class="pi pi-check-circle text-brand-03 text-xl flex-shrink-0"></div>
+              <span class="body-14M flex-1"> You saved ${{ discountAmount().toFixed(2) }} on your RSVP </span>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Questionnaire Requirement -->
+      @if (hasQuestionnaire()) {
+        <div class="flex items-center gap-3 bg-gray-200 rounded-lg p-2">
+          <div class="bg-accent-red rounded-lg p-1">
+            <ion-icon src="assets/svg/questionnaire.svg" alt="questionnaire" class="w-[18px] h-[18px]" />
+          </div>
+          <span class="body-14M neutral-01">A short questionnaire is required to complete RSVP.</span>
+        </div>
+      }
+
+      @if (hasSubscription()) {
+        <div class="flex items-center gap-3 border border-blue-500 rounded-lg p-2">
+          <div class="bg-blue-500 rounded-lg p-2">
+            <ion-icon src="assets/svg/crown-white.svg" alt="questionnaire" class="w-[18px] h-[18px]" />
+          </div>
+          <div>
+            <div class="body-14M neutral-01">RSVP Now for Free!</div>
+            <div class="body-12M neutral-03">Limited to 1 free ticket per subscriber</div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4">
+      <app-button [label]="'Continue - $' + formattedTotal()" (click)="dismiss()" [disabled]="!hasSelectedTickets()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

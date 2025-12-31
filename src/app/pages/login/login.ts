@@ -11,10 +11,10 @@ import { MobileInput } from '@/components/form/mobile-input';
 import { BaseApiService } from '@/services/base-api.service';
 import { PasswordInput } from '@/components/form/password-input';
 import { NavigationService } from '@/services/navigation.service';
+import { IonIcon, ModalController } from '@ionic/angular/standalone';
 import { SocialLoginButtons } from '@/components/common/social-login-buttons';
-import { IonIcon, IonContent, ModalController } from '@ionic/angular/standalone';
-import { signal, inject, Component, viewChild, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { signal, inject, Component, viewChild, OnInit, OnDestroy, Input } from '@angular/core';
 
 interface LoginForm {
   email?: FormControl<string | null>;
@@ -28,9 +28,11 @@ type LoginMethod = 'email' | 'mobile';
   selector: 'login',
   styleUrl: './login.scss',
   templateUrl: './login.html',
-  imports: [Button, IonIcon, OtpInput, IonContent, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule]
+  imports: [Button, IonIcon, OtpInput, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule]
 })
 export class Login implements OnInit, OnDestroy {
+  @Input() onLoginSuccess: () => void = () => {};
+  @Input() isRsvpModal: boolean = false;
   // services
   router = inject(Router);
   fb = inject(FormBuilder);
@@ -111,12 +113,17 @@ export class Login implements OnInit, OnDestroy {
       // login with email and password
       const { email, password } = this.loginForm().value;
       await this.authService.login({ email: email!, password: password! });
-      this.navigationService.navigateForward('/', true);
+      if (this.isRsvpModal) {
+        this.onLoginSuccess();
+      } else {
+        this.navigationService.navigateForward('/', true);
+      }
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to login.');
       this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
+
       await this.modalService.close();
     }
   }
@@ -163,7 +170,11 @@ export class Login implements OnInit, OnDestroy {
       this.isLoading.set(true);
       await this.modalService.openLoadingModal('Signing you in...');
       await this.authService.login({ mobile: this.phoneNumber(), otp });
-      this.navigationService.navigateForward('/', true);
+      if (this.isRsvpModal) {
+        this.onLoginSuccess();
+      } else {
+        this.navigationService.navigateForward('/', true);
+      }
     } catch (error) {
       this.isInvalidOtp.set(true);
       const message = BaseApiService.getErrorMessage(error, 'Invalid or expired OTP.');
@@ -201,6 +212,39 @@ export class Login implements OnInit, OnDestroy {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  goToSignup() {
+    if (this.isRsvpModal) {
+      this.modalCtrl.dismiss();
+      this.modalService.openSignupModal();
+    } else {
+      this.navigationService.navigateForward('/signup', true);
+    }
+  }
+
+  async goToTerms() {
+    if (this.isRsvpModal) {
+      await this.modalService.dismissAllModals();
+    }
+
+    this.navigationService.navigateForward('/terms');
+  }
+
+  async goToPrivacyPolicy() {
+    if (this.isRsvpModal) {
+      await this.modalService.dismissAllModals();
+    }
+
+    this.navigationService.navigateForward('/policy');
+  }
+
+  async goToForgotPassword() {
+    if (this.isRsvpModal) {
+      await this.modalService.dismissAllModals();
+    }
+
+    this.navigationService.navigateForward('/forgot-password');
   }
 
   ngOnDestroy() {

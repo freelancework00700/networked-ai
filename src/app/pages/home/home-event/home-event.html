@@ -22,7 +22,7 @@
     <div class="px-4">
       <div class="flex items-center justify-between">
         <div class="body-16SB neutral-01">My Upcoming Events</div>
-        <button type="button" class="body-14SB brand-02" (click)="navCtrl.navigateForward('/all-events')">See all</button>
+        <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all',true)">See all</button>
       </div>
     </div>
 
@@ -40,7 +40,7 @@
     <div class="px-4">
       <div class="flex items-center justify-between">
         <div class="body-16SB neutral-01">Browse events by cities</div>
-        <button type="button" class="body-14SB brand-02" (click)="navCtrl.navigateForward('/city-events')">See all</button>
+        <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/city',true)">See all</button>
       </div>
     </div>
 
@@ -60,7 +60,7 @@
     <div class="px-4">
       <div class="flex items-center justify-between">
         <div class="body-16SB neutral-01">Events for you</div>
-        <button type="button" class="body-14SB brand-02" (click)="navCtrl.navigateForward('/all-events')">See all</button>
+        <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all',true)">See all</button>
       </div>
     </div>
 
@@ -173,7 +173,7 @@
     <div class="px-4">
       <div class="flex items-center justify-between">
         <div class="body-16SB neutral-01">Public events</div>
-        <button type="button" class="body-14SB brand-02" (click)="navCtrl.navigateForward('/all-events')">See all</button>
+          <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all',true)">See all</button>
       </div>
     </div>
 

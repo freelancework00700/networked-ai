@@ -1,0 +1,30 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 text-center text-sm text-surface-600">{{ subtitle }}</div>
+  </ion-toolbar>
+</ion-header>
+
+<div class="inner-content px-4">
+  <ion-grid>
+    <ion-row>
+      @for (tag of tags; track tag.value) {
+        <div class="p-1">
+          <button type="button" class="tag-button" [class.active]="isTagSelected(tag.value)" (click)="toggleTag(tag.value)">
+            <span [innerHTML]="tag.icon" class="pr-1"></span>
+            <span>{{ tag.name }}</span>
+
+            <i class="pi pi-times close-icon" [class.visible]="isTagSelected(tag.value)"></i>
+          </button>
+        </div>
+      }
+    </ion-row>
+  </ion-grid>
+</div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4">
+      <app-button label="Confirm" (click)="confirm()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

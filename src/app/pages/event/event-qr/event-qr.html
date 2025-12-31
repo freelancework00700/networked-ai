@@ -1,0 +1,72 @@
+<ion-header mode="md">
+  <ion-toolbar>
+    <div class="flex items-center gap-2 px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
+      <i class="pi pi-arrow-left" (click)="back()"></i>
+      <div class="body-14M text-center w-full">Event QR</div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen mode="md">
+  <div class="h-full flex justify-center">
+    <div class="w-full max-w-[672px] p-6 flex flex-col">
+      <div class="relative rounded-[28px] p-1 border-3 border-surface-400 flex-1">
+        <div class="relative h-full rounded-[28px] overflow-hidden text-white">
+          <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('assets/images/profile.jpeg')"></div>
+          <div class="absolute inset-0 bg-black/30"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-4">
+            <div class="detail-card">
+              <div class="heading-h2">DJ Set at Scarlett Club</div>
+              <div class="text-white mb-4">Networked AI</div>
+
+              <div class="flex justify-center mb-6">
+                <img src="assets/svg/QR.svg" alt="QR Code" class="w-40 h-40 bg-white p-2 rounded-lg" />
+              </div>
+
+              <div class="flex items-center gap-4 mb-4">
+                <div class="border border-surface-400 rounded-full p-3">
+                  <i class="pi pi-calendar"></i>
+                </div>
+                <div>
+                  <div class="body-14M">Saturday, Sep 19</div>
+                  <div class="text-surface-400">9:00PM to 3:00AM EST</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-4">
+                <div class="border border-surface-400 rounded-full p-3">
+                  <i class="pi pi-map-marker"></i>
+                </div>
+                <div>
+                  <div class="body-14M">Scarlett Saturdays</div>
+                  <div class="text-surface-400">San Francisco, California</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 flex flex-col gap-3">
+        <app-button
+          label="Share"
+          iconName="pi pi-upload"
+          iconPos="right"
+          color="secondary"
+          (click)="shareQR()"
+          [isLoading]="isShareLoading()"
+          [disabled]="isShareLoading()"
+        />
+        <app-button
+          label="Download"
+          iconName="pi pi-download"
+          iconPos="right"
+          color="secondary"
+          (click)="downloadQR()"
+          [isLoading]="isDownloadLoading()"
+          [disabled]="isDownloadLoading()"
+        />
+      </div>
+    </div>
+  </div>
+</ion-content>

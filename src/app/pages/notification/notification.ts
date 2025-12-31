@@ -3,6 +3,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { INotification, NotificationFilter } from '@/interfaces/INotification';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { IonContent, IonHeader, IonIcon, IonToolbar, NavController } from '@ionic/angular/standalone';
+import { ModalService } from '@/services/modal.service';
 
 @Component({
   selector: 'notification',
@@ -25,7 +26,7 @@ export class Notification {
   ];
 
   notificationFilter = signal<NotificationFilter>('all');
-
+  modalService = inject(ModalService);
   notifications = signal<INotification[]>([
     {
       id: '1',
@@ -767,6 +768,48 @@ export class Notification {
     return actionMap[notification.type] || null;
   }
 
+  private staticQuestionnaire = [
+    {
+      question: 'What is your name?',
+      type: 'text',
+      required: true,
+      visibility: 'public'
+    },
+    {
+      question: 'What is your age?',
+      type: 'number',
+      required: false,
+      visibility: 'public'
+    },
+    {
+      question: 'What is your phone number?',
+      type: 'phone',
+      required: true,
+      visibility: 'private'
+    },
+    {
+      question: 'What is your gender?',
+      type: 'single',
+      required: true,
+      visibility: 'private',
+      options: ['Male', 'Female', 'Other']
+    },
+    {
+      question: 'What is your hobbies?',
+      type: 'multiple',
+      required: false,
+      visibility: 'public',
+      options: ['Reading', 'Writing', 'Other']
+    },
+    {
+      question: 'What is your rating?',
+      type: 'rating',
+      required: true,
+      visibility: 'public',
+      scale: 5
+    }
+  ];
+
   hasEventCard(notification: INotification): boolean {
     const eventCardTypes = ['cohost-invitation', 'sponsor-invitation', 'speaker-invitation', 'event-reminder', 'new-event'];
     return eventCardTypes.includes(notification.type) && !!notification.event;
@@ -923,7 +966,17 @@ export class Notification {
     console.log('View event details');
   }
 
-  shareFeedback(): void {
+  async shareFeedback(): Promise<void> {
+    await this.modalService.openQuestionnairePreviewModal(
+      this.staticQuestionnaire,
+      false,
+      undefined,
+      'Atlanta Makes Me Laugh',
+      'Fri 8/30, 07:00AM - 09:30AM',
+      'Bar Diver Atlanta, GA 50412',
+      'test_id'
+    );
+
     console.log('Share feedback');
   }
 

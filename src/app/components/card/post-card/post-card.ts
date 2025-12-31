@@ -153,7 +153,7 @@ export class PostCard {
   }
 
   async reportPost() {
-    const result = await this.modalService.openReportModal();
+    const result = await this.modalService.openReportModal('Post');
     if (!result) return;
     const resultModal = await this.modalService.openConfirmModal({
       icon: 'assets/svg/deleteWhiteIcon.svg',
