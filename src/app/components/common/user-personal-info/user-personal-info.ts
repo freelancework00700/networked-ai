@@ -86,4 +86,8 @@ export class UserPersonalInfo {
     const { address, latitude, longitude } = await this.modalService.openLocationModal(currentAddress);
     this.formGroup().patchValue({ address, latitude, longitude });
   }
+
+  getMaxDate(): string {
+    return new Date().toISOString().split('T')[0];
+  }
 }

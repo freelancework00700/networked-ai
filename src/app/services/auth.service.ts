@@ -132,6 +132,7 @@ export class AuthService extends BaseApiService {
       this.setActiveAccount({ ...user, token: response.data.token });
     }
 
+    await FirebaseAuthentication.signOut();
     return response;
   }
 

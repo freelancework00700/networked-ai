@@ -86,8 +86,7 @@ export class LocationModal implements OnInit {
         distinctUntilChanged(),
         switchMap((query: string) => {
           if (!query || query.trim().length < 2) {
-            this.searchResults.set([]);
-            return of([]);
+            return this.searchLocations('Atlanta, GA');
           }
           return this.searchLocations(query);
         })
