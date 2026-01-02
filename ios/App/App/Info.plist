@@ -107,5 +107,9 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+
+	<!-- disable encryption -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
