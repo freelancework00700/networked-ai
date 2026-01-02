@@ -1,6 +1,6 @@
 import { Observable, firstValueFrom } from 'rxjs';
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 
 export interface ApiError {
   error?: any;
@@ -57,9 +57,9 @@ export class BaseApiService {
   }
 
   // GET request
-  protected async get<T>(url: string): Promise<T> {
+  protected async get<T>(url: string, options?: { params?: HttpParams }): Promise<T> {
     try {
-      return await firstValueFrom(this.http.get<T>(url));
+      return await firstValueFrom(this.http.get<T>(url, options));
     } catch (error) {
       return this.handleError(error);
     }
