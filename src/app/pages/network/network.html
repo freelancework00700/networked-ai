@@ -39,7 +39,10 @@
   @if (isLoggedIn()) {
     <div class="w-full max-w-[672px] mx-auto p-4 pt-0 relative h-full">
       @if (segmentValue() === 'list') {
-        <network-list-view [users]="filteredSuggestions()" (clearSearch)="searchQuery.set('')" />
+        <network-list-view 
+          [searchQuery]="searchQuery()"
+          (clearSearch)="searchQuery.set('')" 
+        />
       } @else {
         <network-map-view [users]="filteredSuggestions()" [radius]="radius()" />
       }

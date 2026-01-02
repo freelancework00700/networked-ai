@@ -1,6 +1,4 @@
-@for (user of users(); track user.id) {
-  <user-card-list [user]="user" (handleClick)="handleClick($event)" />
-} @empty {
+@if (users().length === 0) {
   <app-empty-state
     title="No Network Found"
     message="Check your spelling or try searching for a different keyword."
@@ -9,4 +7,14 @@
     [showClearButton]="true"
     (clear)="clearSearch.emit()"
   />
+} @else {
+  @for (user of users(); track user.id) {
+    <user-card-list [user]="user" (handleClick)="handleClick($event)" />
+  }
+  
+  @if (hasMore()) {
+    <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreUsers($event)">
+      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more users..." />
+    </ion-infinite-scroll>
+  }
 }

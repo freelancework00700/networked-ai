@@ -152,6 +152,10 @@ export const serverRoutes: ServerRoute[] = [
     path: 'subscriptions',
     renderMode: RenderMode.Client
   },
+  {
+    path: ':username',
+    renderMode: RenderMode.Server
+  },
   // catch-all for any other routes
   {
     path: '**',

@@ -15,7 +15,7 @@
           [ngSrc]="getImageUrl(account.thumbnail_url)" 
         />
       </div>
-      <span class="body-14M neutral-01">{{ account.name }}</span>
+      <span class="body-14M neutral-01">{{ account.name || account.username }}</span>
     </div>
   }
 

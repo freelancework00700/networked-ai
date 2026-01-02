@@ -2,8 +2,9 @@ import { of, Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { map, catchError } from 'rxjs/operators';
 import { inject, Injectable } from '@angular/core';
+import { HttpParams } from '@angular/common/http';
 import { BaseApiService } from '@/services/base-api.service';
-import { IUser, VibeItem, IUserResponse } from '@/interfaces/IUser';
+import { IUser, VibeItem, IUserResponse, UserSearchResponse, UserSearchApiResponse } from '@/interfaces/IUser';
 
 @Injectable({ providedIn: 'root' })
 export class UserService extends BaseApiService {
@@ -174,6 +175,33 @@ export class UserService extends BaseApiService {
       return response?.data || [];
     } catch (error) {
       console.error('Error fetching interests:', error);
+      throw error;
+    }
+  }
+
+  // search users
+  async searchUsers(value: string, page: number = 1, limit: number = 10): Promise<UserSearchResponse> {
+    try {
+      let params = new HttpParams();
+      
+      if (value && value.trim()) {
+        params = params.set('value', value.trim());
+      }
+      if (page) {
+        params = params.set('page', page.toString());
+      }
+      if (limit) {
+        params = params.set('limit', limit.toString());
+      }
+
+      const response = await this.get<UserSearchApiResponse>('/users/search/', { params });
+
+      const users = response?.data?.data || [];
+      const pagination = response?.data?.pagination || { totalCount: 0, currentPage: 1, totalPages: 0 };
+
+      return { users, pagination };
+    } catch (error) {
+      console.error('Error searching users:', error);
       throw error;
     }
   }

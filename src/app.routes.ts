@@ -130,7 +130,10 @@ export const appRoutes: Routes = [
     path: 'subscriptions',
     loadComponent: () => import('@/pages/subscriptions').then((m) => m.Subscriptions)
   },
-  // Not found (keep eager as it's small and always needed)
   { path: 'not-found', component: NotFound },
+  {
+    path: ':username',
+    loadComponent: () => import('@/pages/profile/profile').then((m) => m.Profile)
+  },
   { path: '**', redirectTo: '/not-found' }
 ];

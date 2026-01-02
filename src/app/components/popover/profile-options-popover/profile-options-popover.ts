@@ -13,6 +13,11 @@ export class ProfileOptionsPopover {
   private popoverCtrl = inject(PopoverController);
   private navigationService = inject(NavigationService);
 
+  async openLikedEvents(): Promise<void> {
+    this.navigationService.navigateForward('/event/all');
+    await this.popoverCtrl.dismiss();
+  }
+
   async openSetting(): Promise<void> {
     this.navigationService.navigateForward('/settings');
     await this.popoverCtrl.dismiss();

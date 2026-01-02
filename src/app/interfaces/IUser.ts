@@ -52,7 +52,8 @@ export interface IUser {
   interests?: VibeItem[];
   hobby_ids?: string[];
   hobbies?: VibeItem[];
-  networks?: number;
+  total_networks?: number;
+  connection_status?: string;
 }
 
 export interface IUserResponse {
@@ -66,4 +67,24 @@ export interface VibeItem {
   name: string;
   icon: string;
   description?: string;
+}
+
+export interface UserSearchPagination {
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+}
+
+export interface UserSearchResponse {
+  users: IUser[];
+  pagination: UserSearchPagination;
+}
+
+export interface UserSearchApiResponse {
+  success: boolean;
+  message: string;
+  data: {
+    data?: IUser[];
+    pagination?: UserSearchPagination;
+  };
 }

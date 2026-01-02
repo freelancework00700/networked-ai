@@ -30,107 +30,109 @@ export class Network {
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
   filteredSuggestions = computed(() => {
-    const search = this.searchQuery().toLowerCase().trim();
-
-    if (!search) {
-      return this.networkSuggestions;
-    }
-
-    return this.networkSuggestions.filter(
-      (s) => s.name.toLowerCase().includes(search) || s.jobTitle.toLowerCase().includes(search) || s.company.toLowerCase().includes(search)
-    );
+    return this.networkSuggestions;
   });
 
-  networkSuggestions = [
+  networkSuggestions: any[] = [
     {
       id: '1',
       name: 'Kathryn Murphy',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.390648, lat: 33.748533 }
+      title: 'Founder & CEO',
+      company_name: 'Cortazzo Consulting',
+      total_gamification_points: 200,
+      connection_status: 'Connected',
+      latitude: 33.748533,
+      longitude: -84.390648
     },
     {
       id: '2',
       name: 'Esther Howard',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.395, lat: 33.75 }
+      title: 'Founder & CEO',
+      company_name: 'Cortazzo Consulting',
+      total_gamification_points: 200,
+      connection_status: 'Connected',
+      latitude: 33.75,
+      longitude: -84.395
     },
     {
       id: '3',
       name: 'Arlene McCoy',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: false,
-      langLocation: { lng: -84.385, lat: 33.745 }
+      title: 'Founder & CEO',
+      company_name: 'Cortazzo Consulting',
+      total_gamification_points: 200,
+      connection_status: 'NotConnected',
+      latitude: 33.745,
+      longitude: -84.385
     },
     {
       id: '4',
       name: 'Darlene Robertson',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.392, lat: 33.747 }
+      title: 'Founder & CEO',
+      company_name: 'Cortazzo Consulting',
+      total_gamification_points: 200,
+      connection_status: 'Connected',
+      latitude: 33.747,
+      longitude: -84.392
     },
     {
       id: '5',
       name: 'Ronald Richards',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.388, lat: 33.749 }
+      title: 'Founder & CEO',
+      company_name: 'Cortazzo Consulting',
+      total_gamification_points: 200,
+      connection_status: 'Connected',
+      latitude: 33.749,
+      longitude: -84.388
     },
     {
       id: '6',
       name: 'Albert Flores',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.391, lat: 33.746 }
+      title: 'Founder & CEO',
+      company_name: 'Cortazzo Consulting',
+      total_gamification_points: 200,
+      connection_status: 'Connected',
+      latitude: 33.746,
+      longitude: -84.391
     },
     {
       id: '7',
       name: 'Eleanor Pena',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: false,
-      langLocation: { lng: -84.387, lat: 33.744 }
+      title: 'Founder & CEO',
+      company_name: 'Cortazzo Consulting',
+      total_gamification_points: 200,
+      connection_status: 'NotConnected',
+      latitude: 33.744,
+      longitude: -84.387
     },
     {
       id: '8',
       name: 'Savannah Nguyen',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.394, lat: 33.751 }
+      title: 'Founder & CEO',
+      company_name: 'Cortazzo Consulting',
+      total_gamification_points: 200,
+      connection_status: 'Connected',
+      latitude: 33.751,
+      longitude: -84.394
     },
     {
       id: '9',
       name: 'Guy Hawkins',
-      value: 200,
-      jobTitle: 'CTO',
-      company: 'Cortazzo Consulting',
-      networked: false,
-      langLocation: { lng: -84.389, lat: 33.748 }
+      title: 'CTO',
+      company_name: 'Cortazzo Consulting',
+      total_gamification_points: 200,
+      connection_status: 'NotConnected',
+      latitude: 33.748,
+      longitude: -84.389
     },
     {
       id: '10',
       name: 'Cody Fisher',
-      value: 200,
-      jobTitle: 'CFO',
-      company: 'Cortazzo Consulting',
-      myProfile: true,
-      langLocation: { lng: -84.386, lat: 33.7475 }
+      title: 'CFO',
+      company_name: 'Cortazzo Consulting',
+      total_gamification_points: 200,
+      connection_status: 'NotConnected',
+      latitude: 33.7475,
+      longitude: -84.386
     }
   ];
 

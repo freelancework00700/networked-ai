@@ -95,8 +95,8 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
 
   private getMapCenter(): MapCenter {
     const firstUser = this.users()[0];
-    if (firstUser?.langLocation) {
-      return [firstUser.langLocation.lng, firstUser.langLocation.lat];
+    if (firstUser?.longitude && firstUser?.latitude) {
+      return [firstUser.longitude, firstUser.latitude];
     }
     return this.DEFAULT_CENTER;
   }
@@ -162,10 +162,10 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
     this.markers = [];
 
     users.forEach((user) => {
-      if (!user.langLocation?.lng || !user.langLocation?.lat) return;
+      if (!user.longitude || !user.latitude) return;
 
       const markerElement = this.createMarkerElement(user);
-      const position = this.getAdjustedPosition(user.langLocation.lng, user.langLocation.lat);
+      const position = this.getAdjustedPosition(user.longitude, user.latitude);
 
       const marker = new Maptiler.Marker({ element: markerElement }).setLngLat(position).addTo(this.map!);
 
@@ -183,7 +183,8 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
 
     const img = this.document.createElement('div');
     img.className = 'custom-marker';
-    img.style.backgroundImage = `url(${user.avatar || 'assets/images/profile.jpeg'})`;
+    const imageUrl = user.thumbnail_url || user.image_url || 'assets/images/profile.jpeg';
+    img.style.backgroundImage = `url(${imageUrl})`;
 
     container.appendChild(img);
     return container;

@@ -9,17 +9,31 @@ import { AuthEmptyState } from '@/components/common/auth-empty-state';
 import { NetworkingScoreCard } from '@/components/card/networking-score-card';
 import { ProfileHeaderToolbar } from '@/components/common/profile-header-toolbar';
 import { ProfileAchievement } from '@/pages/profile/components/profile-achievement';
-import { ProfileLikedEvents } from '@/pages/profile/components/profile-liked-events';
 import { ProfilePosts } from '@/pages/profile/components/profile-posts/profile-posts';
 import { ProfileHostedEvents } from '@/pages/profile/components/profile-hosted-events';
 import { ProfileUpcomingEvents } from '@/pages/profile/components/profile-upcoming-events';
 import { ProfileAttendedEvents } from '@/pages/profile/components/profile-attended-events';
-import { IonIcon, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
-import { inject, Component, AfterViewInit, signal, computed, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
+import { IonIcon, IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
+import {
+  inject,
+  Component,
+  AfterViewInit,
+  OnDestroy,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  PLATFORM_ID,
+  effect,
+  input
+} from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { onImageError } from '@/utils/helper';
+import { NavigationService } from '@/services/navigation.service';
+import { UserService } from '@/services/user.service';
+import { ProfileImagePreviewOverlay } from '@/components/modal/profile-image-preview-overlay';
+import { PopoverService } from '@/services/popover.service';
 
-type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement' | 'liked-events';
+type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
 interface TabConfig {
   icon: string;
@@ -42,35 +56,87 @@ interface TabConfig {
     BusinessCard,
     ProfilePosts,
     AuthEmptyState,
-    ProfileLikedEvents,
     ProfileAchievement,
     NetworkingScoreCard,
     ProfileHostedEvents,
     ProfileHeaderToolbar,
     ProfileAttendedEvents,
     ProfileUpcomingEvents,
-    NgOptimizedImage
+    NgOptimizedImage,
+    ProfileImagePreviewOverlay
   ]
 })
 export class Profile implements AfterViewInit {
+  // Route username param
+  username = input<string>();
   // services
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   private platformId = inject(PLATFORM_ID);
   private authService = inject(AuthService);
+  private userService = inject(UserService);
+  private popoverService = inject(PopoverService);
 
   // computed & signals
   currentSlide = signal<ProfileTabs>('hosted-events');
   isLoggedIn = computed(() => !!this.authService.currentUser());
-  currentUser = this.authService.currentUser;
+  currentUser = signal<any>(null);
+  isViewingOtherProfile = computed(() => {
+    const loggedInUser = this.authService.currentUser();
+    const viewedUser = this.currentUser();
+    if (!loggedInUser || !viewedUser) return false;
+    return (viewedUser.id && viewedUser.id !== loggedInUser.id);
+  });
+  showImagePreview = signal<boolean>(false);
   profileImage = computed(() => {
     const user = this.currentUser();
-    if (user?.thumbnail_url) return user.thumbnail_url;
-    return '/assets/images/profile.jpeg';
+    return user?.thumbnail_url || '/assets/images/profile.jpeg';
   });
   eventsCount = computed(() => {
     const user = this.currentUser();
     return (user?.total_events_hosted || 0) + (user?.total_events_cohosted || 0) + (user?.total_events_sponsored || 0);
   });
+
+  achievementDiamondPath = computed(() => {
+    const points = this.currentUser()?.total_gamification_points || 0;
+    
+    if (points >= 50000) {
+      return '/assets/svg/gamification/diamond-50k.svg';
+    } else if (points >= 40000) {
+      return '/assets/svg/gamification/diamond-40k.svg';
+    } else if (points >= 30000) {
+      return '/assets/svg/gamification/diamond-30k.svg';
+    } else if (points >= 20000) {
+      return '/assets/svg/gamification/diamond-20k.svg';
+    } else if (points >= 10000) {
+      return '/assets/svg/gamification/diamond-10k.svg';
+    } else if (points >= 5000) {
+      return '/assets/svg/gamification/diamond-5k.svg';
+    } else {
+      return '/assets/svg/gamification/diamond-1k.svg';
+    }
+  });
+
+  constructor() {
+    effect(() => {
+      const username = this.username();
+      if (username) {
+        this.loadUserByUsername(username);
+      } else {
+        this.currentUser.set(this.authService.currentUser());
+      }
+    });
+  }
+
+  private async loadUserByUsername(username: string): Promise<void> {
+    try {
+      const user = await this.userService.getUser(username);
+      console.log('user', user);
+      this.currentUser.set(user);
+    } catch (error) {
+      console.error('Error loading user:', error);
+      this.navigationService.navigateRoot('/not-found', 'back');
+    }
+  }
 
   // variables
   swiper?: Swiper;
@@ -83,7 +149,7 @@ export class Profile implements AfterViewInit {
       organization: 'Networked AI',
       date: 'Fri 8/30, 7.00AM',
       location: 'Atlanta, GA',
-      views: '12',
+      views: '12 views',
       image: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Fri',
       day: '12'
@@ -93,7 +159,7 @@ export class Profile implements AfterViewInit {
       organization: 'Networked AI',
       date: 'Fri 8/30, 7.00AM',
       location: 'Atlanta, GA',
-      views: '12',
+      views: '12 views',
       image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Tue',
       day: '16'
@@ -103,22 +169,21 @@ export class Profile implements AfterViewInit {
       organization: 'Networked AI',
       date: 'Fri 8/30, 7.00AM',
       location: 'Atlanta, GA',
-      views: '12',
+      views: '12 views',
       image: 'https://images.unsplash.com/photo-1444840535719-195841cb6e2b?auto=format&fit=crop&w=800&q=80',
       dayOfWeek: 'Fri',
       day: '27'
     }
   ];
 
-  readonly tabs: ProfileTabs[] = ['hosted-events', 'attended-events', 'upcoming-events', 'user-posts', 'user-achievement', 'liked-events'];
+  readonly tabs: ProfileTabs[] = ['hosted-events', 'attended-events', 'upcoming-events', 'user-posts', 'user-achievement'];
 
   readonly slides: TabConfig[] = [
     { value: 'hosted-events', icon: '/assets/svg/profile/hosted-events.svg', iconActive: '/assets/svg/profile/hosted-events-active.svg' },
     { value: 'attended-events', icon: '/assets/svg/profile/attended-events.svg', iconActive: '/assets/svg/profile/attended-events-active.svg' },
     { value: 'upcoming-events', icon: '/assets/svg/profile/upcoming-events.svg', iconActive: '/assets/svg/profile/upcoming-events-active.svg' },
     { value: 'user-posts', icon: '/assets/svg/profile/user-posts.svg', iconActive: '/assets/svg/profile/user-posts-active.svg' },
-    { value: 'user-achievement', icon: '/assets/svg/profile/user-achievement.svg', iconActive: '/assets/svg/profile/user-achievement-active.svg' },
-    { value: 'liked-events', icon: '/assets/svg/profile/liked-events.svg', iconActive: '/assets/svg/profile/liked-events-active.svg' }
+    { value: 'user-achievement', icon: '/assets/svg/profile/user-achievement.svg', iconActive: '/assets/svg/profile/user-achievement-active.svg' }
   ];
 
   changeTab(value: ProfileTabs): void {
@@ -128,7 +193,7 @@ export class Profile implements AfterViewInit {
   }
 
   goToCreateEvent(): void {
-    this.navCtrl.navigateForward('/create-event');
+    this.navigationService.navigateForward('/create-event');
   }
 
   ngAfterViewInit(): void {
@@ -156,5 +221,18 @@ export class Profile implements AfterViewInit {
 
   onImageError(event: Event): void {
     onImageError(event);
+  }
+
+  onProfileImageClick(): void {
+    this.showImagePreview.set(true);
+  }
+
+  onCloseImagePreview(): void {
+    this.showImagePreview.set(false);
+  }
+
+  async openProfileOptionsPopover(event: Event): Promise<void> {
+    await this.popoverService.openProfileOptionsPopover(event);
+    this.popoverService.close();
   }
 }

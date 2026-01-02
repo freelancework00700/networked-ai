@@ -24,7 +24,7 @@ export class ProfileHeaderToolbar {
   // computed
   loggedInUserName = computed(() => {
     const currentUser = this.authService.currentUser();
-    return currentUser?.name || 'User';
+    return currentUser?.name || currentUser?.username;
   });
 
   goToNotification(): void {

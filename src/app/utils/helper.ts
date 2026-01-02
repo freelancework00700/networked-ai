@@ -39,7 +39,7 @@ export function maskEmail(email: string): string {
   return firstTwo + maskedMiddle + lastTwo + domain;
 }
 
-export function getImageUrlOrDefault(imageUrl = '', defaultSvgPath = 'assets/svg/triangle-exclamation.svg'): string {
+export function getImageUrlOrDefault(imageUrl = '', defaultSvgPath = 'assets/images/profile.jpeg'): string {
   // return default SVG if image URL is null, undefined, empty, or invalid
   if (!imageUrl || (typeof imageUrl === 'string' && imageUrl.trim() === '')) {
     return defaultSvgPath;
@@ -55,7 +55,7 @@ export function getImageUrlOrDefault(imageUrl = '', defaultSvgPath = 'assets/svg
   }
 }
 
-export function onImageError(event: Event, defaultImagePath = 'assets/svg/triangle-exclamation.svg'): void {
+export function onImageError(event: Event, defaultImagePath = 'assets/images/profile.jpeg'): void {
   const img = event.target as HTMLImageElement;
   
   // hide the failed image
