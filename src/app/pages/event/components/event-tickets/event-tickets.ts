@@ -1,18 +1,19 @@
 import { NavController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
+import { CheckboxModule } from 'primeng/checkbox';
+import { IonIcon } from '@ionic/angular/standalone';
+import { TicketFormData } from '@/interfaces/event';
 import { ModalService } from '@/services/modal.service';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { CheckboxModule } from 'primeng/checkbox';
 import { TicketCard } from '@/components/card/ticket-card';
+import { PromoCodeFormModalData } from '@/interfaces/event';
 import { NumberInput } from '@/components/form/number-input';
+import { ToggleInput } from '@/components/form/toggle-input';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { IonIcon } from '@ionic/angular/standalone';
 import { PromoCodeCard } from '@/components/card/promo-code-card';
-import { TicketFormData } from '@/components/modal/ticket-form-modal';
-import { Ticket, PromoCode, SubscriptionPlan } from '@/interfaces/event';
 import { SubscriptionInput } from '@/pages/event/components/subscription-input';
-import { PromoCodeFormModalData } from '@/components/modal/promo-code-form-modal';
 import { IonReorderGroup, ItemReorderEventDetail } from '@ionic/angular/standalone';
+import { Ticket, PromoCode, SubscriptionPlan, TicketType } from '@/interfaces/event';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal, effect } from '@angular/core';
 
 @Component({
@@ -21,13 +22,14 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal, ef
     IonIcon,
     TicketCard,
     NumberInput,
+    ToggleInput,
     CommonModule,
     PromoCodeCard,
+    CheckboxModule,
     IonReorderGroup,
     SubscriptionInput,
-    ReactiveFormsModule,
     ToggleSwitchModule,
-    CheckboxModule
+    ReactiveFormsModule
   ],
   styleUrl: './event-tickets.scss',
   templateUrl: './event-tickets.html',
@@ -51,11 +53,11 @@ export class EventTickets {
   editingTicketIndex = signal<number | null>(null);
 
   isEventCompletelyFree = computed(() => {
-    return this.tickets().every((ticket) => ticket.is_free_ticket);
+    return this.tickets().every((ticket) => ticket.ticket_type === 'Free');
   });
 
   hasFreeTicket = computed(() => {
-    return this.tickets().some((t) => t.ticket_type === 'free');
+    return this.tickets().some((t) => t.ticket_type === 'Free');
   });
 
   constructor() {
@@ -113,37 +115,44 @@ export class EventTickets {
       id: ticketId || `ticket-${Date.now()}`,
       name: data.name,
       ticket_type: data.ticket_type,
-      is_free_ticket: data.ticket_type === 'free',
-      price: data.ticket_type === 'free' ? '$0.00' : `$${parseFloat(data.price).toFixed(2)}`,
-      quantity: data.quantity,
+      price: data.ticket_type !== 'Free' ? data.price || 0 : 0,
+      available_quantity: data.quantity || null,
       description: data.description || null,
       sale_start_date: data.sale_start_date || null,
+      sale_start_time: data.sale_start_time || null,
       sale_end_date: data.sale_end_date || null,
-      end_sale_on_event_start: data.end_sale_on_event_start
+      sale_end_time: data.sale_end_time || null,
+      end_at_event_start: data.end_at_event_start
     };
   }
 
   createPromoCodeFromFormData(data: PromoCodeFormModalData): PromoCode {
     return {
-      promoCode: data.promoCode,
-      promotion_type: data.promotion_type,
-      promoPresent: data.promoPresent,
+      promo_code: data.promo_code,
+      type: data.type,
+      value: data.value,
       capped_amount: data.capped_amount || null,
       redemption_limit: data.redemption_limit || null,
-      max_use_per_user: data.max_use_per_user || 1
+      max_uses_per_user: data.max_uses_per_user || 1
     };
   }
 
   handleTicketReorder(event: CustomEvent<ItemReorderEventDetail>): void {
     const reorderedTickets = event.detail.complete([...this.tickets()]);
-    this.updateTickets(reorderedTickets);
+    // Update order field based on new position
+    const ticketsWithOrder = reorderedTickets.map((ticket: Ticket, index: number) => ({
+      ...ticket,
+      order: index + 1
+    }));
+    this.updateTickets(ticketsWithOrder);
     event.detail.complete();
   }
 
-  async openTicketModal(ticketType: 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard', initialData?: Partial<TicketFormData>): Promise<void> {
+  async openTicketModal(ticketType: TicketType, initialData?: Partial<TicketFormData>): Promise<void> {
     const eventDate = this.eventForm().get('date')?.value || null;
     const eventStartTime = this.eventForm().get('start_time')?.value || null;
-    const result = await this.modalService.openTicketModal(ticketType, initialData, eventDate, eventStartTime);
+    const eventEndTime = this.eventForm().get('end_time')?.value || null;
+    const result = await this.modalService.openTicketModal(ticketType, initialData, eventDate, eventStartTime, eventEndTime);
 
     if (result?.role === 'save' && result.data) {
       const editingIndex = this.editingTicketIndex();
@@ -170,12 +179,14 @@ export class EventTickets {
     const ticketData: Partial<TicketFormData> & { id?: string } = {
       id: ticket.id,
       name: ticket.name,
-      price: ticket.price.replace('$', ''),
-      quantity: ticket.quantity || null,
+      price: ticket.price || 0,
+      quantity: ticket.available_quantity || null, // Read from available_quantity
       description: (ticket as { description?: string }).description,
       sale_start_date: ticket.sale_start_date || null,
+      sale_start_time: ticket.sale_start_time || null,
       sale_end_date: ticket.sale_end_date || null,
-      end_sale_on_event_start: ticket.end_sale_on_event_start ?? true,
+      sale_end_time: ticket.sale_end_time || null,
+      end_at_event_start: ticket.end_at_event_start ?? true,
       ticket_type: ticket.ticket_type
     };
     await this.openTicketModal(ticket.ticket_type, ticketData);
@@ -187,7 +198,12 @@ export class EventTickets {
 
     const currentTickets = [...this.tickets()];
     currentTickets.splice(index, 1);
-    this.updateTickets(currentTickets);
+    // Update order field for remaining tickets
+    const ticketsWithOrder = currentTickets.map((ticket: Ticket, idx: number) => ({
+      ...ticket,
+      order: idx + 1
+    }));
+    this.updateTickets(ticketsWithOrder);
   }
 
   async createPaidTicket(): Promise<void> {
@@ -227,12 +243,12 @@ export class EventTickets {
     if (!promo) return;
 
     const initialData: Partial<PromoCodeFormModalData> = {
-      promoCode: promo.promoCode,
-      promotion_type: promo.promotion_type,
-      promoPresent: promo.promoPresent,
+      promo_code: promo.promo_code,
+      type: promo.type,
+      value: promo.value,
       capped_amount: promo.capped_amount || null,
       redemption_limit: promo.redemption_limit || null,
-      max_use_per_user: promo.max_use_per_user || 1
+      max_uses_per_user: promo.max_uses_per_user || 1
     };
     await this.openPromoCodeModal(initialData);
   }
@@ -257,9 +273,9 @@ export class EventTickets {
 
   async createTicket(): Promise<void> {
     const ticketType = await this.modalService.openTicketTypeModal(false, this.hasFreeTicket());
-    if (ticketType && ticketType === 'free') {
-      await this.openTicketModal('free');
-    } else if (ticketType && ticketType === 'paid') {
+    if (ticketType && ticketType === 'Free') {
+      await this.openTicketModal('Free');
+    } else if (ticketType && ticketType === 'Paid') {
       this.createPaidTicket();
     }
   }

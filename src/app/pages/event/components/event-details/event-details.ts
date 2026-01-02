@@ -1,9 +1,24 @@
-import { effect, inject, input, signal, computed, ViewChild, Component, ElementRef, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import {
+  effect,
+  inject,
+  input,
+  OnInit,
+  signal,
+  computed,
+  ViewChild,
+  Component,
+  ElementRef,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy
+} from '@angular/core';
 import { Swiper } from 'swiper';
 import { Button } from '@/components/form/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { UserService } from '@/services/user.service';
+import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
 import { CommonModule, DOCUMENT } from '@angular/common';
+import { EventCategory, Vibe } from '@/interfaces/event';
 import { TextInput } from '@/components/form/text-input';
 import { EditorInput } from '@/components/form/editor-input';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -17,45 +32,51 @@ import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Button, TextInput, EditorInput, DragDropModule, CheckboxModule, ReactiveFormsModule, CommonModule]
 })
-export class EventDetails {
-  // Inputs
+export class EventDetails implements OnInit {
   eventForm = input.required<FormGroup>();
   isSubmitted = input(false);
   maxDescriptionLength = 2500;
 
-  // Services
+  userService = inject(UserService);
   modalService = inject(ModalService);
   cd = inject(ChangeDetectorRef);
   document = inject(DOCUMENT);
+  eventService = inject(EventService);
 
-  // Swiper instance
   swiper?: Swiper;
   currentSlide = signal(0);
   @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
 
   // Signals
-  mediaItems = signal<Array<{ id: string; type: string; file?: File; url: string }>>([]);
+  mediaItems = signal<Array<{ id: string; type: string; file?: File; url: string; order?: number }>>([]);
   isCustomize = signal(false);
   descriptionLength = signal(0);
   selectedMetaTags = signal<Set<string>>(new Set());
-  metaTagOptions = signal<Array<{ name: string; icon: string; value: string }>>([
-    { name: 'Agriculture', icon: '🌿', value: 'agriculture' },
-    { name: 'Art & Entertainment', icon: '🎨', value: 'art_entertainment' },
-    { name: 'Business', icon: '💼', value: 'business' },
-    { name: 'Education', icon: '📚', value: 'education' },
-    { name: 'Food & Drink', icon: '🍔', value: 'food_drink' },
-    { name: 'Health & Wellness', icon: '💪', value: 'health_wellness' },
-    { name: 'Music', icon: '🎵', value: 'music' },
-    { name: 'Networking', icon: '🤝', value: 'networking' },
-    { name: 'Sports & Fitness', icon: '⚽', value: 'sports_fitness' },
-    { name: 'Technology', icon: '💻', value: 'technology' },
-    { name: 'Travel', icon: '✈️', value: 'travel' },
-    { name: 'Volunteer', icon: '❤️', value: 'volunteer' }
-  ]);
+  eventCategories = signal<EventCategory[]>([]);
+  vibes = signal<Vibe[]>([]);
+
+  selectedCategoryName = computed(() => {
+    const form = this.eventForm();
+    const categoryId = form.get('category_id')?.value;
+    if (!categoryId) return '';
+
+    const category = this.eventCategories().find((cat) => cat.id === categoryId);
+    return category?.name || '';
+  });
+
+  categoryIdForApi = signal<string>('');
+
+  metaTagOptions = computed(() => {
+    return this.vibes().map((vibe) => ({
+      name: vibe.name,
+      icon: vibe.icon || '🏷️',
+      value: vibe.id
+    }));
+  });
 
   isMetaTagsInvalid = computed(() => {
     const form = this.eventForm();
-    const metaTagsControl = form.get('meta_tags');
+    const metaTagsControl = form.get('vibes');
     const hasSelectedTags = this.selectedMetaTags().size > 0;
     const controlValue = metaTagsControl?.value || [];
     const hasControlValue = Array.isArray(controlValue) && controlValue.length > 0;
@@ -80,17 +101,29 @@ export class EventDetails {
 
   constructor() {
     this.syncFormToSignal('medias', this.mediaItems);
-    this.syncFormToSignal('meta_tags', this.selectedMetaTags);
+    this.syncFormToSignal('vibes', this.selectedMetaTags);
 
     effect(() => {
-      console.log('medias', this.mediaItems());
-
       this.eventForm().get('medias')?.setValue(this.mediaItems());
     });
 
     effect(() => {
       const tags = Array.from(this.selectedMetaTags());
-      this.eventForm().get('meta_tags')?.setValue(tags);
+      this.eventForm().get('vibes')?.setValue(tags);
+    });
+
+    effect(() => {
+      const form = this.eventForm();
+      const categoryControl = form.get('category');
+      const categoryIdControl = form.get('category_id');
+      const categoryId = this.categoryIdForApi() || categoryIdControl?.value;
+
+      if (categoryId && categoryControl && this.eventCategories().length > 0) {
+        const category = this.eventCategories().find((cat) => cat.id === categoryId);
+        if (category?.name) {
+          categoryControl.setValue(category.name, { emitEvent: true });
+        }
+      }
     });
   }
 
@@ -178,16 +211,22 @@ export class EventDetails {
     this.mediaItems.update((items) => {
       const newItems = [...items];
       newItems.splice(index, 1);
-      return newItems;
+      return newItems.map((item, idx) => ({
+        ...item,
+        order: idx + 1
+      }));
     });
     this.refreshSwiper(index - 1);
   }
 
-  drop(event: CdkDragDrop<Array<{ id: string; type: string; file?: File; url: string }>>) {
+  drop(event: CdkDragDrop<Array<{ id: string; type: string; file?: File; url: string; order?: number }>>) {
     this.mediaItems.update((items) => {
       const reordered = [...items];
       moveItemInArray(reordered, event.previousIndex, event.currentIndex);
-      return reordered;
+      return reordered.map((item, index) => ({
+        ...item,
+        order: index + 1
+      }));
     });
     this.refreshSwiper();
   }
@@ -196,19 +235,29 @@ export class EventDetails {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
 
-    const newItems = Array.from(input.files).map((file) => this.createMediaItem(file, file.type.startsWith('video') ? 'video' : 'image'));
-    this.mediaItems.update((list) => [...list, ...newItems]);
+    const currentItems = this.mediaItems();
+    const newItems = Array.from(input.files).map((file, index) => 
+      this.createMediaItem(file, file.type.startsWith('video') ? 'video' : 'image', currentItems.length + index + 1)
+    );
+    this.mediaItems.update((list) => {
+      const updated = [...list, ...newItems];
+      return updated.map((item, idx) => ({
+        ...item,
+        order: idx + 1
+      }));
+    });
     input.value = '';
     this.refreshSwiperAndGoToLast();
   }
 
-  createMediaItem(fileOrUrl: File | string, type: 'image' | 'video' | 'gif'): { id: string; type: string; file?: File; url: string } {
+  createMediaItem(fileOrUrl: File | string, type: 'image' | 'video' | 'gif', order?: number): { id: string; type: string; file?: File; url: string; order?: number } {
     const isFile = fileOrUrl instanceof File;
     return {
       id: crypto.randomUUID(),
       type,
       file: isFile ? fileOrUrl : undefined,
-      url: isFile ? URL.createObjectURL(fileOrUrl) : fileOrUrl
+      url: isFile ? URL.createObjectURL(fileOrUrl) : fileOrUrl,
+      order: order
     };
   }
 
@@ -216,8 +265,15 @@ export class EventDetails {
     const data = await this.modalService.openImageGalleryModal();
     if (!data) return;
 
-    const items = this.toArray(data).map((url) => this.createMediaItem(url, 'image'));
-    this.mediaItems.update((list) => [...list, ...items]);
+    const currentItems = this.mediaItems();
+    const items = this.toArray(data).map((url, index) => this.createMediaItem(url, 'image', currentItems.length + index + 1));
+    this.mediaItems.update((list) => {
+      const updated = [...list, ...items];
+      return updated.map((item, idx) => ({
+        ...item,
+        order: idx + 1
+      }));
+    });
     this.refreshSwiperAndGoToLast();
   }
 
@@ -225,8 +281,15 @@ export class EventDetails {
     const data = await this.modalService.openGifGalleryModal();
     if (!data) return;
 
-    const items = this.toArray(data).map((url) => this.createMediaItem(url, 'gif'));
-    this.mediaItems.update((list) => [...list, ...items]);
+    const currentItems = this.mediaItems();
+    const items = this.toArray(data).map((url, index) => this.createMediaItem(url, 'gif', currentItems.length + index + 1));
+    this.mediaItems.update((list) => {
+      const updated = [...list, ...items];
+      return updated.map((item, idx) => ({
+        ...item,
+        order: idx + 1
+      }));
+    });
     this.refreshSwiperAndGoToLast();
   }
 
@@ -256,19 +319,83 @@ export class EventDetails {
   }
 
   async openLocationModal(): Promise<void> {
-    const { address } = await this.modalService.openLocationModal();
-    this.eventForm().patchValue({ address });
+    const locationData = await this.modalService.openLocationModal();
+    if (locationData) {
+      this.eventForm().patchValue({
+        address: locationData.address || '',
+        latitude: locationData.latitude || '',
+        longitude: locationData.longitude || '',
+        city: locationData.city || '',
+        state: locationData.state || '',
+        country: locationData.country || ''
+      });
+    }
+  }
+
+  async ngOnInit(): Promise<void> {
+    try {
+      const [categories, vibes] = await Promise.all([this.eventService.getEventCategories(), this.userService.getVibes()]);
+
+      this.eventCategories.set(categories || []);
+      this.vibes.set(vibes || []);
+
+      const form = this.eventForm();
+      const existingCategoryId = form.get('category_id')?.value || form.get('category')?.value;
+
+      if (existingCategoryId) {
+        const isUUID = typeof existingCategoryId === 'string' && existingCategoryId.length > 10 && existingCategoryId.includes('-');
+        if (isUUID) {
+          this.categoryIdForApi.set(existingCategoryId);
+        } else if (categories.length > 0) {
+          const matchingCategory = categories.find((cat) => cat.name === existingCategoryId || cat.id === existingCategoryId);
+          if (matchingCategory) {
+            this.categoryIdForApi.set(matchingCategory.id);
+          }
+        }
+      } else if (categories.length > 0) {
+        const firstCategory = categories[0];
+        this.categoryIdForApi.set(firstCategory.id);
+
+        const categoryIdControl = form.get('category_id');
+        if (categoryIdControl) {
+          categoryIdControl.setValue(firstCategory.id);
+        }
+        form.get('category')?.setValue(firstCategory.name, { emitEvent: true });
+      }
+
+      const existingMetaTags = form.get('vibes')?.value || [];
+      if (Array.isArray(existingMetaTags) && existingMetaTags.length > 0) {
+        this.selectedMetaTags.set(new Set(existingMetaTags));
+      }
+    } catch (error) {
+      console.error('Failed to load event categories or vibes:', error);
+    }
   }
 
   async openEventCategoryModal(): Promise<void> {
-    const currentCategory = this.eventForm().get('category')?.value || 'business';
-    const category = await this.modalService.openEventCategoryModal(currentCategory);
-    this.eventForm().get('category')?.setValue(category);
+    const form = this.eventForm();
+    const currentCategoryId = this.categoryIdForApi() || form.get('category_id')?.value || '';
+    const categories = this.eventCategories();
+
+    const selectedCategoryId = await this.modalService.openEventCategoryModal(currentCategoryId, categories);
+    if (selectedCategoryId) {
+      this.categoryIdForApi.set(selectedCategoryId);
+
+      const categoryIdControl = form.get('category_id');
+      if (categoryIdControl) {
+        categoryIdControl.setValue(selectedCategoryId);
+      }
+
+      const selectedCategory = categories.find((cat) => cat.id === selectedCategoryId);
+      if (selectedCategory?.name) {
+        form.get('category')?.setValue(selectedCategory.name, { emitEvent: true });
+      }
+    }
   }
 
   async openNetworkTagModal() {
     const form = this.eventForm();
-    const metaTagsControl = form.get('meta_tags');
+    const metaTagsControl = form.get('vibes');
     const currentSelected = metaTagsControl?.value || [];
 
     const data = await this.modalService.openNetworkTagModal(this.metaTagOptions(), currentSelected);
@@ -290,7 +417,15 @@ export class EventDetails {
   }
 
   getTagByName(value: string): NetworkTag | undefined {
-    return this.metaTagOptions().find((tag) => tag.value === value);
+    const vibe = this.vibes().find((v) => v.id === value);
+    if (vibe) {
+      return {
+        name: vibe.name,
+        icon: vibe.icon || '🏷️',
+        value: vibe.id
+      };
+    }
+    return undefined;
   }
 
   getFieldValue<T>(field: string): T | null {

@@ -1,10 +1,11 @@
+import { IEvent } from '@/interfaces/event';
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
-import { NavController } from '@ionic/angular/standalone';
-import { Searchbar } from '@/components/common/searchbar';
 import { ModalService } from '@/services/modal.service';
+import { EventCard } from '@/components/card/event-card';
+import { Searchbar } from '@/components/common/searchbar';
+import { NavController } from '@ionic/angular/standalone';
 import { EmptyState } from '@/components/common/empty-state';
-import { EventCard, IEvent } from '@/components/card/event-card';
 import { inject, signal, computed, Component } from '@angular/core';
 import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
 

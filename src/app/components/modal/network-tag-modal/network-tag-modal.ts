@@ -1,7 +1,7 @@
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
-import { IonRow, IonGrid, IonHeader, IonFooter, IonToolbar } from '@ionic/angular/standalone';
 import { Input, inject, signal, OnInit, Component, ChangeDetectionStrategy } from '@angular/core';
+import { IonRow, IonGrid, IonHeader, IonFooter, IonToolbar, IonContent } from '@ionic/angular/standalone';
 
 export interface NetworkTag {
   name: string;
@@ -14,7 +14,7 @@ export interface NetworkTag {
   styleUrl: './network-tag-modal.scss',
   templateUrl: './network-tag-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonRow, IonGrid, IonHeader, IonFooter, IonToolbar]
+  imports: [IonContent, Button, IonRow, IonGrid, IonHeader, IonFooter, IonToolbar]
 })
 export class NetworkTagModal implements OnInit {
   // services

@@ -1,9 +1,10 @@
 import { Swiper } from 'swiper';
+import { IEvent } from '@/interfaces/event';
 import { SwiperOptions } from 'swiper/types';
 import { Button } from '@/components/form/button';
 import { UserCard } from '@/components/card/user-card';
+import { EventCard } from '@/components/card/event-card';
 import { CityCard, ICity } from '@/components/card/city-card';
-import { EventCard, IEvent } from '@/components/card/event-card';
 import { NavigationService } from '@/services/navigation.service';
 import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
 import { HostFirstEventCard } from '@/components/card/host-first-event-card';

@@ -26,6 +26,10 @@ export class AvatarGroupComponent {
     return allUsers.slice(0, this.maxVisible());
   }
 
+  trackByUser(index: number, user: IUser): string {
+    return user.id || `user-${index}`;
+  }
+
   getRemainingCount(): number {
     const allUsers = this.users();
     const totalUsers = allUsers.length;

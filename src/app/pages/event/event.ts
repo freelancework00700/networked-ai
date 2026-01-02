@@ -1,149 +1,117 @@
 import {
+  OnInit,
   inject,
   signal,
   Inject,
   computed,
+  effect,
   DOCUMENT,
   Component,
-  viewChild,
   OnDestroy,
-  ElementRef,
   PLATFORM_ID,
-  AfterViewInit,
   ChangeDetectionStrategy
 } from '@angular/core';
-import Swiper from 'swiper';
 import { MenuModule } from 'primeng/menu';
-import * as Maptiler from '@maptiler/sdk';
 import { IUser } from '@/interfaces/IUser';
-import { Ticket } from '@/interfaces/event';
-import { Pagination } from 'swiper/modules';
 import { FormsModule } from '@angular/forms';
 import { Button } from '@/components/form/button';
-import { isPlatformBrowser } from '@angular/common';
+import { AuthService } from '@/services/auth.service';
+import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
 import { MenuItem as PrimeMenuItem } from 'primeng/api';
-import { environment } from 'src/environments/environment';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ToasterService } from '@/services/toaster.service';
+import { EventDisplay } from '@/components/common/event-display';
 import { NavigationService } from '@/services/navigation.service';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
-import { AvatarGroupComponent } from '@/components/common/avatar-group';
 import { RsvpDetailsModal } from '@/components/modal/rsvp-details-modal';
-import { HostEventPromoCard } from '@/components/card/host-event-promo-card';
-import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { IonContent, IonFooter, IonToolbar, IonHeader, IonIcon, NavController } from '@ionic/angular/standalone';
-
-export interface TicketDisplay extends Ticket {
-  status: 'sale-ended' | 'available' | 'sold-out' | 'upcoming';
-  remainingQuantity?: number;
-  selectedQuantity?: number;
-  startsIn?: string;
-}
 
 @Component({
   selector: 'event',
   styleUrl: './event.scss',
   templateUrl: './event.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    Button,
-    IonIcon,
-    IonFooter,
-    IonHeader,
-    IonContent,
-    IonToolbar,
-    MenuModule,
-    FormsModule,
-    SegmentButton,
-    HostEventPromoCard,
-    AvatarGroupComponent
-  ]
+  imports: [Button, IonIcon, IonFooter, IonHeader, IonContent, IonToolbar, MenuModule, FormsModule, EventDisplay]
 })
-export class Event implements AfterViewInit, OnDestroy {
-  isScrolled = signal(false);
-  selectedDate = signal('10/01');
-  mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
-  private toasterService = inject(ToasterService);
-  private platformId = inject(PLATFORM_ID);
-  @Inject(DOCUMENT) private document = inject(DOCUMENT);
+export class Event implements OnInit, OnDestroy {
+  route = inject(ActivatedRoute);
+  router = inject(Router);
   navCtrl = inject(NavController);
+  platformId = inject(PLATFORM_ID);
+  sanitizer = inject(DomSanitizer);
+  authService = inject(AuthService);
   modalService = inject(ModalService);
+  eventService = inject(EventService);
+  toasterService = inject(ToasterService);
   navigationService = inject(NavigationService);
-  private map: Maptiler.Map | null = null;
-  private marker: Maptiler.Marker | null = null;
-  subscriptionId = signal<string>('test_id');
-  subscriptionPlanType = signal<'event' | 'sponsor'>('event');
-  private readonly DEFAULT_ZOOM = 14;
-  private readonly DEFAULT_CENTER: [number, number] = [-84.390648, 33.748533]; // Atlanta, GA coordinates
-  hosts = signal<IUser[]>([
-    { id: '1', name: 'Amy Elsner', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png' },
-    { id: '2', name: 'Asiya Javayant', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/asiyajavayant.png' },
-    { id: '3', name: 'Onyama Limba', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/onyamalimba.png' }
-  ]);
-  sponsors = signal<IUser[]>([
-    { id: '1', name: 'Ioni Bowcher', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/ionibowcher.png' },
-    { id: '2', name: 'Xuxue Feng', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/xuxuefeng.png' },
-    { id: '3', name: 'Amy Elsner', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png' },
-    { id: '4', name: 'Asiya Javayant', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/asiyajavayant.png' },
-    { id: '5', name: 'Onyama Limba', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/onyamalimba.png' }
-  ]);
-  speakers = signal<IUser[]>([
-    { id: '11', name: 'Amy Elsner', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png' },
-    { id: '12', name: 'Asiya Javayant', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/asiyajavayant.png' },
-    { id: '13', name: 'Onyama Limba', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/onyamalimba.png' },
-    { id: '14', name: 'Ioni Bowcher', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/ionibowcher.png' },
-    { id: '15', name: 'Xuxue Feng', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/xuxuefeng.png' },
-    { id: '16', name: 'Amy Elsner', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png' },
-    { id: '17', name: 'Asiya Javayant', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/asiyajavayant.png' }
-  ]);
-  going = signal<IUser[]>([
-    { id: '1', name: 'Onyama Limba', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/onyamalimba.png' },
-    { id: '2', name: 'Ioni Bowcher', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/ionibowcher.png' },
-    { id: '3', name: 'Xuxue Feng', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/xuxuefeng.png' },
-    { id: '4', name: 'Amy Elsner', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png' },
-    { id: '5', name: 'Asiya Javayant', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/asiyajavayant.png' },
-    { id: '6', name: 'Onyama Limba', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/onyamalimba.png' },
-    { id: '7', name: 'Onyama Limba', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/onyamalimba.png' },
-    { id: '8', name: 'Ioni Bowcher', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/ionibowcher.png' },
-    { id: '9', name: 'Xuxue Feng', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/xuxuefeng.png' }
-  ]);
-  maybe = signal<IUser[]>([
-    { id: '1', name: 'Ioni Bowcher', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/ionibowcher.png' },
-    { id: '2', name: 'Xuxue Feng', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/xuxuefeng.png' },
-    { id: '3', name: 'Amy Elsner', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png' },
-    { id: '4', name: 'Asiya Javayant', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/asiyajavayant.png' },
-    { id: '5', name: 'Onyama Limba', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/onyamalimba.png' },
-    { id: '6', name: 'Ioni Bowcher', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/ionibowcher.png' },
-    { id: '7', name: 'Xuxue Feng', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/xuxuefeng.png' },
-    { id: '8', name: 'Amy Elsner', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png' },
-    { id: '9', name: 'Asiya Javayant', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/asiyajavayant.png' },
-    { id: '10', name: 'Onyama Limba', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/onyamalimba.png' },
-    { id: '11', name: 'Asiya Javayant', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/asiyajavayant.png' },
-    { id: '12', name: 'Onyama Limba', image_url: 'https://primefaces.org/cdn/primeng/images/demo/avatar/onyamalimba.png' }
-  ]);
+  @Inject(DOCUMENT) private document = inject(DOCUMENT);
 
-  userSections = computed(() => [
-    { title: 'Host(s)', users: this.hosts(), overflowLabelClass: '' },
-    { title: 'Sponsors', users: this.sponsors(), overflowLabelClass: '!bg-neutral-02 !text-neutral-07' },
-    { title: 'Speaker(s)', users: this.speakers(), overflowLabelClass: '' },
-    { title: 'Going', users: this.going(), overflowLabelClass: '' },
-    { title: 'Maybe', users: this.maybe(), overflowLabelClass: '' }
-  ]);
+  // SIGNALS
+  event = signal<any>(null);
+  selectedDate = signal('');
+  isScrolled = signal(false);
+  eventId = signal<string>('');
+  isLoading = signal<boolean>(true);
+  subscriptionId = signal<string>('');
+  isLoadingChildEvent = signal<boolean>(false);
+  selectedChildEventId = signal<string | null>(null);
+  childEventData = signal<Map<string, any>>(new Map());
 
-  dateItems = computed<SegmentButtonItem[]>(() => [
-    { value: '09/24', label: '09/24', icon: 'assets/svg/calendar.svg', activeIcon: 'assets/svg/calendar-selected.svg' },
-    { value: '10/01', label: '10/01', icon: 'assets/svg/calendar.svg', activeIcon: 'assets/svg/calendar-selected.svg' },
-    { value: '10/08', label: '10/08', icon: 'assets/svg/calendar.svg', activeIcon: 'assets/svg/calendar-selected.svg' },
-    { value: '10/15', label: '10/15', icon: 'assets/svg/calendar.svg', activeIcon: 'assets/svg/calendar-selected.svg' }
-  ]);
+  currentUser = computed(() => this.authService.currentUser());
+  subscriptionPlanType = computed<'event' | 'sponsor' | null>(() => {
+    const eventData = this.currentEventData();
+    if (!eventData) return null;
+    if (eventData.is_subscription && eventData.subscription_plan === 'event') return 'event';
+    if (eventData.is_subscription && eventData.subscription_plan === 'sponsor') return 'sponsor';
+    return null;
+  });
 
-  tickets = signal<TicketDisplay[]>([
+  currentEventData = computed(() => {
+    const parentEvent = this.event();
+    if (!parentEvent) return null;
+
+    const selectedChildId = this.selectedChildEventId();
+    if (!selectedChildId || !parentEvent.child_events || parentEvent.child_events.length === 0) {
+      return parentEvent;
+    }
+
+    const childEventsMap = this.childEventData();
+    const fetchedChildData = childEventsMap.get(selectedChildId);
+
+    if (fetchedChildData) {
+      return {
+        ...parentEvent,
+        ...fetchedChildData,
+        child_events: parentEvent.child_events
+      };
+    }
+
+    const selectedChild = parentEvent.child_events.find((child: any) => child.id === selectedChildId);
+    if (!selectedChild) return parentEvent;
+
+    return {
+      ...parentEvent,
+      start_date: selectedChild.start_date || parentEvent.start_date,
+      end_date: selectedChild.end_date || parentEvent.end_date,
+      latitude: selectedChild.latitude || parentEvent.latitude,
+      longitude: selectedChild.longitude || parentEvent.longitude,
+      address: selectedChild.address || parentEvent.address,
+      city: selectedChild.city || parentEvent.city,
+      state: selectedChild.state || parentEvent.state,
+      country: selectedChild.country || parentEvent.country,
+      child_events: parentEvent.child_events
+    };
+  });
+
+  tickets = signal<any[]>([
     {
       id: '1',
       name: 'Standard Ticket',
-      ticket_type: 'standard',
+      ticket_type: 'Standard',
       is_free_ticket: true,
-      price: '0.00',
+      price: 0.0,
       quantity: 20,
       remainingQuantity: 20,
       selectedQuantity: 0,
@@ -153,9 +121,9 @@ export class Event implements AfterViewInit, OnDestroy {
     {
       id: '2',
       name: 'Presale 1',
-      ticket_type: 'early-bird',
+      ticket_type: 'Early Bird',
       is_free_ticket: false,
-      price: '5.00',
+      price: 5.0,
       quantity: 0,
       description: 'Insert one or two lines of the description here.',
       status: 'sale-ended'
@@ -163,9 +131,9 @@ export class Event implements AfterViewInit, OnDestroy {
     {
       id: '3',
       name: 'Presale 1',
-      ticket_type: 'early-bird',
+      ticket_type: 'Early Bird',
       is_free_ticket: false,
-      price: '5.00',
+      price: 5.0,
       quantity: 10,
       remainingQuantity: 10,
       selectedQuantity: 0,
@@ -175,9 +143,9 @@ export class Event implements AfterViewInit, OnDestroy {
     {
       id: '4',
       name: 'Presale 3',
-      ticket_type: 'early-bird',
+      ticket_type: 'Early Bird',
       is_free_ticket: false,
-      price: '5.00',
+      price: 5.0,
       quantity: 0,
       description: 'Insert one or two lines of the description here.',
       status: 'sold-out'
@@ -185,9 +153,9 @@ export class Event implements AfterViewInit, OnDestroy {
     {
       id: '5',
       name: 'Standard Ticket',
-      ticket_type: 'standard',
+      ticket_type: 'Standard',
       is_free_ticket: false,
-      price: '10.00',
+      price: 10.0,
       quantity: 0,
       description: 'Insert one or two lines of the description here.',
       status: 'sold-out'
@@ -195,9 +163,9 @@ export class Event implements AfterViewInit, OnDestroy {
     {
       id: '6',
       name: 'Standard Ticket',
-      ticket_type: 'standard',
+      ticket_type: 'Standard',
       is_free_ticket: false,
-      price: '30.00',
+      price: 30.0,
       quantity: null,
       description: 'Insert one or two lines of the description here.',
       startsIn: '3d',
@@ -206,9 +174,9 @@ export class Event implements AfterViewInit, OnDestroy {
     {
       id: '7',
       name: 'VVIP Sponsorship',
-      ticket_type: 'sponsor',
+      ticket_type: 'Sponsor',
       is_free_ticket: false,
-      price: '1999.00',
+      price: 1999.0,
       quantity: null,
       selectedQuantity: 0,
       description: 'Insert one or two lines of the description here.',
@@ -217,9 +185,9 @@ export class Event implements AfterViewInit, OnDestroy {
     {
       id: '8',
       name: 'VVIP Sponsorship',
-      ticket_type: 'sponsor',
+      ticket_type: 'Sponsor',
       is_free_ticket: false,
-      price: '1999.00',
+      price: 1999.0,
       quantity: null,
       description: 'Insert one or two lines of the description here.',
       startsIn: '3d',
@@ -240,20 +208,12 @@ export class Event implements AfterViewInit, OnDestroy {
   ];
 
   networkSuggestions = [
-    { id: '1', name: 'Kathryn Murphy', role: 'staff' },
-    { id: '2', name: 'Esther Howard' },
+    { id: '1', name: 'Kathryn Murphy', role: 'Staff' },
+    { id: '2', name: 'Esther Howard', role: 'CoHost' },
     { id: '3', name: 'Arlene McCoy' },
-    { id: '4', name: 'Darlene Robertson', role: 'speaker' },
-    { id: '5', name: 'Ronald Richards', role: 'sponsor' },
-    { id: '6', name: 'Albert Flores' }
-  ];
-
-  eventMenuItems: PrimeMenuItem[] = [
-    {
-      label: 'Report',
-      icon: 'pi pi-flag',
-      command: () => this.reportEvent()
-    }
+    { id: '4', name: 'Darlene Robertson', role: 'Speaker' },
+    { id: '5', name: 'Ronald Richards', role: 'Sponsor' },
+    { id: '6', name: 'Albert Flores', role: 'CoHost' }
   ];
 
   staticQuestionnaire = [
@@ -316,57 +276,152 @@ export class Event implements AfterViewInit, OnDestroy {
       max_use_per_user: 1
     }
   ];
+  eventMenuItems: PrimeMenuItem[] = [
+    {
+      label: 'Report',
+      icon: 'pi pi-flag',
+      command: () => this.reportEvent()
+    }
+  ];
 
-  onDateChange(date: string): void {
-    this.selectedDate.set(date);
+  eventDisplayData = computed(() => {
+    const eventData = this.currentEventData();
+    if (!eventData) {
+      return {
+        thumbnail_url: '',
+        title: '',
+        description: '',
+        images: [],
+        displayMedias: [],
+        views: '0',
+        isPublic: true,
+        location: '',
+        hostName: 'Networked AI',
+        mapCenter: null,
+        admission: 'Free',
+        formattedDateTime: '',
+        userSections: [],
+        isRepeatingEvent: false,
+        dateItems: [],
+        rsvpButtonLabel: 'RSVP Now - Free',
+        isCurrentUserHost: false,
+        tickets: [],
+        questionnaire: [],
+        promoCodes: [],
+        subscriptionPlanType: null
+      };
+    }
+    const parentEvent = this.event();
+    const currentUser = this.currentUser();
+
+    // Use the helper function from eventService for consistency
+    const transformedData = this.eventService.transformEventDataForDisplay(eventData, parentEvent, currentUser);
+
+    // Get date items for repeating events
+    const dateItems = this.eventService.createDateItems(parentEvent || eventData);
+
+    return {
+      ...transformedData,
+      dateItems,
+      subscriptionPlanType: this.subscriptionPlanType()
+    };
+  });
+
+  // Helper functions for date formatting
+  ngOnInit(): void {
+    const eventId = this.route.snapshot.paramMap.get('id');
+    if (eventId) {
+      this.eventId.set(eventId);
+      this.loadEvent();
+    }
   }
 
-  ngAfterViewInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      new Swiper('.swiper-event-detail', {
-        modules: [Pagination],
-        slidesPerView: 1,
-        spaceBetween: 0,
-        allowTouchMove: true,
-        pagination: {
-          el: '.swiper-event-detail .swiper-pagination',
-          clickable: true
+  async loadEvent(): Promise<void> {
+    const eventId = this.eventId();
+    if (!eventId) return;
+
+    try {
+      this.isLoading.set(true);
+      const eventData = await this.eventService.getEventById(eventId);
+      if (eventData) {
+        this.event.set(eventData);
+
+        this.updateTicketsAndParticipants(eventData);
+
+        if (eventData.subscription_id) {
+          this.subscriptionId.set(eventData.subscription_id);
         }
+
+        this.selectedChildEventId.set(null);
+        this.childEventData.set(new Map());
+        if (eventData.start_date) {
+          this.selectedDate.set(this.eventService.formatDateKey(eventData.start_date));
+        } else if (this.eventDisplayData().dateItems.length > 0) {
+          this.selectedDate.set(this.eventDisplayData().dateItems[0].value);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading event:', error);
+      this.toasterService.showError('Failed to load event');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async onDateChange(date: string): Promise<void> {
+    this.selectedDate.set(date);
+
+    const eventData = this.event();
+    if (!eventData) return;
+
+    if (eventData.child_events && eventData.child_events.length > 0) {
+      const matchingChild = eventData.child_events.find((child: any) => {
+        if (!child.start_date) return false;
+        const childDateKey = this.eventService.formatDateKey(child.start_date);
+        return childDateKey === date;
       });
 
-      this.initMap();
+      if (matchingChild) {
+        this.selectedChildEventId.set(matchingChild.id);
+        await this.loadChildEvent(matchingChild.id);
+      } else {
+        const parentDateKey = this.eventService.formatDateKey(eventData.start_date);
+        if (parentDateKey === date) {
+          this.selectedChildEventId.set(null);
+          this.updateTicketsAndParticipants(eventData);
+        }
+      }
+    } else {
+      this.selectedChildEventId.set(null);
     }
   }
 
-  initMap(): void {
-    if (!this.DEFAULT_CENTER) return;
-
-    Maptiler.config.apiKey = environment.maptilerApiKey;
-
-    const map = new Maptiler.Map({
-      container: this.mapContainer().nativeElement,
-      style: Maptiler.MapStyle.STREETS,
-      center: this.DEFAULT_CENTER,
-      zoom: 15
-    });
-
-    map.on('load', () => {
-      map.resize();
-      new Maptiler.Marker({ color: '#D33' }).setLngLat(this.DEFAULT_CENTER).addTo(map);
-    });
-  }
-
-  private cleanup(): void {
-    if (this.marker) {
-      this.marker.remove();
-      this.marker = null;
+  async loadChildEvent(childEventId: string): Promise<void> {
+    const childEventsMap = this.childEventData();
+    if (childEventsMap.has(childEventId)) {
+      this.updateTicketsAndParticipants(childEventsMap.get(childEventId));
+      return;
     }
 
-    if (this.map) {
-      this.map.remove();
-      this.map = null;
+    try {
+      this.isLoadingChildEvent.set(true);
+      const childEventData = await this.eventService.getEventById(childEventId);
+      if (childEventData) {
+        const updatedMap = new Map(childEventsMap);
+        updatedMap.set(childEventId, childEventData);
+        this.childEventData.set(updatedMap);
+
+        this.updateTicketsAndParticipants(childEventData);
+      }
+    } catch (error) {
+      console.error('Error loading child event:', error);
+      this.toasterService.showError('Failed to load event details');
+    } finally {
+      this.isLoadingChildEvent.set(false);
     }
   }
+
+  private updateTicketsAndParticipants(eventData: any): void {}
 
   onScroll(event: CustomEvent) {
     const scrollTop = event.detail.scrollTop;
@@ -374,7 +429,18 @@ export class Event implements AfterViewInit, OnDestroy {
   }
 
   openUserList(title: string, users: IUser[]): void {
-    this.navigationService.navigateForward(`/event/1111/guests`, true);
+    const eventId = this.eventId();
+    const displayData = this.eventDisplayData();
+    if (eventId && users && users.length > 0) {
+      this.router.navigate([`/event/${eventId}/guests`], {
+        state: {
+          users: users,
+          role: title,
+          eventId: eventId,
+          eventTitle: displayData.title
+        }
+      });
+    }
   }
 
   async openRsvpModal(): Promise<void> {
@@ -417,35 +483,56 @@ export class Event implements AfterViewInit, OnDestroy {
   }
 
   editEvent() {
-    this.navCtrl.navigateForward(`/event/edit`);
+    const eventId = this.eventId();
+    if (eventId) {
+      this.navCtrl.navigateForward(`/event/edit/${eventId}`);
+    }
   }
 
   viewEventAnalytics() {
-    this.navCtrl.navigateForward(`/event/analytics/1111`);
+    const eventId = this.eventId();
+    if (eventId) {
+      this.navCtrl.navigateForward(`/event/analytics/${eventId}`);
+    }
   }
 
   viewQuestionnaireResponses() {
-    this.navCtrl.navigateForward(`/event/questionnaire-response/1111`);
+    const eventId = this.eventId();
+    if (eventId) {
+      this.navCtrl.navigateForward(`/event/questionnaire-response/${eventId}`);
+    }
   }
 
   async manageRoles() {
-    const result = await this.modalService.openManageRoleModal(this.networkSuggestions, '1111');
+    const eventId = this.eventId();
+    if (eventId) {
+      const result = await this.modalService.openManageRoleModal(this.networkSuggestions, eventId);
+    }
   }
 
   viewGuestList() {
-    this.navCtrl.navigateForward(`/event/guests/1111`);
+    const eventId = this.eventId();
+    if (eventId) {
+      this.navCtrl.navigateForward(`/event/guests/${eventId}`);
+    }
   }
 
   viewEventPageQr() {
-    this.navCtrl.navigateForward(`/event/qr/1111`);
+    const eventId = this.eventId();
+    if (eventId) {
+      this.navCtrl.navigateForward(`/event/qr/${eventId}`);
+    }
   }
 
   viewTapToPay() {}
 
   async shareEvent() {
-    const result = await this.modalService.openShareModal('1111', 'Event');
-    if (result) {
-      this.toasterService.showSuccess('Event shared');
+    const eventId = this.eventId();
+    if (eventId) {
+      const result = await this.modalService.openShareModal(eventId, 'Event');
+      if (result) {
+        this.toasterService.showSuccess('Event shared');
+      }
     }
   }
 
@@ -485,6 +572,6 @@ export class Event implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.cleanup();
+    // Cleanup is handled by EventDisplay component
   }
 }

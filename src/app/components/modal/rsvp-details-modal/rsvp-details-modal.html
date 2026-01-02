@@ -132,9 +132,9 @@
             </div>
           }
         }
-        @if (rsvpDataSignal()?.promoCode) {
+        @if (rsvpDataSignal()?.promo_code) {
           <div class="flex items-center justify-between">
-            <span class="body-14R neutral-02">{{ rsvpDataSignal()?.promoCode }}</span>
+            <span class="body-14R neutral-02">{{ rsvpDataSignal()?.promo_code }}</span>
             <span class="body-14M neutral-01">-${{ rsvpDataSignal()?.discountAmount }}</span>
           </div>
         }

@@ -1,4 +1,4 @@
-import { IonToggle } from '@ionic/angular/standalone';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { input, OnInit, inject, Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
 
@@ -7,7 +7,7 @@ import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, 
   styleUrl: './toggle-input.scss',
   templateUrl: './toggle-input.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonToggle, ReactiveFormsModule],
+  imports: [ToggleSwitchModule, ReactiveFormsModule],
   viewProviders: [
     {
       provide: ControlContainer,

@@ -14,7 +14,7 @@ import { Input, signal, inject, Component, OnInit, ChangeDetectionStrategy, comp
 export interface RsvpDetailsData {
   tickets: any[];
   questionnaireResponses?: any[];
-  promoCode?: string;
+  promo_code?: string;
   appliedPromoCode?: any;
   discountAmount?: number;
   subtotal?: number;
@@ -129,10 +129,10 @@ export class RsvpDetailsModal implements OnInit {
   });
 
   getTicketPrice(ticket: any): string {
-    if (ticket.is_free_ticket) {
+    if (ticket.ticket_type === 'Free') {
       return '0.00';
     }
-    const price = parseFloat(ticket.price) || 0;
+    const price = typeof ticket.price === 'number' ? ticket.price : parseFloat(ticket.price) || 0;
     const quantity = ticket.selectedQuantity || 0;
     return (price * quantity).toFixed(2);
   }

@@ -1,12 +1,13 @@
 import { Chip } from '@/components/common/chip';
 import { Button } from '@/components/form/button';
+import { AnalyticsQuestion } from '@/interfaces/event';
 import { NavController } from '@ionic/angular/standalone';
 import { Searchbar } from '@/components/common/searchbar';
 import { EmptyState } from '@/components/common/empty-state';
-import { ViewResponse } from '@/pages/event/components/view-response';
+import { ViewResponse } from '../components/view-response';
 import { IonContent, IonToolbar, IonHeader } from '@ionic/angular/standalone';
 import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { AnalyticsQuestion, QuestionnaireAnalytics } from '@/pages/event/components/questionnaire-analytics';
+import { QuestionnaireAnalytics } from '../components/questionnaire-analytics';
 
 @Component({
   selector: 'questionnaire-response',

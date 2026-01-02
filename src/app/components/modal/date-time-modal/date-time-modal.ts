@@ -39,8 +39,30 @@ export class DateTimeModal implements OnInit {
       }
     }
   }
+
+  private formatReturnValue(value: string): string {
+    if (!value) return value;
+    if (value.includes('T')) {
+      if (this.type === 'time') {
+        try {
+          const date = new Date(value);
+          const hours = date.getHours().toString().padStart(2, '0');
+          const minutes = date.getMinutes().toString().padStart(2, '0');
+          return `${hours}:${minutes}`;
+        } catch {
+          return value;
+        }
+      } else {
+        return value.split('T')[0];
+      }
+    }
+
+    return value;
+  }
+
   dismiss(): void {
-    this.modalCtrl.dismiss(this.value);
+    const formattedValue = this.formatReturnValue(this.value);
+    this.modalCtrl.dismiss(formattedValue);
     this.modalService.close();
   }
 

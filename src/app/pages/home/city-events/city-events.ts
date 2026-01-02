@@ -1,9 +1,10 @@
+import { IEvent } from '@/interfaces/event';
 import { CommonModule } from '@angular/common';
 import { ModalService } from '@/services/modal.service';
 import { NavController } from '@ionic/angular/standalone';
+import { EventCard } from '@/components/card/event-card';
 import { Searchbar } from '@/components/common/searchbar';
 import { EmptyState } from '@/components/common/empty-state';
-import { EventCard, IEvent } from '@/components/card/event-card';
 import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 

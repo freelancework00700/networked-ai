@@ -2,6 +2,7 @@ import { Login } from '@/pages/login';
 import { Signup } from '@/pages/signup/signup';
 import { inject, Injectable } from '@angular/core';
 import { MenuItem } from '@/components/modal/menu-modal';
+import { CreateEvent } from '@/pages/event/create-event';
 import { RsvpModal } from '@/components/modal/rsvp-modal';
 import { MenuModal } from '@/components/modal/menu-modal';
 import { ModalController } from '@ionic/angular/standalone';
@@ -16,11 +17,11 @@ import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
 import { PostEventModal } from '@/components/modal/post-event-modal';
 import { ShareGroup } from '@/pages/messages/components/share-group';
 import { GifGalleryModal } from '@/components/modal/gif-gallery-modal';
-import { CreateEvent } from '@/pages/event/create-event/create-event';
 import { BlockModal } from '@/components/modal/block-modal/block-modal';
 import { TicketTypeModal } from '@/components/modal/ticket-type-modal';
 import { ShareModal } from '@/components/modal/share-modal/share-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
+import { TicketFormModal } from '@/components/modal/ticket-form-modal';
 import { EventFilterModal } from '@/components/modal/event-filter-modal';
 import { GuestFilterModal } from '@/components/modal/guest-filter-modal';
 import { ForgotPassword } from '@/pages/forgot-password/forgot-password';
@@ -33,18 +34,18 @@ import { DeleteAccountModal } from '@/components/modal/delete-account-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
 import { SuccessModal } from '@/components/modal/success-modal/success-modal';
 import { GroupInvitation } from '@/pages/messages/components/group-invitation';
+import { PromoCodeFormModal } from '@/components/modal/promo-code-form-modal';
 import { LocationFilterModal } from '@/components/modal/location-filter-modal';
 import { NetworkTagModal, NetworkTag } from '@/components/modal/network-tag-modal';
 import { AchievementDetailModal } from '@/components/modal/achievement-detail-modal';
 import { QuestionnaireFormModal } from '@/components/modal/questionnaire-form-modal';
 import { PhoneEmailVerifiedModal } from '@/components/modal/phone-email-verified-modal';
+import { PromoCodeFormModalData, TicketFormData, TicketType } from '@/interfaces/event';
 import { ManageRoleModal } from '@/components/modal/manage-role-modal/manage-role-modal';
-import { TicketFormModal, TicketFormData } from '@/components/modal/ticket-form-modal';
 import { RsvpDetailsData, RsvpDetailsModal } from '@/components/modal/rsvp-details-modal';
 import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confirm-modal';
 import { QuestionnairePreviewModal } from '@/components/modal/questionnaire-preview-modal';
 import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
-import { PromoCodeFormModal, PromoCodeFormModalData } from '@/components/modal/promo-code-form-modal';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -191,7 +192,9 @@ export class ModalService {
     return data || value;
   }
 
-  async openLocationModal(location = ''): Promise<{ address: string; latitude: string; longitude: string }> {
+  async openLocationModal(
+    location = ''
+  ): Promise<{ address: string; latitude: string; longitude: string; city: string; state: string; country: string }> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -207,10 +210,10 @@ export class ModalService {
 
     const { data } = await modal.onDidDismiss();
     // return original value if dismissed via backdrop without data
-    return data || { address: location || '', latitude: '', longitude: '' };
+    return data || { address: location || '', latitude: '', longitude: '', city: '', state: '', country: '' };
   }
 
-  async openEventCategoryModal(value?: string): Promise<string> {
+  async openEventCategoryModal(value?: string, categories?: any[]): Promise<string> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -219,7 +222,7 @@ export class ModalService {
       backdropDismiss: false,
       cssClass: 'auto-hight-modal',
       component: EventCategoryModal,
-      componentProps: { value }
+      componentProps: { value, categories }
     });
 
     await modal.present();
@@ -236,7 +239,7 @@ export class ModalService {
       initialBreakpoint: 1,
       component: NetworkTagModal,
       backdropDismiss: true,
-      cssClass: 'auto-hight-modal',
+      cssClass: 'modal-600px-height ',
       componentProps: {
         title: 'Networked Meta Tags',
         subtitle: 'Select up to 5',
@@ -273,10 +276,11 @@ export class ModalService {
   }
 
   async openTicketModal(
-    ticketType: 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard',
+    ticketType: TicketType,
     initialData?: Partial<TicketFormData>,
     eventDate?: string | null,
-    eventStartTime?: string | null
+    eventStartTime?: string | null,
+    eventEndTime?: string | null
   ): Promise<{ data: TicketFormData; role: string } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -290,7 +294,8 @@ export class ModalService {
         ticketType,
         initialData,
         eventDate,
-        eventStartTime
+        eventStartTime,
+        eventEndTime
       }
     });
 
@@ -300,7 +305,7 @@ export class ModalService {
     return data && role === 'save' ? { data, role } : null;
   }
 
-  async openTicketTypeModal(isPaid: boolean = true, hasFreeTicket: boolean = false): Promise<'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard' | null> {
+  async openTicketTypeModal(isPaid: boolean = true, hasFreeTicket: boolean = false): Promise<TicketType | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -315,7 +320,7 @@ export class ModalService {
     await modal.present();
 
     const { data, role } = await modal.onWillDismiss();
-    return role === 'select' && data ? (data as 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard') : null;
+    return role === 'select' && data ? (data as TicketType) : null;
   }
 
   async openPromoCodeModal(initialData?: Partial<PromoCodeFormModalData>): Promise<{ data: PromoCodeFormModalData; role: string } | null> {
@@ -708,7 +713,7 @@ export class ModalService {
     return data || null;
   }
 
-  async openRsvpModal(tickets: any[], eventTitle?: string, questionnaire?: any, promoCodes?: any[], subscriptionId?: string): Promise<any> {
+  async openRsvpModal(tickets: any[], eventTitle?: string, questionnaire?: any, promo_codes?: any[], subscriptionId?: string): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -716,7 +721,7 @@ export class ModalService {
       initialBreakpoint: 1,
       cssClass: 'modal-600px-height',
       component: RsvpModal,
-      componentProps: { tickets, eventTitle, questionnaire, promoCodes, subscriptionId }
+      componentProps: { tickets, eventTitle, questionnaire, promo_codes, subscriptionId }
     });
     await modal.present();
     const { data } = await modal.onDidDismiss();
@@ -730,7 +735,9 @@ export class ModalService {
     eventTitle?: string,
     eventDate?: string,
     eventLocation?: string,
-    subscriptionId?: string
+    subscriptionId?: string,
+    initialType?: 'pre_event' | 'post_event',
+    allQuestions?: { preEvent: any[]; postEvent: any[] }
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -739,7 +746,17 @@ export class ModalService {
       initialBreakpoint: 1,
       cssClass: 'modal-600px-height',
       component: QuestionnairePreviewModal,
-      componentProps: { questions, isPreviewMode, rsvpData, eventTitle, eventDate, eventLocation, subscriptionId }
+      componentProps: { 
+        questions, 
+        isPreviewMode, 
+        rsvpData, 
+        eventTitle, 
+        eventDate, 
+        eventLocation, 
+        subscriptionId,
+        initialType,
+        allQuestions
+      }
     });
     await modal.present();
     const { data } = await modal.onDidDismiss();

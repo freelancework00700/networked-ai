@@ -1,32 +1,47 @@
+import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
+import { EventCategory } from '@/interfaces/event';
 import { ModalService } from '@/services/modal.service';
-import { Input, inject, signal, Component } from '@angular/core';
-import { IonPicker, IonFooter, IonHeader, IonToolbar, IonPickerColumn, IonPickerColumnOption } from '@ionic/angular/standalone';
+import { Input, inject, signal, Component, OnInit } from '@angular/core';
+import { IonFooter, IonHeader, IonToolbar, IonPicker, IonPickerColumnOption, IonPickerColumn } from '@ionic/angular/standalone';
+
+interface CategoryOption {
+  value: string;
+  label: string;
+  icon?: string;
+}
 
 @Component({
   selector: 'event-category-modal',
   styleUrl: './event-category-modal.scss',
   templateUrl: './event-category-modal.html',
-  imports: [Button, IonFooter, IonHeader, IonPicker, IonToolbar, IonPickerColumn, IonPickerColumnOption]
+  imports: [IonPicker, Button, IonFooter, IonHeader, IonToolbar, CommonModule, IonPickerColumnOption, IonPickerColumn]
 })
-export class EventCategoryModal {
+export class EventCategoryModal implements OnInit {
   // services
   private modalService = inject(ModalService);
 
-  // inputs
-  @Input() value: string = 'business';
+  @Input() value: string = '';
+  @Input() categories?: EventCategory[];
 
-  options = signal([
-    { value: 'business', label: 'Business' },
-    { value: 'networking', label: 'Networking' },
-    { value: 'conference', label: 'Conference' },
-    { value: 'workshop', label: 'Workshop' },
-    { value: 'social', label: 'Social' },
-    { value: 'sports', label: 'Sports' },
-    { value: 'music', label: 'Music' },
-    { value: 'arts', label: 'Arts' },
-    { value: 'other', label: 'Other' }
-  ]);
+  options = signal<CategoryOption[]>([]);
+  selectedValue = signal<string>('');
+
+  ngOnInit(): void {
+    if (this.categories && this.categories.length > 0) {
+      const formattedOptions: CategoryOption[] = this.categories.map((cat) => ({
+        value: cat.id || cat.value || '',
+        label: cat.name || '',
+        icon: cat.icon || ''
+      })).filter(opt => opt.value && opt.label);
+      
+      if (formattedOptions.length > 0) {
+        this.options.set(formattedOptions);
+      }
+    }
+    this.selectedValue.set(this.value || '');
+  }
+
 
   async dismiss() {
     await this.modalService.close(this.value);

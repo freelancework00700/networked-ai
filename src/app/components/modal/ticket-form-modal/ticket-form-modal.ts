@@ -1,49 +1,38 @@
+import { CheckboxModule } from 'primeng/checkbox';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
 import { NumberInput } from '@/components/form/number-input';
+import { TicketFormData, TicketType } from '@/interfaces/event';
 import { TextAreaInput } from '@/components/form/text-area-input';
 import { FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { IonHeader, IonFooter, IonContent, IonToolbar } from '@ionic/angular/standalone';
-import { CheckboxModule } from 'primeng/checkbox';
 import { Input, OnInit, inject, signal, computed, Component, ChangeDetectionStrategy } from '@angular/core';
 
-export interface TicketFormData {
-  name: string;
-  price: string;
-  quantity: number | null;
-  description?: string;
-  sale_start_date?: string | null;
-  sale_start_time?: string | null;
-  sale_end_date?: string | null;
-  sale_end_time?: string | null;
-  end_sale_on_event_start: boolean;
-  free_for_subscribers?: boolean;
-  ticket_type: 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard';
-}
-
 @Component({
-  selector: 'ticket-form-modal',  
+  selector: 'ticket-form-modal',
   styleUrl: './ticket-form-modal.scss',
   templateUrl: './ticket-form-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, Button, TextInput, NumberInput, TextAreaInput, IonHeader, IonToolbar, IonContent, IonFooter, CheckboxModule]
 })
-export class TicketFormModal   implements OnInit {
+export class TicketFormModal implements OnInit {
   // services
   private fb = inject(FormBuilder);
   private modalService = inject(ModalService);
 
   // inputs
-  @Input() ticketType: 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard' = 'free';
+  @Input() ticketType: TicketType = 'Free';
   @Input() initialData?: Partial<TicketFormData> | null;
   @Input() eventDate?: string | null;
+  @Input() eventStartTime?: string | null;
+  @Input() eventEndTime?: string | null;
 
   // signals
   ticketForm = signal<FormGroup>(
     this.fb.group({
       free_for_subscribers: false,
-      end_sale_on_event_start: true
+      end_at_event_start: true
     })
   );
 
@@ -56,7 +45,7 @@ export class TicketFormModal   implements OnInit {
   isCustomize = computed(() => this.showDescriptionEditor());
 
   ngOnInit(): void {
-    const isFree = this.ticketType === 'free';
+    const isFree = this.ticketType === 'Free';
     this.isFreeTicket.set(isFree);
 
     // Get current date and time for defaults
@@ -67,29 +56,29 @@ export class TicketFormModal   implements OnInit {
     // Initialize date/time values for form controls
     let salesStartDateValue = '';
     let salesStartTimeValue = '';
-    if (this.initialData?.sale_start_date) {
-      const date = new Date(this.initialData.sale_start_date);
-      salesStartDateValue = date.toISOString().split('T')[0];
-      salesStartTimeValue = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    if (this.initialData?.sale_start_date && this.initialData?.sale_start_time) {
+      // Use separate date and time strings directly
+      salesStartDateValue = this.initialData.sale_start_date;
+      salesStartTimeValue = this.initialData.sale_start_time;
     } else {
       // Set default to current date and time
       salesStartDateValue = currentDate;
       salesStartTimeValue = currentTime;
     }
 
-    const endSaleOnEventStart = this.initialData?.end_sale_on_event_start ?? true;
+    const endSaleOnEventStart = this.initialData?.end_at_event_start ?? true;
     this.endSaleOnEventStart.set(endSaleOnEventStart);
 
     let salesEndDateValue = '';
     let salesEndTimeValue = '';
-    if (this.initialData?.sale_end_date) {
-      const date = new Date(this.initialData.sale_end_date);
-      salesEndDateValue = date.toISOString().split('T')[0];
-      salesEndTimeValue = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-    } else if (!endSaleOnEventStart) {
-      // Set default to current date and time if end sale is enabled
-      salesEndDateValue = currentDate;
-      salesEndTimeValue = currentTime;
+    if (this.initialData?.sale_end_date && this.initialData?.sale_end_time) {
+      // Use separate date and time strings directly
+      salesEndDateValue = this.initialData.sale_end_date;
+      salesEndTimeValue = this.initialData.sale_end_time;
+    } else if (!endSaleOnEventStart && this.eventDate && this.eventEndTime) {
+      // Set default to event end date and time if end_at_event_start is false
+      salesEndDateValue = this.eventDate;
+      salesEndTimeValue = this.eventEndTime;
     }
 
     const form = this.fb.group({
@@ -101,7 +90,7 @@ export class TicketFormModal   implements OnInit {
       sale_start_time: [salesStartTimeValue, [Validators.required]],
       sale_end_date: [salesEndDateValue],
       sale_end_time: [salesEndTimeValue],
-      end_sale_on_event_start: [endSaleOnEventStart],
+      end_at_event_start: [endSaleOnEventStart],
       free_for_subscribers: [this.initialData?.free_for_subscribers ?? false]
     });
     this.ticketForm.set(form);
@@ -110,7 +99,7 @@ export class TicketFormModal   implements OnInit {
       form.get('price')?.disable();
     }
 
-    form.get('end_sale_on_event_start')?.valueChanges.subscribe((value) => {
+    form.get('end_at_event_start')?.valueChanges.subscribe((value) => {
       this.endSaleOnEventStart.set(value ?? true);
 
       // Update validators for sale_end_date and sale_end_time based on checkbox value
@@ -118,24 +107,32 @@ export class TicketFormModal   implements OnInit {
       const salesEndTimeControl = form.get('sale_end_time');
 
       if (value) {
-        // If end_sale_on_event_start is true, remove required validators
+        // If end_at_event_start is true, remove required validators
         salesEndDateControl?.clearValidators();
         salesEndTimeControl?.clearValidators();
         // Clear values when checkbox is checked
         salesEndDateControl?.setValue('');
         salesEndTimeControl?.setValue('');
       } else {
-        // If end_sale_on_event_start is false, add required validators
+        // If end_at_event_start is false, add required validators
         salesEndDateControl?.setValidators([Validators.required]);
         salesEndTimeControl?.setValidators([Validators.required]);
-        // Set default values to current date/time if fields are empty
+        // Set default values to event end date/time if fields are empty, otherwise current date/time
         if (!salesEndDateControl?.value) {
-          const now = new Date();
-          salesEndDateControl?.setValue(now.toISOString().split('T')[0]);
+          if (this.eventDate) {
+            salesEndDateControl?.setValue(this.eventDate);
+          } else {
+            const now = new Date();
+            salesEndDateControl?.setValue(now.toISOString().split('T')[0]);
+          }
         }
         if (!salesEndTimeControl?.value) {
-          const now = new Date();
-          salesEndTimeControl?.setValue(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
+          if (this.eventEndTime) {
+            salesEndTimeControl?.setValue(this.eventEndTime);
+          } else {
+            const now = new Date();
+            salesEndTimeControl?.setValue(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
+          }
         }
       }
 
@@ -146,15 +143,15 @@ export class TicketFormModal   implements OnInit {
 
   getTitle(): string {
     switch (this.ticketType) {
-      case 'free':
+      case 'Free':
         return 'Free Ticket';
-      case 'early-bird':
+      case 'Early Bird':
         return 'Early Bird Ticket';
-      case 'sponsor':
+      case 'Sponsor':
         return 'Sponsor Ticket';
-      case 'standard':
+      case 'Standard':
         return 'Standard Paid Ticket';
-      case 'paid':
+      case 'Paid':
         return 'Paid Ticket';
       default:
         return 'Ticket';

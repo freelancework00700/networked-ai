@@ -8,19 +8,25 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { TextInput } from '@/components/form/text-input';
 import { NumberInput } from '@/components/form/number-input';
 import { MobileInput } from '@/components/form/mobile-input';
+import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { IonHeader, IonFooter, IonToolbar, ModalController, IonContent } from '@ionic/angular/standalone';
 import { Input, signal, inject, Component, OnInit, ChangeDetectionStrategy, computed } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 
-export interface QuestionnaireQuestion {
+interface QuestionnaireQuestionWithPhase {
   question: string;
-  type: 'text' | 'number' | 'single' | 'multiple' | 'phone' | 'rating';
-  required: boolean;
-  visibility: 'public' | 'private';
-  options?: string[];
+  type?: string;
+  question_type?: string;
+  required?: boolean;
+  is_required?: boolean;
+  visibility?: 'public' | 'private';
+  is_public?: boolean;
+  options?: (string | { option: string; order?: number })[];
   min?: number;
   max?: number;
   rating?: number;
+  rating_scale?: number;
+  event_phase?: 'PreEvent' | 'PostEvent';
 }
 
 @Component({
@@ -37,6 +43,7 @@ export interface QuestionnaireQuestion {
     IonToolbar,
     NumberInput,
     MobileInput,
+    SegmentButton,
     CommonModule,
     SelectModule,
     CheckboxModule,
@@ -45,7 +52,7 @@ export interface QuestionnaireQuestion {
   ]
 })
 export class QuestionnairePreviewModal implements OnInit {
-  @Input() questions: QuestionnaireQuestion[] = [];
+  @Input() questions: QuestionnaireQuestionWithPhase[] = [];
   @Input() isPreviewMode: boolean = false;
   @Input() rsvpData: RsvpDetailsData | null = null;
   @Input() eventTitle: string = '';
@@ -56,27 +63,65 @@ export class QuestionnairePreviewModal implements OnInit {
   private fb = inject(FormBuilder);
   modalCtrl = inject(ModalController);
   form!: FormGroup;
+  selectedPhase = signal<'PreEvent' | 'PostEvent'>('PreEvent');
+
+  preEventQuestions = computed(() => {
+    return this.questions.filter((q) => !q.event_phase || q.event_phase === 'PreEvent');
+  });
+
+  postEventQuestions = computed(() => {
+    return this.questions.filter((q) => q.event_phase === 'PostEvent');
+  });
+
+  hasBothPhases = computed(() => {
+    return this.preEventQuestions().length > 0 && this.postEventQuestions().length > 0;
+  });
+
+  displayedQuestions = computed(() => {
+    const phase = this.selectedPhase();
+    return phase === 'PreEvent' ? this.preEventQuestions() : this.postEventQuestions();
+  });
+
+  segmentItems = computed<SegmentButtonItem[]>(() => {
+    return [
+      { value: 'PreEvent', label: 'Pre-Event' },
+      { value: 'PostEvent', label: 'Post-Event' }
+    ];
+  });
 
   hasPrivateQuestions = computed(() => {
-    return this.questions.some((q) => q.visibility === 'private');
+    return this.displayedQuestions().some((q) => (q.is_public === false || q.visibility === 'private'));
   });
 
   ngOnInit(): void {
+    if (this.hasBothPhases()) {
+      this.selectedPhase.set('PreEvent');
+    } else if (this.postEventQuestions().length > 0) {
+      this.selectedPhase.set('PostEvent');
+    }
+    this.initializeForm();
+  }
+
+  onPhaseChange(phase: string): void {
+    this.selectedPhase.set(phase as 'PreEvent' | 'PostEvent');
     this.initializeForm();
   }
 
   initializeForm(): void {
     const formControls: { [key: string]: any } = {};
+    const questionsToDisplay = this.displayedQuestions();
 
-    this.questions.forEach((question, index) => {
-      const validators = question.required ? [Validators.required] : [];
+    questionsToDisplay.forEach((question, index) => {
+      const questionType = question.question_type || question.type || '';
+      const isRequired = question.is_required !== undefined ? question.is_required : question.required || false;
+      const validators = isRequired ? [Validators.required] : [];
 
-      switch (question.type) {
-        case 'text':
-        case 'phone':
+      switch (questionType) {
+        case 'Text':
+        case 'PhoneNumber':
           formControls[`question_${index}`] = ['', validators];
           break;
-        case 'number':
+        case 'Number':
           const numberValidators = [...validators];
           if (question.min !== undefined) {
             numberValidators.push(Validators.min(question.min));
@@ -86,14 +131,20 @@ export class QuestionnairePreviewModal implements OnInit {
           }
           formControls[`question_${index}`] = ['', numberValidators];
           break;
-        case 'single':
+        case 'SingleChoice':
           formControls[`question_${index}`] = ['', validators];
           break;
-        case 'multiple':
+        case 'MultipleChoice':
           const optionControls = question.options?.map(() => this.fb.control(false)) || [];
-          formControls[`question_${index}`] = this.fb.array(optionControls, question.required ? [this.atLeastOneSelected] : []);
+          const multipleChoiceArray = this.fb.array(optionControls, isRequired ? [this.atLeastOneSelected] : []);
+          formControls[`question_${index}`] = multipleChoiceArray;
+          if (this.isPreviewMode) {
+            multipleChoiceArray.valueChanges.subscribe(() => {
+              multipleChoiceArray.markAsTouched();
+            });
+          }
           break;
-        case 'rating':
+        case 'Rating':
           formControls[`question_${index}`] = ['', validators];
           break;
       }
@@ -105,7 +156,9 @@ export class QuestionnairePreviewModal implements OnInit {
       Object.keys(this.form.controls).forEach((key) => {
         const control = this.form.get(key);
         if (control) {
-          control.disable({ emitEvent: false });
+          control.valueChanges.subscribe(() => {
+            control.markAsTouched();
+          });
         }
       });
     }
@@ -125,14 +178,16 @@ export class QuestionnairePreviewModal implements OnInit {
     return this.form.get(`question_${index}`) as FormArray;
   }
 
-  getRatingScale(question: QuestionnaireQuestion): number[] {
-    const scale = question.rating || 10;
+  getRatingScale(question: QuestionnaireQuestionWithPhase): number[] {
+    const scale = question.rating_scale || question.rating || 10;
     return Array.from({ length: scale }, (_, i) => i + 1);
   }
 
   selectRating(index: number, rating: number): void {
-    if (!this.isPreviewMode) {
-      this.form.get(`question_${index}`)?.setValue(rating);
+    const control = this.form.get(`question_${index}`);
+    if (control) {
+      control.setValue(rating);
+      control.markAsTouched();
     }
   }
 
@@ -145,18 +200,20 @@ export class QuestionnairePreviewModal implements OnInit {
       await this.modalService.close();
     } else {
       if (this.form.valid) {
-        const responses = this.questions.map((question, index) => {
+        const questionsToDisplay = this.displayedQuestions();
+        const responses = questionsToDisplay.map((question, index) => {
           const control = this.getQuestionControl(index);
           let value = control?.value;
+          const questionType = question.question_type || question.type || '';
 
-          if (question.type === 'multiple') {
+          if (questionType === 'MultipleChoice') {
             const formArray = this.getMultipleChoiceArray(index);
             value = question.options?.filter((_, i) => formArray.at(i).value) || [];
           }
 
           return {
             question: question.question,
-            type: question.type,
+            type: questionType,
             answer: value
           };
         });

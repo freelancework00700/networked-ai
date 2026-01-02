@@ -73,11 +73,11 @@
 
       <!-- End sale when event starts -->
       <div class="flex items-center gap-2">
-        <p-checkbox formControlName="end_sale_on_event_start" [binary]="true"></p-checkbox>
+        <p-checkbox formControlName="end_at_event_start" [binary]="true"></p-checkbox>
         <label class="text-sm text-gray-700 cursor-pointer">End sale when event starts</label>
       </div>
 
-      <!-- Sales End (shown when end_sale_on_event_start is false) -->
+      <!-- Sales End (shown when end_at_event_start is false) -->
       @if (showEndSaleInputs()) {
         <div class="flex flex-col gap-1">
           <label class="block neutral-02 body-14M">Sale End</label>

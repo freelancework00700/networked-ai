@@ -1,18 +1,8 @@
+import { IEvent } from '@/interfaces/event';
 import { ModalService } from '@/services/modal.service';
 import { NavController } from '@ionic/angular/standalone';
 import { ToasterService } from '@/services/toaster.service';
 import { input, Component, ChangeDetectionStrategy, inject } from '@angular/core';
-
-export interface IEvent {
-  date: string;
-  day?: string;
-  views: string;
-  title: string;
-  image: string;
-  location: string;
-  dayOfWeek?: string;
-  organization: string;
-}
 
 @Component({
   selector: 'event-card',
@@ -29,7 +19,7 @@ export class EventCard {
   variant = input<'default' | 'compact'>('default');
 
   viewEvent() {
-    this.navCtrl.navigateForward(`/event/1111`);
+    this.navCtrl.navigateForward(`/event/bd6cabe4-21ae-488c-a830-6e63ab1b4cfe`);
   }
 
   async shareEvent() {

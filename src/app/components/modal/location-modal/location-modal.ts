@@ -4,7 +4,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { ModalService } from '@/services/modal.service';
 import { environment } from 'src/environments/environment';
-import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, ModalController } from '@ionic/angular/standalone';
 import { of, Subject, catchError, switchMap, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Input, inject, OnInit, signal, Component, ChangeDetectionStrategy } from '@angular/core';
 
@@ -62,6 +62,7 @@ export class LocationModal implements OnInit {
   @Input() title = 'Select Location';
 
   // services
+  private modalCtrl = inject(ModalController);
   private http = inject(HttpClient);
   private modalService = inject(ModalService);
   private searchSubject = new Subject<string>();
@@ -221,11 +222,13 @@ export class LocationModal implements OnInit {
 
   selectLocation(result: LocationResult): void {
     this.searchQuery.set(result.address);
-    this.modalService.close({
+    this.modalCtrl.dismiss({
       address: result.address,
-      distance: result.distance,
       latitude: String(result.latitude),
-      longitude: String(result.longitude)
+      longitude: String(result.longitude),
+      city: result.city || '',
+      state: result.state || '',
+      country: result.country || ''
     });
   }
 

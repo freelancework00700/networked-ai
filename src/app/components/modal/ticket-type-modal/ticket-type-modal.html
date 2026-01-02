@@ -6,7 +6,7 @@
     </div>
   }
   @for (ticketType of ticketTypes; track ticketType.type) {
-    @if (ticketType.isPaid === isPaid && !(hasFreeTicket && ticketType.type === 'free')) {
+    @if (ticketType.isPaid === isPaid && !(hasFreeTicket && ticketType.type === 'Free')) {
       <ticket-type-card
         [icon]="ticketType.icon"
         [label]="ticketType.label"

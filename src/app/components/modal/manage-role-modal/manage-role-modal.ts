@@ -28,11 +28,11 @@ export class ManageRoleModal implements OnInit {
   );
 
   roles = signal([
-    { name: 'None', value: 'none' },
-    { name: 'Staff', value: 'staff' },
-    { name: 'Cohost', value: 'co-host' },
-    { name: 'Sponsor', value: 'sponsor' },
-    { name: 'Speaker', value: 'speaker' }
+    { name: 'None', value: 'None' },
+    { name: 'Staff', value: 'Staff' },
+    { name: 'Cohost', value: 'CoHost' },
+    { name: 'Sponsor', value: 'Sponsor' },
+    { name: 'Speaker', value: 'Speaker' }
   ]);
 
   ngOnInit() {
@@ -44,7 +44,7 @@ export class ManageRoleModal implements OnInit {
               id: [user.id],
               name: [user.name],
               image: [user.image],
-              role: [user.role ?? 'none']
+              role: [user.role ?? 'None']
             })
           )
         )

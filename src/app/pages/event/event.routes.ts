@@ -1,5 +1,5 @@
-import { Event } from './event';
 import { Routes } from '@angular/router';
+import { Event } from '@/pages/event/event';
 import { EventQr } from '@/pages/event/event-qr';
 import { GuestList } from '@/pages/event/guest-list';
 import { AllEvents } from '@/pages/home/all-events';
@@ -16,7 +16,7 @@ export default [
 
   { path: 'all', component: AllEvents },
   { path: 'city', component: CityEvents },
-  { path: 'edit', component: CreateEvent },
+  { path: 'edit/:id', component: CreateEvent },
 
   { path: 'qr/:id', component: EventQr },
   { path: 'guests/:id', component: GuestList },

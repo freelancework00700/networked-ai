@@ -1,13 +1,13 @@
 <div class="flex flex-col gap-6">
   <!-- Require RSVP Approval -->
-  <toggle-input [formGroup]="eventForm()" controlName="show_time_picker" label="Show Time?" />
-  <toggle-input [formGroup]="eventForm()" controlName="require_rsvp_approval" label="Require RSVP Approval?" />
+  <toggle-input [formGroup]="eventForm()" controlName="is_show_timer" label="Show Time?" />
+  <toggle-input [formGroup]="eventForm()" controlName="is_rsvp_approval_required" label="Require RSVP Approval?" />
   <!-- Repeating Event -->
-  @if (!isModalMode()) {
+  @if (!isModalMode() && !isEditMode()) {
     <div>
-      <toggle-input [formGroup]="eventForm()" controlName="is_repeating" label="Repeating Event" />
+      <toggle-input [formGroup]="eventForm()" controlName="is_repeating_event" label="Repeating Event" />
 
-      @if (getFieldValue('is_repeating')) {
+      @if (getFieldValue('is_repeating_event')) {
         <div class="w-full mt-2">
           <div class="border-l-3 border-neutral-300 pl-3">
             <!-- Repeat Frequency -->
@@ -15,7 +15,7 @@
               @for (item of repeatOptions(); track item.value) {
                 <chip
                   [type]="item.value"
-                  [color]="getFieldValue('repeat_frequency') === item.value ? 'lgold' : ''"
+                  [color]="getFieldValue('repeating_frequency') === item.value ? 'lgold' : ''"
                   (selectedType)="setRepeatFrequency(item.value)"
                   class="w-full"
                 >
@@ -41,7 +41,6 @@
                     </span>
                   </chip>
                 } @else {
-                  <!-- Custom input button -->
                   <div>
                     <number-input
                       [formGroup]="eventForm()"
@@ -57,14 +56,21 @@
             </div>
           </div>
 
-          <!-- Repeating Events List -->
-          @if (repeatingEvents().length > 0) {
+          <!-- Events List -->
+          @if (getFieldValue('is_repeating_event') && repeatingEvents().length > 0) {
             <div class="mt-4">
               <div class="flex flex-col gap-2">
+                <!-- Main Event (Event #1) - from form data -->
+                <repeating-event-item
+                  [event]="mainEvent()"
+                  [isMainEvent]="true"
+                />
+                
+                <!-- Repeating Events (Event #2, #3, etc.) -->
                 @for (event of repeatingEvents(); track event['id']) {
                   <repeating-event-item
                     [event]="event"
-                    [isMainEvent]="event['eventNumber'] === 1"
+                    [isMainEvent]="false"
                     (edit)="editRepeatingEvent(event)"
                     (delete)="deleteRepeatingEvent(event['id'])"
                   />
@@ -77,22 +83,22 @@
     </div>
   }
   <!-- Co-Hosts -->
-  <participant-input label="Co-Host(s)" type="co-host" [selectedUsers]="coHosts()" (usersChange)="onUsersChange($event, 'co_hosts')" />
+  <participant-input label="Co-Host(s)" type="CoHost" [selectedUsers]="coHosts()" (usersChange)="onUsersChange($event, 'co_hosts')" />
 
   <!-- Sponsors -->
-  <participant-input label="Sponsor(s)" type="sponsor" [selectedUsers]="sponsors()" (usersChange)="onUsersChange($event, 'sponsors')" />
+  <participant-input label="Sponsor(s)" type="Sponsor" [selectedUsers]="sponsors()" (usersChange)="onUsersChange($event, 'sponsors')" />
 
   <!-- Speakers -->
-  <participant-input label="Speaker(s)" type="speaker" [selectedUsers]="speakers()" (usersChange)="onUsersChange($event, 'speakers')" />
+  <participant-input label="Speaker(s)" type="Speaker" [selectedUsers]="speakers()" (usersChange)="onUsersChange($event, 'speakers')" />
 
   <!-- Visibility -->
   <div class="flex items-center justify-between">
     <label class="neutral-02 body-14M">Visibility</label>
     <div class="flex gap-2">
-      <chip [type]="visibility()" [color]="visibility() === 'public' ? 'lgold' : ''" (selectedType)="setVisibility('public')">
+      <chip [type]="isPublic() ? 'public' : 'invite-only'" [color]="isPublic() ? 'lgold' : ''" (selectedType)="setVisibility(true)">
         <span class="body-14R">Public</span>
       </chip>
-      <chip [type]="visibility()" [color]="visibility() === 'invite-only' ? 'lgold' : ''" (selectedType)="setVisibility('invite-only')">
+      <chip [type]="isPublic() ? 'public' : 'invite-only'" [color]="!isPublic() ? 'lgold' : ''" (selectedType)="setVisibility(false)">
         <span class="body-14R">Invite Only</span>
       </chip>
     </div>
@@ -108,7 +114,11 @@
 
         <div class="flex flex-wrap gap-3">
           @for (item of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track item) {
-            <chip [type]="item.toString()" [color]="getFieldValue('plus') === item ? 'lgold' : ''" (selectedType)="setPlusCount(item)">
+            <chip
+              [type]="item.toString()"
+              [color]="getFieldValue('max_attendees_per_user') === item ? 'lgold' : ''"
+              (selectedType)="setPlusCount(item)"
+            >
               <span class="body-14R">+{{ item }}</span>
             </chip>
           }
@@ -134,15 +144,15 @@
 
             <div class="flex gap-4">
               @if (!hasQuestions(section.type)) {
-                <button (click)="openQuestionnaireModal(section.type)">
+                <button (click)="openQuestionnaireModal(section.type)" type="button">
                   <i class="pi pi-plus text-gray-700"></i>
                 </button>
               } @else {
-                <button (click)="openQuestionnaireModal(section.type)">
+                <button (click)="openQuestionnaireModal(section.type)" type="button">
                   <img src="assets/svg/editIcon.svg" alt="Edit" />
                 </button>
 
-                <button (click)="deleteEventQuestionnaire(section.type)">
+                <button (click)="deleteEventQuestionnaire(section.type)" type="button">
                   <img src="assets/svg/deleteIcon.svg" alt="Delete" />
                 </button>
               }

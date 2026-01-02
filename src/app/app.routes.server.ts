@@ -85,7 +85,7 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
-    path: 'event/edit',
+    path: 'event/edit/:id',
     renderMode: RenderMode.Server
   },
   {

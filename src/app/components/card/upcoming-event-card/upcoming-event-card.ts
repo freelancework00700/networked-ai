@@ -1,4 +1,4 @@
-import { IEvent } from '../event-card/event-card';
+import { IEvent } from '@/interfaces/event';
 import { Button } from '@/components/form/button';
 import { input, output, Component, ChangeDetectionStrategy } from '@angular/core';
 

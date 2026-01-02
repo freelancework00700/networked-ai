@@ -12,7 +12,7 @@
   <div class="px-4">
     <form [formGroup]="promoForm()" class="flex flex-col gap-4">
       <!-- Promo Code Name -->
-      <text-input controlName="promoCode" label="Promo Code" placeholder="Promo Code Name" />
+      <text-input controlName="promo_code" label="Promo Code" placeholder="Promo Code Name" />
 
       <!-- Promotion Type -->
       <div class="w-full">
@@ -22,9 +22,9 @@
             <!-- Percentage Chip -->
             <chip
               class="w-full"
-              [type]="'percentage'"
-              (selectedType)="setPromotionType('percentage')"
-              [color]="promotionType() === 'percentage' ? 'lgold' : ''"
+              [type]="'Percentage'"
+              (selectedType)="setPromotionType('Percentage')"
+              [color]="promotionType() === 'Percentage' ? 'lgold' : ''"
             >
               <div class="flex justify-between">
                 <span>Percentage Off</span>
@@ -33,7 +33,7 @@
             </chip>
 
             <!-- Fixed Chip -->
-            <chip [type]="'fixed'" [color]="promotionType() === 'fixed' ? 'lgold' : ''" (selectedType)="setPromotionType('fixed')" class="w-full">
+            <chip [type]="'Fixed'" [color]="promotionType() === 'Fixed' ? 'lgold' : ''" (selectedType)="setPromotionType('Fixed')" class="w-full">
               <div class="flex justify-between">
                 <span>Fixed Amount Off</span>
                 <span>$</span>
@@ -46,15 +46,16 @@
       <!-- Discount Amount Section (Dynamic Based on Promotion Type) -->
       <div>
         <!-- If PERCENTAGE -->
-        @if (promotionType() === 'percentage') {
+        @if (promotionType() === 'Percentage') {
           <div class="flex gap-3">
             <number-input
               class="w-full"
               placeholder="10"
               [position]="'right'"
               label="Discount Amount"
-              controlName="promoPresent"
+              controlName="value"
               [iconName]="'pi-percentage'"
+              [allowDecimal]="true"
             />
 
             <number-input
@@ -70,8 +71,8 @@
         }
 
         <!-- If FIXED AMOUNT -->
-        @if (promotionType() === 'fixed') {
-          <number-input label="Discount Amount" controlName="promoPresent" placeholder="0.00" [allowDecimal]="true" [iconName]="'pi-dollar'" />
+        @if (promotionType() === 'Fixed') {
+          <number-input label="Discount Amount" controlName="value" placeholder="0.00" [allowDecimal]="true" [iconName]="'pi-dollar'" />
         }
       </div>
 
@@ -79,7 +80,7 @@
       <number-input label="Redemption Limit" controlName="redemption_limit" placeholder="400" [required]="false" />
 
       <!-- Max use(s) per user -->
-      <number-input label="Max use(s) per user" controlName="max_use_per_user" placeholder="1" [required]="false" />
+      <number-input label="Max use(s) per user" controlName="max_uses_per_user" placeholder="1" [required]="false" />
     </form>
   </div>
 </ion-content>

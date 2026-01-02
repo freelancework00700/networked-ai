@@ -1,19 +1,7 @@
+import { Ticket } from '@/interfaces/event';
 import { CommonModule } from '@angular/common';
 import { IonReorder } from '@ionic/angular/standalone';
 import { input, output, Inject, computed, DOCUMENT, Component, ChangeDetectionStrategy } from '@angular/core';
-
-export interface Ticket {
-  id?: string;
-  name: string;
-  ticket_type: 'free' | 'paid' | 'early-bird' | 'sponsor' | 'standard';
-  is_free_ticket: boolean;
-  price: string;
-  quantity?: number | null;
-  description?: string | null;
-  sale_start_date?: string | null;
-  sale_end_date?: string | null;
-  end_sale_on_event_start?: boolean;
-}
 
 @Component({
   selector: 'ticket-card',
@@ -60,11 +48,11 @@ export class TicketCard {
   ticketChipImage = computed(() => {
     const ticketType = this.ticket().ticket_type;
     switch (ticketType) {
-      case 'early-bird':
+      case 'Early Bird':
         return 'assets/svg/ticket/early-bird-card-chip.svg';
-      case 'sponsor':
+      case 'Sponsor':
         return 'assets/svg/ticket/sponsor-card-chip.svg';
-      case 'free':
+      case 'Free':
         return 'assets/svg/ticket/free-card-chip.svg';
       default:
         return 'assets/svg/ticket/standard-card-chip.svg';
@@ -74,11 +62,11 @@ export class TicketCard {
   ticketChipAlt = computed(() => {
     const ticketType = this.ticket().ticket_type;
     switch (ticketType) {
-      case 'early-bird':
+      case 'Early Bird':
         return 'Early Bird Ticket';
-      case 'sponsor':
+      case 'Sponsor':
         return 'Sponsor Ticket';
-      case 'free':
+      case 'Free':
         return 'Free Ticket';
       default:
         return 'Standard Ticket';
@@ -88,11 +76,11 @@ export class TicketCard {
   ticketTypeClass = computed(() => {
     const ticketType = this.ticket().ticket_type;
     switch (ticketType) {
-      case 'early-bird':
+      case 'Early Bird':
         return 'ticket-early-bird';
-      case 'sponsor':
+      case 'Sponsor':
         return 'ticket-sponsor';
-      case 'standard':
+      case 'Standard':
         return 'ticket-standard';
       default:
         return '';
@@ -101,36 +89,48 @@ export class TicketCard {
 
   formattedPrice = computed(() => {
     const ticket = this.ticket();
-    if (ticket.is_free_ticket) {
+    if (ticket.ticket_type === 'Free') {
       return 'FREE';
     }
-    return ticket?.price?.startsWith('$') ? ticket.price : '$' + ticket.price;
+    const price = typeof ticket?.price === 'number' ? ticket.price : parseFloat(String(ticket?.price || 0).replace('$', ''));
+    return '$' + price.toFixed(2);
   });
 
   formattedQuantity = computed(() => {
-    const quantity = this.ticket().quantity;
+    const quantity = this.ticket().available_quantity;
     return quantity ? quantity.toString() : 'Unlimited';
   });
 
+  private combineDateAndTime(dateStr: string | null | undefined, timeStr: string | null | undefined): string | null {
+    if (!dateStr || !timeStr) return null;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const date = new Date(dateStr);
+    date.setHours(hours, minutes, 0, 0);
+    return date.toISOString();
+  }
+
   saleStartDisplay = computed(() => {
-    const salesStartDate = this.ticket().sale_start_date;
-    if (salesStartDate) {
-      return `${this.formatDate(salesStartDate)}, ${this.formatTime(salesStartDate)}`;
+    const ticket = this.ticket();
+    const combinedDateTime = this.combineDateAndTime(ticket.sale_start_date, ticket.sale_start_time);
+    if (combinedDateTime) {
+      return `${this.formatDate(combinedDateTime)}, ${this.formatTime(combinedDateTime)}`;
     }
     return 'Not set';
   });
 
   saleEndDisplay = computed(() => {
     const ticket = this.ticket();
-    if (ticket.end_sale_on_event_start) {
+    if (ticket.end_at_event_start) {
       const eventDate = this.eventDate();
       const eventTime = this.eventStartTime();
       if (eventDate && eventTime) {
         return `${this.formatEventDate(eventDate)}, ${this.formatEventTime(eventTime)}`;
       }
-      return 'When event starts';
-    } else if (ticket.sale_end_date) {
-      return `${this.formatDate(ticket.sale_end_date)}, ${this.formatTime(ticket.sale_end_date)}`;
+    } else {
+      const combinedDateTime = this.combineDateAndTime(ticket.sale_end_date, ticket.sale_end_time);
+      if (combinedDateTime) {
+        return `${this.formatDate(combinedDateTime)}, ${this.formatTime(combinedDateTime)}`;
+      }
     }
     return 'Not set';
   });

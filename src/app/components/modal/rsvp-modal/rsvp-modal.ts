@@ -1,17 +1,10 @@
-import { Ticket } from '@/interfaces/event';
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
+import { TicketDisplay } from '@/interfaces/event';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { Input, signal, inject, Component, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent } from '@ionic/angular/standalone';
-
-export interface TicketDisplay extends Ticket {
-  status: 'sale-ended' | 'available' | 'sold-out' | 'upcoming';
-  remainingQuantity?: number;
-  selectedQuantity?: number;
-  startsIn?: string;
-}
 
 @Component({
   selector: 'rsvp-modal',
@@ -60,7 +53,7 @@ export class RsvpModal implements OnInit {
     return this.ticketsData().reduce((total, ticket) => {
       const quantity = ticket.selectedQuantity ?? 0;
       if (quantity > 0 && ticket.status === 'available') {
-        const price = parseFloat(ticket.price) || 0;
+        const price = parseFloat(String(ticket.price)) || 0;
         return total + price * quantity;
       }
       return total;
@@ -95,11 +88,11 @@ export class RsvpModal implements OnInit {
 
   getTicketChipImage(ticketType: string): string {
     switch (ticketType) {
-      case 'early-bird':
+      case 'Early Bird':
         return 'assets/svg/ticket/early-bird-card-chip.svg';
-      case 'sponsor':
+      case 'Sponsor':
         return 'assets/svg/ticket/sponsor-card-chip.svg';
-      case 'free':
+      case 'Free':
         return 'assets/svg/ticket/free-card-chip.svg';
       default:
         return 'assets/svg/ticket/standard-card-chip.svg';
@@ -213,16 +206,16 @@ export class RsvpModal implements OnInit {
     const subtotal = this.subtotalPrice();
     let discount = 0;
 
-    if (foundPromo.promotion_type === 'percentage') {
-      const percentage = parseFloat(foundPromo.promoPresent) || 0;
+    if (foundPromo.promotion_type === 'Percentage') {
+      const percentage = foundPromo.value || 0;
       discount = (subtotal * percentage) / 100;
 
       if (foundPromo.capped_amount) {
         const cap = parseFloat(foundPromo.capped_amount);
         discount = Math.min(discount, cap);
       }
-    } else if (foundPromo.promotion_type === 'fixed') {
-      discount = parseFloat(foundPromo.promoPresent) || 0;
+    } else if (foundPromo.promotion_type === 'Fixed') {
+      discount = parseFloat(foundPromo.value) || 0;
     }
 
     this.appliedPromoCode.set(foundPromo);

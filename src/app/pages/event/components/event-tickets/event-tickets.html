@@ -1,29 +1,9 @@
 @if (tickets().length === 0) {
-  <div class="flex p-3 border border-surface-300 rounded-lg gap-4">
-    <!-- left: svg -->
-<div>
-  <div class="pi pi-crown text-brand-02 bg-brand-05 rounded p-3"></div>
-</div>
-    <!-- middle: text -->
-    <div class="flex-1">
-      <div class="font-bold mb-1">Subscribers Exclusive</div>
-      <div class="text-sm text-surface-600">Only subscribers can RSVP for this event.</div>
-    </div>
-
-    <!-- right: toggle switch -->
-    <div class="flex items-center">
-      <p-toggleSwitch />
-    </div>
-  </div>
-  <div>
-    Users can RSVP only if they’re subscribed to the following plan(s):
-  </div>
   <div class="flex flex-col items-center justify-center">
     <ion-icon src="assets/svg/ticket/no-tickets.svg" class="w-45 h-45 mx-auto pb-8" />
     <div class="heading-h3 neutral-01 text-center">Ready to Sell Tickets?</div>
     <div class="body-14M text-surface-500 text-center">Offer early bird specials, VIP packages, or free entry—it's up to you.</div>
   </div>
-
 }
 
 <!-- Ticket List Section -->
@@ -67,7 +47,7 @@
         } @else {
           @if (promoCodes().length > 0) {
             <div class="flex flex-col gap-3">
-              @for (promo of promoCodes(); track promo.promoCode) {
+              @for (promo of promoCodes(); track promo.promo_code) {
                 <promo-code-card
                   [promo]="promo"
                   (edit)="editPromoCode(getPromoCodeOriginalIndex(promo))"
@@ -78,7 +58,7 @@
           }
 
           <div class="flex justify-center pb-4">
-            <button class="body-medium-14 brand-02" (click)="resetPromoForm()">
+            <button class="body-medium-14 brand-02" (click)="resetPromoForm()" type="button">
               <i class="pi pi-plus"></i>
               Create New
             </button>
@@ -111,10 +91,9 @@
           <div class="body-regular-14 natural-03">Unapplicable to free events</div>
         } @else {
           <div class="w-full border-l-2 border-neutral-300 pl-4" [formGroup]="eventForm()">
-            @if (!getFieldValue('host_pays_fees')) {
+            @if (!getFieldValue('host_pays_platform_fee')) {
               <div class="flex items-center gap-4 mb-2">
-                <div class="body-regular-14 natural-01">Additional fee for guests (%)</div>
-                <p-toggleSwitch formControlName="guest_fee_enabled" />
+                <toggle-input controlName="guest_fee_enabled" label="Additional fee for guests (%)" />
               </div>
 
               @if (getFieldValue('guest_fee_enabled')) {
@@ -131,7 +110,7 @@
               }
             }
             <div class="flex items-center gap-3 mt-4">
-              <p-checkbox formControlName="host_pays_fees" [binary]="true"></p-checkbox>
+              <p-checkbox formControlName="host_pays_platform_fee" [binary]="true"></p-checkbox>
 
               <div class="body-regular-14 natural-01">Hosts will pay the platform fees</div>
             </div>

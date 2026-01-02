@@ -1,15 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
+import { SubscriptionPlan } from '@/interfaces/event';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ModalController } from '@ionic/angular/standalone';
 import { SelectModal, SelectOption } from '@/components/modal/select-modal/select-modal';
 import { ControlContainer, FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ChangeDetectionStrategy, Component, inject, OnInit, input, computed } from '@angular/core';
-
-export interface SubscriptionPlan {
-  productId: string;
-  name: string;
-}
 
 @Component({
   selector: 'subscription-input',
@@ -29,7 +25,7 @@ export class SubscriptionInput implements OnInit {
   private parentContainer = inject(ControlContainer);
   private modalCtrl = inject(ModalController);
 
-  controlName = 'include_as_subscription';
+  controlName = 'is_subscription';
   subscriptionIdControlName = 'subscription_id';
 
   // Inputs

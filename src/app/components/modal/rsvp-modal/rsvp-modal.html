@@ -13,12 +13,12 @@
       @for (ticket of ticketsData(); track ticket.id) {
         <div
           class="flex flex-col rounded-lg overflow-hidden mb-4"
-          [class.ticket-early-bird]="ticket.ticket_type === 'early-bird'"
-          [class.ticket-standard]="ticket.ticket_type === 'free' || ticket.ticket_type === 'standard'"
-          [class.ticket-sponsor]="ticket.ticket_type === 'sponsor'"
+          [class.ticket-early-bird]="ticket.ticket_type === 'Early Bird'"
+          [class.ticket-standard]="ticket.ticket_type === 'Free' || ticket.ticket_type === 'Standard'"
+          [class.ticket-sponsor]="ticket.ticket_type === 'Sponsor'"
         >
           <!-- Ticket Type Banner -->
-          @if (ticket.ticket_type === 'early-bird') {
+          @if (ticket.ticket_type === 'Early Bird') {
             <div class="relative w-full">
               <img [src]="getTicketChipImage(ticket.ticket_type)" class="w-full h-[30px] object-cover" />
             </div>
@@ -30,11 +30,11 @@
               <div class="flex flex-col flex-1">
                 <div class="flex items-center gap-2">
                   <div class="body-16SB neutral-01">{{ ticket.name }}</div>
-                  @if (ticket.ticket_type === 'sponsor') {
+                  @if (ticket.ticket_type === 'Sponsor') {
                     <ion-icon src="assets/svg/crown-sponsor.svg" class="w-[20px] h-[20px]" />
                   }
                 </div>
-                <div class="body-16SB neutral-02">${{ formatPrice(ticket.price) }}</div>
+                <div class="body-16SB neutral-02">${{ ticket.price.toFixed(2) }}</div>
                 @if (ticket.status === 'available' && ticket.remainingQuantity !== undefined && ticket.remainingQuantity <= 30) {
                   <div class="text-sm font-semibold accent-red">{{ ticket.remainingQuantity }} tickets left</div>
                 }

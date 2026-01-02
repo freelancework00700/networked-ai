@@ -4,7 +4,7 @@ import { TicketTypeCard } from '@/components/card/ticket-type-card';
 import { Component, inject, ChangeDetectionStrategy, Input } from '@angular/core';
 
 export interface TicketTypeOption {
-  type: 'standard' | 'early-bird' | 'sponsor' | 'free' | 'paid';
+  type: 'Standard' | 'Early Bird' | 'Sponsor' | 'Free' | 'Paid';
   label: string;
   description: string;
   icon: string;
@@ -25,35 +25,35 @@ export class TicketTypeModal {
 
   ticketTypes: TicketTypeOption[] = [
     {
-      type: 'standard',
+      type: 'Standard',
       label: 'Standard Paid Ticket',
       description: 'Create a standard paid ticket.',
       icon: 'assets/svg/ticket/paid-ticket.svg',
       isPaid: true
     },
     {
-      type: 'early-bird',
+      type: 'Early Bird',
       label: 'Early Bird Ticket',
       description: 'Allow early access for a special price.',
       icon: 'assets/svg/ticket/early-bird.svg',
       isPaid: true
     },
     {
-      type: 'sponsor',
+      type: 'Sponsor',
       label: 'Sponsor Ticket',
       description: 'Allow people to become sponsors.',
       icon: 'assets/svg/ticket/sponsor.svg',
       isPaid: true
     },
     {
-      type: 'free',
+      type: 'Free',
       label: 'Free Ticket',
       description: 'Allow guest to RSVP for free.',
       icon: 'assets/svg/ticket/free-ticket.svg',
       isPaid: false
     },
     {
-      type: 'paid',
+      type: 'Paid',
       label: 'Paid Ticket',
       description: 'Allow guest to RSVP for a paid ticket.',
       icon: 'assets/svg/ticket/paid-ticket.svg',
@@ -61,7 +61,7 @@ export class TicketTypeModal {
     }
   ];
 
-  selectTicketType(type: 'standard' | 'early-bird' | 'sponsor' | 'free' | 'paid'): void {
+  selectTicketType(type: 'Standard' | 'Early Bird' | 'Sponsor' | 'Free' | 'Paid'): void {
     this.modalCtrl.dismiss(type, 'select');
   }
 

@@ -1,189 +1,126 @@
-import { CommonModule } from '@angular/common';
+import { IUser } from '@/interfaces/IUser';
 import { Button } from '@/components/form/button';
+import { UserService } from '@/services/user.service';
 import { Searchbar } from '@/components/common/searchbar';
-import { Component, input, output, signal, computed, ChangeDetectionStrategy, effect } from '@angular/core';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { Component, input, output, signal, ChangeDetectionStrategy, effect, inject, OnDestroy } from '@angular/core';
 
-export interface User {
-  uid: string;
-  firstName: string;
-  lastName: string;
-  thumbnail?: string;
-  email?: string;
-  phone?: string;
-}
 @Component({
   selector: 'participant-input',
   styleUrl: './participant-input.scss',
   templateUrl: './participant-input.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, Button, Searchbar]
+  imports: [CommonModule, Button, Searchbar, NgOptimizedImage]
 })
-export class ParticipantInput {
+export class ParticipantInput implements OnDestroy {
+  private userService = inject(UserService);
+  private searchTimeout?: ReturnType<typeof setTimeout>;
+
   label = input<string>('');
-  type = input<'co-host' | 'sponsor' | 'speaker'>('co-host');
-  selectedUsers = input<User[]>([]);
+  type = input<'CoHost' | 'Sponsor' | 'Speaker'>('CoHost');
+  selectedUsers = input<IUser[]>([]);
 
-  usersChange = output<User[]>();
+  usersChange = output<IUser[]>();
 
-  private mockUsers: User[] = [
-    { uid: '1', firstName: 'John', lastName: 'Doe', thumbnail: 'assets/images/profile.jpeg', email: 'john@example.com' },
-    { uid: '2', firstName: 'Jane', lastName: 'Smith', thumbnail: 'assets/images/profile.jpeg', email: 'jane@example.com' },
-    { uid: '3', firstName: 'Mike', lastName: 'Johnson', thumbnail: 'assets/images/profile.jpeg', email: 'mike@example.com' },
-    { uid: '4', firstName: 'Sarah', lastName: 'Williams', thumbnail: 'assets/images/profile.jpeg', email: 'sarah@example.com' },
-    { uid: '5', firstName: 'David', lastName: 'Brown', thumbnail: 'assets/images/profile.jpeg', email: 'david@example.com' },
-    { uid: '6', firstName: 'Emily', lastName: 'Davis', thumbnail: 'assets/images/profile.jpeg', email: 'emily@example.com' },
-    { uid: '7', firstName: 'Chris', lastName: 'Miller', thumbnail: 'assets/images/profile.jpeg', email: 'chris@example.com' },
-    { uid: '8', firstName: 'Anna', lastName: 'Wilson', thumbnail: 'assets/images/profile.jpeg', email: 'anna@example.com' },
-    { uid: '9', firstName: 'Tom', lastName: 'Moore', thumbnail: 'assets/images/profile.jpeg', email: 'tom@example.com' },
-    { uid: '10', firstName: 'Lisa', lastName: 'Taylor', thumbnail: 'assets/images/profile.jpeg', email: 'lisa@example.com' }
-  ];
-
-  showInput = signal<boolean>(false);
-  internalUsers = signal<(User | null)[]>([]);
-  searchInputs = signal<Record<number, string>>({});
-  filteredUsers = signal<Record<number, User[]>>({});
-
-  allSlotsFilled = computed(() => {
-    const users = this.internalUsers();
-    return users.length > 0 && !users.some((u) => u === null);
-  });
-
-  isSearchbarVisible = computed(() => {
-    return this.showInput() && this.internalUsers().some((u) => u === null);
-  });
+  users = signal<IUser[]>([]);
+  searchQuery = signal<string>('');
+  filteredUsers = signal<IUser[]>([]);
+  isSearching = signal<boolean>(false);
+  showSearch = signal<boolean>(false);
 
   constructor() {
     effect(() => {
-      const users = this.selectedUsers();
-      this.initializeUsers(users);
+      const selectedUsers = this.selectedUsers();
+      this.users.set([...selectedUsers]);
     });
-  }
-
-  private initializeUsers(users: User[]): void {
-    if (users && users.length > 0) {
-      this.internalUsers.set([...users]);
-      this.showInput.set(true);
-    } else {
-      this.internalUsers.set([]);
-      this.showInput.set(false);
-    }
   }
 
   onAddClick(): void {
-    this.showInput.set(true);
-    this.addInput();
+    this.showSearch.set(true);
   }
 
-  addInput(): void {
-    const currentUsers = this.internalUsers();
-    const newIndex = currentUsers.length;
+  onSearchInput(value: string): void {
+    this.searchQuery.set(value);
 
-    this.internalUsers.update((users) => [...users, null]);
-
-    this.searchInputs.update((inputs) => ({ ...inputs, [newIndex]: '' }));
-    this.filteredUsers.update((users) => ({ ...users, [newIndex]: [] }));
-  }
-
-  onSearchInput(index: number, value: string): void {
-    this.searchInputs.update((inputs) => ({ ...inputs, [index]: value }));
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
 
     if (!value || value.trim() === '') {
-      this.filteredUsers.update((users) => ({ ...users, [index]: [] }));
+      this.filteredUsers.set([]);
+      this.isSearching.set(false);
       return;
     }
 
-    const searchTerm = value.toLowerCase();
-    const currentUsers = this.internalUsers();
-    const filtered = this.mockUsers.filter((user) => {
-      const isSelected = currentUsers.some((u) => u && u.uid === user.uid);
-      if (isSelected) return false;
+    this.isSearching.set(true);
 
-      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-      const email = user.email?.toLowerCase() || '';
-      const phone = user.phone?.toLowerCase() || '';
+    this.searchTimeout = setTimeout(async () => {
+      try {
+        const searchTerm = value.trim();
+        if (!searchTerm) {
+          this.filteredUsers.set([]);
+          this.isSearching.set(false);
+          return;
+        }
 
-      return fullName.includes(searchTerm) || email.includes(searchTerm) || phone.includes(searchTerm);
-    });
+        const searchResults = await this.userService.searchUsers(searchTerm);
+        const mappedUsers = this.mapIUserToUser(searchResults.users);
+        const currentUserIds = new Set(this.users().map((u) => u.id));
+        const filtered = mappedUsers.filter((user) => user.id && !currentUserIds.has(user.id));
 
-    this.filteredUsers.update((users) => ({ ...users, [index]: filtered }));
+        this.filteredUsers.set(filtered);
+        this.isSearching.set(false);
+      } catch (error) {
+        console.error('Error searching users:', error);
+        this.filteredUsers.set([]);
+        this.isSearching.set(false);
+      }
+    }, 300);
   }
 
-  onSelectUser(index: number, user: User): void {
-    const currentUsers = this.internalUsers();
+  private mapIUserToUser(users: IUser[]): IUser[] {
+    return users.map((user) => ({
+      id: user.id,
+      name: user.name || 'User',
+      thumbnail_url: user.thumbnail_url || 'assets/images/profile.jpeg',
+      email: user.email || undefined,
+      phone: user.mobile || undefined
+    }));
+  }
 
-    const isAlreadySelected = currentUsers.some((u) => u && u.uid === user.uid);
+  onSelectUser(user: IUser): void {
+    const currentUsers = this.users();
+    const isAlreadySelected = currentUsers.some((u) => u.id === user.id);
     if (isAlreadySelected) {
       return;
     }
 
-    this.internalUsers.update((users) => [...users, user]);
-
-    this.filteredUsers.update((users) => {
-      const newUsers = { ...users };
-      delete newUsers[index];
-      return newUsers;
-    });
-
-    this.searchInputs.update((inputs) => {
-      const newInputs = { ...inputs };
-      newInputs[index] = '';
-      return newInputs;
-    });
-
-    const validUsers = this.internalUsers().filter((u) => u !== null) as User[];
-    this.usersChange.emit(validUsers);
+    const updatedUsers = [...currentUsers, user];
+    this.users.set(updatedUsers);
+    this.searchQuery.set('');
+    this.filteredUsers.set([]);
+    this.showSearch.set(false);
+    this.usersChange.emit(updatedUsers);
   }
 
-  onClear(index: number): void {
-    this.internalUsers.update((users) => {
-      const updated = [...users];
-      updated.splice(index, 1);
-      return updated;
-    });
+  onRemoveUser(userId: string): void {
+    const updatedUsers = this.users().filter((u) => u.id !== userId);
+    this.users.set(updatedUsers);
+    this.usersChange.emit(updatedUsers);
+  }
 
-    this.searchInputs.update((inputs) => {
-      const newInputs: Record<number, string> = {};
-      Object.keys(inputs).forEach((key) => {
-        const keyNum = parseInt(key);
-        if (keyNum < index) {
-          newInputs[keyNum] = inputs[keyNum];
-        } else if (keyNum > index) {
-          newInputs[keyNum - 1] = inputs[keyNum];
-        }
-      });
-      return newInputs;
-    });
+  onImageError(event: Event): void {
+    onImageError(event, 'assets/images/profile.jpeg');
+  }
 
-    this.filteredUsers.update((users) => {
-      const newUsers: Record<number, User[]> = {};
-      Object.keys(users).forEach((key) => {
-        const keyNum = parseInt(key);
-        if (keyNum < index) {
-          newUsers[keyNum] = users[keyNum];
-        } else if (keyNum > index) {
-          newUsers[keyNum - 1] = users[keyNum];
-        }
-      });
-      return newUsers;
-    });
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl, 'assets/images/profile.jpeg');
+  }
 
-    if (this.internalUsers().length === 0) {
-      this.showInput.set(false);
+  ngOnDestroy(): void {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
     }
-
-    const validUsers = this.internalUsers().filter((u) => u !== null) as User[];
-    this.usersChange.emit(validUsers);
-  }
-
-  getSearchInput(index: number): string {
-    return this.searchInputs()[index] || '';
-  }
-
-  getFilteredUsers(index: number): User[] {
-    return this.filteredUsers()[index] || [];
-  }
-
-  getUsers(): (User | null)[] {
-    return this.internalUsers();
   }
 }

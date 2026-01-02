@@ -2,19 +2,11 @@ import { Chip } from '@/components/common/chip';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
+import { PromoCodeFormModalData } from '@/interfaces/event';
 import { NumberInput } from '@/components/form/number-input';
 import { IonHeader, IonFooter, IonContent, IonToolbar } from '@ionic/angular/standalone';
 import { FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Input, inject, signal, Component, ChangeDetectionStrategy } from '@angular/core';
-
-export interface PromoCodeFormModalData {
-  promoCode: string;
-  promoPresent: string;
-  max_use_per_user?: number;
-  capped_amount?: string | null;
-  redemption_limit?: number | null;
-  promotion_type: 'percentage' | 'fixed';
-}
 
 @Component({
   selector: 'promo-code-form-modal',
@@ -34,40 +26,53 @@ export class PromoCodeFormModal {
   // signals
   promoForm = signal<FormGroup>(
     this.fb.group({
-      promotion_type: ['fixed', [Validators.required]],
+      type: ['Fixed', [Validators.required]],
       capped_amount: [null]
     })
   );
-  promotionType = signal<'percentage' | 'fixed'>('fixed');
+  promotionType = signal<'Percentage' | 'Fixed'>('Fixed');
 
   ionViewWillEnter(): void {
     if (this.initialData) {
-      this.promotionType.set(this.initialData.promotion_type as 'percentage' | 'fixed');
+      this.promotionType.set(this.initialData.type as 'Percentage' | 'Fixed');
       this.promoForm().patchValue({
         ...this.initialData
       });
     }
 
+    // Convert promo_code to uppercase on input
+    const promoCodeControl = this.promoForm().get('promo_code');
+    if (promoCodeControl) {
+      promoCodeControl.valueChanges.subscribe((value) => {
+        if (value) {
+          const upperValue = value.toUpperCase();
+          if (value !== upperValue) {
+            promoCodeControl.setValue(upperValue);
+          }
+        }
+      });
+    }
+
     // Watch promotion type changes
-    const typeControl = this.promoForm().get('promotion_type');
+    const typeControl = this.promoForm().get('type');
     if (typeControl) {
       typeControl.valueChanges.subscribe((value) => {
-        if (value === 'percentage' || value === 'fixed') {
+        if (value === 'Percentage' || value === 'Fixed') {
           this.promotionType.set(value);
-          // Reset promoPresent when type changes
-          const promoPresentControl = this.promoForm().get('promoPresent');
-          if (promoPresentControl) {
-            promoPresentControl.setValue('');
+          // Reset value when type changes
+          const valueControl = this.promoForm().get('value');
+          if (valueControl) {
+            valueControl.setValue('');
           }
         }
       });
     }
   }
 
-  setPromotionType(type: 'percentage' | 'fixed'): void {
+  setPromotionType(type: 'Percentage' | 'Fixed'): void {
     this.promotionType.set(type);
     const form = this.promoForm();
-    const typeControl = form.get('promotion_type');
+    const typeControl = form.get('type');
     if (typeControl) {
       typeControl.setValue(type);
     }
@@ -81,7 +86,18 @@ export class PromoCodeFormModal {
       return;
     }
 
-    this.modalService.close(form.value, 'save');
+    const formValue = form.value;
+
+    const formattedValue: PromoCodeFormModalData = {
+      ...formValue,
+      value: formValue.value ? Number(formValue.value) : null
+    };
+
+    if (formValue.capped_amount) {
+      formattedValue.capped_amount = Number(formValue.capped_amount);
+    }
+
+    this.modalService.close(formattedValue, 'save');
   }
 
   close(): void {

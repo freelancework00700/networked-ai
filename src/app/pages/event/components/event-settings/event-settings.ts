@@ -1,12 +1,14 @@
+import { IUser } from '@/interfaces/IUser';
 import { CommonModule } from '@angular/common';
 import { Chip } from '@/components/common/chip';
 import { ModalService } from '@/services/modal.service';
 import { ToggleInput } from '@/components/form/toggle-input';
+import { RepeatingFrequencyType } from '@/interfaces/event';
 import { NumberInput } from '@/components/form/number-input';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { ParticipantInput, User } from '@/pages/event/components/participant-input';
+import { ParticipantInput } from '@/pages/event/components/participant-input';
 import { RepeatingEventItem } from '@/pages/event/components/repeating-event-item';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, input, output, signal, effect, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, input, output, signal, effect, DestroyRef, computed } from '@angular/core';
 @Component({
   selector: 'event-settings',
   styleUrl: './event-settings.scss',
@@ -18,6 +20,7 @@ export class EventSettings {
   // Inputs
   eventForm = input.required<FormGroup>();
   isModalMode = input<boolean>(false);
+  isEditMode = input<boolean>(false);
   openConfirmModal = input.required<(message: string) => Promise<boolean>>();
 
   // Outputs
@@ -28,14 +31,14 @@ export class EventSettings {
   cd = inject(ChangeDetectorRef);
   destroyRef = inject(DestroyRef);
 
-  coHosts = signal<User[]>([]);
-  sponsors = signal<User[]>([]);
-  speakers = signal<User[]>([]);
-  visibility = signal<'public' | 'invite-only'>('public');
+  coHosts = signal<IUser[]>([]);
+  sponsors = signal<IUser[]>([]);
+  speakers = signal<IUser[]>([]);
+  isPublic = signal<boolean>(true);
   repeatingEvents = signal<Array<Record<string, unknown>>>([]);
 
   // Signals
-  repeatOptions = signal<Array<{ label: string; value: 'weekly' | 'monthly' | 'custom' }>>([
+  repeatOptions = signal<Array<{ label: string; value: RepeatingFrequencyType }>>([
     { label: 'Weekly', value: 'weekly' },
     { label: 'Monthly', value: 'monthly' },
     { label: 'Custom', value: 'custom' }
@@ -53,35 +56,77 @@ export class EventSettings {
     { type: 'post_event', label: 'Post-Event', placeholder: 'A feedback survey after the event has concluded.' }
   ]);
 
+  // Main event signal from form data (reactive to form changes)
+  mainEvent = signal<Record<string, unknown>>({
+    id: 'main-event',
+    eventNumber: 1
+  });
+
+
   constructor() {
+    this.syncParticipantsToSignals();
+
     effect(() => {
-      const users = this.coHosts();
-      const uids = users.map((u) => u.uid);
-      this.eventForm().get('co_hosts')?.setValue(uids);
+      const form = this.eventForm();
+      const currentParticipants = form.get('participants')?.value || [];
+
+      const existingHosts = currentParticipants.filter((p: any) => {
+        return p.role === 'Host';
+      });
+
+      const participants: Array<{ user_id: string; role: string; thumbnail_url?: string; name?: string }> = [...existingHosts];
+
+      this.coHosts().forEach((user) => {
+        if (user.id) {
+          participants.push({
+            user_id: user.id,
+            role: 'CoHost',
+            thumbnail_url: user.thumbnail_url,
+            name: user.name
+          });
+        }
+      });
+
+      this.sponsors().forEach((user) => {
+        if (user.id) {
+          participants.push({
+            user_id: user.id,
+            role: 'Sponsor',
+            thumbnail_url: user.thumbnail_url,
+            name: user.name
+          });
+        }
+      });
+
+      // Add speakers
+      this.speakers().forEach((user) => {
+        if (user.id) {
+          participants.push({
+            user_id: user.id,
+            role: 'Speaker',
+            thumbnail_url: user.thumbnail_url,
+            name: user.name
+          });
+        }
+      });
+
+      const currentStr = JSON.stringify(currentParticipants.sort((a: any, b: any) => a.user_id?.localeCompare(b.user_id) || 0));
+      const newStr = JSON.stringify(participants.sort((a: any, b: any) => a.user_id?.localeCompare(b.user_id) || 0));
+      if (currentStr !== newStr) {
+        form.get('participants')?.setValue(participants);
+      }
     });
 
     effect(() => {
-      const users = this.sponsors();
-      const uids = users.map((u) => u.uid);
-      this.eventForm().get('sponsors')?.setValue(uids);
-    });
-
-    effect(() => {
-      const users = this.speakers();
-      const uids = users.map((u) => u.uid);
-      this.eventForm().get('speakers')?.setValue(uids);
-    });
-
-    effect(() => {
-      const visibility = this.visibility();
-      this.eventForm().get('visibility')?.setValue(visibility);
+      const isPublic = this.isPublic();
+      this.eventForm().get('is_public')?.setValue(isPublic);
     });
 
     effect(() => {
       const form = this.eventForm();
-      const formVisibility = form.get('visibility')?.value;
-      if (formVisibility && (formVisibility === 'public' || formVisibility === 'invite-only')) {
-        this.visibility.set(formVisibility);
+      const formIsPublic = form.get('is_public')?.value;
+      if (formIsPublic !== null && formIsPublic !== undefined) {
+        this.isPublic.set(formIsPublic);
       }
     });
 
@@ -109,7 +154,106 @@ export class EventSettings {
 
       const formEvents = repeatingEventsControl.value;
       if (Array.isArray(formEvents) && formEvents.length > 0 && this.repeatingEvents().length === 0) {
-        this.repeatingEvents.set(formEvents);
+        this.repeatingEvents.set(formEvents.map(e => ({ ...e })));
+        this.cd.markForCheck();
+      }
+    });
+
+    // Sync form data to mainEvent signal (reactive to form changes)
+    effect(() => {
+      const form = this.eventForm();
+      
+      // Initial update
+      const updateMainEvent = () => {
+        const formValues = form.getRawValue();
+        this.mainEvent.set({
+          ...formValues,
+          id: 'main-event',
+          eventNumber: 1,
+          date: formValues.date || ''
+        });
+        this.cd.markForCheck();
+      };
+
+      // Initial value
+      updateMainEvent();
+
+      // Subscribe to form value changes
+      const subscription = form.valueChanges.subscribe(() => {
+        updateMainEvent();
+      });
+
+      // Cleanup subscription when effect re-runs or component is destroyed
+      return () => {
+        subscription.unsubscribe();
+      };
+    });
+  }
+
+  private syncParticipantsToSignals(): void {
+    effect(() => {
+      const form = this.eventForm();
+      const control = form.get('participants');
+
+      if (control) {
+        const participants = control.value || [];
+
+        if (Array.isArray(participants)) {
+          const coHosts: IUser[] = [];
+          const sponsors: IUser[] = [];
+          const speakers: IUser[] = [];
+
+          participants.forEach((p: any) => {
+            const role = (p.role || '').trim();
+            const user: IUser = {
+              id: p.user_id,
+              name: p.name || '',
+              thumbnail_url: p.thumbnail_url
+            };
+
+            if (role === 'CoHost') {
+              coHosts.push(user);
+            } else if (role === 'Sponsor') {
+              sponsors.push(user);
+            } else if (role === 'Speaker') {
+              speakers.push(user);
+            }
+          });
+
+          this.coHosts.set(coHosts);
+          this.sponsors.set(sponsors);
+          this.speakers.set(speakers);
+        }
+
+        control.valueChanges.subscribe((value) => {
+          const participants = value || [];
+          if (Array.isArray(participants)) {
+            const coHosts: IUser[] = [];
+            const sponsors: IUser[] = [];
+            const speakers: IUser[] = [];
+
+            participants.forEach((p: any) => {
+              const role = (p.role || '').trim();
+              const user: IUser = {
+                id: p.user_id,
+                name: p.name || '',
+                thumbnail_url: p.thumbnail_url
+              };
+
+              if (role === 'CoHost') {
+                coHosts.push(user);
+              } else if (role === 'Sponsor') {
+                sponsors.push(user);
+              } else if (role === 'Speaker') {
+                speakers.push(user);
+              }
+            });
+
+            this.coHosts.set(coHosts);
+            this.sponsors.set(sponsors);
+            this.speakers.set(speakers);
+          }
+        });
       }
     });
   }
@@ -119,14 +263,34 @@ export class EventSettings {
   }
 
   getSectionQuestions(type: string): Array<{ id: string; question: string }> {
-    return (this.getFieldValue<Record<string, unknown>>('questionnaire')?.[type] as Array<{ id: string; question: string }>) ?? [];
+    const questionnaire = this.getFieldValue<Array<any>>('questionnaire');
+    if (!questionnaire || !Array.isArray(questionnaire) || questionnaire.length === 0) return [];
+
+    const eventPhase = type === 'pre_event' ? 'PreEvent' : 'PostEvent';
+    return questionnaire
+      .filter((q: any) => q.event_phase === eventPhase)
+      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+      .map((q: any, index: number) => ({
+        id: q.id || `question-${index}`,
+        question: q.question
+      }));
+  }
+
+  getSectionQuestionsForEdit(type: string): Array<any> {
+    const questionnaire = this.getFieldValue<Array<any>>('questionnaire');
+    if (!questionnaire || !Array.isArray(questionnaire) || questionnaire.length === 0) return [];
+
+    const eventPhase = type === 'pre_event' ? 'PreEvent' : 'PostEvent';
+    return questionnaire
+      .filter((q: any) => q.event_phase === eventPhase)
+      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
   }
 
   hasQuestions(type: string): boolean {
     return this.getSectionQuestions(type).length > 0;
   }
 
-  onUsersChange(users: User[], field: 'co_hosts' | 'sponsors' | 'speakers'): void {
+  onUsersChange(users: IUser[], field: 'co_hosts' | 'sponsors' | 'speakers'): void {
     if (field === 'co_hosts') {
       this.coHosts.set(users);
     } else if (field === 'sponsors') {
@@ -141,16 +305,16 @@ export class EventSettings {
     this.cd.markForCheck();
   }
 
-  setVisibility(type: 'public' | 'invite-only'): void {
-    this.visibility.set(type);
+  setVisibility(isPublic: boolean): void {
+    this.isPublic.set(isPublic);
   }
 
   setPlusCount(count: number): void {
-    this.updateFormField('plus', count);
+    this.updateFormField('max_attendees_per_user', count);
   }
 
-  setRepeatFrequency(frequency: 'weekly' | 'monthly' | 'custom'): void {
-    this.updateFormField('repeat_frequency', frequency);
+  setRepeatFrequency(frequency: RepeatingFrequencyType): void {
+    this.updateFormField('repeating_frequency', frequency);
 
     this.generateRepeatingEvents.emit();
   }
@@ -189,17 +353,20 @@ export class EventSettings {
   }
 
   async openQuestionnaireModal(type: 'pre_event' | 'post_event'): Promise<void> {
-    const currentQuestions = this.getSectionQuestions(type);
+    const currentQuestions = this.getSectionQuestionsForEdit(type);
     const result = await this.modalService.openQuestionnaireFormModal(type, currentQuestions.length > 0 ? currentQuestions : undefined);
 
     if (result?.questions) {
       const form = this.eventForm();
       const questionnaireControl = form.get('questionnaire');
-      const currentValue = (questionnaireControl?.value as Record<string, unknown>) || {};
-      questionnaireControl?.setValue({
-        ...currentValue,
-        [type]: result.questions
-      });
+      const existingQuestions = (questionnaireControl?.value as Array<any>) || [];
+
+      const eventPhase = type === 'pre_event' ? 'PreEvent' : 'PostEvent';
+      const filteredQuestions = existingQuestions.filter((q: any) => q.event_phase !== eventPhase);
+
+      const updatedQuestions = [...filteredQuestions, ...result.questions];
+
+      questionnaireControl?.setValue(updatedQuestions);
       this.cd.markForCheck();
     }
   }
@@ -207,9 +374,12 @@ export class EventSettings {
   deleteEventQuestionnaire(type: 'pre_event' | 'post_event'): void {
     const form = this.eventForm();
     const questionnaireControl = form.get('questionnaire');
-    const currentValue = (questionnaireControl?.value as Record<string, unknown>) || {};
-    const { [type]: _, ...updatedValue } = currentValue;
-    questionnaireControl?.setValue(updatedValue);
+    const existingQuestions = (questionnaireControl?.value as Array<any>) || [];
+
+    const eventPhase = type === 'pre_event' ? 'PreEvent' : 'PostEvent';
+    const filteredQuestions = existingQuestions.filter((q: any) => q.event_phase !== eventPhase);
+
+    questionnaireControl?.setValue(filteredQuestions);
     this.cd.markForCheck();
   }
 }

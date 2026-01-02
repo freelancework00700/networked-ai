@@ -2,7 +2,13 @@
   <ion-toolbar mode="md">
     <div class="p-6 max-w-[672px] mx-auto">
       <div class="flex items-center gap-2">
-        <div class="pi pi-arrow-left cursor-pointer" (click)="previousStep()"></div>
+        <div 
+          class="pi pi-arrow-left"
+          [class.cursor-pointer]="!isButtonDisabled()"
+          [class.cursor-not-allowed]="isButtonDisabled()"
+          [class.opacity-50]="isButtonDisabled()"
+          (click)="!isButtonDisabled() && previousStep()"
+        ></div>
         @if (!isModalMode) {
           <div class="body-14M neutral-02 text-center w-full">Create an Event</div>
         } @else {
@@ -26,7 +32,7 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" mode="md">
-  <div class="w-full p-6 max-w-[672px] mx-auto">
+  <div class="w-full p-6 pt-0 max-w-[672px] mx-auto">
     <form [formGroup]="eventForm()" class="h-full" (ngSubmit)="createEvent()">
       <!-- step 1: event details -->
       <div [hidden]="currentStep() !== 1" class="flex flex-col gap-6">
@@ -43,6 +49,7 @@
         <event-settings
           [eventForm]="eventForm()"
           [isModalMode]="isModalMode"
+          [isEditMode]="isEditMode()"
           [openConfirmModal]="handleConfirmModal"
           (generateRepeatingEvents)="generateRepeatingEventsIfReady()"
         />
@@ -50,7 +57,12 @@
 
       <!-- step 4: event preview -->
       <div [hidden]="currentStep() !== 4" class="flex flex-col gap-4">
-        <div class="flex flex-col gap-4">Step 4 content</div>
+        <event-display
+          [eventData]="eventDisplayData()"
+          [selectedDate]="selectedDate()"
+          [onDateChange]="onDateChange.bind(this)"
+          [showPreviewBanner]="true"
+        />
       </div>
     </form>
   </div>
@@ -64,7 +76,7 @@
           <app-button
             label="Create Ticket"
             [icon]="currentStep() === 2 ? 'assets/svg/ticket.svg' : ''"
-            (click)="createTicket()"
+            (click)="eventTickets.createTicket()"
             class="flex-1"
             [color]="tickets.length > 0 ? 'secondary' : 'primary'"
           />
@@ -74,7 +86,17 @@
         </div>
       } @else {
         @if (!isModalMode) {
-          <app-button [label]="buttonLabel()" [iconName]="buttonIcon()" [iconPos]="iconPos()" (click)="handleButtonClick()" />
+          @if (hasQuestionnaire() && currentStep() === 4) {
+            <div class="mb-4">
+              <app-button 
+                label="Preview Questionnaire" 
+                (click)="openQuestionnairePreview()" 
+                color="secondary"
+                class="w-full"
+              />
+            </div>
+          }
+          <app-button [label]="buttonLabel()" [iconName]="buttonIcon()" [iconPos]="iconPos()" (click)="handleButtonClick()" [disabled]="isButtonDisabled()" [isLoading]="isButtonDisabled()" />
         } @else {
           <div class="flex items-center gap-2">
             <app-button label="Cancel" (click)="cancelModal()" class="w-full" color="secondary" />

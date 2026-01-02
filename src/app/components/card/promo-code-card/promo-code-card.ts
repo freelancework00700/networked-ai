@@ -1,14 +1,6 @@
+import { PromoCode } from '@/interfaces/event';
 import { CommonModule } from '@angular/common';
 import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
-
-export interface PromoCode {
-  promoCode: string;
-  promotion_type: 'percentage' | 'fixed';
-  promoPresent: string;
-  capped_amount?: string | null;
-  redemption_limit?: number | null;
-  max_use_per_user?: number;
-}
 
 @Component({
   selector: 'promo-code-card',
@@ -24,10 +16,10 @@ export class PromoCodeCard {
 
   calculatePromoDiscount = computed(() => {
     const promo = this.promo();
-    if (promo.promotion_type === 'percentage') {
-      return parseFloat(promo.promoPresent) * 100 + '% OFF';
+    if (promo.type === 'Percentage') {
+      return `${promo.value}% OFF`;
     }
-    return `$${promo.promoPresent} OFF`;
+    return `$${promo.value} OFF`;
   });
 
   onEdit(): void {

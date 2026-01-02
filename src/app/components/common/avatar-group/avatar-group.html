@@ -1,6 +1,6 @@
 <div class="flex">
   <p-avatar-group>
-    @for (user of getVisibleUsers(); track user.id) {
+    @for (user of getVisibleUsers(); track trackByUser($index, user)) {
       <p-avatar [image]="getUserImage(user)" [size]="size()" [shape]="shape()" />
     }
     @if (shouldShowOverflow()) {
