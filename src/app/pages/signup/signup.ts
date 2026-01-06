@@ -11,7 +11,7 @@ import { MobileInput } from '@/components/form/mobile-input';
 import { BaseApiService } from '@/services/base-api.service';
 import { PasswordInput } from '@/components/form/password-input';
 import { NavigationService } from '@/services/navigation.service';
-import { IonIcon, ModalController } from '@ionic/angular/standalone';
+import { IonContent, IonIcon, ModalController } from '@ionic/angular/standalone';
 import { SocialLoginButtons } from '@/components/common/social-login-buttons';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { signal, inject, Component, viewChild, OnInit, OnDestroy, Input } from '@angular/core';
@@ -28,7 +28,7 @@ type SignupMethod = 'email' | 'mobile';
   selector: 'signup',
   styleUrl: './signup.scss',
   templateUrl: './signup.html',
-  imports: [Button, IonIcon, OtpInput, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule]
+  imports: [Button, IonIcon, OtpInput, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule, IonContent]
 })
 export class Signup implements OnInit, OnDestroy {
   @Input() onSignupSuccess: () => void = () => {};

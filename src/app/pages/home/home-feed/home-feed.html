@@ -26,6 +26,14 @@
   <div class="flex justify-center items-center py-8">
     <ion-spinner></ion-spinner>
   </div>
+} @else if (posts().length === 0) {
+  <profile-empty-state
+    buttonIcon="pi-plus"
+    buttonText="Start a Post"
+    buttonRoute="/new-post"
+    title="No Posts Yet"
+    subtitle="Create your first post!"
+  />
 } @else {
   @for (post of posts(); track post.id) {
     @if ($index === 1) {

@@ -12,12 +12,14 @@ import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { signal, Component, afterEveryRender, ChangeDetectionStrategy, inject, computed, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { ProfileEmptyState } from '@/components/common/profile-empty-state';
+import { FeedPost } from '@/interfaces/IFeed';
 
 type Filter = 'public' | 'networked';
 
 @Component({
   selector: 'home-feed',
-  imports: [UserCard, PostCard, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, NgOptimizedImage],
+  imports: [UserCard, PostCard, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, NgOptimizedImage, ProfileEmptyState],
   styleUrl: './home-feed.scss',
   templateUrl: './home-feed.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -55,9 +57,10 @@ export class HomeFeed implements OnDestroy {
   ];
 
   // Computed posts based on current filter (no API call on filter change)
-  posts = computed(() => {
+  posts = computed<FeedPost[]>(() => {
     const filter = this.feedFilter();
-    return filter === 'public' ? this.feedService.publicFeeds() : this.feedService.networkedFeeds();
+    const feeds = filter === 'public' ? this.feedService.publicFeeds() : this.feedService.networkedFeeds();
+    return feeds || [];
   });
 
   // Computed pagination state based on current filter
