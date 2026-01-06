@@ -3,6 +3,14 @@
   width: 100%;
 }
 
+.comment-user-name {
+  display: inline-block;
+  max-width: 160px; // Approximately 20 characters
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ngx-mentions {
   position: absolute !important;
   bottom: 100% !important;

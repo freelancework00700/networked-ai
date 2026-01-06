@@ -108,6 +108,7 @@ export interface MediaItem {
   type: 'Image' | 'Video' | 'image' | 'video' | 'gif';
   order?: number;
   file?: File;
+  media_url?: string;
 }
 
 // User section interface for grouping participants by role
@@ -238,4 +239,36 @@ export interface EventSettingsPayload {
   repeating_frequency?: RepeatingFrequency;
   max_attendees_per_user?: number;
   additional_fees?: number;
+}
+
+export interface EventsResponse {
+  message?: string;
+  success?: boolean;
+  data?: any;
+}
+
+export interface EventData {
+  id?: string;
+  title: string;
+  location: string;
+  latLng: {
+    lat: number;
+    lng: number;
+  };
+  address: string;
+  public: boolean;
+  dates: {
+    [id: string]: {
+      start: number;
+      end: number;
+    };
+  };
+  img?: string[];
+  description?: string;
+  promoCodes?: PromoCode[];
+  tickets?: Ticket[];
+  guestFeeEnabled?: boolean;
+  iap?: boolean;
+  start_date?: string;
+  medias?: MediaItem[];
 }

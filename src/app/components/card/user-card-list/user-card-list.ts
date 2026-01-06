@@ -60,9 +60,7 @@ export class UserCardList {
 
   onCardClick(): void {
     const username = this.user()?.username;
-    if (username) {
-      this.navigationService.navigateForward(`/${username}`);
-    }
+    this.navigationService.navigateForward(`/${username}`);
   }
 
   isSelected(id: string): boolean {

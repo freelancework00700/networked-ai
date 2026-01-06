@@ -1,41 +1,62 @@
-<div class="flex gap-2 p-4">
-  <button type="button" class="filter-button" [class.active]="feedFilter() === 'public'" (click)="feedFilter.set('public')">Public</button>
-  <button type="button" class="filter-button" [class.active]="feedFilter() === 'networked'" (click)="feedFilter.set('networked')">Networked</button>
+<!-- Filter buttons -->
+<div class="feed-filter-section bg-neutral-07 flex gap-2 p-4">
+  <button type="button" class="filter-button" [class.active]="feedFilter() === 'public'" (click)="feedFilter.set('public'); onFilterChange()">Public</button>
+  <button type="button" class="filter-button" [class.active]="feedFilter() === 'networked'" (click)="feedFilter.set('networked'); onFilterChange()">Networked</button>
 </div>
-<!-- post composer -->
-<div class="flex items-center gap-2 p-4 bg-neutral-07 border-b border-[#dbdbdb]">
-  <img src="assets/images/profile.jpeg" alt="avatar" class="w-[40px] h-[40px] rounded-full object-cover" />
 
+<!-- Post composer -->
+<div class="feed-post-composer flex items-center gap-2 p-4 bg-neutral-07 border-b border-[#dbdbdb]">
+  <div class="relative w-[40px] h-[40px] flex-shrink-0">
+    <img
+      fill
+      placeholder
+      alt="avatar"
+      class="rounded-full object-cover"
+      (error)="onImageError($event)"
+      [ngSrc]="currentUserImage()"
+    />
+  </div>
   <div class="flex-1 flex flex-col" (click)="navCtrl.navigateForward('/new-post')">
-    <div class="body-14SB neutral-01">Ethan Cortazzo</div>
+    <div class="post-composer-name body-14SB neutral-01">{{ currentUserName() }}</div>
     <div class="body-12M neutral-03">Start a new post...</div>
   </div>
 </div>
 
-@for (post of filteredPosts(); track post.post_id) {
-  @if ($index === 1) {
-    <div class="w-full max-w-[672px] mx-auto bg-neutral-06 py-3 mb-4">
-      <div class="px-4">
-        <div class="flex items-center justify-between">
-          <div class="body-16SB neutral-01">People you might know</div>
+@if (isLoading() && !hasLoadedOnce()) {
+  <div class="flex justify-center items-center py-8">
+    <ion-spinner></ion-spinner>
+  </div>
+} @else {
+  @for (post of posts(); track post.id) {
+    @if ($index === 1) {
+      <div class="w-full max-w-[672px] mx-auto bg-neutral-06 py-3 mb-4">
+        <div class="px-4">
+          <div class="flex items-center justify-between">
+            <div class="body-16SB neutral-01">People you might know</div>
+          </div>
         </div>
-      </div>
 
-      <div class="mt-3">
-        <div class="swiper swiper-user-recommendation">
-          <div class="swiper-wrapper">
-            @for (user of users; track user.name) {
-              <div class="swiper-slide">
-                <user-card [user]="user" />
-              </div>
-            }
+        <div class="mt-3">
+          <div class="swiper swiper-user-recommendation">
+            <div class="swiper-wrapper">
+              @for (user of users; track user.name) {
+                <div class="swiper-slide">
+                  <user-card [user]="user" />
+                </div>
+              }
+            </div>
           </div>
         </div>
       </div>
+    }
+
+    <div class="px-4">  
+      <post-card [post]="post" />
     </div>
   }
-
-  <div class="px-4">  
-    <post-card [post]="post" (onLike)="onLike(post.id)" (onComment)="onComment(post)" />
-  </div>
+  
+  <!-- Infinite scroll -->
+  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreFeeds($event)">
+    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more posts..." />
+  </ion-infinite-scroll>
 }

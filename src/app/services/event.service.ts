@@ -2,7 +2,8 @@ import { IUser } from '@/interfaces/IUser';
 import { inject, Injectable } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
 import { SegmentButtonItem } from '@/components/common/segment-button';
-import { EventResponse, EventCategory, EventCategoriesResponse, EventDisplayData, UserSection, MediaItem } from '@/interfaces/event';
+import { EventResponse, EventCategory, EventCategoriesResponse, EventDisplayData, UserSection, MediaItem, EventsResponse } from '@/interfaces/event';
+import { HttpParams } from '@angular/common/http';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
@@ -772,5 +773,35 @@ export class EventService extends BaseApiService {
     }
 
     return payload;
+  }
+
+  async getEvents(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    include_participant_events?: boolean;
+  } = {}): Promise<EventsResponse> {
+    try {
+      let httpParams = new HttpParams();
+      
+      if (params.page) {
+        httpParams = httpParams.set('page', params.page.toString());
+      }
+      if (params.limit) {
+        httpParams = httpParams.set('limit', params.limit.toString());
+      }
+      if (params.search) {
+        httpParams = httpParams.set('search', params.search);
+      }
+      if (params.include_participant_events !== undefined) {
+        httpParams = httpParams.set('include_participant_events', params.include_participant_events.toString());
+      }
+
+      const response = await this.get<EventsResponse>('/events/me', { params: httpParams });
+      return response;
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      throw error;
+    }
   }
 }

@@ -3,12 +3,17 @@ import { NavController } from '@ionic/angular';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
+import { AuthService } from '@/services/auth.service';
+import { FeedService } from '@/services/feed.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
-import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output, signal, ViewChild } from '@angular/core';
+import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output, signal, ViewChild, computed } from '@angular/core';
+import { FeedPost } from '@/interfaces/IFeed';
 
 @Component({
-  imports: [Button],
+  imports: [Button, NgOptimizedImage, DatePipe],
   selector: 'post-card',
   styleUrl: './post-card.scss',
   templateUrl: './post-card.html',
@@ -17,36 +22,69 @@ import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output, 
 export class PostCard {
   @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
 
-  post = input.required<any>();
+post = input.required<FeedPost>();
 
   navCtrl = inject(NavController);
   sanitizer = inject(DomSanitizer);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
+  authService = inject(AuthService);
+  feedService = inject(FeedService);
+  
+  private datePipe = new DatePipe('en-US');
 
-  onLike = output<void>();
-  onComment = output<void>();
   onMore = output<void>();
+  onLike = output<void>();
 
   swiper?: Swiper;
 
   currentSlide = signal(0);
-  menuItems: MenuItem[] = [
-    { label: 'Not Interested', icon: 'pi pi-eye-slash', iconType: 'pi', action: 'notInterested' },
-    { label: 'Add @sammyk982 to network', icon: 'assets/svg/addUserIcon.svg', iconType: 'svg', action: 'edit' },
-    { label: 'Mute @sammyk982', icon: 'assets/svg/alertOffBlackIcon.svg', iconType: 'svg', action: 'mute' },
-    { label: 'Unmute @sammyk982', icon: 'assets/svg/alertBlackIcon.svg', iconType: 'svg', action: 'unmute' },
-    { label: 'Block @sammyk982', icon: 'pi pi-ban', iconType: 'pi', action: 'block' },
-    { label: 'Report post', icon: 'assets/svg/social-feed/report.svg', iconType: 'svg', action: 'report' },
-    { label: 'Unfollow @sammyk982', icon: 'assets/svg/social-feed/user-minus.svg', iconType: 'svg', action: 'unfollow' },
+  
+  // Computed property to check if post belongs to current user
+  isCurrentUserPost = computed(() => {
+    const currentUser = this.authService.currentUser();
+    const postUserId = this.post().user_id;
+    return currentUser?.id === postUserId;
+  });
+  
+  // Menu items for current user's posts (Edit/Delete only)
+  currentUserMenuItems: MenuItem[] = [
     { label: 'Edit', icon: 'assets/svg/editIconBlack.svg', iconType: 'svg', action: 'edit' },
     { label: 'Delete', icon: 'assets/svg/deleteIcon.svg', iconType: 'svg', danger: true, action: 'delete' }
   ];
+  
+  // Menu items for other users' posts
+  otherUserMenuItems: MenuItem[] = [
+    { label: 'Not Interested', icon: 'pi pi-eye-slash', iconType: 'pi', action: 'notInterested' },
+    { label: 'Add to network', icon: 'assets/svg/addUserIcon.svg', iconType: 'svg', action: 'addToNetwork' },
+    { label: 'Mute', icon: 'assets/svg/alertOffBlackIcon.svg', iconType: 'svg', action: 'mute' },
+    { label: 'Unmute', icon: 'assets/svg/alertBlackIcon.svg', iconType: 'svg', action: 'unmute' },
+    { label: 'Block', icon: 'pi pi-ban', iconType: 'pi', action: 'block' },
+    { label: 'Report post', icon: 'assets/svg/social-feed/report.svg', iconType: 'svg', action: 'report' },
+    { label: 'Unfollow', icon: 'assets/svg/social-feed/user-minus.svg', iconType: 'svg', action: 'unfollow' }
+  ];
+
+  // Computed properties for API data
+  sortedMedias = computed(() => {
+    const medias = this.post().medias;
+    if (!medias || medias.length === 0) return [];
+    return [...medias].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  });
+
+  createdAtTimestamp = computed(() => {
+    const dateStr = this.post().created_at;
+    return dateStr ? new Date(dateStr).getTime() : Date.now();
+  });
+
+  updatedAtTimestamp = computed(() => {
+    const dateStr = this.post().updated_at;
+    return dateStr ? new Date(dateStr).getTime() : undefined;
+  });
 
   ngAfterViewChecked() {
     if (this.swiper) return;
     if (!this.swiperEl?.nativeElement) return;
-    if (!this.post().media?.length) return;
+    if (!this.sortedMedias().length) return;
 
     this.swiper = new Swiper(this.swiperEl.nativeElement, {
       slidesPerView: 1,
@@ -67,19 +105,8 @@ export class PostCard {
     });
   }
 
-  eventsMap = new Map<string, any>([
-    [
-      '-OaRVjr6NoQrDdd1Bi1u',
-      {
-        title: 'Atlanta Makes Me Laugh',
-        location: 'Atlanta, GA',
-        date: 'Fri 8/30'
-      }
-    ]
-  ]);
-
-  getEvent(eventId: string) {
-    return this.eventsMap.get(eventId);
+  formatEventDate(dateString: string): string {
+    return this.datePipe.transform(dateString, 'EEE MMM d') || '';
   }
 
   getTimeAgo = (timestamp: number, updatedTimestamp?: number) => {
@@ -114,7 +141,12 @@ export class PostCard {
   };
 
   async openMenu() {
-    const result = await this.modalService.openMenuModal(this.menuItems);
+    // Show different menu items based on whether it's the current user's post
+    const menuItems = this.isCurrentUserPost() 
+      ? this.currentUserMenuItems 
+      : this.otherUserMenuItems;
+    
+    const result = await this.modalService.openMenuModal(menuItems);
     if (!result) return;
 
     const actions: Record<string, () => void> = {
@@ -125,14 +157,22 @@ export class PostCard {
       unfollow: () => this.unfollowPost(),
       unmute: () => this.unmutePost(),
       mute: () => this.mutePost(),
-      notInterested: () => this.notInterestedPost()
+      notInterested: () => this.notInterestedPost(),
+      addToNetwork: () => this.addToNetwork()
     };
 
     actions[result.role]?.();
   }
 
   editPost() {
-    this.navCtrl.navigateForward(`/new-post`);
+    this.navCtrl.navigateForward(`/new-post`, { 
+      state: { postId: this.post().id, post: this.post() } 
+    });
+  }
+  
+  addToNetwork() {
+    // TODO: Implement add to network functionality
+    console.log('Add to network:', this.post().user_id);
   }
 
   async deletePost() {
@@ -144,35 +184,53 @@ export class PostCard {
       confirmButtonLabel: 'Delete',
       cancelButtonLabel: 'Cancel',
       confirmButtonColor: 'danger',
-      iconPosition: 'left'
+      iconPosition: 'left',
+      onConfirm: async () => {
+        const postId = this.post().id;
+        const response = await this.feedService.deletePost(postId!);
+        this.toasterService.showSuccess(response.message);
+        return response;
+      }
     });
 
-    if (result && result.role === 'confirm') {
-      this.toasterService.showSuccess('post deleted');
+    if (result && result.role === 'error') {
+      this.toasterService.showError('Failed to delete post. Please try again.');
     }
   }
 
   async reportPost() {
     const result = await this.modalService.openReportModal('Post');
-    if (!result) return;
-    const resultModal = await this.modalService.openConfirmModal({
-      icon: 'assets/svg/deleteWhiteIcon.svg',
-      iconBgColor: '#F5BC61',
-      title: 'Report Submitted',
-      description: 'We use these reports to show you less of this kind of content in the future.',
-      confirmButtonLabel: 'Done'
-    });
-    if (resultModal && resultModal.role === 'confirm') {
-      this.toasterService.showSuccess('Event cancelled');
+    if (!result || !result.reason_id) return;
+
+    const postId = this.post().id;
+    if (!postId) return;
+
+    try {
+      await this.feedService.reportFeed({
+        feed_id: postId,
+        reason_id: result.reason_id,
+        reason: result.reason
+      });
+
+      await this.modalService.openConfirmModal({
+        icon: 'assets/svg/deleteWhiteIcon.svg',
+        iconBgColor: '#F5BC61',
+        title: 'Report Submitted',
+        description: 'We use these reports to show you less of this kind of content in the future.',
+        confirmButtonLabel: 'Done'
+      });
+    } catch (error) {
+      console.error('Error reporting post:', error);
+      this.toasterService.showError('Failed to report post. Please try again.');
     }
-    this.toasterService.showSuccess('Post reported');
   }
 
   async blockUser() {
-    const result = await this.modalService.openBlockModal();
-    if (!result) return;
+    const currentPost = this.post();
+    if (!currentPost?.user) return;
 
-    this.toasterService.showSuccess('User blocked');
+    const result = await this.modalService.openBlockModal(currentPost.user);
+    if (!result) return;
   }
 
   unfollowPost() {
@@ -192,10 +250,10 @@ export class PostCard {
   }
 
   async sharePost() {
-    const result = await this.modalService.openShareModal(this.post().post_id, 'Post');
-    if (result) {
-      this.toasterService.showSuccess('Post shared');
-    }
+    const postId = this.post().id;
+    if (!postId) return;
+    
+    await this.modalService.openShareModal(postId, 'Post', postId);
   }
 
   renderText(text: string): SafeHtml {
@@ -216,7 +274,10 @@ export class PostCard {
   }
 
   openFullscreen(index: number) {
-    this.modalService.openImagePreviewModal(this.post().media[index].url);
+    const media = this.sortedMedias()[index];
+    if (media && media.media_type === 'Image' && media.media_url) {
+      this.modalService.openImagePreviewModal(media.media_url);
+    }
   }
 
   renderCommentText(text: string): SafeHtml {
@@ -230,5 +291,28 @@ export class PostCard {
     );
 
     return this.sanitizer.bypassSecurityTrustHtml(modifiedText);
+  }
+
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
+  }
+
+  onImageError(event: Event): void {
+    onImageError(event);
+  }
+
+  async toggleLike(): Promise<void> {
+    const postId = this.post().id;
+    try {
+      await this.feedService.toggleLike(postId!);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+    this.onLike.emit();
+  }
+
+  onComment(): void {
+    const postId = this.post().id;
+    this.navCtrl.navigateForward(['/comments', postId!], { state: { post: this.post() } });
   }
 }

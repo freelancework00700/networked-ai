@@ -1,21 +1,48 @@
-<div class="flex p-6 flex-col gap-2">
-  <div class="flex items-center justify-between">
-    <div class="heading-h3 neutral-01">Add Event to Post</div>
-    <div class="pi pi-times cursor-pointer" (click)="close()"></div>
-  </div>
-  <searchbar class="w-full" [searchQuery]="searchQuery()" (searchChange)="onSearchChange($event)" [placeholder]="'Search for an event'" />
-  <div class="flex">
-    <button type="button" class="segment-button" [class.active]="segmentValue() === 'All Events'" (click)="segmentValue.set('All Events')">
-      <span class="segment-text">All Events</span>
-    </button>
-
-    <button type="button" class="segment-button" [class.active]="segmentValue() === 'My Events'" (click)="segmentValue.set('My Events')">
-      <span class="segment-text">My Events</span>
-    </button>
-  </div>
-  <div class="flex flex-col">
-    @for (event of filteredEvents(); track event.id) {
-      <post-event-card [event]="event" [isModal]="true" (onAdd)="onAdd($event)" />
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="flex items-center justify-between p-6 pb-4">
+      <div class="heading-h3 neutral-01">Add Event to Post</div>
+      <div class="pi pi-times cursor-pointer" (click)="close()"></div>
+    </div>
+    
+    <!-- Search and Segments -->
+    <div class="px-6 pb-4 flex flex-col gap-4">
+      <searchbar class="w-full" [searchQuery]="searchQuery()" (searchChange)="onSearchChange($event)" [placeholder]="'Search for an event'" />
+      <div class="flex">
+        <button type="button" class="segment-button" [class.active]="segmentValue() === 'All Events'" (click)="onSegmentChange('All Events')">
+          <span class="segment-text">All Events</span>
+        </button>
+  
+        <button type="button" class="segment-button" [class.active]="segmentValue() === 'My Events'" (click)="onSegmentChange('My Events')">
+          <span class="segment-text">My Events</span>
+        </button>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+  <!-- Scrollable Content -->
+<ion-content class="flex-1">
+  <div class="px-6 pb-4 flex flex-col">
+    @if (isLoading()) {
+      <div class="flex justify-center items-center py-8">
+        <ion-spinner type="crescent" mode="md"></ion-spinner>
+      </div>
+    } @else if (filteredEvents().length === 0) {
+      <app-empty-state 
+        [title]="'No Events Found'" 
+        [message]="searchQuery() ? 'Try searching for a different keyword.' : 'No events available.'"
+        [showClearButton]="!!searchQuery()"
+        (clear)="onSearchChange('')"
+      />
+    } @else {
+      @for (event of filteredEvents(); track event.id) {
+        <post-event-card [event]="event" [isModal]="true" (onAdd)="onAdd($event)" />
+      }
+      @if (hasMore()) {
+        <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreEvents($event)">
+          <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more events..." />
+        </ion-infinite-scroll>
+      }
     }
   </div>
-</div>
+</ion-content>

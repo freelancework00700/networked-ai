@@ -2,22 +2,30 @@
   <ion-toolbar mode="md">
     <!-- user and notification -->
     @if (isLoggedIn()) {
-      <div class="w-full p-6 px-4 max-w-[672px] mx-auto">
+      <div class="header-profile-section w-full p-6 px-4 max-w-[672px] mx-auto">
         <profile-header-toolbar />
       </div>
     }
 
     <!-- segment buttons -->
-    <segment-button [items]="tabItems" [value]="tab()" (valueChange)="onSegmentChange($event)" />
+    <div class="header-segment-section">
+      <segment-button [items]="tabItems" [value]="tab()" (valueChange)="onSegmentChange($event)" />
+    </div>
   </ion-toolbar>
+  
+  
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <div class="w-full max-w-[672px] mx-auto relative h-full">
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
+    <ion-refresher-content mode="md"></ion-refresher-content>
+  </ion-refresher>
+  
+  <div class="w-full max-w-[672px] mx-auto relative">
     @if (tab() === 'events') {
       <home-event />
     } @else {
-      <home-feed />
+      <home-feed #homeFeedRef />
     }
   </div>
 </ion-content>

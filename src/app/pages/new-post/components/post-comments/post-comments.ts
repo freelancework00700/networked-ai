@@ -5,12 +5,19 @@ import { Button } from '@/components/form/button';
 import { PostCard } from '@/components/card/post-card';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
+import { FeedService } from '@/services/feed.service';
 import { EmptyState } from '@/components/common/empty-state';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { NgxMentionsModule, ChoiceWithIndices } from 'ngx-mentions';
-import { Component, effect, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { IonToolbar, IonHeader, IonContent, NavController, IonFooter } from '@ionic/angular/standalone';
+import { Component, inject, signal, ChangeDetectionStrategy, PLATFORM_ID, computed, OnInit} from '@angular/core';
+import { IonToolbar, IonHeader, IonContent, NavController, IonFooter, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
+import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
+import { CommentResponse, FeedComment } from '@/interfaces/IFeed';
+import { Router, ActivatedRoute } from '@angular/router';
+import { AuthService } from '@/services/auth.service';
+import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
+import { NavigationService } from '@/services/navigation.service';
 
 @Component({
   selector: 'post-comments',
@@ -26,16 +33,31 @@ import { IonToolbar, IonHeader, IonContent, NavController, IonFooter } from '@io
     MenuModule,
     IonContent,
     IonToolbar,
+    IonSpinner,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
     CommonModule,
     NgxMentionsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    NgOptimizedImage
   ]
 })
-export class PostComments {
+export class PostComments implements OnInit {
   navCtrl = inject(NavController);
   sanitizer = inject(DomSanitizer);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
+  feedService = inject(FeedService);
+  authService = inject(AuthService);
+  navigationService = inject(NavigationService);
+  router = inject(Router);
+  route = inject(ActivatedRoute);
+  private platformId = inject(PLATFORM_ID);
+
+  // Check if we're in the browser (for SSR compatibility)
+  isBrowser = computed(() => isPlatformBrowser(this.platformId));
+
+  currentUser = this.authService.currentUser;
 
   choices: any[] = [];
   mentions: ChoiceWithIndices[] = [];
@@ -44,12 +66,19 @@ export class PostComments {
 
   post = signal<any>(null);
   loading = signal<boolean>(false);
+  isLoadingComments = signal<boolean>(false);
+  isLoadingPost = signal<boolean>(false);
+  currentPage = signal<number>(1);
+  totalPages = signal<number>(0);
+  totalComments = signal<number>(0);
   replyingTo = signal<{
     commentId: string;
     userName: string;
     userPhoto?: string;
   } | null>(null);
   formattedText!: any;
+
+  hasMoreComments = computed(() => this.currentPage() < this.totalPages());
 
   parentCommentStatusBasedStyles = {
     color: '#F5BC61'
@@ -64,183 +93,299 @@ export class PostComments {
     }
   ];
 
-  menuItems: MenuItem[] = [
-    {
+  getMenuItems(comment: FeedComment): MenuItem[] {
+    const currentUserId = this.currentUser()?.id;
+    const isOwnComment = comment.user_id === currentUserId || comment.created_by === currentUserId;
+
+    const items: MenuItem[] = [];
+
+    // View Profile is available for all comments
+    items.push({
       label: 'View Profile',
       icon: 'pi pi-user',
-      command: () => this.viewProfile()
-    },
-    {
-      label: 'Message',
-      icon: 'pi pi-envelope',
-      command: () => this.sendMessage()
-    },
-    {
-      separator: true
-    },
-    {
-      label: 'Report',
-      icon: 'pi pi-flag',
-      command: () => this.reportComment()
-    },
-    {
-      label: 'Block account',
-      icon: 'pi pi-ban',
-      command: () => this.blockUser()
-    }
-  ];
+      command: () => this.viewProfile(comment)
+    });
 
-  comments = signal<any[]>([
-    {
-      comment_id: 'HWCL26g6rwZeMOyenN6L',
-      text: 'https://www.npmjs.com/package/angular-mentions',
-      uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-      post_id: 'MuffELhtUqTbGnUJ3zmE',
-      createdAt: 1766127451868,
-      parent_comment_id: null,
-      like_count: 2,
-      reply_count: 0,
-      isLiked: true,
-      replies: [],
-      isSending: false
-    },
-    {
-      comment_id: 'voGvKv9Tq36p9KsbYuKQ',
-      parent_comment_id: null,
-      uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-      reply_count: 2,
-      text: 'test123',
-      post_id: 'MuffELhtUqTbGnUJ3zmE',
-      createdAt: 1756378928704,
-      like_count: 0,
-      isLiked: false,
-      replies: [
+    if (isOwnComment) {
+      // Show delete option for own comments
+      items.push({
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        command: () => this.deleteComment(comment)
+      });
+    } else {
+      // Options for other users' comments
+      items.push(
         {
-          comment_id: 'xLSf8Aj5RPtxzVSvyXOW',
-          text: 'test 123',
-          uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-          post_id: 'MuffELhtUqTbGnUJ3zmE',
-          createdAt: 1766127504771,
-          parent_comment_id: 'voGvKv9Tq36p9KsbYuKQ',
-          like_count: 4,
-          reply_count: 0,
-          isLiked: false,
-          replies: [],
-          isSending: false
+          label: 'Message',
+          icon: 'pi pi-envelope',
+          command: () => this.sendMessage(comment)
         },
         {
-          comment_id: 'qneGoETVRliLSp2FNrCk',
-          parent_comment_id: 'voGvKv9Tq36p9KsbYuKQ',
-          uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-          post_id: 'MuffELhtUqTbGnUJ3zmE',
-          like_count: 0,
-          createdAt: 1756378939910,
-          text: '123',
-          reply_count: 0,
-          isLiked: false
-        }
-      ]
-    },
-    {
-      comment_id: 'BKk8mYZhGEe39GI9zfIO',
-      parent_comment_id: null,
-      uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-      post_id: 'MuffELhtUqTbGnUJ3zmE',
-      createdAt: 1756359496204,
-      text: 'test comment',
-      reply_count: 2,
-      like_count: 6,
-      isLiked: false,
-      replies: [
-        {
-          comment_id: '6bgZ30Vqn6ZZecwkg889',
-          post_id: 'MuffELhtUqTbGnUJ3zmE',
-          reply_count: 0,
-          parent_comment_id: 'BKk8mYZhGEe39GI9zfIO',
-          uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-          text: '123',
-          createdAt: 1756378946006,
-          like_count: 0,
-          isLiked: false
+          separator: true
         },
         {
-          comment_id: 'qRr65alYV39qWAWU1Mdf',
-          createdAt: 1756378933651,
-          reply_count: 0,
-          like_count: 0,
-          text: 'test',
-          uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-          parent_comment_id: 'BKk8mYZhGEe39GI9zfIO',
-          post_id: 'MuffELhtUqTbGnUJ3zmE',
-          isLiked: false
+          label: 'Report',
+          icon: 'pi pi-flag',
+          command: () => this.reportComment(comment)
+        },
+        {
+          label: 'Block account',
+          icon: 'pi pi-ban',
+          command: () => this.blockUser(comment)
         }
-      ]
+      );
     }
-  ]);
 
-  private navEffect = effect(() => {
-    const state = history.state;
+    return items;
+  }
 
-    if (state?.post) {
-      this.post.set(state.post);
+  comments = signal<FeedComment[]>([]);
+
+  async ngOnInit() {
+    const postId = this.route.snapshot.paramMap.get('id');
+    if (postId) {
+      try {
+        this.isLoadingPost.set(true);
+        const postData = await this.feedService.getPostById(postId);
+        if (postData) {
+          this.post.set(postData);
+          this.loadComments(postId);
+        }
+      } catch (error) {
+        console.error('Error loading post:', error);
+      } finally {
+        this.isLoadingPost.set(false);
+      }
     }
-  });
 
-  ngOnInit() {
     this.textCtrl.valueChanges.subscribe((content) =>
       this.getFormattedHighlightText(this.textCtrl.value, this.mentions, this.parentCommentStatusBasedStyles)
     );
   }
 
-  viewProfile() {
-    console.log('View profile clicked');
-  }
+  private async loadComments(feedId: string, page: number = 1, limit: number = 10): Promise<void> {
+    try {
+      this.isLoadingComments.set(true);
+      const result = await this.feedService.getFeedComments(feedId, { page, limit });
+      this.totalComments.set(result.total);
 
-  sendMessage() {
-    console.log('Message clicked');
-  }
+      // Add isRepliesOpen property to comments and their replies
+      const addRepliesOpen = (comment: FeedComment): FeedComment => {
+        return {
+          ...comment,
+          isRepliesOpen: false,
+          replies: comment.replies?.map(reply => ({ ...reply, isRepliesOpen: false }))
+        };
+      };
 
-  async reportComment() {
-    const result = await this.modalService.openReportModal('Post');
-    if (!result) return;
-    const resultModal = await this.modalService.openConfirmModal({
-      icon: 'assets/svg/deleteWhiteIcon.svg',
-      iconBgColor: '#F5BC61',
-      title: 'Report Submitted',
-      description: 'We use these reports to show you less of this kind of content in the future.',
-      confirmButtonLabel: 'Done'
-    });
-    if (resultModal && resultModal.role === 'confirm') {
-      this.toasterService.showSuccess('Event cancelled');
+      const topLevelComments = result.comments
+        .filter(comment => !comment.parent_comment_id)
+        .map(comment => addRepliesOpen(comment));
+
+      if (page === 1) {
+        this.comments.set(topLevelComments);
+      } else {
+        this.comments.update(current => [...current, ...topLevelComments]);
+      }
+      this.currentPage.set(result.page);
+      this.totalPages.set(result.totalPages);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    } finally {
+      this.isLoadingComments.set(false);
     }
-    this.toasterService.showSuccess('Post reported');
   }
 
-  async blockUser() {
-    const result = await this.modalService.openBlockModal();
-    if (!result) return;
+  async loadMoreComments(event: Event): Promise<void> {
+    const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
+    const postId = this.post()?.id;
+    
+    if (!postId || !this.hasMoreComments()) {
+      infiniteScroll.complete();
+      return;
+    }
 
-    this.toasterService.showSuccess('User blocked');
+    try {
+      const nextPage = this.currentPage() + 1;
+      await this.loadComments(postId, nextPage);
+      infiniteScroll.complete();
+    } catch (error) {
+      console.error('Error loading more comments:', error);
+      infiniteScroll.complete();
+    }
+  }
+
+  async deleteComment(comment: FeedComment): Promise<void> {
+    let deleteResponse: CommentResponse | null = null;
+
+    const result = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/deleteWhiteIcon.svg',
+      iconBgColor: '#C73838',
+      title: 'Delete Comment',
+      description: 'Are you sure you want to delete this comment? This action cannot be undone.',
+      confirmButtonLabel: 'Delete',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        deleteResponse = await this.feedService.deleteComment(comment.id);
+        return deleteResponse;
+      }
+    });
+
+    if (result && result.role === 'confirm' && deleteResponse !== null) {
+      const commentIdToDelete = comment.id;
+      const isReply = !!comment.parent_comment_id;
+      const responseMessage = (deleteResponse as CommentResponse).message;
+
+      // Remove comment from the list
+      this.comments.update((comments) => {
+        if (isReply) {
+          // Remove reply from parent comment's replies array
+          return comments.map(c => {
+            if (c.replies && c.replies.some(reply => reply.id === commentIdToDelete)) {
+              return {
+                ...c,
+                replies: c.replies.filter(reply => reply.id !== commentIdToDelete),
+                total_replies: Math.max((c.total_replies || 1) - 1, 0)
+              };
+            }
+            return c;
+          });
+        } else {
+          // Remove top-level comment
+          return comments.filter(c => c.id !== commentIdToDelete);
+        }
+      });
+
+      // Update pagination: decrement total comments count
+      this.totalComments.update(count => Math.max(count - 1, 0));
+
+      // Update post's total_comments
+      this.post.update((p) => ({
+        ...p,
+        total_comments: Math.max((p.total_comments || 1) - 1, 0)
+      }));
+
+      // Show success message from API response
+      this.toasterService.showSuccess(responseMessage || 'Comment deleted successfully');
+    } else if (result && result.role === 'error') {
+      this.toasterService.showError('Failed to delete comment. Please try again.');
+    }
+  }
+
+  viewProfile(comment: FeedComment) {
+    const username = comment.user?.username;
+    document.body.click();
+    setTimeout(() => this.navigationService.navigateForward(`/${username}`));
+  }
+
+  sendMessage(comment: FeedComment) {
+    console.log('Message clicked for:', comment.user?.username);
+    // TODO: Navigate to messages
+  }
+
+  async reportComment(comment: FeedComment) {
+    const result = await this.modalService.openReportModal('Comment');
+    if (!result || !result.reason_id) return;
+
+    try {
+      await this.feedService.reportComment({
+        comment_id: comment.id,
+        reason_id: result.reason_id,
+        reason: result.reason
+      });
+
+      await this.modalService.openConfirmModal({
+        icon: 'assets/svg/deleteWhiteIcon.svg',
+        iconBgColor: '#F5BC61',
+        title: 'Report Submitted',
+        description: 'We use these reports to show you less of this kind of content in the future.',
+        confirmButtonLabel: 'Done'
+      });
+    } catch (error) {
+      console.error('Error reporting comment:', error);
+      this.toasterService.showError('Failed to report comment. Please try again.');
+    }
+  }
+
+  async blockUser(comment: FeedComment) {
+    if (!comment.user) return;
+
+    const result = await this.modalService.openBlockModal(comment.user);
+    if (!result) return;
   }
 
   onLike() {
-    this.post.set({
-      ...this.post(),
-      isLikedByYou: !this.post().isLikedByYou,
-      like_count: !this.post().isLikedByYou ? (this.post().like_count || 0) + 1 : Math.max((this.post().like_count || 1) - 1, 0)
-    });
+    const currentPost = this.post();
+    if (!currentPost) return;
+
+    const currentIsLiked = currentPost.is_like || false;
+    const currentLikes = currentPost.total_likes || 0;
+    const newIsLiked = !currentIsLiked;
+    const newLikes = newIsLiked ? currentLikes + 1 : Math.max(currentLikes - 1, 0);
+
+    this.post.update((p) => ({ ...p, is_like: newIsLiked, total_likes: newLikes }));
   }
 
-  toggleReplies(comment: any) {
+  toggleReplies(comment: FeedComment) {
     comment.isRepliesOpen = !comment.isRepliesOpen;
   }
 
-  onLikeComment(comment: any, isReply: boolean = false) {
-    comment.isLiked = !comment.isLiked;
-    if (isReply) {
-      comment.like_count = comment.isLiked ? (comment.like_count || 0) + 1 : Math.max((comment.like_count || 1) - 1, 0);
-    } else {
-      comment.like_count = comment.isLiked ? (comment.like_count || 0) + 1 : Math.max((comment.like_count || 1) - 1, 0);
+  async onLikeComment(comment: FeedComment, isReply: boolean = false): Promise<void> {
+    const commentId = comment.id;
+    const currentIsLiked = comment.is_like || false;
+    const currentLikes = comment.total_likes || 0;
+    const newIsLiked = !currentIsLiked;
+    const newLikes = newIsLiked ? currentLikes + 1 : Math.max(currentLikes - 1, 0);
+
+    // Helper function to update comment in tree
+    const updateCommentInTree = (c: FeedComment): FeedComment => {
+      if (c.id === commentId) {
+        return { ...c, is_like: newIsLiked, total_likes: newLikes };
+      }
+      if (c.replies && c.replies.length > 0) {
+        return { ...c, replies: c.replies.map(reply => updateCommentInTree(reply)) };
+      }
+      return c;
+    };
+
+    // Optimistic update: Update UI immediately
+    this.comments.update((comments) => comments.map(updateCommentInTree));
+
+    try {
+      // Call API
+      const response = await this.feedService.toggleCommentLike(commentId);
+
+      // Update again based on actual API response
+      const actualIsLiked = response.data.content;
+      const actualLikes = actualIsLiked ? currentLikes + 1 : Math.max(currentLikes - 1, 0);
+      
+      const updateCommentWithActual = (c: FeedComment): FeedComment => {
+        if (c.id === commentId) {
+          return { ...c, is_like: actualIsLiked, total_likes: actualLikes };
+        }
+        if (c.replies && c.replies.length > 0) {
+          return { ...c, replies: c.replies.map(reply => updateCommentWithActual(reply)) };
+        }
+        return c;
+      };
+
+      this.comments.update((comments) => comments.map(updateCommentWithActual));
+    } catch (error) {
+      console.error('Error toggling comment like:', error);
+      // Revert optimistic update on error
+      const revertComment = (c: FeedComment): FeedComment => {
+        if (c.id === commentId) {
+          return { ...c, is_like: currentIsLiked, total_likes: currentLikes };
+        }
+        if (c.replies && c.replies.length > 0) {
+          return { ...c, replies: c.replies.map(reply => revertComment(reply)) };
+        }
+        return c;
+      };
+      this.comments.update((comments) => comments.map(revertComment));
     }
   }
 
@@ -248,52 +393,94 @@ export class PostComments {
     this.post.update((p) => ({ ...p, share_count: (p.share_count || 0) + 1 }));
   }
 
-  sendComment() {
+  async sendComment(): Promise<void> {
     if (!this.textCtrl.value?.trim()) return;
 
     const replyTo = this.replyingTo();
-    const newComment = {
-      comment_id: Date.now(),
-      userName: 'You',
-      userPhoto: 'assets/images/profile.jpeg',
-      text: this.formattedText?.changingThisBreaksApplicationSecurity,
-      createdAt: Date.now(),
-      replies: [],
-      like_count: 0,
-      isLiked: false
-    };
+    const feedId = this.post()?.id;
+    if (!feedId) return;
 
-    this.comments.update((comments) => {
-      if (replyTo) {
-        return comments.map((comment) => {
-          if (comment.comment_id === replyTo.commentId) {
-            return {
-              ...comment,
-              replies: [...(comment.replies || []), newComment]
-            };
-          }
-          return comment;
-        });
-      }
+    // Extract mention IDs from mentions array
+    const mentionIds = this.mentions
+      .map(mention => mention.choice?.id)
+      .filter((id): id is string => !!id);
 
-      return [...comments, newComment];
-    });
-    this.formattedText = '';
-    this.textCtrl.setValue('');
-    this.replyingTo.set(null);
+    // Get plain text comment (without HTML formatting)
+    const commentText = this.textCtrl.value?.trim() || '';
 
     this.loading.set(true);
-    setTimeout(() => {
+
+    try {
+      const payload: {
+        feed_id: string;
+        comment: string;
+        parent_comment_id?: string | null;
+        mention_ids?: string[];
+      } = {
+        feed_id: feedId,
+        comment: commentText,
+        ...(replyTo && { parent_comment_id: replyTo.commentId }),
+        ...(mentionIds.length > 0 && { mention_ids: mentionIds })
+      };
+
+      const response = await this.feedService.createComment(payload);
+      const newComment = response.data.content as FeedComment;
+
+      // Add isRepliesOpen property
+      const commentWithState: FeedComment = {
+        ...newComment,
+        isRepliesOpen: false
+      };
+
+      // Update comments signal
+      this.comments.update((comments) => {
+        if (replyTo) {
+          // Add as reply to parent comment (newest first)
+          return comments.map((comment) => {
+            if (comment.id === replyTo.commentId) {
+              return {
+                ...comment,
+                replies: [commentWithState, ...(comment.replies || [])],
+                total_replies: (comment.total_replies || 0) + 1
+              };
+            }
+            return comment;
+          });
+        }
+
+        // Add as top-level comment at the start
+        return [commentWithState, ...comments];
+      });
+
+      if (!replyTo) {
+        this.totalComments.update(count => count + 1);
+
+        // Update post's total_comments only for parent comments
+        this.post.update((p) => ({ ...p, total_comments: (p.total_comments || 0) + 1 }));
+      }
+
+      // Clear form
+      this.formattedText = '';
+      this.textCtrl.setValue('');
+      this.replyingTo.set(null);
+      this.mentions = [];
+    } catch (error) {
+      console.error('Error sending comment:', error);
+      this.toasterService.showError('Failed to post comment. Please try again.');
+    } finally {
       this.loading.set(false);
-    }, 1000);
+    }
   }
 
-  getTimeAgo = (timestamp: number) => {
+  getTimeAgo = (dateString: string) => {
     const now = new Date().getTime();
+    const timestamp = new Date(dateString).getTime();
 
-    let displayTimestamp = timestamp;
+    const diffInMilliseconds = now - timestamp;
+    
+    // If time difference is negative (future date) or very small, show "now"
+    if (diffInMilliseconds < 1000) return 'now';
 
-    const diffInMilliseconds = now - displayTimestamp;
     const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     const diffInHours = Math.floor(diffInMinutes / 60);
@@ -309,7 +496,7 @@ export class PostComments {
     else if (diffInMinutes > 0) timeAgo = `${diffInMinutes}m`;
     else timeAgo = `${diffInSeconds}s`;
 
-    return `${timeAgo}`;
+    return timeAgo;
   };
 
   renderCommentText(text: string): SafeHtml {
@@ -325,11 +512,11 @@ export class PostComments {
     return this.sanitizer.bypassSecurityTrustHtml(modifiedText);
   }
 
-  onReplyClick(comment: any) {
+  onReplyClick(comment: FeedComment) {
     this.replyingTo.set({
-      commentId: comment.comment_id,
-      userName: comment.userName || 'User',
-      userPhoto: comment.userPhoto
+      commentId: comment.id,
+      userName: comment.user?.name || 'User',
+      userPhoto: comment.user?.thumbnail_url || comment.user?.image_url
     });
   }
 
@@ -471,5 +658,13 @@ export class PostComments {
         ]);
       }, 600);
     });
+  }
+
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
+  }
+
+  onImageError(event: Event): void {
+    onImageError(event);
   }
 }

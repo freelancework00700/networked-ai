@@ -11,89 +11,72 @@
 
       <!-- checkbox for sending to entire network -->
       <div class="flex items-center gap-2 pt-2">
-        <p-checkbox [binary]="true" [formControl]="selectAllNetworkCtrl()" />
+        <p-checkbox 
+          [binary]="true" 
+          [formControl]="selectAllNetworkCtrl()"
+        />
         <div class="body-14R">Send to Entire Network</div>
       </div>
     </div>
   </ion-toolbar>
 </ion-header>
 
-<div class="inner-content px-4 space-y-3">
-  <!-- previous event attendees -->
-  <div class="space-y-2">
-    @if (filteredPreviousAttendees().length && type === 'Event') {
-      <div class="body-16SB">Previous Event Attendees</div>
-      <div class="grid grid-cols-4 gap-4">
-        @for (user of filteredPreviousAttendees(); track user.name) {
-          <div class="flex flex-col items-center min-w-[70px] gap-1">
-            <div class="relative cursor-pointer" (click)="toggleUser(user)">
-              <img
-                [src]="user.avatar"
-                class="h-16 w-16 rounded-full object-cover"
-                [class.ring-2]="isSelected(user)"
-                [class.ring-primary]="isSelected(user)"
-              />
+<ion-content>
+  <div class="px-4 space-y-3">
+    <!-- your network -->
+    <div class="space-y-2">
+      @if (isLoading() && yourNetwork().length === 0) {
+        <div class="flex justify-center py-8">
+          <ion-spinner></ion-spinner>
+        </div>
+      } @else if (yourNetwork().length) {
+        <div class="body-16SB">Your Network</div>
+        <div class="grid grid-cols-4 gap-4">
+          @for (user of yourNetwork(); track user.id) {
+            <div class="flex flex-col items-center gap-1">
+              <div class="relative cursor-pointer" (click)="toggleUser(user)">
+                <img
+                  [src]="getImageUrl(user)"
+                  class="h-16 w-16 rounded-full object-cover"
+                  [class.ring-2]="isSelected(user)"
+                  [class.ring-primary]="isSelected(user)"
+                  [alt]="user.name || 'user'"
+                />
 
-              @if (isSelected(user)) {
-                <div
-                  class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
-                >
-                  <i class="pi pi-check !text-[10px]"></i>
-                </div>
-              }
+                @if (isSelected(user)) {
+                  <div
+                    class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
+                  >
+                    <i class="pi pi-check !text-[10px]"></i>
+                  </div>
+                }
+              </div>
+              <div class="body-12R text-center truncate w-full">
+                {{ getUserDisplayName(user) }}
+              </div>
             </div>
-            <div class="body-12R text-center truncate w-full">
-              {{ user.name }}
-            </div>
-          </div>
+          }
+        </div>
+
+        <!-- Infinite scroll -->
+        @if (hasMore()) {
+          <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreUsers($event)">
+            <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more..." />
+          </ion-infinite-scroll>
         }
-      </div>
-    }
+      } @else if (!isLoading() && searchQuery()) {
+        <div class="body-14R text-center py-4">No users found</div>
+      }
+    </div>
   </div>
-
-  <!-- your network -->
-  <div class="space-y-2">
-    @if (filteredYourNetwork().length) {
-      <div class="body-16SB">Your Network</div>
-      <div class="grid grid-cols-4 gap-4">
-        @for (user of filteredYourNetwork(); track user.name) {
-          <div class="flex flex-col items-center gap-1">
-            <div class="relative cursor-pointer" (click)="toggleUser(user)">
-              <img
-                [src]="user.avatar"
-                class="h-16 w-16 rounded-full object-cover"
-                [class.ring-2]="isSelected(user)"
-                [class.ring-primary]="isSelected(user)"
-              />
-
-              @if (isSelected(user)) {
-                <div
-                  class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
-                >
-                  <i class="pi pi-check !text-[10px]"></i>
-                </div>
-              }
-            </div>
-            <div class="body-12R text-center truncate w-full">
-              {{ user.name }}
-            </div>
-          </div>
-        }
-      </div>
-    }
-
-    @if (!filteredYourNetwork().length && !filteredPreviousAttendees().length && searchQuery()) {
-      <div class="body-14R text-center py-4">No users found</div>
-    }
-  </div>
-</div>
+</ion-content>
 
 <ion-footer mode="md">
   <ion-toolbar mode="md">
     <div class="p-4">
-      @if (selectedUsers().length) {
+      @if (selectedUsers().length > 0 || sendEntireNetwork()) {
         <textarea class="w-full border-none outline-none resize-none" [placeholder]="'Write a message...'" wrap="hard"></textarea>
-        <app-button [label]="`Share ${type}`" (click)="shareEvent()" />
+        <app-button [label]="shareButtonLabel()" (click)="sharePost()" />
       } @else {
         <!-- Actions -->
         <div class="flex justify-around border-t border-gray-200 pt-4">

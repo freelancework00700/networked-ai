@@ -83,6 +83,7 @@
   margin: 0 auto 40px;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .slide-image img,
@@ -137,4 +138,8 @@
 .ngx-selectable-list-item:hover,
 .ngx-selectable-list-item.active {
   background-color: #f3f4f6;
+}
+
+::ng-deep .chip-inner {
+  padding: 0 8px !important;
 }

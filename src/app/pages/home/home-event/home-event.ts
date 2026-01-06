@@ -3,13 +3,15 @@ import { IEvent } from '@/interfaces/event';
 import { SwiperOptions } from 'swiper/types';
 import { Button } from '@/components/form/button';
 import { UserCard } from '@/components/card/user-card';
-import { EventCard } from '@/components/card/event-card';
 import { CityCard, ICity } from '@/components/card/city-card';
+import { EventCard } from '@/components/card/event-card';
 import { NavigationService } from '@/services/navigation.service';
 import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
 import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
-import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy, inject } from '@angular/core';
+import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy, inject, OnInit, OnDestroy, afterNextRender } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 interface FeedPost {
   id: string;
@@ -38,10 +40,16 @@ interface NetworkSuggestion {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Button, UserCard, CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard]
 })
-export class HomeEvent {
+export class HomeEvent implements OnDestroy {
   navigationService = inject(NavigationService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
   filter = signal<'browse' | 'upcoming'>('browse');
   upcomingEvents = signal<IEvent[]>([]);
+
+  // subscriptions
+  private queryParamsSubscription?: Subscription;
 
   cityCards: ICity[] = [
     {
@@ -148,6 +156,36 @@ export class HomeEvent {
 
   constructor() {
     afterEveryRender(() => this.initSwipers());
+
+    afterNextRender(() => {
+      const params = this.route.snapshot.queryParamMap;
+      const eventFilter = params.get('eventFilter');
+
+      if (eventFilter === 'browse' || eventFilter === 'upcoming') {
+        this.filter.set(eventFilter as 'browse' | 'upcoming');
+      } else {
+        // Set default filter if not in URL
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { eventFilter: this.filter() },
+          queryParamsHandling: 'merge',
+          replaceUrl: true
+        });
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.queryParamsSubscription?.unsubscribe();
+  }
+
+  onFilterChange(): void {
+    // Update URL with query param
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { eventFilter: this.filter() },
+      queryParamsHandling: 'merge'
+    });
   }
 
   handleViewTicket(): void {

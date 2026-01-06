@@ -154,7 +154,7 @@ export const serverRoutes: ServerRoute[] = [
   },
   {
     path: ':username',
-    renderMode: RenderMode.Server
+    renderMode: RenderMode.Client
   },
   // catch-all for any other routes
   {

@@ -4,7 +4,7 @@ import { map, catchError } from 'rxjs/operators';
 import { inject, Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { BaseApiService } from '@/services/base-api.service';
-import { IUser, VibeItem, IUserResponse, UserSearchResponse, UserSearchApiResponse } from '@/interfaces/IUser';
+import { IUser, VibeItem, IUserResponse, UserSearchResponse, UserSearchApiResponse, NetworkConnectionsApiResponse, NetworkConnection, NetworkConnectionsData } from '@/interfaces/IUser';
 
 @Injectable({ providedIn: 'root' })
 export class UserService extends BaseApiService {
@@ -202,6 +202,37 @@ export class UserService extends BaseApiService {
       return { users, pagination };
     } catch (error) {
       console.error('Error searching users:', error);
+      throw error;
+    }
+  }
+
+  // get my network connections
+  async getMyConnections(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  } = {}): Promise<NetworkConnectionsData> {
+    try {
+      let httpParams = new HttpParams();
+      
+      if (params.page) {
+        httpParams = httpParams.set('page', params.page.toString());
+      }
+      if (params.limit) {
+        httpParams = httpParams.set('limit', params.limit.toString());
+      }
+      if (params.search && params.search.trim()) {
+        httpParams = httpParams.set('search', params.search.trim());
+      }
+
+      const response = await this.get<NetworkConnectionsApiResponse>('/network-connections/my-connections', { params: httpParams });
+
+      const data = response?.data?.data || [];
+      const pagination = response?.data?.pagination || { totalCount: 0, currentPage: 1, totalPages: 0 };
+
+      return { data, pagination };
+    } catch (error) {
+      console.error('Error fetching network connections:', error);
       throw error;
     }
   }

@@ -1,24 +1,41 @@
 import { Swiper } from 'swiper';
+import { afterNextRender } from '@angular/core';
 import { NavController } from '@ionic/angular';
+import { IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
 import { UserCard } from '@/components/card/user-card';
 import { PostCard } from '@/components/card/post-card';
 import { ModalService } from '@/services/modal.service';
-import { signal, Component, afterEveryRender, ChangeDetectionStrategy, inject, computed } from '@angular/core';
+import { FeedService } from '@/services/feed.service';
+import { AuthService } from '@/services/auth.service';
+import { NgOptimizedImage } from '@angular/common';
+import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
+import { signal, Component, afterEveryRender, ChangeDetectionStrategy, inject, computed, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 type Filter = 'public' | 'networked';
 
 @Component({
   selector: 'home-feed',
-  imports: [UserCard, PostCard],
+  imports: [UserCard, PostCard, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, NgOptimizedImage],
   styleUrl: './home-feed.scss',
   templateUrl: './home-feed.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class HomeFeed {
+export class HomeFeed implements OnDestroy {
   navCtrl = inject(NavController);
   modalService = inject(ModalService);
+  feedService = inject(FeedService);
+  authService = inject(AuthService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
   // signals
   feedFilter = signal<Filter>('public');
+
+  // subscriptions
+  private queryParamsSubscription?: Subscription;
+
   users = [
     {
       name: 'Kathryn Murphy',
@@ -37,122 +54,168 @@ export class HomeFeed {
     }
   ];
 
-  posts = signal<any[]>([
-    {
-      post_id: 'UNpWXAmZSRFuoUpg9vG8',
-      uid: 'WdFzpiB4SoZfAC28Nvp380DJPn33',
-      text: 'Get out. Get Networked.',
-      media: [],
-      eid: ['-OaRVjr6NoQrDdd1Bi1u'],
-      location: '5600 Roswell Rd Building C, Sandy Springs, GA 30342, USA',
-      lat: 33.9074988,
-      lng: -84.3792591,
-      visibility: 'public',
-      createdAt: 1765927059811,
-      updatedAt: null,
-      like_count: 1,
-      comment_count: 0,
-      share_count: 0,
-      id: 'UNpWXAmZSRFuoUpg9vG8',
-      isLikedByYou: true
-    },
-    {
-      post_id: '8nUe0RsykuGuU5sEUxwo',
-      uid: 'fGoPjhM3LwVHVrPZiJrMRx6aWLu1',
-      text: 'Hey! I’m attending the Lifetime Tech event  on the 18th and stoked!!!\n\n@[gaudravi](kkX01IRGUxfJW5Gdesx9Sh8yCRj2)',
-      media: [],
-      eid: [],
-      location: '',
-      lat: null,
-      lng: null,
-      visibility: 'public',
-      createdAt: null,
-      updatedAt: 1765134206978,
-      comment_count: 0,
-      share_count: 0,
-      like_count: 2,
-      id: '8nUe0RsykuGuU5sEUxwo'
-    },
-    {
-      post_id: 'ETeoCIVbpN4iZI5VVzc5',
-      uid: 'cCohEPzZLVTtLT1irgzNgtikD4J3',
-      text: 'https://www.npmjs.com/package/angular-mentions',
-      media: [
-        {
-          url: 'https://firebasestorage.googleapis.com/v0/b/networked-6f29b.appspot.com/o/eventImages%2F1764533538399.png?alt=media&token=b1bc2c33-5508-4722-a95e-dc3749cbd0cf',
-          type: 'image'
-        }
-      ],
-      eid: [],
-      location: '',
-      lat: null,
-      lng: null,
-      visibility: 'public',
-      createdAt: 1764533548436,
-      updatedAt: null,
-      share_count: 0,
-      like_count: 2,
-      comment_count: 1,
-      id: 'ETeoCIVbpN4iZI5VVzc5'
-    },
-    {
-      post_id: 'NJQ8xQBknj0fmUvCYAdC',
-      uid: 'WdFzpiB4SoZfAC28Nvp380DJPn33',
-      media: [
-        {
-          url: 'https://firebasestorage.googleapis.com/v0/b/networked-6f29b.appspot.com/o/eventImages%2F1763129084316.jpeg?alt=media&token=1a1d743b-78cf-443d-89b3-85b8392e2c6b',
-          type: 'image'
-        },
-        {
-          url: 'https://firebasestorage.googleapis.com/v0/b/networked-6f29b.appspot.com/o/eventImages%2F1763129095994.jpeg?alt=media&token=08bb296d-781c-48b0-8d82-ad9e4efbf2e7',
-          type: 'image'
-        },
-        {
-          url: 'https://firebasestorage.googleapis.com/v0/b/networked-6f29b.appspot.com/o/eventVideo%2F1763129204617.quicktime?alt=media&token=dd30ba88-fe27-4655-8bb4-67349187da0a',
-          type: 'video'
-        }
-      ],
-      eid: [],
-      location: '2500 Old Milton Pkwy Suite 250, Alpharetta, GA 30009, USA',
-      lat: 34.0697989,
-      lng: -84.2846194,
-      visibility: 'networked',
-      createdAt: 1763129269644,
-      updatedAt: null,
-      comment_count: 0,
-      share_count: 0,
-      like_count: 2,
-      id: 'NJQ8xQBknj0fmUvCYAdC'
-    },
-    {
-      post_id: 'ixDha2O6ktdNiS74NCrf',
-      uid: 'WdFzpiB4SoZfAC28Nvp380DJPn33',
-      text: 'Growth isn’t just about business — it’s about becoming who you’re called to be.',
-      media: [
-        {
-          url: 'https://firebasestorage.googleapis.com/v0/b/networked-6f29b.appspot.com/o/eventImages%2F1762533208846.jpeg?alt=media&token=242defc6-f735-451d-a7bf-7e82cd56a492',
-          type: 'image'
-        }
-      ],
-      eid: [],
-      location: 'Atlanta, GA, USA',
-      lat: 33.7501275,
-      lng: -84.3885209,
-      visibility: 'public',
-      createdAt: 1762533238228,
-      updatedAt: null,
-      comment_count: 0,
-      share_count: 0,
-      like_count: 1,
-      id: 'ixDha2O6ktdNiS74NCrf'
-    }
-  ]);
-
-  filteredPosts = computed(() => {
-    return this.posts().filter((p) => p.visibility === this.feedFilter());
+  // Computed posts based on current filter (no API call on filter change)
+  posts = computed(() => {
+    const filter = this.feedFilter();
+    return filter === 'public' ? this.feedService.publicFeeds() : this.feedService.networkedFeeds();
   });
+
+  // Computed pagination state based on current filter
+  hasMore = computed(() => {
+    const filter = this.feedFilter();
+    return filter === 'public' ? this.feedService.publicFeedsHasMore() : this.feedService.networkedFeedsHasMore();
+  });
+
+  // Current user data
+  currentUser = this.authService.currentUser;
+  currentUserName = computed(() => this.currentUser()?.name || this.authService.currentUser()?.username || '');
+  currentUserImage = computed(() => {
+    const user = this.currentUser();
+    const imageUrl = user?.thumbnail_url;
+    return getImageUrlOrDefault(imageUrl);
+  });
+
+  // Loading state
+  isLoading = signal(false);
+  isLoadingMore = signal(false);
+  hasLoadedOnce = signal(false);
+
+  // Constants
+  private readonly pageLimit = 10;
+
   constructor() {
     afterEveryRender(() => this.initSwiper());
+
+    afterNextRender(async () => {
+      const params = this.route.snapshot.queryParamMap;
+      const filterParam = params.get('feedFilter');
+
+      if (filterParam === 'public' || filterParam === 'networked') {
+        this.feedFilter.set(filterParam as Filter);
+      } else {
+        // Set default filter if not in URL
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { feedFilter: this.feedFilter() },
+          queryParamsHandling: 'merge',
+          replaceUrl: true
+        });
+      }
+
+      await this.checkAndLoadFeeds();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.queryParamsSubscription?.unsubscribe();
+  }
+
+  private async checkAndLoadFeeds(): Promise<void> {
+    const hasPublicFeeds = this.feedService.publicFeeds().length > 0;
+    const hasNetworkedFeeds = this.feedService.networkedFeeds().length > 0;
+
+    if (!hasPublicFeeds && !hasNetworkedFeeds) {
+      await this.loadAllFeeds();
+      this.hasLoadedOnce.set(true);
+    } else {
+      this.hasLoadedOnce.set(true);
+    }
+  }
+
+  private async loadAllFeeds(reset: boolean = true): Promise<void> {
+    try {
+      this.isLoading.set(true);
+
+      // Reset pagination state
+      this.feedService.publicFeedsPage.set(1);
+      this.feedService.networkedFeedsPage.set(1);
+
+      // Use append: false only if reset is true, otherwise keep old data visible
+      await Promise.all([
+        this.feedService.getFeeds({
+          is_public: true,
+          page: 1,
+          limit: this.pageLimit,
+          append: !reset
+        }),
+        this.feedService.getFeeds({
+          is_public: false,
+          page: 1,
+          limit: this.pageLimit,
+          append: !reset
+        })
+      ]);
+
+      this.hasLoadedOnce.set(true);
+    } catch (error) {
+      console.error('Error loading feeds:', error);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async loadMoreFeeds(event: Event): Promise<void> {
+    const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
+
+    if (this.isLoadingMore() || !this.hasMore()) {
+      infiniteScroll.complete();
+      return;
+    }
+
+    try {
+      this.isLoadingMore.set(true);
+
+      const filter = this.feedFilter();
+      const isPublic = filter === 'public';
+      const currentPage = isPublic ? this.feedService.publicFeedsPage() : this.feedService.networkedFeedsPage();
+
+      const nextPage = currentPage + 1;
+
+      await this.feedService.getFeeds({
+        is_public: isPublic,
+        page: nextPage,
+        limit: this.pageLimit,
+        append: true
+      });
+    } catch (error) {
+      console.error('Error loading more feeds:', error);
+    } finally {
+      this.isLoadingMore.set(false);
+      infiniteScroll.complete();
+    }
+  }
+
+  async refresh(): Promise<void> {
+    try {
+      this.feedService.publicFeedsPage.set(1);
+      this.feedService.networkedFeedsPage.set(1);
+      await Promise.all([
+        this.feedService.getFeeds({
+          is_public: true,
+          page: 1,
+          limit: this.pageLimit,
+          append: false
+        }),
+        this.feedService.getFeeds({
+          is_public: false,
+          page: 1,
+          limit: this.pageLimit,
+          append: false
+        })
+      ]);
+    } catch (error) {
+      console.error('Error refreshing feeds:', error);
+      throw error;
+    }
+  }
+
+  onFilterChange(): void {
+    // Update URL with query param
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { feedFilter: this.feedFilter() },
+      queryParamsHandling: 'merge'
+    });
   }
 
   private initSwiper(): void {
@@ -165,23 +228,8 @@ export class HomeFeed {
     });
   }
 
-  onLike(postId: string) {
-    this.posts.update((p: any) => {
-      return p.map((p: any) => {
-        if (p.id !== postId) return p;
 
-        const isLiked = !p.isLikedByYou;
-
-        return {
-          ...p,
-          isLikedByYou: isLiked,
-          like_count: isLiked ? (p.like_count || 0) + 1 : Math.max((p.like_count || 1) - 1, 0)
-        };
-      });
-    });
-  }
-
-  onComment(post: any) {
-    this.navCtrl.navigateForward(['/comments', post.id], { state: { post } });
+  onImageError(event: Event): void {
+    onImageError(event);
   }
 }

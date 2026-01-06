@@ -9,32 +9,51 @@
 <ion-content [fullscreen]="true">
   <div class="min-h-full">
     <div class="w-full max-w-[672px] mx-auto p-4 flex flex-col gap-4">
-      <post-card [post]="post()" (onLike)="onLike()" />
+      @if (isLoadingPost()) {
+      <div class="flex justify-center items-center py-8">
+        <ion-spinner></ion-spinner>
+      </div>
+      } @else if (post()) {
+      <post-card [post]="post()!" (onLike)="onLike()" />
+      } @else {
+      <app-empty-state title="Not found" message="Post not found" />
+      }
+      @if (post()) {
       <!-- Comments Section -->
       <div class="w-full bg-white rounded-lg flex flex-col gap-2">
         <!-- Comments List -->
-        @if (comments().length) {
-          <div class="body-14M text-center">All Comments ({{ comments().length }})</div>
+        @if (isLoadingComments()) {
+          <div class="flex justify-center items-center py-8">
+            <ion-spinner></ion-spinner>
+          </div>
+        } @else if (comments().length) {
+        <div class="body-14M text-center">All Comments ({{ totalComments() }})</div>
         }
 
-        @for (comment of comments(); track comment.comment_id) {
+        @for (comment of comments(); track comment.id) {
           <div class="border-b border-gray-300 px-4 py-2">
             <div class="flex justify-between items-start gap-4">
-              <div class="flex items-start gap-2">
+              <div class="flex items-start gap-2 cursor-pointer" (click)="menu.toggle($event)">
+              <div class="relative w-10 h-10 flex-shrink-0">
                 <img
-                  [src]="comment.userPhoto || 'assets/images/profile.jpeg'"
-                  class="w-10 h-10 rounded-full cursor-pointer"
-                  (click)="menu.toggle($event)"
+                  fill
+                  placeholder
+                  [alt]="comment.user?.name || 'avatar'"
+                  class="rounded-full object-cover cursor-pointer"
+                  (error)="onImageError($event)"
+                  [ngSrc]="getImageUrl(comment.user?.thumbnail_url || comment.user?.image_url)"
                 />
+              </div>
 
-                <p-menu #menu [popup]="true" [model]="menuItems" appendTo="body"> </p-menu>
+                <p-menu #menu [popup]="true" [model]="getMenuItems(comment)" appendTo="body"> </p-menu>
 
                 <div>
                   <div class="flex items-center gap-1">
-                    <span class="body-14SB">{{ comment.userName || 'Jonathan L.' }}</span>
-                    <span class="text-gray-400 text-xs pl-1">{{ getTimeAgo(comment.createdAt) }}</span>
+                  <span class="body-14SB comment-user-name">{{ comment.user?.name || comment.user?.username }} </span>
+                  <span class="text-gray-400 text-xs pl-1">{{ getTimeAgo(comment.created_at) }}</span>
                   </div>
-                  <div class="body-12 mt-1 break-all whitespace-pre-wrap" [innerHTML]="renderCommentText(comment.text)"></div>
+                <div class="body-12 mt-1 break-all whitespace-pre-wrap" [innerHTML]="renderCommentText(comment.comment)">
+                </div>
                 </div>
               </div>
 
@@ -42,20 +61,12 @@
                 <span class="cursor-pointer text-[12px]" (click)="onReplyClick(comment)"> Reply </span>
 
                 <div class="flex flex-col items-center cursor-pointer select-none" (click)="onLikeComment(comment)">
-                  <div
-                    class="pi !text-[12px]"
-                    [class.pi-heart-fill]="comment.isLiked"
-                    [class.pi-heart]="!comment.isLiked"
-                    [class.accent-red]="comment.isLiked"
-                    [class.text-neutral-04]="!comment.isLiked"
-                  ></div>
+                <div class="pi !text-[12px]" [class.pi-heart-fill]="comment.is_like" [class.pi-heart]="!comment.is_like"
+                  [class.accent-red]="comment.is_like" [class.text-neutral-04]="!comment.is_like"></div>
 
-                  <span
-                    class="body-12M transition-colors text-center"
-                    [class.accent-red]="comment.isLiked"
-                    [class.text-neutral-04]="!comment.isLiked"
-                  >
-                    {{ comment.like_count }}
+                <span class="body-12M transition-colors text-center" [class.accent-red]="comment.is_like"
+                  [class.text-neutral-04]="!comment.is_like">
+                  {{ comment.total_likes || 0 }}
                   </span>
                 </div>
               </div>
@@ -63,47 +74,50 @@
             @if (comment.replies?.length) {
               <div class="ml-12 mt-2 text-[12px] text-gray-500 cursor-pointer select-none" (click)="toggleReplies(comment)">
                 @if (!comment.isRepliesOpen) {
-                  View {{ comment.replies.length }} replies
+            View {{ comment?.replies?.length }} replies
                 } @else {
                   Hide replies
                 }
               </div>
             }
             @if (comment.isRepliesOpen) {
-              @for (reply of comment.replies; track reply.comment_id) {
+          @for (reply of comment.replies; track reply.id) {
                 <div class="ml-12 mt-2 body-12 gap-4 flex justify-between items-start">
-                  <div class="flex items-start gap-2 my-2">
+                  <div class="flex items-start gap-2 my-2 cursor-pointer" (click)="menu.toggle($event)">
+              <div class="relative w-10 h-10 flex-shrink-0">
                     <img
-                      [src]="comment.userPhoto || 'assets/images/profile.jpeg'"
-                      class="w-10 h-10 rounded-full cursor-pointer"
-                      (click)="menu.toggle($event)"
+                  fill
+                  placeholder
+                  [alt]="reply.user?.name || 'avatar'"
+                  class="rounded-full object-cover cursor-pointer"
+                  (error)="onImageError($event)"
+                  [ngSrc]="getImageUrl(reply.user?.thumbnail_url || reply.user?.image_url)"
                     />
+              </div>
 
-                    <p-menu #menu [popup]="true" [model]="menuItems" appendTo="body"> </p-menu>
+                    <p-menu #menu [popup]="true" [model]="getMenuItems(reply)" appendTo="body"> </p-menu>
 
                     <div>
                       <div class="flex items-center gap-1">
-                        <span class="body-14SB">{{ reply.userName || 'Jonathan L.' }}</span>
+                  <span class="body-14SB">{{ reply.user?.name || 'User' }}</span>
                         <span class="text-gray-400 text-xs pl-1">
-                          {{ getTimeAgo(reply.createdAt) }}
+                    {{ getTimeAgo(reply.created_at) }}
                         </span>
                       </div>
 
-                      <div class="body-12 mt-1 break-all whitespace-pre-wrap" [innerHTML]="renderCommentText(reply.text)"></div>
+                <div class="body-12 mt-1 break-all whitespace-pre-wrap" [innerHTML]="renderCommentText(reply.comment)">
+                </div>
                     </div>
                   </div>
 
-                  <div class="flex flex-col items-center cursor-pointer select-none text-gray-400 my-2" (click)="onLikeComment(reply, true)">
-                    <div
-                      class="pi !text-[12px]"
-                      [class.pi-heart-fill]="reply.isLiked"
-                      [class.pi-heart]="!reply.isLiked"
-                      [class.accent-red]="reply.isLiked"
-                      [class.text-neutral-04]="!reply.isLiked"
-                    ></div>
+            <div class="flex flex-col items-center cursor-pointer select-none text-gray-400 my-2"
+              (click)="onLikeComment(reply, true)">
+              <div class="pi !text-[12px]" [class.pi-heart-fill]="reply.is_like" [class.pi-heart]="!reply.is_like"
+                [class.accent-red]="reply.is_like" [class.text-neutral-04]="!reply.is_like"></div>
 
-                    <span class="body-12M transition-colors text-center" [class.accent-red]="reply.isLiked" [class.text-neutral-04]="!reply.isLiked">
-                      {{ reply.like_count }}
+              <span class="body-12M transition-colors text-center" [class.accent-red]="reply.is_like"
+                [class.text-neutral-04]="!reply.is_like">
+                {{ reply.total_likes || 0 }}
                     </span>
                   </div>
                 </div>
@@ -114,19 +128,31 @@
           <app-empty-state title="No comments yet" message="Start the conversation!" />
         }
       </div>
+      
+      <!-- Infinite scroll -->
+      <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreComments($event)" [disabled]="!hasMoreComments()">
+        <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more comments..." />
+      </ion-infinite-scroll>
+      }
     </div>
   </div>
 </ion-content>
+@if (post()) {
 <ion-footer mode="md">
   <ion-toolbar>
     <div class="pt-6 max-w-[672px] mx-auto">
       @if (replyingTo()) {
         <div class="flex items-center gap-2 px-3 py-2 rounded-lg border-l-[3px] border-primary-500">
+        <div class="relative w-[35px] h-[35px] flex-shrink-0">
           <img
-            [src]="replyingTo()?.userPhoto || 'assets/images/profile.jpeg'"
+            fill
+            placeholder
             alt="User avatar"
-            class="w-[35px] h-[35px] rounded-full object-cover"
+            class="rounded-full object-cover"
+            (error)="onImageError($event)"
+            [ngSrc]="getImageUrl(replyingTo()?.userPhoto)"
           />
+        </div>
 
           <div class="w-[2px] h-5 bg-primary-500 rounded"></div>
 
@@ -144,50 +170,56 @@
 
       <div class="flex items-center gap-4 mt-0 p-6 pt-0">
         <div class="flex-1 flex items-center gap-2 border border-gray-300 rounded-lg px-2">
-          <img src="assets/images/profile.jpeg" class="w-10 h-10 rounded-full" />
+          <div class="relative w-10 h-10 flex-shrink-0">
+            <img
+              fill
+              placeholder
+              [alt]="currentUser()?.name || 'avatar'"
+              class="rounded-full object-cover"
+              (error)="onImageError($event)"
+              [ngSrc]="getImageUrl(currentUser()?.thumbnail_url)"
+            />
+          </div>
 
           <div class="relative-block-container">
             <div>
-              <textarea
-                #textareaRef
-                class="w-full py-2 px-4 border-none outline-none resize-none"
-                [formControl]="textCtrl"
-                [placeholder]="replyingTo() ? 'Reply as user_name' : 'Reply to this post...'"
-                wrap="hard"
-              ></textarea>
+              <textarea #textareaRef class="w-full py-2 px-4 border-none outline-none resize-none"
+                [formControl]="textCtrl" [placeholder]="replyingTo() ? ('Reply as ' + currentUser()?.username) : 'Reply to this post...'"
+                wrap="hard"></textarea>
 
-              <ngx-mentions
-                [textInputElement]="textareaRef"
-                [menuTemplate]="menuTemplate"
-                [mentionsConfig]="mentionsConfig"
-                [searchRegexp]="searchRegexp"
-                [mentions]="mentions"
-                [removeWholeTagOnBackspace]="true"
-                (search)="loadChoices($event)"
-                (selectedChoicesChange)="onSelectedChoicesChange($event)"
-                (menuShow)="onMenuShow()"
-                (menuHide)="onMenuHide()"
-              ></ngx-mentions>
+              @if (isBrowser()) {
+              <ngx-mentions [textInputElement]="textareaRef" [menuTemplate]="menuTemplate"
+                [mentionsConfig]="mentionsConfig" [searchRegexp]="searchRegexp" [mentions]="mentions"
+                [removeWholeTagOnBackspace]="true" (search)="loadChoices($event)"
+                (selectedChoicesChange)="onSelectedChoicesChange($event)" (menuShow)="onMenuShow()"
+                (menuHide)="onMenuHide()"></ngx-mentions>
+              }
 
               <ng-template #menuTemplate let-selectChoice="selectChoice">
-                <ul
-                  class="ngx-selectable-list"
-                  ngxKbListNavigation
-                  [choices]="choices"
-                  (selectChoice)="selectChoice($event)"
-                  [class.loader-only]="!choices.length && loading"
-                >
+                <ul class="ngx-selectable-list" ngxKbListNavigation [choices]="choices"
+                  (selectChoice)="selectChoice($event)" [class.loader-only]="!choices.length && loading">
                   @for (user of choices; track user.id) {
-                    <li class="ngx-selectable-list-item flex items-center justify-between gap-2" (click)="selectChoice(user)">
+                  <li class="ngx-selectable-list-item flex items-center justify-between gap-2"
+                    (click)="selectChoice(user)">
                       <!-- Left: avatar + name -->
                       <div class="flex items-center gap-2">
-                        <img [src]="user.thumbnail || 'assets/images/profile.jpeg'" class="w-8 h-8 rounded-full object-cover" />
+                      <div class="relative w-8 h-8 flex-shrink-0">
+                        <img
+                          fill
+                          placeholder
+                          [alt]="user.name || 'avatar'"
+                          class="rounded-full object-cover"
+                          (error)="onImageError($event)"
+                          [ngSrc]="getImageUrl(user.thumbnail)"
+                        />
+                      </div>
                         <span title="{{ user.name }}">{{ user.name }}</span>
                       </div>
 
                       <!-- Right: Networked chip -->
                       @if (user.isNetwork) {
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium"> Networked </span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium"> Networked
+                    </span>
                       }
                     </li>
                   }
@@ -196,15 +228,10 @@
             </div>
           </div>
         </div>
-        <app-button
-          (click)="sendComment()"
-          [iconName]="'pi pi-send'"
-          [isLoading]="loading()"
-          [disabled]="loading() || !textCtrl.value?.trim()"
-          width="50px"
-          height="50px"
-        />
+        <app-button (click)="sendComment()" [iconName]="'pi pi-send'" [isLoading]="loading()"
+          [disabled]="loading() || !textCtrl.value?.trim()" width="50px" height="50px" />
       </div>
     </div>
   </ion-toolbar>
 </ion-footer>
+}

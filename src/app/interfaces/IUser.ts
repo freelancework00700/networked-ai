@@ -88,3 +88,29 @@ export interface UserSearchApiResponse {
     pagination?: UserSearchPagination;
   };
 }
+
+export interface NetworkConnection {
+  id: string;
+  user_id: string;
+  peer_id?: string;
+  peer?: IUser;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  updated_by?: string | null;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  is_deleted?: boolean;
+  [key: string]: any;
+}
+
+export interface NetworkConnectionsData {
+  data?: NetworkConnection[];
+  pagination?: UserSearchPagination;
+}
+
+export interface NetworkConnectionsApiResponse {
+  success: boolean;
+  message: string;
+  data?: NetworkConnectionsData;
+}

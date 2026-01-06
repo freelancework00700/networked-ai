@@ -354,6 +354,7 @@ export class ModalService {
     confirmButtonColor?: string;
     iconPosition?: 'left' | 'center';
     customColor?: string;
+    onConfirm?: () => Promise<any>;
   }): Promise<{ data: any; role: string } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -361,7 +362,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: ConfirmModal,
-      backdropDismiss: true,
+      backdropDismiss: !config.onConfirm || true, // Prevent backdrop dismiss if async callback is provided
       cssClass: 'auto-hight-modal',
       componentProps: config
     });
@@ -611,15 +612,15 @@ export class ModalService {
     return data;
   }
 
-  async openShareModal(eventId: any, type: 'Event' | 'Post'): Promise<any | null> {
+  async openShareModal(eventId: any, type: 'Event' | 'Post', feedId?: string): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: ShareModal,
-      cssClass: 'auto-hight-modal',
-      componentProps: { eventId, type }
+      cssClass: 'modal-600px-height',
+      componentProps: { eventId, type, feedId }
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();
@@ -648,7 +649,7 @@ export class ModalService {
     await modal.present();
   }
 
-  async openReportModal(type: 'Post' | 'Event'): Promise<any | null> {
+  async openReportModal(type: 'Post' | 'Event' | 'Comment'): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -663,13 +664,14 @@ export class ModalService {
     return data;
   }
 
-  async openBlockModal(): Promise<any | null> {
+  async openBlockModal(user: any): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: BlockModal,
+      componentProps: { user },
       cssClass: 'auto-hight-modal'
     });
     await modal.present();
