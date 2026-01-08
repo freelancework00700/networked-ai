@@ -14,7 +14,7 @@
 
     <!-- Feed header content (filters and post composer) - only visible on feed tab -->
     @if (tab() === 'feed' && homeFeedRef) {
-      <div class="feed-header-content">
+      <div class="feed-header-content max-w-[672px] mx-auto">
         <!-- Filter buttons -->
         <div class="feed-filter-section bg-neutral-07 flex gap-2 p-4">
           <button type="button" class="filter-button" [class.active]="homeFeedRef.feedFilter() === 'public'" (click)="homeFeedRef.feedFilter.set('public'); homeFeedRef.onFilterChange()">Public</button>
