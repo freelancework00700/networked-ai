@@ -1,10 +1,13 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { BaseApiService } from '@/services/base-api.service';
 import { FeedPost, FeedsResponse, MyFeedResponse, FeedResponse, FeedLikeResponse, FeedComment, FeedCommentsResponse, CommentLikeResponse, CommentResponse, FeedShareResponse, ReportReasonsResponse, ReportResponse } from '@/interfaces/IFeed';
+import { AuthService } from '@/services/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class FeedService extends BaseApiService {
+  private authService = inject(AuthService);
+
   myPosts = signal<FeedPost[]>([]);
   posts = signal<FeedPost[]>([]);
   publicFeeds = signal<FeedPost[]>([]);
@@ -69,6 +72,41 @@ export class FeedService extends BaseApiService {
       };
     } catch (error) {
       console.error('Error fetching feeds:', error);
+      throw error;
+    }
+  }
+
+  async getUserFeeds(userId: string, params: {
+    page?: number;
+    limit?: number;
+  } = {}): Promise<{ posts: FeedPost[]; total: number; page: number; limit: number; hasMore: boolean }> {
+    try {
+      let httpParams = new HttpParams();
+      
+      if (params.page) {
+        httpParams = httpParams.set('page', params.page.toString());
+      }
+      if (params.limit) {
+        httpParams = httpParams.set('limit', params.limit.toString());
+      }
+
+      const response = await this.get<FeedsResponse>(`/feeds/user/${userId}`, { params: httpParams });
+      const posts = response?.data?.data || [];
+      const pagination = response?.data?.pagination;
+      
+      const currentPage = pagination?.currentPage || params?.page || 1;
+      const totalPages = pagination?.totalPages || 0;
+      const hasMore = posts.length > 0 && currentPage < totalPages;
+      
+      return {
+        posts,
+        total: pagination?.totalCount || 0,
+        page: currentPage,
+        limit: params?.limit || 10,
+        hasMore
+      };
+    } catch (error) {
+      console.error('Error fetching user feeds:', error);
       throw error;
     }
   }
@@ -144,8 +182,6 @@ export class FeedService extends BaseApiService {
   async createPost(payload: Partial<FeedPost> & { content: string; is_public: boolean }): Promise<FeedResponse> {
     try {
       const response = await this.post<FeedResponse>('/feeds', payload);
-      // Reload feeds in background (don't await - allow UI to respond immediately)
-      this.reloadAllFeeds();
       return response;
     } catch (error) {
       console.error('Error creating post:', error);
@@ -156,8 +192,6 @@ export class FeedService extends BaseApiService {
   async updatePost(id: string, payload: Partial<FeedPost> & { content: string; is_public: boolean }): Promise<FeedResponse> {
     try {
       const response = await this.put<FeedResponse>(`/feeds/${id}`, payload);
-      // Reload feeds in background (don't await - allow UI to respond immediately)
-      this.reloadAllFeeds();
       return response;
     } catch (error) {
       console.error('Error updating post:', error);
@@ -168,8 +202,6 @@ export class FeedService extends BaseApiService {
   async deletePost(id: string): Promise<FeedResponse> {
     try {
       const response = await this.delete<FeedResponse>(`/feeds/${id}`);
-      // Reload feeds in background (don't await - modal should close after delete response)
-      this.reloadAllFeeds();
       return response;
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -177,103 +209,21 @@ export class FeedService extends BaseApiService {
     }
   }
 
-  /**
-   * Resets all feed signals and pagination state, then reloads all feeds
-   */
-  async reloadAllFeeds(): Promise<void> {
-    // Reset all feed signals and pagination state
-    this.resetAllFeeds();
-    
-    // Reload all feeds by calling GET APIs
-    const defaultLimit = 10;
-    try {
-      await Promise.all([
-        this.getMyFeeds({ page: 1, limit: defaultLimit, append: false }),
-        this.getFeeds({ is_public: true, page: 1, limit: defaultLimit, append: false }),
-        this.getFeeds({ is_public: false, page: 1, limit: defaultLimit, append: false })
-      ]);
-    } catch (error) {
-      console.error('Error reloading feeds:', error);
-      // Don't throw - allow the operation to complete even if reload fails
-    }
-  }
-
   async toggleLike(feedId: string): Promise<FeedLikeResponse> {
-    // Find the post to get current like status
-    const findPost = (posts: FeedPost[]): FeedPost | undefined => {
-      return posts.find(post => post.id === feedId);
-    };
-
-    // Get current like status from any feed signal
-    let currentPost: FeedPost | undefined;
-    currentPost = findPost(this.myPosts()) || 
-                  findPost(this.publicFeeds()) || 
-                  findPost(this.networkedFeeds()) || 
-                  findPost(this.posts());
-
-    const currentIsLiked = currentPost?.is_like || false;
-    const newIsLiked = !currentIsLiked; // Toggle the like status
-
-    // Optimistic update: Update UI immediately
-    this.updatePostLikeStatus(feedId, newIsLiked);
-
     try {
-      // Call API
-      const response = await this.post<FeedLikeResponse>(`/feed-likes/${feedId}`, {});
-      
-      // Update again based on actual API response
-      // content: true means liked, content: false means unliked
-      this.updatePostLikeStatus(feedId, response.data.content);
-      
+      const response = await this.post<FeedLikeResponse>(`/feed-likes/${feedId}`);
       return response;
     } catch (error) {
       console.error('Error toggling like:', error);
-      // Revert optimistic update on error
-      this.updatePostLikeStatus(feedId, currentIsLiked);
       throw error;
     }
   }
 
-  private updatePostLikeStatus(feedId: string, isLiked: boolean): void {
-    // Helper function to update a post in an array
-    const updatePostInArray = (posts: FeedPost[]): FeedPost[] => {
-      return posts.map(post => {
-        if (post.id === feedId) {
-          const currentIsLiked = post.is_like || false;
-          const currentLikes = post.total_likes || 0;
-          
-          // Only update if the like status actually changed
-          if (currentIsLiked !== isLiked) {
-            return {
-              ...post,
-              is_like: isLiked,
-              total_likes: isLiked 
-                ? currentLikes + 1 
-                : Math.max(currentLikes - 1, 0)
-            };
-          }
-        }
-        return post;
-      });
-    };
-
-    // Update in myPosts
-    this.myPosts.update(updatePostInArray);
-    
-    // Update in publicFeeds
-    this.publicFeeds.update(updatePostInArray);
-    
-    // Update in networkedFeeds
-    this.networkedFeeds.update(updatePostInArray);
-    
-    // Update in general posts signal
-    this.posts.update(updatePostInArray);
-  }
-
   /**
    * Resets all feed signals and pagination state
+   * reset feeds on account switch
    */
-  private resetAllFeeds(): void {
+  resetAllFeeds(): void {
     // Reset all feed signals
     this.myPosts.set([]);
     this.publicFeeds.set([]);
@@ -290,6 +240,125 @@ export class FeedService extends BaseApiService {
     this.publicFeedsHasMore.set(true);
     this.networkedFeedsHasMore.set(true);
     this.myFeedsHasMore.set(true);
+  }
+
+  /**
+   * Signal to store the currently viewed post (for post-comments page)
+   */
+  currentViewedPost = signal<FeedPost | null>(null);
+
+  /**
+   * Set the currently viewed post
+   */
+  setCurrentViewedPost(post: FeedPost | null): void {
+    this.currentViewedPost.set(post);
+  }
+
+  /**
+   * Update the currently viewed post from socket event
+   */
+  updateCurrentViewedPost(updatedPost: FeedPost): void {
+    const current = this.currentViewedPost();
+    if (current && current.id === updatedPost.id) {
+      this.currentViewedPost.set(updatedPost);
+    }
+  }
+
+  /**
+   * Signal to store comments for the currently viewed post
+   */
+  private currentPostComments = signal<{ feedId: string; comments: FeedComment[] } | null>(null);
+
+  /**
+   * Get comments signal for a specific feed
+   */
+  getCommentsSignal(feedId: string): FeedComment[] {
+    const current = this.currentPostComments();
+    return current?.feedId === feedId ? current.comments : [];
+  }
+
+  /**
+   * Set comments for a specific feed
+   */
+  setCommentsForFeed(feedId: string, comments: FeedComment[]): void {
+    this.currentPostComments.set({ feedId, comments });
+  }
+
+  applyCommentCreated(feedId: string, comment: FeedComment): void {
+    const current = this.currentPostComments();
+    
+    // Only update if we're viewing this feed's comments
+    if (!current || current.feedId !== feedId) return;
+
+    const isReply = !!comment.parent_comment_id;
+    if (isReply) return;
+
+    // Only handle parent comments - add to the start
+    this.currentPostComments.update((state) => {
+      if (!state || state.feedId !== feedId) return state;
+      return { ...state, comments: [comment, ...state.comments] };
+    });
+  }
+
+  applyCommentUpdated(feedId: string, updatedComment: FeedComment): void {
+    const current = this.currentPostComments();
+    
+    // Only update if we're viewing this feed's comments
+    if (!current || current.feedId !== feedId) return;
+
+    this.currentPostComments.update((state) => {
+      if (!state || state.feedId !== feedId) return state;
+
+      const updateCommentInTree = (c: FeedComment): FeedComment => {
+        if (c.id === updatedComment.id) {
+          // Preserve UI-only properties, but use updated replies from server
+          return {
+            ...updatedComment,
+            isRepliesOpen: c.isRepliesOpen, // Keep UI state
+          };
+        }
+        // Check replies recursively
+        if (c.replies && c.replies.length > 0) {
+          return {
+            ...c,
+            replies: c.replies.map(reply => updateCommentInTree(reply))
+          };
+        }
+        return c;
+      };
+
+      return {
+        ...state,
+        comments: state.comments.map(updateCommentInTree)
+      };
+    });
+  }
+
+  applyCommentDeleted(feedId: string, commentId: string): void {
+    const current = this.currentPostComments();
+    
+    // Only update if we're viewing this feed's comments
+    if (!current || current.feedId !== feedId) return;
+
+    // Check if it's a parent comment or reply
+    const isParentComment = current.comments.some(c => c.id === commentId);
+    const isReply = current.comments.some(c => 
+      c.replies && c.replies.some(reply => reply.id === commentId)
+    );
+
+    if (isReply) return;
+
+    // Only handle parent comment deletion
+    if (isParentComment) {
+      // feed:updated event will handle updating total_comments in feed arrays
+      this.currentPostComments.update((state) => {
+        if (!state || state.feedId !== feedId) return state;
+        return {
+          ...state,
+          comments: state.comments.filter(c => c.id !== commentId)
+        };
+      });
+    }
   }
 
   async getPostById(postId: string): Promise<FeedPost | null> {
@@ -419,5 +488,77 @@ export class FeedService extends BaseApiService {
       console.error('Error reporting comment:', error);
       throw error;
     }
+  }
+
+  // =============================================================================
+  // SOCKET-DRIVEN FEED UPDATES
+  // =============================================================================
+
+  private upsertAtEndIfMissing(list: FeedPost[], incoming: FeedPost): FeedPost[] {
+    const id = incoming.id;
+    if (!id) return list;
+    if (list.some((p) => p.id === id)) return list;
+    return [...list, incoming];
+  }
+
+  private replaceByIdIfExists(list: FeedPost[], incoming: FeedPost): FeedPost[] {
+    const id = incoming.id;
+    if (!id) return list;
+    let replaced = false;
+    const next = list.map((p) => {
+      if (p.id === id) {
+        replaced = true;
+        return incoming;
+      }
+      return p;
+    });
+    return replaced ? next : list;
+  }
+
+  private removeById(list: FeedPost[], feedId: string): FeedPost[] {
+    if (!feedId) return list;
+    return list.filter((p) => p.id !== feedId);
+  }
+
+  applyFeedCreated(feed: FeedPost): void {
+    if (!feed?.id) return;
+
+    // Always keep backward-compatible "posts" updated if it’s being used anywhere.
+    this.posts.update((curr) => this.upsertAtEndIfMissing(curr, feed));
+
+    // Append to the correct feed list based on is_public
+    if (feed.is_public) {
+      this.publicFeeds.update((curr) => this.upsertAtEndIfMissing(curr, feed));
+    } else {
+      this.networkedFeeds.update((curr) => this.upsertAtEndIfMissing(curr, feed));
+    }
+
+    // Append to myPosts ONLY if this feed belongs to current user
+    const currentUserId = this.authService.currentUser()?.id;
+    const feedOwnerId = feed.user_id || feed.user?.id || feed.created_by;
+    if (currentUserId && feedOwnerId && currentUserId === feedOwnerId) {
+      this.myPosts.update((curr) => this.upsertAtEndIfMissing(curr, feed));
+    }
+  }
+
+  applyFeedUpdated(feed: FeedPost): void {
+    if (!feed?.id) return;
+
+    this.posts.update((curr) => this.replaceByIdIfExists(curr, feed));
+    this.publicFeeds.update((curr) => this.replaceByIdIfExists(curr, feed));
+    this.networkedFeeds.update((curr) => this.replaceByIdIfExists(curr, feed));
+    this.myPosts.update((curr) => this.replaceByIdIfExists(curr, feed));
+    
+    // Also update the currently viewed post (for post-comments page)
+    this.updateCurrentViewedPost(feed);
+  }
+
+  applyFeedDeleted(feedId: string): void {
+    if (!feedId) return;
+
+    this.posts.update((curr) => this.removeById(curr, feedId));
+    this.publicFeeds.update((curr) => this.removeById(curr, feedId));
+    this.networkedFeeds.update((curr) => this.removeById(curr, feedId));
+    this.myPosts.update((curr) => this.removeById(curr, feedId));
   }
 }

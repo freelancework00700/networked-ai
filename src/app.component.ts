@@ -3,6 +3,7 @@ import * as icons from 'ionicons/icons';
 import { IonRouterOutlet } from '@ionic/angular/standalone';
 import { NavigationService } from '@/services/navigation.service';
 import { inject, effect, Component, viewChild } from '@angular/core';
+import { SocketService } from '@/services/socket.service';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +16,7 @@ import { inject, effect, Component, viewChild } from '@angular/core';
 export class AppComponent {
   // services
   private navigationService = inject(NavigationService);
+  private socketService = inject(SocketService);
 
   // view child
   private routerOutlet = viewChild(IonRouterOutlet);

@@ -1,10 +1,12 @@
 import { Swiper } from 'swiper';
+import { Pagination } from 'swiper/modules';
 import { NavController } from '@ionic/angular';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
 import { AuthService } from '@/services/auth.service';
 import { FeedService } from '@/services/feed.service';
+import { NavigationService } from '@/services/navigation.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
 import { DatePipe, NgOptimizedImage } from '@angular/common';
@@ -13,7 +15,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output, 
 import { FeedPost } from '@/interfaces/IFeed';
 
 @Component({
-  imports: [Button, NgOptimizedImage, DatePipe],
+  imports: [Button, NgOptimizedImage],
   selector: 'post-card',
   styleUrl: './post-card.scss',
   templateUrl: './post-card.html',
@@ -30,11 +32,11 @@ post = input.required<FeedPost>();
   toasterService = inject(ToasterService);
   authService = inject(AuthService);
   feedService = inject(FeedService);
+  navigationService = inject(NavigationService);
   
   private datePipe = new DatePipe('en-US');
 
   onMore = output<void>();
-  onLike = output<void>();
 
   swiper?: Swiper;
 
@@ -87,14 +89,14 @@ post = input.required<FeedPost>();
     if (!this.sortedMedias().length) return;
 
     this.swiper = new Swiper(this.swiperEl.nativeElement, {
+      modules: [Pagination],
       slidesPerView: 1,
       spaceBetween: 0,
       allowTouchMove: true,
       observer: true,
-
+      nested: true,
       pagination: {
-        el: '.swiper-pagination',
-        clickable: true
+        el: '.swiper-pagination'
       },
 
       on: {
@@ -122,6 +124,9 @@ post = input.required<FeedPost>();
     }
 
     const diffInMilliseconds = now - displayTimestamp;
+
+    if (diffInMilliseconds < 1000) return 'now';
+    
     const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     const diffInHours = Math.floor(diffInMinutes / 60);
@@ -256,23 +261,6 @@ post = input.required<FeedPost>();
     await this.modalService.openShareModal(postId, 'Post', postId);
   }
 
-  renderText(text: string): SafeHtml {
-    if (!text) return '';
-
-    const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-
-    let modifiedText = text.replace(mentionRegex, (match, username, uid) => {
-      return `<a href="/${uid}" class="text-blue-500">@${username}</a>`;
-    });
-
-    modifiedText = modifiedText.replace(urlRegex, (match, url) => {
-      return `<a href="${url}" target="_blank" class="text-blue-500">${url}</a>`;
-    });
-
-    return this.sanitizer.bypassSecurityTrustHtml(modifiedText);
-  }
-
   openFullscreen(index: number) {
     const media = this.sortedMedias()[index];
     if (media && media.media_type === 'Image' && media.media_url) {
@@ -280,17 +268,37 @@ post = input.required<FeedPost>();
     }
   }
 
-  renderCommentText(text: string): SafeHtml {
+  renderText(text: string): SafeHtml {
     if (!text) return '';
 
-    const urlRegex = /(?<!href=")(https?:\/\/[^\s<]+)/gi;
+    // Use a negative lookbehind to avoid matching mentions already inside HTML tags
+    const mentionRegex = /(?<!<[^>]*>)@([\w.]+)/g;
+    let modifiedText = text.replace(mentionRegex, (match, username) => {
+      // Check if this mention is already inside an anchor tag
+      if (match.includes('<a')) return match;
+      return `<a href="#" class="mention-link brand-03" data-username="${username}" style="font-weight:500; text-decoration:none; cursor:pointer;">${match}</a>`;
+    });
 
-    const modifiedText = text.replace(
-      urlRegex,
-      (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8; text-decoration:underline;">${url}</a>`
-    );
+    // Finally, handle URLs (avoid replacing URLs that are already in href attributes)
+    const urlRegex = /(?<!href=")(https?:\/\/[^\s<]+)/gi;
+    modifiedText = modifiedText.replace(urlRegex, (url) => {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8; text-decoration:underline;">${url}</a>`;
+    });
 
     return this.sanitizer.bypassSecurityTrustHtml(modifiedText);
+  }
+
+  onMentionClick(event: Event): void {
+    event.stopPropagation();
+    const target = event.target as HTMLElement;
+    const mentionLink = target.closest('.mention-link') as HTMLElement;
+    if (mentionLink) {
+      event.preventDefault();
+      const username = mentionLink.getAttribute('data-username');
+      if (username) {
+        this.navigationService.navigateForward(`/${username}`);
+      }
+    }
   }
 
   getImageUrl(imageUrl = ''): string {
@@ -308,7 +316,6 @@ post = input.required<FeedPost>();
     } catch (error) {
       console.error('Error toggling like:', error);
     }
-    this.onLike.emit();
   }
 
   onComment(): void {

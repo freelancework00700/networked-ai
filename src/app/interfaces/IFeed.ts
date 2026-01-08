@@ -36,6 +36,7 @@ export interface FeedPost {
     email: string;
     image_url?: string;
     thumbnail_url?: string;
+    connection_status?: string;
   };
   events?: EventData[] | null | undefined; // Events array from API
   mentions?: FeedMention[] | null; // Mentioned users from API response

@@ -179,6 +179,15 @@ ion-footer {
   border-radius: 32px;
   background: var(--neutral-07) !important;
 }
+.swiper-post-card .swiper-pagination-bullet {
+  background: var(--neutral-04) !important;
+  opacity: 1 !important;
+}
+.swiper-post-card .swiper-pagination-bullet-active {
+  width: 32px;
+  border-radius: 32px;
+  background: var(--neutral-07) !important;
+}
 @supports ((-webkit-backdrop-filter: blur(0)) or (backdrop-filter: blur(0))) {
   .header-translucent-ios ion-toolbar {
     --opacity: 1;

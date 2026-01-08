@@ -1,4 +1,5 @@
 import { Swiper } from 'swiper';
+import { Pagination } from 'swiper/modules';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { Chip } from '@/components/common/chip';
 import { Button } from '@/components/form/button';
@@ -9,8 +10,8 @@ import { AuthService } from '@/services/auth.service';
 import { MediaService } from '@/services/media.service';
 import { UserService } from '@/services/user.service';
 import { PostEventCard } from '@/components/card/post-event-card';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { NgxMentionsModule, ChoiceWithIndices } from 'ngx-mentions';
+import { Mentions } from '@/components/common/mentions';
+import { OverlayModule } from '@angular/cdk/overlay';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -22,7 +23,6 @@ import {
   ViewChild,
   ChangeDetectorRef,
   computed,
-  PLATFORM_ID,
   DestroyRef,
   OnInit
 } from '@angular/core';
@@ -31,9 +31,6 @@ import { IonToolbar, IonHeader, IonContent, NavController, IonFooter, IonIcon } 
 import { FeedPost, FeedMention } from '@/interfaces/IFeed';
 import { IUser } from '@/interfaces/IUser';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
-import { isPlatformBrowser } from '@angular/common';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, catchError, of, from } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'new-post',
@@ -50,19 +47,20 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     CommonModule,
     PostEventCard,
     DragDropModule,
-    NgxMentionsModule,
     ReactiveFormsModule,
-    NgOptimizedImage
+    NgOptimizedImage,
+    Mentions,
+    OverlayModule
   ]
 })
 export class NewPost implements OnInit {
   @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
+  @ViewChild('textareaEl') textareaRef!: ElementRef<HTMLTextAreaElement>;
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
   cd = inject(ChangeDetectorRef);
   navCtrl = inject(NavController);
   router = inject(Router);
-  sanitizer = inject(DomSanitizer);
   private fb = inject(FormBuilder);
   modalService = inject(ModalService);
   feedService = inject(FeedService);
@@ -70,22 +68,13 @@ export class NewPost implements OnInit {
   authService = inject(AuthService);
   mediaService = inject(MediaService);
   userService = inject(UserService);
-  private destroyRef = inject(DestroyRef);
-  private platformId = inject(PLATFORM_ID);
-
-  // Check if we're in the browser (for SSR compatibility)
-  isBrowser = computed(() => isPlatformBrowser(this.platformId));
 
   text = '';
   swiper?: Swiper;
-  formattedText!: any;
-  users: IUser[] = [];
-  mentions: ChoiceWithIndices[] = [];
-  searchRegexp = new RegExp('^([-&.\\w]+ *){0,3}$');
   textCtrl: FormControl = new FormControl('');
 
-  // RxJS Subject for debounced user search
-  private searchSubject = new Subject<string>();
+  // Track mentioned users: username -> user ID
+  private mentionedUsers = new Map<string, string>();
 
   currentSlide = signal(0);
   loading = signal<boolean>(false);
@@ -93,19 +82,24 @@ export class NewPost implements OnInit {
   isLoading = signal<boolean>(false);
   postLoading = signal<boolean>(false);
   visibility = signal<'public' | 'private'>('public');
+  eventsCount = signal<number>(0);
 
   // Edit mode
   postId = signal<string | null>(null);
   isEditMode = computed(() => !!this.postId());
-  originalMentions = signal<FeedMention[]>([]); // Store original mentions from post for parsing
 
   // Reactive text content signal
   textContent = signal<string>('');
 
   // Computed signal to check if post can be submitted
+  // At least one of: text content, media, or event is required
   isPostDisabled = computed(() => {
     const hasContent = this.textContent()?.trim().length > 0;
-    return !hasContent;
+    const hasMedia = this.mediaItems().length > 0;
+    const hasEvent = this.eventsCount() > 0;
+    
+    // Post is disabled if none of the three conditions are met
+    return !(hasContent || hasMedia || hasEvent);
   });
 
   // Current user data
@@ -124,18 +118,6 @@ export class NewPost implements OnInit {
     })
   );
 
-  parentCommentStatusBasedStyles = {
-    color: '#F5BC61'
-  };
-
-  mentionsConfig = [
-    {
-      triggerCharacter: '@',
-      getChoiceLabel: (item: IUser): string => {
-        return `@${item.name || ''}`;
-      }
-    }
-  ];
 
   ngOnInit() {
     const navigationState: any = this.router.currentNavigation()?.extras?.state;
@@ -147,103 +129,23 @@ export class NewPost implements OnInit {
 
     this.textCtrl.valueChanges.subscribe((content) => {
       this.textContent.set(content || '');
-      this.getFormattedHighlightText(this.textCtrl.value, this.mentions, this.parentCommentStatusBasedStyles);
     });
 
     // Initialize textContent with current value
     this.textContent.set(this.textCtrl.value || '');
-
-    // Set up debounced user search
-    this.searchSubject
-      .pipe(
-        debounceTime(500), // Wait 300ms after user stops typing
-        distinctUntilChanged(), // Only search if the value changed
-        switchMap((searchText: string) => {
-          if (!searchText || searchText.trim() === '') {
-            // Return empty array if search is empty
-            this.users = [];
-            return of({ users: [], pagination: { totalCount: 0, currentPage: 1, totalPages: 0 } });
-          }
-
-          // Defer loading state update
-          this.loading.set(true);
-
-          // Convert Promise to Observable
-          return from(this.userService.searchUsers(searchText, 1, 20)).pipe(
-            catchError((error) => {
-              console.error('Error searching users:', error);
-              this.loading.set(false);
-              return of({ users: [], pagination: { totalCount: 0, currentPage: 1, totalPages: 0 } });
-            })
-          );
-        }),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe((response) => {
-        this.users = response.users || [];
-        this.loading.set(false);
-        this.cd.detectChanges();
-      });
   }
 
   private loadPostData(post: FeedPost): void {
-    // Load mentions - initialize mentions array and store original mention IDs
-    if (post.mentions && post.mentions.length > 0 && post.content) {
-      this.originalMentions.set(post.mentions);
-
-      const content = post.content;
-      const mentionsWithIndices: ChoiceWithIndices[] = [];
-
+    // Load mentions - store user mappings for mention_ids extraction
+    if (post.mentions && post.mentions.length > 0) {
       post.mentions.forEach((mention) => {
-        // Try to find the mention in content by username or name
-        const patterns = [
-          `@${mention.username}`,
-          `@${mention.name}`,
-          `@${mention.name.split(' ')[0]}`, // First name only
-          `@${mention.name.split(' ').join('')}` // Full name without spaces
-        ];
-
-        // Try each pattern until we find a match
-        let found = false;
-        for (const pattern of patterns) {
-          if (found) break; // Stop if we already found this mention
-
-          let searchIndex = 0;
-          while (true) {
-            const index = content.indexOf(pattern, searchIndex);
-            if (index === -1) break;
-
-            // (avoid duplicates)
-            const alreadyAdded = mentionsWithIndices.some((m) => m.choice?.id === mention.id && m.indices.start === index);
-
-            if (!alreadyAdded) {
-              mentionsWithIndices.push({
-                choice: { ...mention } as IUser,
-                indices: {
-                  start: index,
-                  end: index + pattern.length,
-                  triggerCharacter: '@'
-                }
-              });
-              found = true;
-              break; // Found this mention, move to next mention
-            }
-            searchIndex = index + 1;
-          }
+        if (mention.username && mention.id) {
+          this.mentionedUsers.set(mention.username.toLowerCase(), mention.id);
         }
       });
-
-      // Sort by position in content
-      mentionsWithIndices.sort((a, b) => a.indices.start - b.indices.start);
-
-      // Set mentions BEFORE setting content so ngx-mentions can track them
-      this.mentions = mentionsWithIndices;
-    } else {
-      this.originalMentions.set([]);
-      this.mentions = [];
     }
 
-    // Now set content after mentions are initialized
+    // Set content
     if (post.content) {
       this.textCtrl.setValue(post.content);
       this.textContent.set(post.content);
@@ -267,6 +169,7 @@ export class NewPost implements OnInit {
           eventFormArray.push(this.fb.control(event));
         }
       });
+      this.eventsCount.set(eventFormArray.controls.length);
     }
 
     // Load medias (sort by order)
@@ -290,10 +193,15 @@ export class NewPost implements OnInit {
     if (!this.mediaItems().length) return;
 
     this.swiper = new Swiper(this.swiperEl.nativeElement, {
+      modules: [Pagination],
       slidesPerView: 1,
       spaceBetween: 0,
       allowTouchMove: true,
       observer: true,
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true
+      },
       on: {
         slideChange: (swiper) => {
           this.currentSlide.set(swiper.activeIndex);
@@ -352,6 +260,7 @@ export class NewPost implements OnInit {
 
     if (!exists) {
       this.eventsArray().push(this.fb.control(data));
+      this.eventsCount.set(this.eventsArray().controls.length);
     }
     this.cd.detectChanges();
   }
@@ -434,6 +343,7 @@ export class NewPost implements OnInit {
 
     if (index !== -1) {
       this.eventsArray().removeAt(index);
+      this.eventsCount.set(this.eventsArray().controls.length);
     }
   }
 
@@ -448,8 +358,8 @@ export class NewPost implements OnInit {
         .filter((id) => id);
       const medias = await this.processMediaItems();
 
-      // Extract mention IDs from mentions array - ngx-mentions tracks what's actually in the text
-      const mentionIds = this.mentions.map((mention) => mention.choice?.id).filter((id): id is string => !!id);
+      // Extract mention IDs from the content text
+      const mentionIds = this.extractMentionIds(content);
 
       const payload: Partial<FeedPost> & { content: string; is_public: boolean } = {
         event_ids: eventIds,
@@ -532,70 +442,28 @@ export class NewPost implements OnInit {
     return mimetype?.startsWith('video') ? 'Video' : 'Image';
   }
 
-  async loadChoices({ searchText, triggerCharacter }: { searchText: string; triggerCharacter: string }): Promise<IUser[]> {
-    if (triggerCharacter === '@') {
-      if (searchText && searchText.trim()) {
-        this.searchSubject.next(searchText);
-      } else {
-        this.users = [];
+  onMentionSelected(user: IUser): void {
+    // Store username -> user ID mapping for extracting mention IDs later
+    if (user.username && user.id) {
+      this.mentionedUsers.set(user.username.toLowerCase(), user.id);
+    }
+  }
+
+  private extractMentionIds(content: string): string[] {
+    const mentionRegex = /@([\w.]+)/g;
+    const matches = content.matchAll(mentionRegex);
+    const mentionIds: string[] = [];
+
+    for (const match of matches) {
+      const username = match[1].toLowerCase();
+      const userId = this.mentionedUsers.get(username);
+      if (userId && !mentionIds.includes(userId)) {
+        mentionIds.push(userId);
       }
-      return this.users || [];
+      console.log('mentionIds:', mentionIds);
     }
-    return [];
-  }
 
-  getChoiceLabel = (user: IUser): string => {
-    return `@${user.name || ''}`;
-  };
-
-  getDisplayLabel = (item: IUser): string => {
-    return item.name || '';
-  };
-
-  onSelectedChoicesChange(choices: ChoiceWithIndices[]): void {
-    this.mentions = choices;
-    this.getFormattedHighlightText(this.textCtrl.value, this.mentions, this.parentCommentStatusBasedStyles);
-    console.log('mentions:', this.mentions);
-  }
-
-  onMenuShow(): void {
-    // Menu is shown - only show if we have users
-    if (!this.users || this.users.length === 0) {
-      return;
-    }
-  }
-
-  onMenuHide(): void {
-    this.users = [];
-  }
-
-  private getFormattedHighlightText(
-    content: string,
-    ranges: any[],
-    parentCommentStatusBasedStyles: {
-      color: string;
-    }
-  ) {
-    let highlightedContent = content;
-    let replaceContentIndex = 0;
-
-    ranges.forEach((range) => {
-      const start = range.indices.start;
-      const end = range.indices.end;
-      const highlightedText = content.substring(start, end);
-
-      const highlighted = `<a href="http://localhost:4200" style="color: ${parentCommentStatusBasedStyles.color}; white-space: nowrap; padding: 0 3px; border-radius: 3px; text-decoration: none;">${highlightedText}</a>`;
-
-      const newReplace = highlightedContent.substring(replaceContentIndex).replace(highlightedText, highlighted);
-
-      highlightedContent = replaceContentIndex === 0 ? newReplace : highlightedContent.substring(0, replaceContentIndex) + newReplace;
-
-      replaceContentIndex = highlightedContent.lastIndexOf('</a>') + 4;
-    });
-
-    highlightedContent = highlightedContent.replace(/\n/g, '<br>');
-
-    this.formattedText = this.sanitizer.bypassSecurityTrustHtml(highlightedContent) as string;
+    return mentionIds;
   }
 
   getImageUrl(imageUrl = ''): string {

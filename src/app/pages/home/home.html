@@ -1,4 +1,4 @@
-<ion-header mode="md">
+<ion-header mode="md" [class.events-tab]="tab() === 'events'">
   <ion-toolbar mode="md">
     <!-- user and notification -->
     @if (isLoggedIn()) {
@@ -11,12 +11,41 @@
     <div class="header-segment-section">
       <segment-button [items]="tabItems" [value]="tab()" (valueChange)="onSegmentChange($event)" />
     </div>
+
+    <!-- Feed header content (filters and post composer) - only visible on feed tab -->
+    @if (tab() === 'feed' && homeFeedRef) {
+      <div class="feed-header-content">
+        <!-- Filter buttons -->
+        <div class="feed-filter-section bg-neutral-07 flex gap-2 p-4">
+          <button type="button" class="filter-button" [class.active]="homeFeedRef.feedFilter() === 'public'" (click)="homeFeedRef.feedFilter.set('public'); homeFeedRef.onFilterChange()">Public</button>
+          <button type="button" class="filter-button" [class.active]="homeFeedRef.feedFilter() === 'networked'" (click)="homeFeedRef.feedFilter.set('networked'); homeFeedRef.onFilterChange()">Networked</button>
+        </div>
+        
+        <!-- Post composer - only show when logged in -->
+        @if (isLoggedIn()) {
+        <div class="feed-post-composer flex items-center gap-2 p-4 bg-neutral-07 border-b border-[#dbdbdb]">
+          <div class="relative w-[40px] h-[40px] flex-shrink-0">
+            <img
+              fill
+              placeholder
+              alt="avatar"
+              class="rounded-full object-cover"
+              (error)="homeFeedRef.onImageError($event)"
+              [ngSrc]="homeFeedRef.currentUserImage()"
+            />
+          </div>
+          <div class="flex-1 flex flex-col" (click)="navCtrl.navigateForward('/new-post')">
+            <div class="post-composer-name body-14SB neutral-01">{{ homeFeedRef.currentUserName() }}</div>
+            <div class="body-12M neutral-03">Start a new post...</div>
+          </div>
+        </div>
+        }
+      </div>
+    }
   </ion-toolbar>
-  
-  
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" [scrollEvents]="true">
   <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
     <ion-refresher-content mode="md"></ion-refresher-content>
   </ion-refresher>

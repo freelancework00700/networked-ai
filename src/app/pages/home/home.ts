@@ -5,10 +5,12 @@ import { ProfileHeaderToolbar } from '@/components/common/profile-header-toolbar
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { signal, inject, computed, Component, ChangeDetectionStrategy, ViewChild, OnDestroy } from '@angular/core';
 import { IonHeader, IonToolbar, IonContent, NavController, RefresherCustomEvent } from '@ionic/angular/standalone';
+import { NgOptimizedImage } from '@angular/common';
 import { IonRefresher, IonRefresherContent } from '@ionic/angular/standalone';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ViewWillEnter } from '@ionic/angular/standalone';
+import { ScrollHandlerDirective } from '@/directives/scroll-handler.directive';
 
 type Tab = 'events' | 'feed';
 
@@ -17,7 +19,7 @@ type Tab = 'events' | 'feed';
   styleUrl: './home.scss',
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HomeFeed, IonHeader, HomeEvent, IonToolbar, IonContent, SegmentButton, ProfileHeaderToolbar, IonRefresher, IonRefresherContent]
+  imports: [HomeFeed, IonHeader, HomeEvent, IonToolbar, IonContent, SegmentButton, ProfileHeaderToolbar, IonRefresher, IonRefresherContent, NgOptimizedImage, ScrollHandlerDirective]
 })
 export class Home implements OnDestroy, ViewWillEnter {
   // services

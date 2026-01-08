@@ -1,115 +1,24 @@
-@if (isStandalonePage) {
-  <ion-header>
-    <ion-toolbar>
+@if (isStandalonePage()) {
+  <ion-header mode="md">
+    <ion-toolbar mode="md">
       <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 max-w-[672px] mx-auto">
         <div class="pi pi-arrow-left cursor-pointer" (click)="navCtrl.back()"></div>
         <div class="body-14M neutral-02 text-center w-full">Achievements</div>
       </div>
     </ion-toolbar>
   </ion-header>
-}
-<div class="inner-content overflow-y-auto h-full">
-  <div class="w-full max-w-[672px] mx-auto" [class.p-4]="isStandalonePage">
-    @if (isStandalonePage) {
-      <div class="flex justify-between items-center pb-4">
-        <div class="heading-h3 neutral-01">Your Networking Score</div>
-      </div>
-    } @else {
-      <div class="flex justify-between items-center pb-4">
-        <div class="heading-h3 neutral-01">Achievements</div>
-        <div class="brand-02 body-14SB cursor-pointer" (click)="navigateToAchievements()">See all</div>
-      </div>
-    }
-    @if (isStandalonePage) {
-      <networking-score-card [score]="37890" />
-    }
-    <div class="mb-6">
-      <div class="flex items-center justify-between pb-3">
-        <div class="body-16M neutral-01">Events Hosted</div>
-        <div class="flex items-center gap-2">
-          @if (!isAllEventsHostedCompleted()) {
-            <div class="w-[120px] sm:w-[200px] h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-              <div
-                class="h-full rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"
-                [style.width.%]="getEventsHostedProgress()"
-              ></div>
-            </div>
-          }
-          @if (isAllEventsHostedCompleted()) {
-            <div class="flex items-center gap-2">
-              <i class="pi pi-check"></i>
-              <div class="body-16M neutral-01 font-semibold">{{ eventsHostedCount | number }}</div>
-            </div>
-          } @else {
-            <div class="body-16M neutral-01 font-semibold whitespace-nowrap">{{ eventsHostedCount | number }}/{{ eventsHostedTotal | number }}</div>
-          }
-        </div>
-      </div>
-      <div class="grid grid-cols-5 gap-2">
-        @for (achievement of eventsHostedAchievements; track achievement.id) {
-          <achievement-card [achievement]="achievement" (onClick)="openAchievementDetailModal($event)" />
-        }
-      </div>
-    </div>
 
-    <!-- Events Attended Section -->
-    <div class="mb-6">
-      <div class="flex items-center justify-between pb-3">
-        <div class="body-16M neutral-01">Events Attended</div>
-        <div class="flex items-center gap-2">
-          @if (!isAllEventsAttendedCompleted()) {
-            <div class="w-[120px] sm:w-[200px] h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-              <div
-                class="h-full rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"
-                [style.width.%]="(getEventsAttendedCompleted() / getTotalAchievements()) * 100"
-              ></div>
-            </div>
-          }
-          @if (isAllEventsAttendedCompleted()) {
-            <div class="flex items-center gap-2">
-              <i class="pi pi-check"></i>
-              <div class="body-16M neutral-01 font-semibold">{{ eventsAttendedCount | number }}</div>
-            </div>
+  <ion-content [fullscreen]="true" mode="md">
+    <achievements-content
+      [showHeader]="true"
+      [showNetworkingScore]="true"
+    />
+  </ion-content>
           } @else {
-            <div class="body-16M neutral-01 font-semibold whitespace-nowrap">{{ getEventsAttendedCompleted() }}/{{ getTotalAchievements() }}</div>
-          }
-        </div>
-      </div>
-      <div class="grid grid-cols-5 gap-2">
-        @for (achievement of eventsAttendedAchievements; track achievement.id) {
-          <achievement-card [achievement]="achievement" (onClick)="openAchievementDetailModal($event)" />
+  <achievements-content
+    [showHeader]="false"
+    [showSeeAll]="true"
+    [showNetworkingScore]="false"
+    (onSeeAll)="navigateToAchievements()"
+  />
         }
-      </div>
-    </div>
-
-    <!-- Networks Section -->
-    <div>
-      <div class="flex items-center justify-between pb-3">
-        <div class="body-16M neutral-01">Networks</div>
-        <div class="flex items-center gap-2">
-          @if (!isAllNetworksCompleted()) {
-            <div class="w-[120px] sm:w-[200px] h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-              <div
-                class="h-full rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]"
-                [style.width.%]="getNetworksProgress()"
-              ></div>
-            </div>
-          }
-          @if (isAllNetworksCompleted()) {
-            <div class="flex items-center gap-2">
-              <i class="pi pi-check"></i>
-              <div class="body-16M neutral-01 font-semibold">{{ networksCount | number }}</div>
-            </div>
-          } @else {
-            <div class="body-16M neutral-01 font-semibold whitespace-nowrap">{{ networksCount | number }}/{{ networksTotal | number }}</div>
-          }
-        </div>
-      </div>
-      <div class="grid grid-cols-5 gap-2">
-        @for (achievement of networksAchievements; track achievement.id) {
-          <achievement-card [achievement]="achievement" (onClick)="openAchievementDetailModal($event)" />
-        }
-      </div>
-    </div>
-  </div>
-</div>

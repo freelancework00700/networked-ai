@@ -14,7 +14,7 @@
         <ion-spinner></ion-spinner>
       </div>
       } @else if (post()) {
-      <post-card [post]="post()!" (onLike)="onLike()" />
+      <post-card [post]="post()!" />
       } @else {
       <app-empty-state title="Not found" message="Post not found" />
       }
@@ -23,112 +23,105 @@
       <div class="w-full bg-white rounded-lg flex flex-col gap-2">
         <!-- Comments List -->
         @if (isLoadingComments()) {
-          <div class="flex justify-center items-center py-8">
-            <ion-spinner></ion-spinner>
-          </div>
+        <div class="flex justify-center items-center py-8">
+          <ion-spinner></ion-spinner>
+        </div>
         } @else if (comments().length) {
-        <div class="body-14M text-center">All Comments ({{ totalComments() }})</div>
+        <div class="body-14M text-center">All Comments ({{ post()?.total_comments || 0 }})</div>
         }
 
         @for (comment of comments(); track comment.id) {
-          <div class="border-b border-gray-300 px-4 py-2">
-            <div class="flex justify-between items-start gap-4">
-              <div class="flex items-start gap-2 cursor-pointer" (click)="menu.toggle($event)">
-              <div class="relative w-10 h-10 flex-shrink-0">
-                <img
-                  fill
-                  placeholder
-                  [alt]="comment.user?.name || 'avatar'"
-                  class="rounded-full object-cover cursor-pointer"
-                  (error)="onImageError($event)"
-                  [ngSrc]="getImageUrl(comment.user?.thumbnail_url || comment.user?.image_url)"
-                />
+        <div class="border-b border-gray-300 px-4 py-2">
+          <div class="flex justify-between items-start gap-4">
+            <div class="flex items-start gap-2 cursor-pointer">
+              <div class="relative w-10 h-10 flex-shrink-0" (click)="menu.toggle($event)">
+                <img fill placeholder [alt]="comment.user?.name || 'avatar'"
+                  class="rounded-full object-cover cursor-pointer" (error)="onImageError($event)"
+                  [ngSrc]="getImageUrl(comment.user?.thumbnail_url || comment.user?.image_url)" />
               </div>
 
-                <p-menu #menu [popup]="true" [model]="getMenuItems(comment)" appendTo="body"> </p-menu>
+              <p-menu #menu [popup]="true" [model]="getMenuItems(comment)" appendTo="body"> </p-menu>
 
-                <div>
-                  <div class="flex items-center gap-1">
+              <div>
+                <div class="flex items-center gap-1">
                   <span class="body-14SB comment-user-name">{{ comment.user?.name || comment.user?.username }} </span>
                   <span class="text-gray-400 text-xs pl-1">{{ getTimeAgo(comment.created_at) }}</span>
-                  </div>
-                <div class="body-12 mt-1 break-all whitespace-pre-wrap" [innerHTML]="renderCommentText(comment.comment)">
                 </div>
+                <div class="body-12 mt-1 break-all whitespace-pre-wrap"
+                  [innerHTML]="renderCommentText(comment.comment)"
+                  (click)="onMentionClick($event)">
                 </div>
               </div>
+            </div>
 
-              <div class="flex gap-3 text-gray-400 items-center text-start">
-                <span class="cursor-pointer text-[12px]" (click)="onReplyClick(comment)"> Reply </span>
+            <div class="flex gap-3 text-gray-400 items-center text-start">
+              <span class="cursor-pointer text-[12px]" (click)="onReplyClick(comment)"> Reply </span>
 
-                <div class="flex flex-col items-center cursor-pointer select-none" (click)="onLikeComment(comment)">
+              <div class="flex flex-col items-center cursor-pointer select-none" (click)="onLikeComment(comment)">
                 <div class="pi !text-[12px]" [class.pi-heart-fill]="comment.is_like" [class.pi-heart]="!comment.is_like"
                   [class.accent-red]="comment.is_like" [class.text-neutral-04]="!comment.is_like"></div>
 
                 <span class="body-12M transition-colors text-center" [class.accent-red]="comment.is_like"
                   [class.text-neutral-04]="!comment.is_like">
                   {{ comment.total_likes || 0 }}
+                </span>
+              </div>
+            </div>
+          </div>
+          @if (comment.replies?.length) {
+          <div class="ml-12 mt-2 text-[12px] text-gray-500 cursor-pointer select-none" (click)="toggleReplies(comment)">
+            @if (!comment.isRepliesOpen) {
+            View {{ comment?.replies?.length }} replies
+            } @else {
+            Hide replies
+            }
+          </div>
+          }
+          @if (comment.isRepliesOpen) {
+          @for (reply of comment.replies; track reply.id) {
+          <div class="ml-12 mt-2 body-12 gap-4 flex justify-between items-start">
+            <div class="flex items-start gap-2 my-2 cursor-pointer" (click)="menu.toggle($event)">
+              <div class="relative w-10 h-10 flex-shrink-0">
+                <img fill placeholder [alt]="reply.user?.name || 'avatar'"
+                  class="rounded-full object-cover cursor-pointer" (error)="onImageError($event)"
+                  [ngSrc]="getImageUrl(reply.user?.thumbnail_url || reply.user?.image_url)" />
+              </div>
+
+              <p-menu #menu [popup]="true" [model]="getMenuItems(reply)" appendTo="body"> </p-menu>
+
+              <div>
+                <div class="flex items-center gap-1">
+                  <span class="body-14SB">{{ reply.user?.name || 'User' }}</span>
+                  <span class="text-gray-400 text-xs pl-1">
+                    {{ getTimeAgo(reply.created_at) }}
                   </span>
+                </div>
+
+                <div class="body-12 mt-1 break-all whitespace-pre-wrap" [innerHTML]="renderCommentText(reply.comment)"
+                  (click)="onMentionClick($event)">
                 </div>
               </div>
             </div>
-            @if (comment.replies?.length) {
-              <div class="ml-12 mt-2 text-[12px] text-gray-500 cursor-pointer select-none" (click)="toggleReplies(comment)">
-                @if (!comment.isRepliesOpen) {
-            View {{ comment?.replies?.length }} replies
-                } @else {
-                  Hide replies
-                }
-              </div>
-            }
-            @if (comment.isRepliesOpen) {
-          @for (reply of comment.replies; track reply.id) {
-                <div class="ml-12 mt-2 body-12 gap-4 flex justify-between items-start">
-                  <div class="flex items-start gap-2 my-2 cursor-pointer" (click)="menu.toggle($event)">
-              <div class="relative w-10 h-10 flex-shrink-0">
-                    <img
-                  fill
-                  placeholder
-                  [alt]="reply.user?.name || 'avatar'"
-                  class="rounded-full object-cover cursor-pointer"
-                  (error)="onImageError($event)"
-                  [ngSrc]="getImageUrl(reply.user?.thumbnail_url || reply.user?.image_url)"
-                    />
-              </div>
-
-                    <p-menu #menu [popup]="true" [model]="getMenuItems(reply)" appendTo="body"> </p-menu>
-
-                    <div>
-                      <div class="flex items-center gap-1">
-                  <span class="body-14SB">{{ reply.user?.name || 'User' }}</span>
-                        <span class="text-gray-400 text-xs pl-1">
-                    {{ getTimeAgo(reply.created_at) }}
-                        </span>
-                      </div>
-
-                <div class="body-12 mt-1 break-all whitespace-pre-wrap" [innerHTML]="renderCommentText(reply.comment)">
-                </div>
-                    </div>
-                  </div>
 
             <div class="flex flex-col items-center cursor-pointer select-none text-gray-400 my-2"
-              (click)="onLikeComment(reply, true)">
+              (click)="onLikeComment(reply)">
               <div class="pi !text-[12px]" [class.pi-heart-fill]="reply.is_like" [class.pi-heart]="!reply.is_like"
                 [class.accent-red]="reply.is_like" [class.text-neutral-04]="!reply.is_like"></div>
 
               <span class="body-12M transition-colors text-center" [class.accent-red]="reply.is_like"
                 [class.text-neutral-04]="!reply.is_like">
                 {{ reply.total_likes || 0 }}
-                    </span>
-                  </div>
-                </div>
-              }
-            }
+              </span>
+            </div>
           </div>
+          }
+          }
+        </div>
         } @empty {
-          <app-empty-state title="No comments yet" message="Start the conversation!" />
+        <app-empty-state title="No comments yet" message="Start the conversation!" />
         }
       </div>
-      
+
       <!-- Infinite scroll -->
       <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreComments($event)" [disabled]="!hasMoreComments()">
         <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more comments..." />
@@ -137,94 +130,51 @@
     </div>
   </div>
 </ion-content>
+
 @if (post()) {
 <ion-footer mode="md">
   <ion-toolbar>
     <div class="pt-6 max-w-[672px] mx-auto">
       @if (replyingTo()) {
-        <div class="flex items-center gap-2 px-3 py-2 rounded-lg border-l-[3px] border-primary-500">
+      <div class="flex items-center gap-2 px-3 py-2 rounded-lg border-l-[3px] border-primary-500">
         <div class="relative w-[35px] h-[35px] flex-shrink-0">
-          <img
-            fill
-            placeholder
-            alt="User avatar"
-            class="rounded-full object-cover"
-            (error)="onImageError($event)"
-            [ngSrc]="getImageUrl(replyingTo()?.userPhoto)"
-          />
+          <img fill placeholder alt="User avatar" class="rounded-full object-cover" (error)="onImageError($event)"
+            [ngSrc]="getImageUrl(replyingTo()?.userPhoto)" />
         </div>
 
-          <div class="w-[2px] h-5 bg-primary-500 rounded"></div>
+        <div class="w-[2px] h-5 bg-primary-500 rounded"></div>
 
-          <div class="flex items-center gap-1 flex-1">
-            <span class="body-14M text-neutral-04"> Replying to </span>
+        <div class="flex items-center gap-1 flex-1">
+          <span class="body-14M text-neutral-04"> Replying to </span>
 
-            <span class="body-14SB text-black">
-              {{ replyingTo()?.userName }}
-            </span>
-          </div>
-
-          <i class="pi pi-times" (click)="clearReply()"></i>
+          <span class="body-14SB text-black">
+            {{ replyingTo()?.userName }}
+          </span>
         </div>
+
+        <i class="pi pi-times" (click)="clearReply()"></i>
+      </div>
       }
 
       <div class="flex items-center gap-4 mt-0 p-6 pt-0">
         <div class="flex-1 flex items-center gap-2 border border-gray-300 rounded-lg px-2">
           <div class="relative w-10 h-10 flex-shrink-0">
-            <img
-              fill
-              placeholder
-              [alt]="currentUser()?.name || 'avatar'"
-              class="rounded-full object-cover"
-              (error)="onImageError($event)"
-              [ngSrc]="getImageUrl(currentUser()?.thumbnail_url)"
-            />
+            <img fill placeholder [alt]="currentUser()?.name || 'avatar'" class="rounded-full object-cover"
+              (error)="onImageError($event)" [ngSrc]="getImageUrl(currentUser()?.thumbnail_url)" />
           </div>
 
           <div class="relative-block-container">
             <div>
-              <textarea #textareaRef class="w-full py-2 px-4 border-none outline-none resize-none"
-                [formControl]="textCtrl" [placeholder]="replyingTo() ? ('Reply as ' + currentUser()?.username) : 'Reply to this post...'"
+              <textarea #textareaEl cdkOverlayOrigin #textareaOrigin="cdkOverlayOrigin" class="w-full py-2 px-4 border-none outline-none resize-none"
+                [formControl]="textCtrl"
+                [placeholder]="replyingTo() ? ('Reply as ' + currentUser()?.username) : 'Reply to this post...'"
                 wrap="hard"></textarea>
-
-              @if (isBrowser()) {
-              <ngx-mentions [textInputElement]="textareaRef" [menuTemplate]="menuTemplate"
-                [mentionsConfig]="mentionsConfig" [searchRegexp]="searchRegexp" [mentions]="mentions"
-                [removeWholeTagOnBackspace]="true" (search)="loadChoices($event)"
-                (selectedChoicesChange)="onSelectedChoicesChange($event)" (menuShow)="onMenuShow()"
-                (menuHide)="onMenuHide()"></ngx-mentions>
-              }
-
-              <ng-template #menuTemplate let-selectChoice="selectChoice">
-                <ul class="ngx-selectable-list" ngxKbListNavigation [choices]="choices"
-                  (selectChoice)="selectChoice($event)" [class.loader-only]="!choices.length && loading">
-                  @for (user of choices; track user.id) {
-                  <li class="ngx-selectable-list-item flex items-center justify-between gap-2"
-                    (click)="selectChoice(user)">
-                      <!-- Left: avatar + name -->
-                      <div class="flex items-center gap-2">
-                      <div class="relative w-8 h-8 flex-shrink-0">
-                        <img
-                          fill
-                          placeholder
-                          [alt]="user.name || 'avatar'"
-                          class="rounded-full object-cover"
-                          (error)="onImageError($event)"
-                          [ngSrc]="getImageUrl(user.thumbnail)"
-                        />
-                      </div>
-                        <span title="{{ user.name }}">{{ user.name }}</span>
-                      </div>
-
-                      <!-- Right: Networked chip -->
-                      @if (user.isNetwork) {
-                    <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium"> Networked
-                    </span>
-                      }
-                    </li>
-                  }
-                </ul>
-              </ng-template>
+              <mentions 
+                [textareaRef]="textareaRef"
+                [control]="textCtrl"
+                [overlayOrigin]="textareaOrigin"
+                [position]="'above'"
+                (userSelected)="onMentionSelected($event)" />
             </div>
           </div>
         </div>

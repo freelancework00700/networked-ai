@@ -18,7 +18,6 @@ import {
   inject,
   Component,
   AfterViewInit,
-  OnDestroy,
   signal,
   computed,
   ChangeDetectionStrategy,
@@ -32,6 +31,7 @@ import { NavigationService } from '@/services/navigation.service';
 import { UserService } from '@/services/user.service';
 import { ProfileImagePreviewOverlay } from '@/components/modal/profile-image-preview-overlay';
 import { PopoverService } from '@/services/popover.service';
+import { ScrollHandlerDirective } from '@/directives/scroll-handler.directive';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
@@ -63,7 +63,8 @@ interface TabConfig {
     ProfileAttendedEvents,
     ProfileUpcomingEvents,
     NgOptimizedImage,
-    ProfileImagePreviewOverlay
+    ProfileImagePreviewOverlay,
+    ScrollHandlerDirective
   ]
 })
 export class Profile implements AfterViewInit {

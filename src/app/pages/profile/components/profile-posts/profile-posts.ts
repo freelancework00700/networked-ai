@@ -1,6 +1,6 @@
 import { NavController, RefresherCustomEvent } from '@ionic/angular/standalone';
 import { IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner, IonRefresher, IonRefresherContent } from '@ionic/angular/standalone';
-import { inject, Component, ChangeDetectionStrategy, OnInit, signal, computed, input } from '@angular/core';
+import { inject, Component, ChangeDetectionStrategy, OnInit, signal, computed, input, effect } from '@angular/core';
 import { PostCard } from '@/components/card/post-card';
 import { FeedService } from '@/services/feed.service';
 import { ViewWillEnter } from '@ionic/angular/standalone';
@@ -18,15 +18,29 @@ export class ProfilePosts implements OnInit, ViewWillEnter {
   navCtrl = inject(NavController);
   feedService = inject(FeedService);
 
+  userId = input<string | null>(null);
+
   // signals
   posts = this.feedService.myPosts;
   isLoading = signal(false);
   isLoadingMore = signal(false);
   hasLoadedOnce = signal(false);
-  hasMore = computed(() => this.feedService.myFeedsHasMore());
+  hasMore = signal(true);
+  currentPage = signal(1);
+  totalPages = signal(0);
 
   // Constants
   private readonly pageLimit = 10;
+
+  constructor() {
+    // Reload feeds when userId changes
+    effect(() => {
+      const userId = this.userId();
+      if (this.hasLoadedOnce()) {
+        this.loadFeeds(true);
+      }
+    });
+  }
 
   async ngOnInit(): Promise<void> {
     await this.checkAndLoadFeeds();
@@ -44,17 +58,43 @@ export class ProfilePosts implements OnInit, ViewWillEnter {
     try {
       this.isLoading.set(true);
 
-      if (reset) {
-        this.feedService.myFeedsPage.set(1);
+      const userId = this.userId();
+      const page = reset ? 1 : this.currentPage();
+
+      if (userId) {
+        // Fetch other user's feeds
+        const response = await this.feedService.getUserFeeds(userId, {
+          page,
+          limit: this.pageLimit
+        });
+
+        if (reset) {
+          this.posts.set(response.posts);
+        } else {
+          this.posts.update(current => [...current, ...response.posts]);
+        }
+
+        this.currentPage.set(response.page);
+        this.totalPages.set(Math.ceil(response.total / this.pageLimit));
+        this.hasMore.set(response.hasMore);
+      } 
+      else {
+        // Fetch current user's feeds
+        if (reset) {
+          this.feedService.myFeedsPage.set(1);
+        }
+
+        await this.feedService.getMyFeeds({
+          page,
+          limit: this.pageLimit,
+          append: !reset
+        });
+
+        // Use the service's myPosts signal
+        this.posts.set(this.feedService.myPosts());
+        this.currentPage.set(this.feedService.myFeedsPage());
+        this.hasMore.set(this.feedService.myFeedsHasMore());
       }
-
-      const page = reset ? 1 : this.feedService.myFeedsPage();
-
-      await this.feedService.getMyFeeds({
-        page,
-        limit: this.pageLimit,
-        append: !reset
-      });
 
       this.hasLoadedOnce.set(true);
     } catch (error) {
@@ -75,14 +115,31 @@ export class ProfilePosts implements OnInit, ViewWillEnter {
     try {
       this.isLoadingMore.set(true);
 
-      const currentPage = this.feedService.myFeedsPage();
-      const nextPage = currentPage + 1;
+      const userId = this.userId();
+      const nextPage = this.currentPage() + 1;
 
-      await this.feedService.getMyFeeds({
-        page: nextPage,
-        limit: this.pageLimit,
-        append: true
-      });
+      if (userId) {
+        // Load more for other user's feeds
+        const response = await this.feedService.getUserFeeds(userId, {
+          page: nextPage,
+          limit: this.pageLimit
+        });
+
+        this.posts.update(current => [...current, ...response.posts]);
+        this.currentPage.set(response.page);
+        this.hasMore.set(response.hasMore);
+      } else {
+        // Load more for current user's feeds
+        await this.feedService.getMyFeeds({
+          page: nextPage,
+          limit: this.pageLimit,
+          append: true
+        });
+
+        this.posts.set(this.feedService.myPosts());
+        this.currentPage.set(this.feedService.myFeedsPage());
+        this.hasMore.set(this.feedService.myFeedsHasMore());
+      }
     } catch (error) {
       console.error('Error loading more feeds:', error);
     } finally {
@@ -93,12 +150,7 @@ export class ProfilePosts implements OnInit, ViewWillEnter {
 
   async onRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.feedService.myFeedsPage.set(1);
-      await this.feedService.getMyFeeds({
-        page: 1,
-        limit: this.pageLimit,
-        append: false
-      });
+      await this.loadFeeds(true);
     } catch (error) {
       console.error('Error refreshing feeds:', error);
     } finally {

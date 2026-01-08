@@ -28,66 +28,20 @@
           <div class="relative-block-container">
             <div>
               <textarea
-                #textareaRef
+                #textareaEl
+                cdkOverlayOrigin
+                #textareaOrigin="cdkOverlayOrigin"
                 class="w-full border-none outline-none resize-none"
                 [formControl]="textCtrl"
                 [placeholder]="'Start writing here...'"
                 wrap="hard"
               ></textarea>
-
-              @if (isBrowser()) {
-                <ngx-mentions
-                  [textInputElement]="textareaRef"
-                  [menuTemplate]="menuTemplate"
-                  [mentionsConfig]="mentionsConfig"
-                  [searchRegexp]="searchRegexp"
-                  [mentions]="mentions"
-                  [removeWholeTagOnBackspace]="true"
-                  (search)="loadChoices($event)"
-                  (selectedChoicesChange)="onSelectedChoicesChange($event)"
-                  (menuShow)="onMenuShow()"
-                  (menuHide)="onMenuHide()"
-                ></ngx-mentions>
-              }
-
-              <ng-template #menuTemplate let-selectChoice="selectChoice">
-                @if (users && users.length > 0) {
-                <ul
-                  class="ngx-selectable-list"
-                  ngxKbListNavigation
-                  [choices]="users"
-                  (selectChoice)="selectChoice($event)"
-                >
-                  @for (user of users; track user.id) {
-                    <li class="ngx-selectable-list-item flex items-center justify-between gap-2" (click)="selectChoice(user)">
-                      <!-- Left: avatar + name -->
-                      <div class="flex items-center gap-2">
-                        <div class="relative w-8 h-8 flex-shrink-0">
-                          <img
-                            fill
-                            placeholder
-                            [alt]="user.name || 'avatar'"
-                            class="rounded-full object-cover"
-                            (error)="onImageError($event)"
-                            [ngSrc]="getImageUrl(user.thumbnail_url)"
-                          />
-                        </div>
-                        <span title="{{ user.name }}">{{ user.name }}</span>
-                      </div>
-
-                      <!-- Right: Networked chip -->
-                      @if (user.connection_status === 'Connected') {
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium"> Networked </span>
-                      }
-                    </li>
-                  }
-                </ul>
-                } @else if (loading()) {
-                <ul class="ngx-selectable-list loader-only">
-                  <li class="ngx-selectable-list-item">Loading...</li>
-                </ul>
-                }
-              </ng-template>
+              <mentions 
+                [textareaRef]="textareaRef"
+                [control]="textCtrl"
+                [overlayOrigin]="textareaOrigin"
+                [position]="'below'"
+                (userSelected)="onMentionSelected($event)" />
             </div>
           </div>
         </div>
@@ -95,7 +49,7 @@
 
       <!-- Media Items -->
       @if (mediaItems().length) {
-        <div #swiperEl class="swiper">
+        <div #swiperEl class="swiper swiper-post-card">
           <div class="swiper-wrapper">
             @for (item of mediaItems(); track item.id) {
               <div class="swiper-slide">
@@ -133,6 +87,7 @@
               </div>
             }
           </div>
+          <div class="swiper-pagination"></div>
         </div>
         <div #scrollContainer class="thumbnail-container" cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="drop($event)">
           @for (item of mediaItems(); track item.id) {

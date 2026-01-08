@@ -1,28 +1,6 @@
-<!-- Filter buttons -->
-<div class="feed-filter-section bg-neutral-07 flex gap-2 p-4">
-  <button type="button" class="filter-button" [class.active]="feedFilter() === 'public'" (click)="feedFilter.set('public'); onFilterChange()">Public</button>
-  <button type="button" class="filter-button" [class.active]="feedFilter() === 'networked'" (click)="feedFilter.set('networked'); onFilterChange()">Networked</button>
-</div>
-
-<!-- Post composer -->
-<div class="feed-post-composer flex items-center gap-2 p-4 bg-neutral-07 border-b border-[#dbdbdb]">
-  <div class="relative w-[40px] h-[40px] flex-shrink-0">
-    <img
-      fill
-      placeholder
-      alt="avatar"
-      class="rounded-full object-cover"
-      (error)="onImageError($event)"
-      [ngSrc]="currentUserImage()"
-    />
-  </div>
-  <div class="flex-1 flex flex-col" (click)="navCtrl.navigateForward('/new-post')">
-    <div class="post-composer-name body-14SB neutral-01">{{ currentUserName() }}</div>
-    <div class="body-12M neutral-03">Start a new post...</div>
-  </div>
-</div>
-
-@if (isLoading() && !hasLoadedOnce()) {
+@if (!isLoggedIn() && feedFilter() === 'networked') {
+  <auth-empty-state type="network" />
+} @else if (isLoading()) {
   <div class="flex justify-center items-center py-8">
     <ion-spinner></ion-spinner>
   </div>

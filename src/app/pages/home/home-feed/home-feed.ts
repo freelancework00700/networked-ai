@@ -1,5 +1,5 @@
 import { Swiper } from 'swiper';
-import { afterNextRender } from '@angular/core';
+import { afterNextRender, effect } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import { IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
 import { UserCard } from '@/components/card/user-card';
@@ -13,13 +13,14 @@ import { signal, Component, afterEveryRender, ChangeDetectionStrategy, inject, c
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ProfileEmptyState } from '@/components/common/profile-empty-state';
+import { AuthEmptyState } from '@/components/common/auth-empty-state';
 import { FeedPost } from '@/interfaces/IFeed';
 
 type Filter = 'public' | 'networked';
 
 @Component({
   selector: 'home-feed',
-  imports: [UserCard, PostCard, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, NgOptimizedImage, ProfileEmptyState],
+  imports: [UserCard, PostCard, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, NgOptimizedImage, ProfileEmptyState, AuthEmptyState],
   styleUrl: './home-feed.scss',
   templateUrl: './home-feed.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -77,11 +78,15 @@ export class HomeFeed implements OnDestroy {
     const imageUrl = user?.thumbnail_url;
     return getImageUrlOrDefault(imageUrl);
   });
+  isLoggedIn = computed(() => !!this.authService.currentUser());
 
   // Loading state
   isLoading = signal(false);
   isLoadingMore = signal(false);
-  hasLoadedOnce = signal(false);
+
+  // Track previous user ID to detect account changes
+  private previousUserId: string | null = null;
+  private previousLoginState: boolean | null = null;
 
   // Constants
   private readonly pageLimit = 10;
@@ -89,14 +94,43 @@ export class HomeFeed implements OnDestroy {
   constructor() {
     afterEveryRender(() => this.initSwiper());
 
-    afterNextRender(async () => {
+    // Watch for user changes and login state - ONLY call APIs when auth state changes
+    effect(() => {
+      const currentUser = this.currentUser();
+      const currentUserId = currentUser?.id || null;
+      const currentLoginState = this.isLoggedIn();
+
+      // Initialize previous state on first run (don't load on first run)
+      if (this.previousLoginState === null) {
+        this.previousUserId = currentUserId;
+        this.previousLoginState = currentLoginState;
+        
+        // On initial mount, check if feeds exist, if not load them
+        this.loadFeedsIfNeeded();
+        return;
+      }
+
+      const loginStateChanged = this.previousLoginState !== currentLoginState;
+      const userIdChanged = this.previousUserId !== null && this.previousUserId !== currentUserId;
+
+      // Only call APIs when auth state changes
+      if (userIdChanged) {
+        this.handleAccountChangeAndLogin();
+      } else if (loginStateChanged && currentLoginState && !this.previousLoginState) {
+        this.handleAccountChangeAndLogin();
+      }
+
+      this.previousUserId = currentUserId;
+      this.previousLoginState = currentLoginState;
+    });
+
+    afterNextRender(() => {
       const params = this.route.snapshot.queryParamMap;
       const filterParam = params.get('feedFilter');
 
       if (filterParam === 'public' || filterParam === 'networked') {
         this.feedFilter.set(filterParam as Filter);
       } else {
-        // Set default filter if not in URL
         this.router.navigate([], {
           relativeTo: this.route,
           queryParams: { feedFilter: this.feedFilter() },
@@ -104,8 +138,6 @@ export class HomeFeed implements OnDestroy {
           replaceUrl: true
         });
       }
-
-      await this.checkAndLoadFeeds();
     });
   }
 
@@ -113,27 +145,56 @@ export class HomeFeed implements OnDestroy {
     this.queryParamsSubscription?.unsubscribe();
   }
 
-  private async checkAndLoadFeeds(): Promise<void> {
+  private async handleAccountChangeAndLogin(): Promise<void> {
+    this.feedService.resetAllFeeds();
+    await this.loadAllFeeds(true);
+  }
+
+  private async loadFeedsIfNeeded(): Promise<void> {
+    // Only load if feeds don't exist in service (on initial mount)
     const hasPublicFeeds = this.feedService.publicFeeds().length > 0;
     const hasNetworkedFeeds = this.feedService.networkedFeeds().length > 0;
+    const loggedIn = this.isLoggedIn();
 
-    if (!hasPublicFeeds && !hasNetworkedFeeds) {
-      await this.loadAllFeeds();
-      this.hasLoadedOnce.set(true);
+    // If feeds already exist in service, don't load (just use global state)
+    if (loggedIn && hasPublicFeeds && hasNetworkedFeeds) return;
+
+    if (!loggedIn && hasPublicFeeds) return;
+
+    // Only load if feeds don't exist
+    if (!loggedIn) {
+      if (!hasPublicFeeds) {
+        await this.loadPublicFeeds();
+      }
     } else {
-      this.hasLoadedOnce.set(true);
+      if (!hasPublicFeeds && !hasNetworkedFeeds) {
+        await this.loadAllFeeds();
+      }
+    }
+  }
+
+  private async loadPublicFeeds(reset: boolean = true): Promise<void> {
+    try {
+      this.isLoading.set(true);
+      this.feedService.publicFeedsPage.set(1);
+      await this.feedService.getFeeds({
+        is_public: true,
+        page: 1,
+        limit: this.pageLimit,
+        append: !reset
+      });
+    } catch (error) {
+      console.error('Error loading public feeds:', error);
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
   private async loadAllFeeds(reset: boolean = true): Promise<void> {
     try {
       this.isLoading.set(true);
-
-      // Reset pagination state
       this.feedService.publicFeedsPage.set(1);
       this.feedService.networkedFeedsPage.set(1);
-
-      // Use append: false only if reset is true, otherwise keep old data visible
       await Promise.all([
         this.feedService.getFeeds({
           is_public: true,
@@ -148,8 +209,6 @@ export class HomeFeed implements OnDestroy {
           append: !reset
         })
       ]);
-
-      this.hasLoadedOnce.set(true);
     } catch (error) {
       console.error('Error loading feeds:', error);
     } finally {
@@ -165,10 +224,16 @@ export class HomeFeed implements OnDestroy {
       return;
     }
 
+    // Don't load more networked feeds when not logged in
+    const filter = this.feedFilter();
+    if (!this.isLoggedIn() && filter === 'networked') {
+      infiniteScroll.complete();
+      return;
+    }
+
     try {
       this.isLoadingMore.set(true);
 
-      const filter = this.feedFilter();
       const isPublic = filter === 'public';
       const currentPage = isPublic ? this.feedService.publicFeedsPage() : this.feedService.networkedFeedsPage();
 
@@ -190,30 +255,43 @@ export class HomeFeed implements OnDestroy {
 
   async refresh(): Promise<void> {
     try {
-      this.feedService.publicFeedsPage.set(1);
-      this.feedService.networkedFeedsPage.set(1);
-      await Promise.all([
-        this.feedService.getFeeds({
+      const loggedIn = this.isLoggedIn();
+      
+      if (!loggedIn) {
+        // When not logged in, only refresh public feeds
+        this.feedService.publicFeedsPage.set(1);
+        await this.feedService.getFeeds({
           is_public: true,
           page: 1,
           limit: this.pageLimit,
           append: false
-        }),
-        this.feedService.getFeeds({
-          is_public: false,
-          page: 1,
-          limit: this.pageLimit,
-          append: false
-        })
-      ]);
+        });
+      } else {
+        // When logged in, refresh both feeds
+        this.feedService.publicFeedsPage.set(1);
+        this.feedService.networkedFeedsPage.set(1);
+        await Promise.all([
+          this.feedService.getFeeds({
+            is_public: true,
+            page: 1,
+            limit: this.pageLimit,
+            append: false
+          }),
+          this.feedService.getFeeds({
+            is_public: false,
+            page: 1,
+            limit: this.pageLimit,
+            append: false
+          })
+        ]);
+      }
     } catch (error) {
       console.error('Error refreshing feeds:', error);
       throw error;
     }
   }
 
-  onFilterChange(): void {
-    // Update URL with query param
+  async onFilterChange(): Promise<void> {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { feedFilter: this.feedFilter() },

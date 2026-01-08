@@ -42,6 +42,7 @@ export class ShareModal implements OnInit {
   yourNetwork = signal<IUser[]>([]);
   isLoading = signal<boolean>(false);
   isLoadingMore = signal<boolean>(false);
+  isSharing = signal<boolean>(false);
   currentPage = signal<number>(1);
   totalPages = signal<number>(0);
   sendEntireNetwork = signal<boolean>(false);
@@ -203,6 +204,7 @@ export class ShareModal implements OnInit {
     this.selectAllNetworkCtrl().setValue(allSelected, {
       emitEvent: false
     });
+    this.sendEntireNetwork.set(allSelected);
   }
 
   onSelectAllChange(checked: boolean) {
@@ -248,6 +250,8 @@ export class ShareModal implements OnInit {
     }
 
     try {
+      this.isSharing.set(true);
+      
       const payload: {
         feed_id: string;
         peer_ids?: string[];
@@ -271,6 +275,8 @@ export class ShareModal implements OnInit {
       console.error('Error sharing post:', error);
       const errorMessage = error?.message || 'Failed to share post. Please try again.';
       this.toasterService.showError(errorMessage);
+    } finally {
+      this.isSharing.set(false);
     }
   }
 

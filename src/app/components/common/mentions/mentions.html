@@ -1,0 +1,41 @@
+<ng-template cdkConnectedOverlay 
+  [cdkConnectedOverlayOpen]="showMentions()" 
+  [cdkConnectedOverlayOrigin]="overlayOrigin()"
+  [cdkConnectedOverlayPositions]="positions()" 
+  [cdkConnectedOverlayHasBackdrop]="false"
+  [cdkConnectedOverlayLockPosition]="true">
+  @if (allUsers().length > 0) {
+    <ul class="ngx-selectable-list">
+      @for (user of allUsers(); track user.id; let i = $index) {
+        <li class="ngx-selectable-list-item flex items-center justify-between gap-2" 
+            [class.active]="i === activeIndex()" 
+            (click)="selectMention(user)"
+            (mousedown)="$event.preventDefault()">
+          <div class="flex items-center gap-2">
+            <div class="relative w-8 h-8 flex-shrink-0">
+              <img
+                fill
+                priority
+                placeholder
+                [alt]="user.username || 'avatar'"
+                class="rounded-full object-cover"
+                (error)="onImageError($event)"
+                [ngSrc]="getImageUrl(user.thumbnail_url)"
+              />
+            </div>
+            <span title="{{ user.username }}">{{ user.username }}</span>
+          </div>
+
+          <!-- Right: Networked chip -->
+          @if (user.connection_status === 'Connected') {
+            <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium"> Networked </span>
+          }
+        </li>
+      }
+    </ul>
+  } @else if (isLoading()) {
+    <ul class="ngx-selectable-list loader-only">
+      <li class="ngx-selectable-list-item">Loading...</li>
+    </ul>
+  }
+</ng-template>
