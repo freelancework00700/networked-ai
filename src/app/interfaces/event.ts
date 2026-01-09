@@ -266,28 +266,3 @@ export interface EventsResponse {
   data?: any;
 }
 
-export interface EventData {
-  id?: string;
-  title: string;
-  location: string;
-  latLng: {
-    lat: number;
-    lng: number;
-  };
-  address: string;
-  public: boolean;
-  dates: {
-    [id: string]: {
-      start: number;
-      end: number;
-    };
-  };
-  img?: string[];
-  description?: string;
-  promoCodes?: PromoCode[];
-  tickets?: Ticket[];
-  guestFeeEnabled?: boolean;
-  iap?: boolean;
-  start_date?: string;
-  medias?: MediaItem[];
-}
