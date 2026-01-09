@@ -700,7 +700,7 @@ export class CreateEvent implements OnInit, OnDestroy {
     if (this.isModalMode) {
       this.modalCtrl.dismiss(response, 'updated');
     } else {
-      this.router.navigate(['/event', this.editingEventId()!]);
+      this.navigationService.navigateForward(`/event/${this.editingEventId()!}`,true);
     }
   }
 
