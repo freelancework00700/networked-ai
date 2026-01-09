@@ -1,12 +1,26 @@
+import {
+  IEvent,
+  MediaItem,
+  UserSection,
+  EventCategory,
+  EventAttendee,
+  EventResponse,
+  EventsResponse,
+  EventDisplayData,
+  EventFeedbackPayload,
+  EventCategoriesResponse,
+} from '@/interfaces/event';
 import { IUser } from '@/interfaces/IUser';
 import { HttpParams } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
 import { SegmentButtonItem } from '@/components/common/segment-button';
-import { EventResponse, EventCategory, EventCategoriesResponse, EventDisplayData, UserSection, MediaItem, EventsResponse } from '@/interfaces/event';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
+  recommendedEvents = signal<IEvent[]>([]);
+  publicEvents = signal<IEvent[]>([]);
+  
   async createEvents(eventsPayload: any[]): Promise<EventResponse> {
     try {
       const response = await this.post<EventResponse>('/events', eventsPayload);
@@ -540,6 +554,8 @@ export class EventService extends BaseApiService {
       hostName = host?.name || host?.user?.name || hostName;
     }
 
+    const isRsvpApprovalRequired = eventData?.settings?.is_rsvp_approval_required ?? false;
+
     return {
       thumbnail_url: eventData?.thumbnail_url || thumbnailUrl,
       title: eventData?.title || '',
@@ -557,6 +573,7 @@ export class EventService extends BaseApiService {
       dateItems,
       rsvpButtonLabel,
       isCurrentUserHost,
+      isRsvpApprovalRequired,
       tickets: eventData?.tickets || [],
       questionnaire: eventData?.questionnaire || eventData?.questions || [],
       promo_codes: eventData?.promo_codes || []
@@ -728,15 +745,18 @@ export class EventService extends BaseApiService {
     return payload;
   }
 
-  async getRecommendedEvents(params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    start_date?: string;
-  } = {}): Promise<EventsResponse> {
+  async getRecommendedEvents(
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      start_date?: string;
+      append?: boolean; // If true, append to existing events instead of replacing
+    } = {}
+  ): Promise<EventsResponse> {
     try {
       let httpParams = new HttpParams();
-      
+
       if (params.page) {
         httpParams = httpParams.set('page', params.page.toString());
       }
@@ -751,6 +771,15 @@ export class EventService extends BaseApiService {
       }
 
       const response = await this.get<EventsResponse>('/events/recommended', { params: httpParams });
+      const events = response?.data?.data || [];
+
+      // Store events
+      if (params.append) {
+        this.recommendedEvents.update((current) => [...current, ...events]);
+      } else {
+        this.recommendedEvents.set(events);
+      }
+
       return response;
     } catch (error) {
       console.error('Error fetching recommended events:', error);
@@ -758,23 +787,26 @@ export class EventService extends BaseApiService {
     }
   }
 
-  async getEvents(params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    include_participant_events?: boolean;
-    order_by?: string;
-    order_direction?: 'ASC' | 'DESC';
-    is_my_events?: boolean;
-    is_included_me_event?: boolean;
-    city?: string;
-    state?: string;
-    is_public?: boolean;
-    start_date?: string;
-  } = {}): Promise<EventsResponse> {
+  async getEvents(
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      include_participant_events?: boolean;
+      order_by?: string;
+      order_direction?: 'ASC' | 'DESC';
+      is_my_events?: boolean;
+      is_included_me_event?: boolean;
+      city?: string;
+      state?: string;
+      is_public?: boolean;
+      start_date?: string;
+      append?: boolean; // If true, append to existing events instead of replacing
+    } = {}
+  ): Promise<EventsResponse> {
     try {
       let httpParams = new HttpParams();
-      
+
       if (params.page) {
         httpParams = httpParams.set('page', params.page.toString());
       }
@@ -813,6 +845,17 @@ export class EventService extends BaseApiService {
       }
 
       const response = await this.get<EventsResponse>('/events', { params: httpParams });
+      const events = response?.data?.data || [];
+
+      // Store public events if is_public is true
+      if (params.is_public === true) {
+        if (params.append) {
+          this.publicEvents.update((current) => [...current, ...events]);
+        } else {
+          this.publicEvents.set(events);
+        }
+      }
+
       return response;
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -851,5 +894,55 @@ export class EventService extends BaseApiService {
       console.error('Error reporting event:', error);
       throw error;
     }
+  }
+
+  // Save event attendee (RSVP) - sends single attendee object
+  async saveEventAttendee(eventId: string, attendee: EventAttendee): Promise<any> {
+    try {
+      const response = await this.post<any>(`/events/${eventId}/attendees`, attendee);
+      return response;
+    } catch (error) {
+      console.error('Error saving event attendee:', error);
+      throw error;
+    }
+  }
+
+  // Save event feedback (questionnaire responses)
+  async saveEventFeedback(eventId: string, feedbackPayload: EventFeedbackPayload): Promise<any> {
+    try {
+      const response = await this.post<any>(`/events/${eventId}/feedback`, feedbackPayload);
+      return response;
+    } catch (error) {
+      console.error('Error saving event feedback:', error);
+      throw error;
+    }
+  }
+
+  // Send RSVP request (when approval is required)
+  async sendRsvpRequest(eventId: string): Promise<any> {
+    try {
+      const response = await this.post<any>(`/rsvp-requests/${eventId}`, {});
+      return response;
+    } catch (error) {
+      console.error('Error sending RSVP request:', error);
+      throw error;
+    }
+  }
+
+  // Approve or reject RSVP request
+  async approveOrRejectRsvpRequest(eventId: string, requestId: string, action: 'Approved' | 'Rejected'): Promise<any> {
+    try {
+      const response = await this.put<any>(`/rsvp-requests/${eventId}/approve-or-reject/${requestId}`, { action });
+      return response;
+    } catch (error) {
+      console.error('Error approving/rejecting RSVP request:', error);
+      throw error;
+    }
+  }
+
+  // Reset all events (similar to resetAllFeeds in FeedService)
+  resetAllEvents(): void {
+    this.recommendedEvents.set([]);
+    this.publicEvents.set([]);
   }
 }

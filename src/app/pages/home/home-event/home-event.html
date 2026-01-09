@@ -57,24 +57,26 @@
     </div>
 
     <!-- events for you -->
-    <div class="px-4">
-      <div class="flex items-center justify-between">
-        <div class="body-16SB neutral-01">Events for you</div>
-        <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=recommended',true)">See all</button>
-      </div>
-    </div>
-
-    <div>
-      <div class="swiper swiper-event-recommendation">
-        <div class="swiper-wrapper">
-          @for (event of displayedEventCards(); track event.id || event.title) {
-            <div class="swiper-slide">
-              <event-card [event]="event" />
-            </div>
-          }
+    @if (isLoggedIn()) {
+      <div class="px-4">
+        <div class="flex items-center justify-between">
+          <div class="body-16SB neutral-01">Events for you</div>
+          <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=recommended',true)">See all</button>
         </div>
       </div>
-    </div>
+
+      <div>
+        <div class="swiper swiper-event-recommendation">
+          <div class="swiper-wrapper">
+            @for (event of recommendedEvents(); track event.id || event.title) {
+              <div class="swiper-slide">
+                <event-card [event]="event" />
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- user recommendations -->
     <div class="bg-neutral-06 py-3">

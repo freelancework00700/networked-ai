@@ -5,6 +5,7 @@ import { SwiperOptions } from 'swiper/types';
 import { Button } from '@/components/form/button';
 import { UserCard } from '@/components/card/user-card';
 import { EventService } from '@/services/event.service';
+import { AuthService } from '@/services/auth.service';
 import { EventCard } from '@/components/card/event-card';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CityCard, ICity } from '@/components/card/city-card';
@@ -12,7 +13,7 @@ import { NavigationService } from '@/services/navigation.service';
 import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
 import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
-import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy, inject, OnInit, OnDestroy } from '@angular/core';
+import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect } from '@angular/core';
 
 interface FeedPost {
   id: string;
@@ -46,21 +47,23 @@ export class HomeEvent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private eventService = inject(EventService);
+  private authService = inject(AuthService);
 
   filter = signal<'browse' | 'upcoming'>('browse');
   upcomingEvents = signal<IEvent[]>([]);
   eventCards = signal<IEvent[]>([]);
-  publicEvents = signal<IEvent[]>([]);
-  isLoadingEvents = signal<boolean>(false);
-  isLoadingPublicEvents = signal<boolean>(false);
+  isLoading = signal<boolean>(false);
 
-  // Show only first 3 events in the "Events for you" section
-  displayedEventCards = computed(() => {
-    return this.eventCards().slice(0, 3);
-  });
-
-  // subscriptions
   private queryParamsSubscription?: Subscription;
+  
+  currentUser = this.authService.currentUser;
+  isLoggedIn = computed(() => !!this.authService.currentUser());
+
+  private previousUserId: string | null = null;
+  private previousLoginState: boolean | null = null;
+
+  recommendedEvents = computed(() => this.eventService.recommendedEvents());
+  publicEvents = computed(() => this.eventService.publicEvents());
 
   cityCards: ICity[] = [
     {
@@ -98,7 +101,6 @@ export class HomeEvent implements OnInit, OnDestroy {
     }
   ];
 
-
   feedPosts: FeedPost[] = [
     {
       id: '1',
@@ -135,6 +137,32 @@ export class HomeEvent implements OnInit, OnDestroy {
 
   constructor() {
     afterEveryRender(() => this.initSwipers());
+
+    effect(() => {
+      const currentUser = this.currentUser();
+      const currentUserId = currentUser?.id || null;
+      const currentLoginState = this.isLoggedIn();
+
+      if (this.previousLoginState === null) {
+        this.previousUserId = currentUserId;
+        this.previousLoginState = currentLoginState;
+        
+        this.loadEventsIfNeeded();
+        return;
+      }
+
+      const loginStateChanged = this.previousLoginState !== currentLoginState;
+      const userIdChanged = this.previousUserId !== null && this.previousUserId !== currentUserId;
+
+      if (userIdChanged) {
+        this.handleAccountChangeAndLogin();
+      } else if (loginStateChanged && currentLoginState && !this.previousLoginState) {
+        this.handleAccountChangeAndLogin();
+      }
+
+      this.previousUserId = currentUserId;
+      this.previousLoginState = currentLoginState;
+    });
   }
 
   ngOnInit(): void {
@@ -152,71 +180,106 @@ export class HomeEvent implements OnInit, OnDestroy {
           replaceUrl: true
         });
       }
-
-      if (tab === 'events' && this.filter() === 'browse') {
-        this.loadEvents();
-        this.loadPublicEvents();
-      }
     });
-
-    this.loadEvents();
-    this.loadPublicEvents();
   }
 
-  private async loadEvents(): Promise<void> {
-    try {
-      this.isLoadingEvents.set(true);
-      const response = await this.eventService.getRecommendedEvents({
-        page: 1,
-        limit: 10,
-      });
+  private async loadEventsIfNeeded(): Promise<void> {
+    const hasRecommendedEvents = this.eventService.recommendedEvents().length > 0;
+    const hasPublicEvents = this.eventService.publicEvents().length > 0;
+    const loggedIn = this.isLoggedIn();
+    
+    if (loggedIn && hasRecommendedEvents && hasPublicEvents) return;
+    if (!loggedIn && hasPublicEvents) return;
 
-      if (response?.data?.data) {
-        const events = Array.isArray(response.data.data) 
-          ? response.data.data 
-          : [];
-        
-        this.eventCards.set(events);
+    // Only load if events don't exist
+    if (!loggedIn) {
+      if (!hasPublicEvents) {
+        await this.loadPublicEvents();
       }
+    } else {
+      if (!hasRecommendedEvents && !hasPublicEvents) {
+        await this.loadAllEvents();
+      } else if (!hasRecommendedEvents) {
+        await this.loadRecommendedEvents();
+      } else if (!hasPublicEvents) {
+        await this.loadPublicEvents();
+      }
+    }
+  }
+
+  private async handleAccountChangeAndLogin(): Promise<void> {
+    this.eventService.resetAllEvents();
+    await this.loadAllEvents(true);
+  }
+
+  private async loadRecommendedEvents(reset: boolean = true): Promise<void> {
+    // Don't call API if user is not logged in
+    if (!this.isLoggedIn()) {
+      return;
+    }
+    
+    try {
+      this.isLoading.set(true);
+      await this.eventService.getRecommendedEvents({
+        limit: 3,
+        append: !reset
+      });
     } catch (error) {
       console.error('Error loading recommended events:', error);
     } finally {
-      this.isLoadingEvents.set(false);
+      this.isLoading.set(false);
     }
   }
 
-  private async loadPublicEvents(): Promise<void> {
+  private async loadPublicEvents(reset: boolean = true): Promise<void> {
     try {
-      this.isLoadingPublicEvents.set(true);
-      const response = await this.eventService.getEvents({
-        page: 1,
-        limit: 50,
-        order_by: 'start_date',
-        order_direction: 'ASC',
-        is_public: true
+      this.isLoading.set(true);
+      await this.eventService.getEvents({
+        is_public: true,
+        limit: 3,
+        append: !reset
       });
-
-      if (response?.data?.data) {
-        const events = Array.isArray(response.data.data) 
-          ? response.data.data 
-          : [];
-        
-        this.publicEvents.set(events.slice(0, 4));
-      }
     } catch (error) {
       console.error('Error loading public events:', error);
     } finally {
-      this.isLoadingPublicEvents.set(false);
+      this.isLoading.set(false);
     }
   }
 
+  private async loadAllEvents(reset: boolean = true): Promise<void> {
+    try {
+      this.isLoading.set(true);
+      const loggedIn = this.isLoggedIn();
+      
+      if (!loggedIn) {
+        // When not logged in, only load public events
+        await this.loadPublicEvents(reset);
+      } else {
+        // When logged in, load both recommended and public events
+        await Promise.all([
+          this.eventService.getRecommendedEvents({
+            limit: 3,
+            append: !reset
+          }),
+          this.eventService.getEvents({
+            limit: 3,
+            is_public: true,
+            append: !reset
+          })
+        ]);
+      }
+    } catch (error) {
+      console.error('Error loading events:', error);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
 
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
   }
 
   onFilterChange(): void {
-    // Update URL with query param
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { eventFilter: this.filter() },
