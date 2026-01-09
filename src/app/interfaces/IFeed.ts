@@ -1,4 +1,4 @@
-import { EventData } from "./event";
+import { IEvent } from "./event";
 
 export interface FeedMedia {
   id?: string;
@@ -38,7 +38,7 @@ export interface FeedPost {
     thumbnail_url?: string;
     connection_status?: string;
   };
-  events?: EventData[] | null | undefined; // Events array from API
+  events?: IEvent[] | null | undefined; // Events array from API
   mentions?: FeedMention[] | null; // Mentioned users from API response
 }
 
