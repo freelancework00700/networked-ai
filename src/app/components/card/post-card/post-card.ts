@@ -13,6 +13,7 @@ import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output, signal, ViewChild, computed } from '@angular/core';
 import { FeedPost } from '@/interfaces/IFeed';
+import { Router } from '@angular/router';
 
 @Component({
   imports: [Button, NgOptimizedImage],
@@ -33,6 +34,7 @@ post = input.required<FeedPost>();
   authService = inject(AuthService);
   feedService = inject(FeedService);
   navigationService = inject(NavigationService);
+  router = inject(Router);
   
   private datePipe = new DatePipe('en-US');
 
@@ -194,6 +196,13 @@ post = input.required<FeedPost>();
         const postId = this.post().id;
         const response = await this.feedService.deletePost(postId!);
         this.toasterService.showSuccess(response.message);
+        
+        const currentRoute = this.router.url;
+        const isOnCommentsPage = currentRoute.includes('/comments/');
+        const isCurrentUserPost = this.isCurrentUserPost();
+        if (isOnCommentsPage && isCurrentUserPost) {
+          this.navigationService.back();
+        }
         return response;
       }
     });
@@ -321,5 +330,14 @@ post = input.required<FeedPost>();
   onComment(): void {
     const postId = this.post().id;
     this.navCtrl.navigateForward(['/comments', postId!], { state: { post: this.post() } });
+  }
+
+  navigateToEvent(slug: string): void {
+    this.navigationService.navigateForward(`/event/${slug}`);
+  }
+
+  handleEventCardClick(event: Event, slug: string): void {
+    event.stopPropagation();
+    this.navigateToEvent(slug);
   }
 }

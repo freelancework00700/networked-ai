@@ -74,16 +74,50 @@ export class ScrollHandlerDirective implements AfterViewInit, OnDestroy {
     const scrollTop = event.detail?.scrollTop || 0;
     const scrollDelta = scrollTop - this.lastScrollTop;
     
+    // Get scroll container and calculate if we're at the bottom
+    const scrollElement = (this.ionContent as any)?.scrollEl;
+    let isAtBottom = false;
+    let maxScrollTop = scrollTop;
+    
+    if (scrollElement) {
+      const scrollHeight = scrollElement.scrollHeight || 0;
+      const clientHeight = scrollElement.clientHeight || 0;
+      maxScrollTop = Math.max(0, scrollHeight - clientHeight);
+      
+      // Check if we're at or near the bottom (within 5px threshold)
+      isAtBottom = scrollTop >= maxScrollTop - 5;
+    }
+    
     // Calculate scroll progress (0 to 1)
-    const calculatedProgress = scrollTop <= FADE_START 
-      ? 0 
-      : Math.min(1, (scrollTop - FADE_START) / FADE_RANGE);
+    // If at bottom, always set progress to 1
+    let calculatedProgress: number;
+    
+    if (scrollTop <= 0) {
+      calculatedProgress = 0;
+    } else if (isAtBottom || (maxScrollTop > 0 && maxScrollTop < FADE_END)) {
+      const effectiveFadeEnd = Math.max(FADE_END, maxScrollTop);
+      const effectiveFadeStart = Math.min(FADE_START, maxScrollTop * 0.25);
+      const effectiveRange = effectiveFadeEnd - effectiveFadeStart;
+      
+      if (isAtBottom || effectiveRange <= 0) {
+        calculatedProgress = 1;
+      } else {
+        calculatedProgress = scrollTop <= effectiveFadeStart 
+          ? 0 
+          : Math.min(1, (scrollTop - effectiveFadeStart) / effectiveRange);
+      }
+    } else {
+      // Normal case: content is longer than FADE_END
+      calculatedProgress = scrollTop <= FADE_START 
+        ? 0 
+        : Math.min(1, (scrollTop - FADE_START) / FADE_RANGE);
+    }
     
     // Determine progress based on scroll direction
     let progress: number;
     if (scrollTop <= 0) {
       progress = this.currentProgress = 0;
-    } else if (scrollDelta < 0) {
+    } else if (scrollDelta < 0 && !isAtBottom) {
       // Scrolling up: gradually decrease progress
       const decreasedProgress = Math.max(0, this.currentProgress - SCROLL_UP_STEP);
       this.currentProgress = Math.min(decreasedProgress, calculatedProgress);

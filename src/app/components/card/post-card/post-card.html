@@ -69,7 +69,7 @@
       @if (post().events && (post().events?.length ?? 0) > 0) {
         @for (event of post().events!; track event.id || $index) {
           <div class="rounded-[12px] border border-[#e5e5e5] bg-neutral-07 overflow-hidden">
-            <div class="p-3 flex flex-col gap-3">
+            <div class="p-3 flex flex-col gap-3 cursor-pointer" (click)="handleEventCardClick($event, event.slug!)">
               @if (event.medias && event.medias.length > 0) {
                 <div class="w-full relative h-[160px]">
                   <img
@@ -104,7 +104,9 @@
                 </div>
               }
 
-              <app-button label="RSVP Now" height="40px" />
+              @if (!isCurrentUserPost()) {
+                <app-button label="RSVP Now" height="40px" (click)="navigateToEvent(event.slug!)" />
+              }
             </div>
           </div>
         }

@@ -3,7 +3,7 @@ import { HomeEvent } from '@/pages/home/home-event';
 import { AuthService } from '@/services/auth.service';
 import { ProfileHeaderToolbar } from '@/components/common/profile-header-toolbar';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
-import { signal, inject, computed, Component, ChangeDetectionStrategy, ViewChild, OnDestroy } from '@angular/core';
+import { signal, inject, computed, Component, ChangeDetectionStrategy, OnDestroy, viewChild } from '@angular/core';
 import { IonHeader, IonToolbar, IonContent, NavController, RefresherCustomEvent } from '@ionic/angular/standalone';
 import { NgOptimizedImage } from '@angular/common';
 import { IonRefresher, IonRefresherContent } from '@ionic/angular/standalone';
@@ -28,7 +28,7 @@ export class Home implements OnDestroy, ViewWillEnter {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   
-  @ViewChild('homeFeedRef') homeFeedRef?: HomeFeed;
+  homeFeedRefSignal = viewChild<HomeFeed>('homeFeedRef');
   
 
   // signals
@@ -90,8 +90,9 @@ export class Home implements OnDestroy, ViewWillEnter {
   async onRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       // Refresh will be handled by the child component if needed
-      if (this.homeFeedRef) {
-        await this.homeFeedRef.refresh();
+      const homeFeed = this.homeFeedRefSignal();
+      if (homeFeed) {
+        await homeFeed.refresh();
       }
     } catch (error) {
       console.error('Error refreshing feed:', error);
