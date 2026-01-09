@@ -524,11 +524,13 @@ export class CreateEvent implements OnInit, OnDestroy {
       const fieldsToValidate = untilFinished ? this.step1Fields.filter((field) => field !== 'end_time') : this.step1Fields;
 
       if (!this.validateFields(fieldsToValidate)) {
+        this.toasterService.showError('Please fill all required fields.');
         return;
       }
 
       const mediaItems = this.getFieldValue<Array<{ id: string; type: string; file?: File; url: string }>>('medias') || [];
       if (mediaItems.length === 0 || (mediaItems[0].type !== 'image' && mediaItems[0].type !== 'gif')) {
+        this.toasterService.showError('Please add at least one image or GIF.');
         return;
       }
 
@@ -536,6 +538,7 @@ export class CreateEvent implements OnInit, OnDestroy {
     } else if (this.currentStep() === EVENT_STEPS.EVENT_TICKETS) {
       const tickets = this.getFieldValue<Ticket[]>('tickets') || [];
       if (tickets.length === 0) {
+        this.toasterService.showError('Please add at least one ticket.');
         return;
       }
       this.navigateToStep(EVENT_STEPS.EVENT_SETTINGS);
@@ -601,9 +604,9 @@ export class CreateEvent implements OnInit, OnDestroy {
         const targetMonth = baseDateObj.getMonth() + (i - 1);
         const targetYear = baseDateObj.getFullYear() + Math.floor(targetMonth / 12);
         const actualMonth = targetMonth % 12;
-        
+
         const lastDayOfTargetMonth = new Date(targetYear, actualMonth + 1, 0).getDate();
-        
+
         if (isLastDayOfMonth) {
           eventDate.setFullYear(targetYear, actualMonth, lastDayOfTargetMonth);
         } else {
@@ -758,13 +761,7 @@ export class CreateEvent implements OnInit, OnDestroy {
     if (this.isModalMode) {
       this.modalCtrl.dismiss(createResponse, 'created');
     } else {
-      this.router
-        .navigate([], {
-          relativeTo: this.route,
-          queryParams: {},
-          replaceUrl: true
-        })
-        .then(() => this.navigationService.back());
+      this.navigationService.navigateForward(`/event/${createResponse.data.events[0].slug}`,true);
     }
   }
 
