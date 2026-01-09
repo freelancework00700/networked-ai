@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { ModalController, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, IonContent, IonHeader, IonToolbar } from '@ionic/angular/standalone';
 import { PostEventCard } from '@/components/card/post-event-card';
 import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit } from '@angular/core';
-import { EventData } from '@/interfaces/event';
+import { IEvent } from '@/interfaces/event';
 
 @Component({
   selector: 'post-event-modal',
@@ -23,8 +23,8 @@ export class PostEventModal implements OnInit {
   segmentValue = signal<'All Events' | 'My Events'>('All Events');
   
   // Cache events for both tabs
-  allEvents = signal<EventData[]>([]);
-  myEvents = signal<EventData[]>([]);
+  allEvents = signal<IEvent[]>([]);
+  myEvents = signal<IEvent[]>([]);
   
   // Loading states for each tab
   isLoadingAllEvents = signal<boolean>(false);
@@ -229,7 +229,7 @@ export class PostEventModal implements OnInit {
     return this.events();
   });
 
-  onAdd(event: EventData) {
+  onAdd(event: IEvent) {
     this.modalCtrl.dismiss(event);
     this.modalService.close();
   }

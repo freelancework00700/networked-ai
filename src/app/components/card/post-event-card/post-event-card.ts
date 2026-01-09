@@ -1,6 +1,6 @@
 import { CommonModule, NgOptimizedImage, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output, computed } from '@angular/core';
-import { EventData } from '@/interfaces/event';
+import { IEvent } from '@/interfaces/event';
 import { getImageUrlOrDefault } from '@/utils/helper';
 
 @Component({
@@ -13,7 +13,7 @@ import { getImageUrlOrDefault } from '@/utils/helper';
 export class PostEventCard {
   onRemove = output<any>();
   onAdd = output<any>();
-  event = input<EventData>();
+  event = input<IEvent>();
   isModal = input<boolean>(false);
 
   eventDate = computed(() => {
