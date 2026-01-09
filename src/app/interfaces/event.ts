@@ -69,8 +69,8 @@ export interface Ticket {
   id?: string;
   name: string;
   ticket_type: TicketType;
-  price: number; 
-  available_quantity?: number | null;   
+  price: number;
+  available_quantity?: number | null;
   description?: string | null;
   sale_start_date?: string | null;
   sale_start_time?: string | null;
@@ -134,6 +134,12 @@ export interface EventDisplayData {
   dateItems: SegmentButtonItem[];
   rsvpButtonLabel: string;
   isCurrentUserHost: boolean;
+  isCurrentUserAttendee?: boolean;
+  isRsvpApprovalRequired?: boolean;
+  hasCurrentUserRsvpRequest?: boolean;
+  isCurrentUserRequestApproved?: boolean;
+  isCurrentUserRequestPending?: boolean;
+  isCurrentUserRequestRejected?: boolean;
   tickets: Ticket[];
   questionnaire: any[];
   promo_codes: PromoCode[];
@@ -266,3 +272,60 @@ export interface EventsResponse {
   data?: any;
 }
 
+export interface EventData {
+  slug: string;
+  id?: string;
+  title: string;
+  location: string;
+  latLng: {
+    lat: number;
+    lng: number;
+  };
+  address: string;
+  public: boolean;
+  dates: {
+    [id: string]: {
+      start: number;
+      end: number;
+    };
+  };
+  img?: string[];
+  description?: string;
+  promoCodes?: PromoCode[];
+  tickets?: Ticket[];
+  guestFeeEnabled?: boolean;
+  iap?: boolean;
+  start_date?: string;
+  medias?: MediaItem[];
+}
+
+// Event Attendee interface for RSVP
+export interface EventAttendee {
+  parent_user_id: string | null;
+  name?: string;
+  is_incognito: boolean;
+  rsvp_status: 'Yes' | 'Maybe';
+  event_ticket_id?: string;
+  event_promo_code_id?: string;
+  platform_fee_amount?: number;
+  amount_paid?: number;
+  host_payout_amount?: number;
+}
+
+// Event Attendees Payload interface
+export interface EventAttendeesPayload {
+  event_id: string;
+  attendees: EventAttendee[];
+}
+
+// Event Feedback Item interface for questionnaire responses
+export interface EventFeedbackItem {
+  question_id: string;
+  answer_option_id?: string;
+  answer: string | number | string[];
+}
+
+// Event Feedback Payload interface
+export interface EventFeedbackPayload {
+  feedback: EventFeedbackItem[];
+}
