@@ -1,11 +1,11 @@
 import { Button } from '@/components/form/button';
+import { ReportReason } from '@/interfaces/IFeed';
 import { FeedService } from '@/services/feed.service';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TextInput } from '@/components/form/text-input';
 import { inject, signal, Component, Input, OnInit } from '@angular/core';
 import { IonHeader, IonFooter, IonToolbar, IonSpinner, ModalController } from '@ionic/angular/standalone';
 import { FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ReportReason } from '@/interfaces/IFeed';
 
 @Component({
   selector: 'report-modal',

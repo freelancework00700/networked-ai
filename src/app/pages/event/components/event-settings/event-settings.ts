@@ -41,7 +41,7 @@ export class EventSettings {
   repeatOptions = signal<Array<{ label: string; value: RepeatingFrequencyType }>>([
     { label: 'Weekly', value: 'weekly' },
     { label: 'Monthly', value: 'monthly' },
-    { label: 'Custom', value: 'custom' }
+    // { label: 'Custom', value: 'custom' }
   ]);
 
   repeatCountOptions = signal<Array<{ label: string; value: number | 'custom' }>>([

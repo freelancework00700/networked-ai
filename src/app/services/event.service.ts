@@ -1,9 +1,9 @@
 import { IUser } from '@/interfaces/IUser';
+import { HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
 import { SegmentButtonItem } from '@/components/common/segment-button';
 import { EventResponse, EventCategory, EventCategoriesResponse, EventDisplayData, UserSection, MediaItem, EventsResponse } from '@/interfaces/event';
-import { HttpParams } from '@angular/common/http';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
@@ -50,7 +50,6 @@ export class EventService extends BaseApiService {
     }
   }
 
-  // Helper function to format date and time
   formatDateTime(startDateString: string, endDateString?: string): string {
     if (!startDateString) return '';
     const startDate = new Date(startDateString);
@@ -79,13 +78,11 @@ export class EventService extends BaseApiService {
     return `${month}/${day}`;
   }
 
-  // Helper function to format location
   formatLocation(address?: string, city?: string, state?: string, country?: string): string {
     const parts = [address, city, state, country].filter(Boolean);
     return parts.join(', ') || 'Location not specified';
   }
 
-  // Helper function to format admission price
   formatAdmission(tickets: any[]): string {
     if (!tickets || tickets.length === 0) return 'Free';
 
@@ -105,19 +102,24 @@ export class EventService extends BaseApiService {
     return 'Free';
   }
 
-  // Helper function to format medias array
-  formatMedias(medias: any[]): MediaItem[] {
-    if (!Array.isArray(medias)) {
-      return [];
+  processMediaItems(medias: any[]): { displayMedias: MediaItem[]; allMedias: MediaItem[] } {
+    const defaultImage: MediaItem = {
+      url: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80',
+      type: 'Image',
+      order: 1
+    };
+
+    if (!Array.isArray(medias) || medias.length === 0) {
+      return { displayMedias: [], allMedias: [defaultImage] };
     }
 
-    return medias
+    const processedMedias: MediaItem[] = medias
       .filter((media: any) => {
         if (!media) return false;
-        return media.url || (media.file && media.file instanceof File);
+        return media.url || media.media_url || (media.file && media.file instanceof File);
       })
-      .map((media: any) => {
-        let url = media.url || '';
+      .map((media: any, index: number) => {
+        let url = media.url || media.media_url || '';
         if (!url && media.file && media.file instanceof File) {
           try {
             url = URL.createObjectURL(media.file);
@@ -126,7 +128,7 @@ export class EventService extends BaseApiService {
           }
         }
 
-        let type = media.type || '';
+        let type = media.type || media.media_type || '';
         if (!type && media.file) {
           const fileType = media.file.type || '';
           if (fileType.startsWith('video/')) {
@@ -135,22 +137,36 @@ export class EventService extends BaseApiService {
             type = 'Image';
           }
         }
-        if (type.toLowerCase() === 'image' || type.toLowerCase() === 'gif') {
-          type = 'Image';
-        } else if (type.toLowerCase() === 'video') {
-          type = 'Video';
-        }
+
+        const normalizedType = type ? type.charAt(0).toUpperCase() + type.slice(1).toLowerCase() : 'Image';
+        const validType: 'Image' | 'Video' | 'image' | 'video' | 'gif' = (
+          normalizedType === 'Image' || normalizedType === 'Video' || normalizedType === 'Gif'
+            ? normalizedType
+            : normalizedType.toLowerCase() === 'video'
+              ? 'Video'
+              : 'Image'
+        ) as 'Image' | 'Video' | 'image' | 'video' | 'gif';
 
         return {
-          id: media.id || `media-${Date.now()}-${Math.random()}`,
+          id: media.id || `media-${index}`,
           url: url,
-          type: (type || 'Image') as 'Image' | 'Video' | 'image' | 'video' | 'gif',
-          order: media.order
+          type: validType,
+          order: media.order ?? index + 1
         };
-      });
+      })
+      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+
+    const allMedias = processedMedias.length > 0 ? processedMedias : [defaultImage];
+    const displayMedias = allMedias;
+
+    return { displayMedias, allMedias };
   }
 
-  // Helper function to format time string (HH:mm) to locale time string
+  formatMedias(medias: any[]): MediaItem[] {
+    const { allMedias } = this.processMediaItems(medias);
+    return allMedias;
+  }
+
   formatTime(timeString: string): string {
     if (!timeString) return '';
     const [hours, minutes] = timeString.split(':').map(Number);
@@ -159,18 +175,15 @@ export class EventService extends BaseApiService {
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   }
 
-  // Helper function to get today's date in YYYY-MM-DD format
   getTodayDate(): string {
     return new Date().toISOString().split('T')[0];
   }
 
-  // Helper function to get current time in HH:mm format
   getCurrentTime(): string {
     const now = new Date();
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   }
 
-  // Helper function to add minutes to a time string
   addMinutesToTime(time: string, minutes: number): string {
     const [hours, mins] = time.split(':').map(Number);
     const date = new Date();
@@ -178,7 +191,6 @@ export class EventService extends BaseApiService {
     return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
   }
 
-  // Helper function to check if time1 is after time2
   isTimeAfter(time1: string, time2: string): boolean {
     const [hours1, mins1] = time1.split(':').map(Number);
     const [hours2, mins2] = time2.split(':').map(Number);
@@ -187,7 +199,6 @@ export class EventService extends BaseApiService {
     return totalMinutes1 > totalMinutes2;
   }
 
-  // Helper function to combine date and time strings into ISO string
   combineDateAndTime(dateStr: string | null, timeStr: string | null): string | null {
     if (!dateStr || !timeStr) {
       return null;
@@ -198,7 +209,6 @@ export class EventService extends BaseApiService {
     return date.toISOString();
   }
 
-  // Helper function to parse date time string and return date and time
   parseDateTime(dateTimeStr: string): { date: string; time: string } | null {
     if (!dateTimeStr) return null;
     const date = new Date(dateTimeStr);
@@ -210,101 +220,32 @@ export class EventService extends BaseApiService {
     return { date: dateStr, time: timeStr };
   }
 
-  // Helper function to process media items
-  processMediaItems(medias: any[]): { displayMedias: MediaItem[]; allMedias: MediaItem[] } {
-    const defaultImage: MediaItem = {
-      url: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80',
-      type: 'Image',
-      order: 1
-    };
-
-    let eventImages: MediaItem[] = [];
-    if (Array.isArray(medias) && medias.length > 0) {
-      eventImages = medias
-        .map((m: any, index: number) => {
-          const mediaType = (m.media_type || m.type || 'Image').toString();
-          const normalizedType = mediaType.charAt(0).toUpperCase() + mediaType.slice(1).toLowerCase();
-          const validType: 'Image' | 'Video' | 'image' | 'video' | 'gif' = 
-            (normalizedType === 'Image' || normalizedType === 'Video' || normalizedType === 'Gif' 
-              ? normalizedType 
-              : normalizedType.toLowerCase() === 'video' 
-                ? 'Video' 
-                : 'Image') as 'Image' | 'Video' | 'image' | 'video' | 'gif';
-          
-          return {
-            id: m.id || `media-${index}`,
-            url: m.media_url || m.url || m,
-            type: validType,
-            order: m.order || index + 1
-          };
-        })
-        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-    } else {
-      eventImages = [defaultImage];
-    }
-
-    const displayMedias = eventImages.length <= 1 ? [] : eventImages.filter((m: any) => m.order !== 1);
-
-    return { displayMedias, allMedias: eventImages };
-  }
-
-  // Helper function to get user sections from participants
   getUserSections(participants: any[], attendees?: any[]): UserSection[] {
+    const mapUser = (user: any): IUser => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      mobile: user.mobile,
+      username: user.username,
+      thumbnail_url: user.thumbnail_url || user.image_url,
+      image_url: user.image_url || user.thumbnail_url
+    });
+
     const getParticipantsByRole = (role: string): IUser[] => {
       if (!participants || !Array.isArray(participants)) return [];
-      const users: IUser[] = [];
-      participants.forEach((p: any) => {
-        const userRole = (p.role || '').toLowerCase();
-        if (userRole === role.toLowerCase()) {
+      return participants
+        .filter((p: any) => (p.role || '').toLowerCase() === role.toLowerCase())
+        .map((p: any) => {
           const user = p.user || p;
-          if (user) {
-            // Map API response fields to IUser interface
-            const mappedUser: IUser = {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              mobile: user.mobile,
-              username: user.username,
-              thumbnail_url: user.thumbnail_url || user.image_url,
-              image_url: user.image_url || user.thumbnail_url
-            };
-            users.push(mappedUser);
-          }
-        }
-      });
-      return users;
+          return user ? mapUser(user) : null;
+        })
+        .filter((user): user is IUser => user !== null);
     };
-
-    const getAttendeesByStatus = (status: string): IUser[] => {
-      if (!Array.isArray(attendees)) return [];
-      const users: IUser[] = [];
-      attendees.forEach((attendee: any) => {
-        if ((attendee.rsvp_status || '').toLowerCase() === status.toLowerCase()) {
-          const user = attendee.user || attendee;
-          if (user) {
-              const mappedUser: IUser = {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              mobile: user.mobile,
-              username: user.username,
-              thumbnail_url: user.thumbnail_url || user.image_url,
-              image_url: user.image_url || user.thumbnail_url
-            };
-            users.push(mappedUser);
-          }
-        }
-      });
-      return users;
-    };
-
     const sections: UserSection[] = [];
     const hosts = getParticipantsByRole('Host');
+    const coHosts = getParticipantsByRole('CoHost');
     const sponsors = getParticipantsByRole('Sponsor');
     const speakers = getParticipantsByRole('Speaker');
-    const coHosts = getParticipantsByRole('CoHost');
-    const going = getAttendeesByStatus('going');
-    const maybe = getAttendeesByStatus('maybe');
 
     if (hosts.length > 0) {
       sections.push({ title: 'Host(s)', users: hosts });
@@ -318,20 +259,13 @@ export class EventService extends BaseApiService {
     if (speakers.length > 0) {
       sections.push({ title: 'Speaker(s)', users: speakers });
     }
-    if (going.length > 0) {
-      sections.push({ title: 'Going', users: going });
-    }
-    if (maybe.length > 0) {
-      sections.push({ title: 'Maybe', users: maybe });
-    }
 
     return sections;
   }
 
-
   createDateItems(parentEvent: any): SegmentButtonItem[] {
     const dateItems: SegmentButtonItem[] = [];
-    
+
     if (parentEvent?.start_date) {
       const parentDateKey = this.formatDateKey(parentEvent.start_date);
       dateItems.push({
@@ -428,8 +362,10 @@ export class EventService extends BaseApiService {
             order: media.order || 0
           }))
           .sort((a: any, b: any) => (a.order || 0) - (b.order || 0)) || [],
-      tickets: eventData.tickets?.map((ticket: any, index: number) => transformTicketFromApi(ticket, index))
-        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0)) || [],
+      tickets:
+        eventData.tickets
+          ?.map((ticket: any, index: number) => transformTicketFromApi(ticket, index))
+          .sort((a: any, b: any) => (a.order || 0) - (b.order || 0)) || [],
       promo_codes: eventData.promo_codes || [],
       participants:
         eventData.participants?.map((p: any) => ({
@@ -540,39 +476,54 @@ export class EventService extends BaseApiService {
     return items;
   }
 
-  transformEventDataForDisplay(eventData: any, parentEvent?: any, currentUser?: any): Partial<EventDisplayData> {
+  transformEventDataForDisplay(
+    eventData: any,
+    parentEvent?: any,
+    currentUser?: any,
+    options?: {
+      userSections?: UserSection[];
+      dateItems?: SegmentButtonItem[];
+      isRepeatingEvent?: boolean;
+      formattedLocation?: string;
+    }
+  ): Partial<EventDisplayData> {
     const participants = eventData?.participants || [];
     const attendees = eventData?.attendees || [];
-    const userSections = this.getUserSections(participants, attendees);
-    const hosts = userSections.find(s => s.title === 'Host(s)')?.users || [];
+    const userSections = options?.userSections || this.getUserSections(participants, attendees);
+    const hosts = userSections.find((s) => s.title === 'Host(s)')?.users || [];
 
-    const { displayMedias } = this.processMediaItems(eventData?.medias || []);
+    const { displayMedias, allMedias } = this.processMediaItems(eventData?.medias || []);
+    const thumbnailMedia = allMedias.find((m: any) => m.order === 1) || allMedias[0];
+    const thumbnailUrl = thumbnailMedia?.url || '';
 
-    const views = Array.isArray(eventData?.viewers) 
-      ? eventData.viewers.length.toString() 
-      : eventData?.views?.toString() || '0';
+    const views = Array.isArray(eventData?.viewers) ? eventData.viewers.length.toString() : eventData?.views?.toString() || '0';
 
-    const location = this.formatLocation(
-      eventData?.address,
-      eventData?.city,
-      eventData?.state,
-      eventData?.country
-    );
+    const location = options?.formattedLocation || this.formatLocation(eventData?.address, eventData?.city, eventData?.state, eventData?.country);
 
-    const mapCenter: [number, number] | null = 
-      eventData?.latitude && eventData?.longitude 
-        ? [parseFloat(eventData.longitude), parseFloat(eventData.latitude)] 
-        : null;
+    let mapCenter: [number, number] | null = null;
+    if (eventData?.latitude != null && eventData?.longitude != null) {
+      const lat = typeof eventData.latitude === 'string' ? parseFloat(eventData.latitude) : eventData.latitude;
+      const lng = typeof eventData.longitude === 'string' ? parseFloat(eventData.longitude) : eventData.longitude;
+      if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+        mapCenter = [lng, lat];
+      }
+    }
 
     const admission = this.formatAdmission(eventData?.tickets || []);
 
-    const formattedDateTime = eventData?.start_date 
-      ? this.formatDateTime(eventData.start_date, eventData.end_date)
-      : '';
+    let formattedDateTime = '';
+    if (eventData?.start_date) {
+      formattedDateTime = this.formatDateTime(eventData.start_date, eventData.end_date);
+    } else if (eventData?.date && eventData?.start_time) {
+      const dateTimeStr = this.combineDateAndTime(eventData.date, eventData.start_time);
+      if (dateTimeStr) {
+        const untilFinished = eventData?.until_finished ?? false;
+        const endDateTimeStr = untilFinished ? null : eventData?.end_time ? this.combineDateAndTime(eventData.date, eventData.end_time) : null;
+        formattedDateTime = this.formatDateTime(dateTimeStr, endDateTimeStr || undefined);
+      }
+    }
 
-    const rsvpButtonLabel = admission === 'Free' 
-      ? 'RSVP Now - Free' 
-      : `RSVP Now ${admission}`;
+    const rsvpButtonLabel = admission === 'Free' ? 'RSVP Now - Free' : `RSVP Now ${admission}`;
 
     const isCurrentUserHost = participants.some((p: any) => {
       const userId = p.user_id || p.user?.id;
@@ -580,16 +531,22 @@ export class EventService extends BaseApiService {
       return userId === currentUser?.id && role === 'host';
     });
 
-    const isRepeatingEvent = parentEvent?.settings?.is_repeating_event === true;
-    const dateItems = isRepeatingEvent ? this.createDateItems(parentEvent || eventData) : [];
+    const isRepeatingEvent = options?.isRepeatingEvent ?? parentEvent?.settings?.is_repeating_event === true;
+    const dateItems = options?.dateItems ?? (isRepeatingEvent ? this.createDateItems(parentEvent || eventData) : []);
+
+    let hostName = hosts[0]?.name || 'Networked AI';
+    if (!hostName || hostName === 'Networked AI') {
+      const host = Array.isArray(participants) ? participants.find((p: any) => (p.role || '').toLowerCase() === 'host') : null;
+      hostName = host?.name || host?.user?.name || hostName;
+    }
 
     return {
-      thumbnail_url: eventData?.thumbnail_url || displayMedias[0]?.url || '',
+      thumbnail_url: eventData?.thumbnail_url || thumbnailUrl,
       title: eventData?.title || '',
       description: eventData?.description || '',
       displayMedias,
       views,
-      hostName: hosts[0]?.name || 'Networked AI',
+      hostName,
       isPublic: eventData?.is_public !== false,
       location,
       mapCenter,
@@ -602,10 +559,9 @@ export class EventService extends BaseApiService {
       isCurrentUserHost,
       tickets: eventData?.tickets || [],
       questionnaire: eventData?.questionnaire || eventData?.questions || [],
-      promoCodes: eventData?.promo_codes || []
+      promo_codes: eventData?.promo_codes || []
     };
   }
-
 
   formatQuestionnaire(questions: any[]): any[] {
     if (!questions?.length) return [];
@@ -634,7 +590,7 @@ export class EventService extends BaseApiService {
       event_phase: phase,
       question_type: q.question_type || q.type,
       is_required: q.is_required ?? q.required ?? false,
-      is_public: q.is_public ?? (q.visibility === 'public'),
+      is_public: q.is_public ?? q.visibility === 'public',
       order
     };
 
@@ -679,18 +635,16 @@ export class EventService extends BaseApiService {
         order: ticket.order ?? index + 1
       };
 
-      if (ticket.sale_start_date && ticket.sale_start_time) {
-        formattedTicket.sales_start_date = this.combineDateAndTime(ticket.sale_start_date, ticket.sale_start_time);
-      } else if (ticket.sale_start_date) {
-        formattedTicket.sales_start_date = this.combineDateAndTime(ticket.sale_start_date, '00:00');
+      if (ticket.sale_start_date) {
+        const startTime = ticket.sale_start_time || '00:00';
+        formattedTicket.sales_start_date = this.combineDateAndTime(ticket.sale_start_date, startTime);
       }
 
       if (ticket.end_at_event_start && eventDate && eventStartTime) {
         formattedTicket.sales_end_date = this.combineDateAndTime(eventDate, eventStartTime);
-      } else if (ticket.sale_end_date && ticket.sale_end_time) {
-        formattedTicket.sales_end_date = this.combineDateAndTime(ticket.sale_end_date, ticket.sale_end_time);
       } else if (ticket.sale_end_date) {
-        formattedTicket.sales_end_date = this.combineDateAndTime(ticket.sale_end_date, '23:59');
+        const endTime = ticket.sale_end_time || '23:59';
+        formattedTicket.sales_end_date = this.combineDateAndTime(ticket.sale_end_date, endTime);
       }
 
       return formattedTicket;
@@ -717,8 +671,7 @@ export class EventService extends BaseApiService {
     };
 
     if (formData.repeating_frequency && formData.repeating_frequency !== 'custom') {
-      const frequency = formData.repeating_frequency;
-      settings.repeating_frequency = frequency.charAt(0).toUpperCase() + frequency.slice(1);
+      settings.repeating_frequency = formData.repeating_frequency.charAt(0).toUpperCase() + formData.repeating_frequency.slice(1);
     }
 
     if (formData.max_attendees_per_user != null) {
@@ -775,11 +728,49 @@ export class EventService extends BaseApiService {
     return payload;
   }
 
+  async getRecommendedEvents(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    start_date?: string;
+  } = {}): Promise<EventsResponse> {
+    try {
+      let httpParams = new HttpParams();
+      
+      if (params.page) {
+        httpParams = httpParams.set('page', params.page.toString());
+      }
+      if (params.limit) {
+        httpParams = httpParams.set('limit', params.limit.toString());
+      }
+      if (params.search) {
+        httpParams = httpParams.set('search', params.search);
+      }
+      if (params.start_date) {
+        httpParams = httpParams.set('start_date', params.start_date);
+      }
+
+      const response = await this.get<EventsResponse>('/events/recommended', { params: httpParams });
+      return response;
+    } catch (error) {
+      console.error('Error fetching recommended events:', error);
+      throw error;
+    }
+  }
+
   async getEvents(params: {
     page?: number;
     limit?: number;
     search?: string;
     include_participant_events?: boolean;
+    order_by?: string;
+    order_direction?: 'ASC' | 'DESC';
+    is_my_events?: boolean;
+    is_included_me_event?: boolean;
+    city?: string;
+    state?: string;
+    is_public?: boolean;
+    start_date?: string;
   } = {}): Promise<EventsResponse> {
     try {
       let httpParams = new HttpParams();
@@ -796,11 +787,68 @@ export class EventService extends BaseApiService {
       if (params.include_participant_events !== undefined) {
         httpParams = httpParams.set('include_participant_events', params.include_participant_events.toString());
       }
+      if (params.order_by) {
+        httpParams = httpParams.set('order_by', params.order_by);
+      }
+      if (params.order_direction) {
+        httpParams = httpParams.set('order_direction', params.order_direction);
+      }
+      if (params.is_my_events !== undefined) {
+        httpParams = httpParams.set('is_my_events', params.is_my_events.toString());
+      }
+      if (params.is_included_me_event !== undefined) {
+        httpParams = httpParams.set('is_included_me_event', params.is_included_me_event.toString());
+      }
+      if (params.city) {
+        httpParams = httpParams.set('city', params.city);
+      }
+      if (params.state) {
+        httpParams = httpParams.set('state', params.state);
+      }
+      if (params.is_public !== undefined) {
+        httpParams = httpParams.set('is_public', params.is_public.toString());
+      }
+      if (params.start_date) {
+        httpParams = httpParams.set('start_date', params.start_date);
+      }
 
-      const response = await this.get<EventsResponse>('/events/me', { params: httpParams });
+      const response = await this.get<EventsResponse>('/events', { params: httpParams });
       return response;
     } catch (error) {
       console.error('Error fetching events:', error);
+      throw error;
+    }
+  }
+
+  // like/unlike event
+  async likeEvent(eventId: string): Promise<{ data: { content: boolean } }> {
+    try {
+      const response = await this.post<{ data: { content: boolean } }>(`/events/${eventId}/like`, {});
+      return response;
+    } catch (error) {
+      console.error('Error toggling event like:', error);
+      throw error;
+    }
+  }
+
+  // delete event
+  async deleteEvent(eventId: string): Promise<EventResponse> {
+    try {
+      const response = await this.delete<EventResponse>(`/events/${eventId}`);
+      return response;
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      throw error;
+    }
+  }
+
+  // report event
+  async reportEvent(eventId: string, reportData: { report_reason_id: string; reason?: string }): Promise<any> {
+    try {
+      const response = await this.post<any>(`/events/${eventId}/report`, reportData);
+      return response;
+    } catch (error) {
+      console.error('Error reporting event:', error);
       throw error;
     }
   }

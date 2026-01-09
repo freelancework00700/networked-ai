@@ -9,10 +9,20 @@
   }
 
   @if (showPreviewBanner()) {
-    <img [src]="eventData().thumbnail_url" [alt]="eventData().title + ' image'" class="w-full h-[361px] object-cover" />
+    <div class="relative w-full h-[361px]">
+      <img
+        fill
+        placeholder
+        priority
+        [alt]="eventData().title + ' image'"
+        class="object-cover"
+        (error)="onImageError($event)"
+        [ngSrc]="getImageUrl(eventData().thumbnail_url || '')"
+      />
+    </div>
   }
 
-  @if (eventData().isRepeatingEvent && dateItemsForDisplay().length > 0) {
+  @if (eventData().isRepeatingEvent && dateItemsForDisplay().length > 0 && !hideDateSelector()) {
     <div class="date-selector-container px-4 flex flex-col gap-0 pt-4">
       <segment-button
         [value]="selectedDate() || (dateItemsForDisplay()[0]?.value ?? '')"
@@ -62,6 +72,17 @@
           </button>
         </div>
       </div>
+
+      <!-- Action Buttons -->
+      @if (showActionButtons()) {
+        <div class="flex gap-3">
+          <app-button label="Event Chat" icon="assets/svg/messageChatIcon.svg" (click)="onEventChatClick()?.()" class="flex-1" color="secondary" />
+          @if (eventData().isCurrentUserHost) {
+            <app-button label="Manage" icon="assets/svg/manage-event/settings.svg" (click)="onManageEventClick()?.()" class="flex-1" />
+          }
+        </div>
+      }
+
       <!-- details rows -->
       <div class="flex flex-col gap-3">
         <!-- date & time -->
@@ -98,7 +119,10 @@
         <div class="flex items-center justify-between gap-2">
           <div class="body-14SB neutral-01 truncate">{{ section.title }}</div>
           @if (section.users && section.users.length > 0) {
-            <i class="pi pi-arrow-right neutral-02 !text-[16px] cursor-pointer flex-shrink-0" (click)="handleUserListClick(section.title, section.users)" ></i>
+            <i
+              class="pi pi-arrow-right neutral-02 !text-[16px] cursor-pointer flex-shrink-0"
+              (click)="handleUserListClick(section.title, section.users)"
+            ></i>
           }
         </div>
         <avatar-group [users]="section.users || []" />
@@ -119,7 +143,17 @@
                         <video [src]="media.url" class="w-full h-[361px] object-cover" controls></video>
                       }
                       @if (media.type === 'Image') {
-                        <img [src]="media.url" [alt]="eventData().title + ' image ' + ($index + 1)" class="w-full h-[361px] object-cover" />
+                        <div class="relative w-full h-[361px]">
+                          <img
+                            fill
+                            placeholder
+                            priority
+                            [alt]="eventData().title + ' image ' + ($index + 1)"
+                            class="object-cover"
+                            (error)="onImageError($event)"
+                            [ngSrc]="getImageUrl(media.url || '')"
+                          />
+                        </div>
                       }
                     </div>
                   </div>
@@ -139,11 +173,11 @@
       </div>
     }
 
-      <div class="px-4">
-        <div class="w-full rounded-[16px] overflow-hidden" style="height: 300px; position: relative">
-          <div #mapContainer class="event-map"></div>
-        </div>
+    <div class="px-4">
+      <div class="w-full rounded-[16px] overflow-hidden" style="height: 300px; position: relative">
+        <div #mapContainer class="event-map"></div>
       </div>
+    </div>
 
     @if (showHostPromo()) {
       <host-event-promo-card />

@@ -15,18 +15,20 @@ import {
 import Swiper from 'swiper';
 import * as Maptiler from '@maptiler/sdk';
 import { Pagination } from 'swiper/modules';
+import { Button } from "@/components/form/button";
 import { IonIcon } from '@ionic/angular/standalone';
-import { isPlatformBrowser } from '@angular/common';
 import { EventDisplayData } from '@/interfaces/event';
 import { DomSanitizer } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
 import { SegmentButton } from '@/components/common/segment-button';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { AvatarGroupComponent } from '@/components/common/avatar-group';
 import { HostEventPromoCard } from '@/components/card/host-event-promo-card';
 
 @Component({
   selector: 'event-display',
-  imports: [SegmentButton, AvatarGroupComponent, HostEventPromoCard, IonIcon],
+  imports: [SegmentButton, AvatarGroupComponent, HostEventPromoCard, IonIcon, Button, NgOptimizedImage],
   styleUrl: './event-display.scss',
   templateUrl: './event-display.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -38,6 +40,10 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   onDateChange = input<(date: string) => void>();
   onUserListClick = input<(title: string, users: any[]) => void>();
   selectedDate = input<string>('');
+  onManageEventClick = input<() => void>();
+  onEventChatClick = input<() => void>();
+  showActionButtons = input(false);
+  hideDateSelector = input(false);
 
   private platformId = inject(PLATFORM_ID);
   private destroyRef = inject(DestroyRef);
@@ -60,7 +66,8 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   });
 
   displayMediasForDisplay = computed(() => {
-    return this.eventData().displayMedias || [];
+    const medias = this.eventData().displayMedias || [];
+    return medias.slice(1);
   });
 
   hasMultipleMedias = computed(() => {
@@ -180,6 +187,14 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
       this.swiper.destroy(true, true);
       this.swiper = null;
     }
+  }
+
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
+  }
+
+  onImageError(event: Event): void {
+    onImageError(event);
   }
 }
 

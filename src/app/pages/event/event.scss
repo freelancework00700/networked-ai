@@ -1,7 +1,32 @@
+.header-top-view-event {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  padding-top: env(safe-area-inset-top);
+  z-index: 98;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.3) 30%,
+    rgba(0, 0, 0, 0.02) 80%,
+    transparent 100%
+  ) !important;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.plt-ios .header-top-view-event,
+.plt-iphone .header-top-view-event {
+  height: 100px;
+}
 ion-toolbar {
   --border-width: 0;
   --border-color: transparent;
   --box-shadow: none;
+  position: relative;
+  z-index: 99;
 }
 
 .event-map {
@@ -35,4 +60,89 @@ ion-toolbar {
     rgba(195, 167, 121, 0.9) 100%
   );
   border-radius: 9999px;
+}
+
+.image-container {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  padding: 40px 0;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  height: 400px;
+}
+
+.bg-blur-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  filter: blur(8px);
+  transform: scale(1.05);
+  width: 100%;
+  height: 100%;
+}
+
+.bg-blur-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bg-blur-image img[ng-reflect-fill],
+.bg-blur-image img[fill] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bg-image {
+  position: relative;
+  width: 80%;
+  z-index: 2;
+  aspect-ratio: 4 / 3;
+  min-height: 300px;
+  height: 300px;
+}
+
+.bg-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  object-fit: cover;
+}
+
+.bg-image img[ng-reflect-fill],
+.bg-image img[fill] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bg-image-bottom {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 80px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #ffffff 100%);
+}
+
+.countdown-timer {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000000;
+  padding: 12px 24px;
+  color: #d4af37;
+  font-weight: 600;
+  font-size: 16px;
 }

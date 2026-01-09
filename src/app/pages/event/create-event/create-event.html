@@ -2,7 +2,7 @@
   <ion-toolbar mode="md">
     <div class="p-6 max-w-[672px] mx-auto">
       <div class="flex items-center gap-2">
-        <div 
+        <div
           class="pi pi-arrow-left"
           [class.cursor-pointer]="!isButtonDisabled()"
           [class.cursor-not-allowed]="isButtonDisabled()"
@@ -62,6 +62,7 @@
           [selectedDate]="selectedDate()"
           [onDateChange]="onDateChange.bind(this)"
           [showPreviewBanner]="true"
+          [hideDateSelector]="isEditMode()"
         />
       </div>
     </form>
@@ -88,15 +89,17 @@
         @if (!isModalMode) {
           @if (hasQuestionnaire() && currentStep() === 4) {
             <div class="mb-4">
-              <app-button 
-                label="Preview Questionnaire" 
-                (click)="openQuestionnairePreview()" 
-                color="secondary"
-                class="w-full"
-              />
+              <app-button label="Preview Questionnaire" (click)="openQuestionnairePreview()" color="secondary" class="w-full" />
             </div>
           }
-          <app-button [label]="buttonLabel()" [iconName]="buttonIcon()" [iconPos]="iconPos()" (click)="handleButtonClick()" [disabled]="isButtonDisabled()" [isLoading]="isButtonDisabled()" />
+          <app-button
+            [label]="buttonLabel()"
+            [iconName]="buttonIcon()"
+            [iconPos]="iconPos()"
+            (click)="handleButtonClick()"
+            [disabled]="isButtonDisabled()"
+            [isLoading]="isButtonDisabled()"
+          />
         } @else {
           <div class="flex items-center gap-2">
             <app-button label="Cancel" (click)="cancelModal()" class="w-full" color="secondary" />

@@ -62,13 +62,13 @@ export class CreateEvent implements OnInit, OnDestroy {
   fb = inject(FormBuilder);
   router = inject(Router);
   route = inject(ActivatedRoute);
+  authService = inject(AuthService);
   modalService = inject(ModalService);
   modalCtrl = inject(ModalController);
-  navigationService = inject(NavigationService);
   mediaService = inject(MediaService);
   eventService = inject(EventService);
   toasterService = inject(ToasterService);
-  authService = inject(AuthService);
+  navigationService = inject(NavigationService);
 
   // subscriptions
   queryParamsSubscription!: Subscription;
@@ -262,66 +262,31 @@ export class CreateEvent implements OnInit, OnDestroy {
     const form = this.eventForm();
     const selectedEvent = this.selectedEventData();
 
-    const rawMedias = selectedEvent?.medias || form.get('medias')?.value || [];
-    const medias = this.eventService.formatMedias(rawMedias);
-
-    const title = selectedEvent?.title || form.get('title')?.value || '';
-    const description = selectedEvent?.description || form.get('description')?.value || '';
-    const eventDate = selectedEvent?.date || this.eventForm().get('date')?.value;
-    const startTime = selectedEvent?.start_time || form.get('start_time')?.value || '';
-    const endTime = selectedEvent?.end_time || form.get('end_time')?.value || '';
-    const untilFinished = selectedEvent?.until_finished ?? form.get('until_finished')?.value ?? false;
-    const tickets = selectedEvent?.tickets || form.get('tickets')?.value || [];
-    const isPublic = selectedEvent?.is_public ?? form.get('is_public')?.value ?? true;
-
-    let formattedDateTime = '';
-    if (eventDate && startTime) {
-      const dateTimeStr = this.eventService.combineDateAndTime(eventDate, startTime);
-      if (dateTimeStr) {
-        const endDateTimeStr = untilFinished ? null : endTime ? this.eventService.combineDateAndTime(eventDate, endTime) : null;
-        formattedDateTime = this.eventService.formatDateTime(dateTimeStr, endDateTimeStr || undefined);
-      }
-    }
-
-    const latValue = form.get('latitude')?.value;
-    const lngValue = form.get('longitude')?.value;
-    const lat = latValue !== null && latValue !== undefined && latValue !== '' ? parseFloat(String(latValue)) : null;
-    const lng = lngValue !== null && lngValue !== undefined && lngValue !== '' ? parseFloat(String(lngValue)) : null;
-    
-    const mapCenter: [number, number] | null = 
-      lat !== null && !isNaN(lat) && lng !== null && !isNaN(lng) && isFinite(lat) && isFinite(lng)
-        ? [lng, lat] 
-        : null;
-
-    const participants = this.participants();
-    const host = Array.isArray(participants) ? participants.find((p: any) => p.role === 'Host') : null;
-    const hostName = host?.name || host?.user?.name || null;
-
-    const thumbnailMedia = medias.find((m: any) => m.order === 1) || medias[0];
-    const thumbnailUrl = thumbnailMedia?.url || '';
-
-    const displayMedias = medias.filter((media: any, index: number) => {
-        if (media.order === 1) return false;
-      if (!media.order && index === 0 && media.url === thumbnailUrl) return false;
-      return true;
-    });
-
-    return {
-      thumbnail_url: thumbnailUrl,
-      title,
-      description,
-      displayMedias: displayMedias,
-      views: '0',
-      isPublic,
-      location: this.formattedLocation(),
-      hostName,
-      mapCenter,
-      admission: this.eventService.formatAdmission(tickets),
-      formattedDateTime,
-      userSections: this.userSections(),
-      isRepeatingEvent: this.isRepeatingEvent(),
-      dateItems: this.dateItems()
+    const eventData: any = {
+      medias: selectedEvent?.medias || form.get('medias')?.value || [],
+      title: selectedEvent?.title || form.get('title')?.value || '',
+      description: selectedEvent?.description || form.get('description')?.value || '',
+      date: selectedEvent?.date || form.get('date')?.value,
+      start_time: selectedEvent?.start_time || form.get('start_time')?.value || '',
+      end_time: selectedEvent?.end_time || form.get('end_time')?.value || '',
+      until_finished: selectedEvent?.until_finished ?? form.get('until_finished')?.value ?? false,
+      tickets: selectedEvent?.tickets || form.get('tickets')?.value || [],
+      is_public: selectedEvent?.is_public ?? form.get('is_public')?.value ?? true,
+      latitude: selectedEvent?.latitude || form.get('latitude')?.value,
+      longitude: selectedEvent?.longitude || form.get('longitude')?.value,
+      address: selectedEvent?.address || form.get('address')?.value || '',
+      city: selectedEvent?.city || form.get('city')?.value || '',
+      state: selectedEvent?.state || form.get('state')?.value || '',
+      country: selectedEvent?.country || form.get('country')?.value || '',
+      participants: this.participants()
     };
+
+    return this.eventService.transformEventDataForDisplay(eventData, null, null, {
+      userSections: this.userSections(),
+      dateItems: this.dateItems(),
+      isRepeatingEvent: this.isRepeatingEvent(),
+      formattedLocation: this.formattedLocation()
+    });
   });
 
   onDateChange(date: string): void {
@@ -333,6 +298,13 @@ export class CreateEvent implements OnInit, OnDestroy {
       const items = this.dateItems();
       if (items.length > 0 && !this.selectedDate()) {
         this.selectedDate.set(items[0].value);
+      }
+    });
+
+    // Trigger preview update when navigating to preview step
+    effect(() => {
+      if (this.currentStep() === EVENT_STEPS.EVENT_PREVIEW) {
+        this.previewFormChangeTrigger.update((v) => v + 1);
       }
     });
   }
@@ -496,6 +468,11 @@ export class CreateEvent implements OnInit, OnDestroy {
   navigateToStep(step: number): void {
     this.currentStep.set(step);
 
+    // Trigger preview update when navigating to preview step
+    if (step === EVENT_STEPS.EVENT_PREVIEW) {
+      this.previewFormChangeTrigger.update((v) => v + 1);
+    }
+
     if (!this.isModalMode) {
       this.router.navigate([], {
         queryParams: { step },
@@ -610,12 +587,29 @@ export class CreateEvent implements OnInit, OnDestroy {
     const baseDateObj = new Date(date ?? this.getTodayDate());
     const events: Array<Record<string, unknown>> = [];
 
+    const baseDay = baseDateObj.getDate();
+    const baseMonth = baseDateObj.getMonth();
+    const baseYear = baseDateObj.getFullYear();
+    const lastDayOfBaseMonth = new Date(baseYear, baseMonth + 1, 0).getDate();
+    const isLastDayOfMonth = baseDay === lastDayOfBaseMonth;
+
     for (let i = 2; i <= finalCount; i++) {
       const eventDate = new Date(baseDateObj);
       if (frequency === 'weekly') {
         eventDate.setDate(baseDateObj.getDate() + (i - 1) * 7);
       } else if (frequency === 'monthly') {
-        eventDate.setMonth(baseDateObj.getMonth() + (i - 1));
+        const targetMonth = baseDateObj.getMonth() + (i - 1);
+        const targetYear = baseDateObj.getFullYear() + Math.floor(targetMonth / 12);
+        const actualMonth = targetMonth % 12;
+        
+        const lastDayOfTargetMonth = new Date(targetYear, actualMonth + 1, 0).getDate();
+        
+        if (isLastDayOfMonth) {
+          eventDate.setFullYear(targetYear, actualMonth, lastDayOfTargetMonth);
+        } else {
+          const targetDay = baseDay > lastDayOfTargetMonth ? lastDayOfTargetMonth : baseDay;
+          eventDate.setFullYear(targetYear, actualMonth, targetDay);
+        }
       }
 
       events.push({
@@ -680,43 +674,12 @@ export class CreateEvent implements OnInit, OnDestroy {
       const form = this.eventForm();
       const formData = form.getRawValue();
 
-      // Prepare common data
-      const mediaItems = this.getFieldValue<Array<{ id: string; type: string; file?: File; url: string }>>('medias') || [];
-      const eventDate = formData.date ?? null;
-      const eventStartTime = formData.start_time ?? null;
-      const eventEndTime = formData.end_time ?? null;
-      const untilFinished = formData.until_finished;
-
-      // Format common data
-      const mediasWithOrder = await this.uploadAndFormatMedia(mediaItems);
-      const startDate = this.eventService.combineDateAndTime(eventDate, eventStartTime);
-      const endDate = untilFinished ? null : this.eventService.combineDateAndTime(eventDate, eventEndTime);
-      const formattedTickets = this.eventService.formatTickets(formData.tickets || [], eventDate, eventStartTime);
-      const formattedPromoCodes = this.eventService.formatPromoCodes(formData.promo_codes || []);
-      const formattedQuestionnaire = this.eventService.formatQuestionnaire(formData.questionnaire || []);
-      const settings = this.eventService.buildEventSettings(formData);
-
-      // Handle edit mode
       if (this.isEditMode() && this.editingEventId()) {
-        await this.updateEvent(mediasWithOrder, startDate, endDate, formattedTickets, formattedPromoCodes, formattedQuestionnaire, settings);
+        await this.updateSingleEvent(formData);
         return;
       }
 
-      // Handle create mode
-      const eventsToCreate = await this.prepareEventsToCreate(
-        formData,
-        mediaItems,
-        mediasWithOrder,
-        eventDate,
-        eventStartTime,
-        eventEndTime,
-        untilFinished,
-        formattedTickets,
-        formattedPromoCodes,
-        formattedQuestionnaire,
-        settings
-      );
-
+      const eventsToCreate = await this.prepareEventsToCreate(formData);
       await this.createEvents(eventsToCreate);
     } catch (error) {
       const errorMessage = BaseApiService.getErrorMessage(error, 'Failed to create event. Please try again.');
@@ -726,21 +689,56 @@ export class CreateEvent implements OnInit, OnDestroy {
     }
   }
 
-  private async updateEvent(
-    mediasWithOrder: any[],
-    startDate: string | null,
-    endDate: string | null,
-    formattedTickets: any[],
-    formattedPromoCodes: any[],
-    formattedQuestionnaire: any[],
-    settings: any
-  ): Promise<void> {
-    const form = this.eventForm();
-    const formData = form.getRawValue();
+  async updateSingleEvent(formData: any): Promise<void> {
+    const eventPayload = await this.processEventData(formData);
+    const response = await this.eventService.updateEvent(this.editingEventId()!, eventPayload);
+    this.toasterService.showSuccess('Event updated successfully!');
 
-    const eventPayload = this.eventService.cleanupEventPayload(
+    if (this.isModalMode) {
+      this.modalCtrl.dismiss(response, 'updated');
+    } else {
+      this.router.navigate(['/event', this.editingEventId()!]);
+    }
+  }
+
+  async prepareEventsToCreate(formData: any): Promise<any[]> {
+    const repeatingEvents = formData.repeating_events || [];
+
+    const mainEventPayload = await this.processEventData(formData);
+
+    if (repeatingEvents.length === 0) {
+      return [mainEventPayload];
+    }
+
+    const repeatingEventPayloads = await Promise.all(
+      repeatingEvents.map(async (repeatingEvent: any) => {
+        return this.processEventData(repeatingEvent);
+      })
+    );
+
+    return [mainEventPayload, ...repeatingEventPayloads];
+  }
+
+  async processEventData(eventData: any): Promise<any> {
+    const mediaItems = Array.isArray(eventData.medias) && eventData.medias.length > 0 ? eventData.medias : [];
+
+    const eventDate = eventData.date ?? null;
+    const eventStartTime = eventData.start_time ?? null;
+    const eventEndTime = eventData.end_time ?? null;
+    const untilFinished = eventData.until_finished ?? false;
+
+    const mediasWithOrder = await this.uploadAndFormatMedia(mediaItems);
+    const startDate = this.eventService.combineDateAndTime(eventDate, eventStartTime);
+    const endDate = untilFinished ? null : this.eventService.combineDateAndTime(eventDate, eventEndTime);
+
+    const formattedTickets = this.eventService.formatTickets(eventData.tickets || [], eventDate, eventStartTime);
+    const formattedPromoCodes = this.eventService.formatPromoCodes(eventData.promo_codes || []);
+    const formattedQuestionnaire = this.eventService.formatQuestionnaire(eventData.questionnaire || []);
+    const settings = this.eventService.buildEventSettings(eventData);
+
+    return this.eventService.cleanupEventPayload(
       {
-        ...formData,
+        ...eventData,
         medias: mediasWithOrder,
         start_date: startDate,
         end_date: endDate,
@@ -750,86 +748,9 @@ export class CreateEvent implements OnInit, OnDestroy {
       },
       settings
     );
-
-    const response = await this.eventService.updateEvent(this.editingEventId()!, eventPayload);
-    this.toasterService.showSuccess('Event updated successfully!');
-
-    if (this.isModalMode) {
-      this.modalCtrl.dismiss(response, 'updated');
-    } else {
-      this.router
-        .navigate([], {
-          relativeTo: this.route,
-          queryParams: {},
-          replaceUrl: true
-        })
-        .then(() => this.navigationService.back());
-    }
   }
 
-  private async prepareEventsToCreate(
-    formData: any,
-    mediaItems: Array<{ id: string; type: string; file?: File; url: string }>,
-    mediasWithOrder: any[],
-    eventDate: string | null,
-    eventStartTime: string | null,
-    eventEndTime: string | null,
-    untilFinished: boolean | null | undefined,
-    formattedTickets: any[],
-    formattedPromoCodes: any[],
-    formattedQuestionnaire: any[],
-    settings: any
-  ): Promise<any[]> {
-    const repeatingEvents = formData.repeating_events || [];
-
-    // Create main event from form data
-    const mainEventPayload = this.eventService.cleanupEventPayload(
-      {
-        ...formData,
-        medias: mediasWithOrder,
-        start_date: this.eventService.combineDateAndTime(eventDate, eventStartTime),
-        end_date: untilFinished ? null : this.eventService.combineDateAndTime(eventDate, eventEndTime),
-        tickets: formattedTickets,
-        promo_codes: formattedPromoCodes,
-        questionnaire: formattedQuestionnaire
-      },
-      settings
-    );
-
-    // If no repeating events, return only main event
-    if (repeatingEvents.length === 0) {
-      return [mainEventPayload];
-    }
-
-    // Create repeating events
-    const repeatingEventPayloads = await Promise.all(
-      repeatingEvents.map(async (repeatingEvent: any) => {
-        const repeatingEventDate = repeatingEvent.date || eventDate;
-        const repeatingStartDate = this.eventService.combineDateAndTime(repeatingEventDate ?? null, eventStartTime);
-        const repeatingEndDate = untilFinished ? null : this.eventService.combineDateAndTime(repeatingEventDate ?? null, eventEndTime);
-        const repeatingMediaItems = Array.isArray(repeatingEvent.medias) && repeatingEvent.medias.length > 0 ? repeatingEvent.medias : mediaItems;
-        const repeatingMediasWithOrder = await this.uploadAndFormatMedia(repeatingMediaItems);
-
-        return this.eventService.cleanupEventPayload(
-          {
-            ...repeatingEvent,
-            medias: repeatingMediasWithOrder,
-            start_date: repeatingStartDate,
-            end_date: repeatingEndDate,
-            tickets: formattedTickets,
-            promo_codes: formattedPromoCodes,
-            questionnaire: formattedQuestionnaire
-          },
-          settings
-        );
-      })
-    );
-
-    // Return main event first, then repeating events
-    return [mainEventPayload, ...repeatingEventPayloads];
-  }
-
-  private async createEvents(eventsToCreate: any[]): Promise<void> {
+  async createEvents(eventsToCreate: any[]): Promise<void> {
     const createResponse = await this.eventService.createEvents(eventsToCreate);
     const successMessage = eventsToCreate.length > 1 ? 'Events created successfully!' : 'Event created successfully!';
     this.toasterService.showSuccess(successMessage);

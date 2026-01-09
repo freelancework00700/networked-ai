@@ -26,5 +26,5 @@ export default [
   { path: 'questionnaire-response/guests/:id', component: QuestionnaireUserList },
   { path: ':id/guests', component: EventUserList },
 
-  { path: ':id', component: Event }
+  { path: ':slug', component: Event }
 ] as Routes;

@@ -42,10 +42,16 @@
       </div>
 
       <div class="flex flex-col gap-4">
-        @for (event of displayedEvents(); track event.image + event.title + $index) {
-          <event-card [event]="event" />
-        } @empty {
-          <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
+        @if (isLoadingEvents()) {
+          <div class="flex justify-center items-center py-8">
+            <div class="body-14 neutral-05">Loading events...</div>
+          </div>
+        } @else {
+          @for (event of displayedEvents(); track event.id || event.title || $index) {
+            <event-card [event]="event" />
+          } @empty {
+            <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
+          }
         }
       </div>
 

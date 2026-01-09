@@ -22,17 +22,34 @@
     </div>
     <!-- Events list -->
     <div class="flex flex-col gap-4">
-      @for (event of displayedEvents(); track event.image + event.title + $index) {
-        <event-card [event]="event" />
-      } @empty {
-        <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
+      @if (isLoadingEvents()) {
+        <div class="flex justify-center items-center py-8">
+          <div class="body-14 neutral-05">Loading events...</div>
+        </div>
+      } @else {
+        @for (event of filteredEvents(); track event.id || event.title || $index) {
+          <event-card [event]="event" />
+        } @empty {
+          <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
+        }
       }
     </div>
 
     <!-- Load more button -->
     @if (hasMoreEvents()) {
       <div class="flex justify-center mt-6">
-        <button type="button" class="body-14SB brand-02 py-2 px-4" (click)="loadMore()">Load more</button>
+        <button 
+          type="button" 
+          class="body-14SB brand-02 py-2 px-4" 
+          (click)="loadMore()"
+          [disabled]="isLoadingEvents()"
+        >
+          @if (isLoadingEvents()) {
+            Loading...
+          } @else {
+            Load more
+          }
+        </button>
       </div>
     }
   </div>

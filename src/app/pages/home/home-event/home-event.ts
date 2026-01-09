@@ -1,17 +1,18 @@
 import { Swiper } from 'swiper';
+import { Subscription } from 'rxjs';
 import { IEvent } from '@/interfaces/event';
 import { SwiperOptions } from 'swiper/types';
 import { Button } from '@/components/form/button';
 import { UserCard } from '@/components/card/user-card';
-import { CityCard, ICity } from '@/components/card/city-card';
+import { EventService } from '@/services/event.service';
 import { EventCard } from '@/components/card/event-card';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CityCard, ICity } from '@/components/card/city-card';
 import { NavigationService } from '@/services/navigation.service';
 import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
 import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
-import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy, inject, OnInit, OnDestroy, afterNextRender } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy, inject, OnInit, OnDestroy } from '@angular/core';
 
 interface FeedPost {
   id: string;
@@ -40,13 +41,23 @@ interface NetworkSuggestion {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Button, UserCard, CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard]
 })
-export class HomeEvent implements OnDestroy {
+export class HomeEvent implements OnInit, OnDestroy {
   navigationService = inject(NavigationService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private eventService = inject(EventService);
 
   filter = signal<'browse' | 'upcoming'>('browse');
   upcomingEvents = signal<IEvent[]>([]);
+  eventCards = signal<IEvent[]>([]);
+  publicEvents = signal<IEvent[]>([]);
+  isLoadingEvents = signal<boolean>(false);
+  isLoadingPublicEvents = signal<boolean>(false);
+
+  // Show only first 3 events in the "Events for you" section
+  displayedEventCards = computed(() => {
+    return this.eventCards().slice(0, 3);
+  });
 
   // subscriptions
   private queryParamsSubscription?: Subscription;
@@ -87,38 +98,6 @@ export class HomeEvent implements OnDestroy {
     }
   ];
 
-  eventCards: IEvent[] = [
-    {
-      title: 'Scheveningen',
-      organization: 'Networked AI',
-      date: 'Fri 8/30, 7.00AM',
-      location: 'Atlanta, GA',
-      views: '12',
-      image: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Fri',
-      day: '12'
-    },
-    {
-      title: 'Scheveningen',
-      organization: 'Networked AI',
-      date: 'Fri 8/30, 7.00AM',
-      location: 'Atlanta, GA',
-      views: '12',
-      image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Tue',
-      day: '16'
-    },
-    {
-      title: 'Scheveningen',
-      organization: 'Networked AI',
-      date: 'Fri 8/30, 7.00AM',
-      location: 'Atlanta, GA',
-      views: '12',
-      image: 'https://images.unsplash.com/photo-1444840535719-195841cb6e2b?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Fri',
-      day: '27'
-    }
-  ];
 
   feedPosts: FeedPost[] = [
     {
@@ -156,24 +135,81 @@ export class HomeEvent implements OnDestroy {
 
   constructor() {
     afterEveryRender(() => this.initSwipers());
+  }
 
-    afterNextRender(() => {
-      const params = this.route.snapshot.queryParamMap;
-      const eventFilter = params.get('eventFilter');
+  ngOnInit(): void {
+    this.queryParamsSubscription = this.route.queryParams.subscribe((params) => {
+      const eventFilter = params['eventFilter'];
+      const tab = params['tab'];
 
       if (eventFilter === 'browse' || eventFilter === 'upcoming') {
         this.filter.set(eventFilter as 'browse' | 'upcoming');
       } else {
-        // Set default filter if not in URL
         this.router.navigate([], {
           relativeTo: this.route,
-          queryParams: { eventFilter: this.filter() },
+          queryParams: { eventFilter: this.filter(), tab: tab || 'events' },
           queryParamsHandling: 'merge',
           replaceUrl: true
         });
       }
+
+      if (tab === 'events' && this.filter() === 'browse') {
+        this.loadEvents();
+        this.loadPublicEvents();
+      }
     });
+
+    this.loadEvents();
+    this.loadPublicEvents();
   }
+
+  private async loadEvents(): Promise<void> {
+    try {
+      this.isLoadingEvents.set(true);
+      const response = await this.eventService.getRecommendedEvents({
+        page: 1,
+        limit: 10,
+      });
+
+      if (response?.data?.data) {
+        const events = Array.isArray(response.data.data) 
+          ? response.data.data 
+          : [];
+        
+        this.eventCards.set(events);
+      }
+    } catch (error) {
+      console.error('Error loading recommended events:', error);
+    } finally {
+      this.isLoadingEvents.set(false);
+    }
+  }
+
+  private async loadPublicEvents(): Promise<void> {
+    try {
+      this.isLoadingPublicEvents.set(true);
+      const response = await this.eventService.getEvents({
+        page: 1,
+        limit: 50,
+        order_by: 'start_date',
+        order_direction: 'ASC',
+        is_public: true
+      });
+
+      if (response?.data?.data) {
+        const events = Array.isArray(response.data.data) 
+          ? response.data.data 
+          : [];
+        
+        this.publicEvents.set(events.slice(0, 4));
+      }
+    } catch (error) {
+      console.error('Error loading public events:', error);
+    } finally {
+      this.isLoadingPublicEvents.set(false);
+    }
+  }
+
 
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();

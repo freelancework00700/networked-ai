@@ -3,8 +3,8 @@ import { Button } from '@/components/form/button';
 import { TicketDisplay } from '@/interfaces/event';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
-import { Input, signal, inject, Component, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent } from '@ionic/angular/standalone';
+import { Input, signal, inject, Component, computed, ChangeDetectionStrategy, OnInit, OnDestroy } from '@angular/core';
 
 @Component({
   selector: 'rsvp-modal',
@@ -13,12 +13,12 @@ import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent 
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [IonContent, IonFooter, IonToolbar, IonHeader, CommonModule, Button, IonIcon]
 })
-export class RsvpModal implements OnInit {
+export class RsvpModal implements OnInit, OnDestroy {
   @Input() tickets: TicketDisplay[] = [];
   @Input() eventTitle: string = 'Atlanta Makes Me Laugh';
   @Input() subscriptionId: string = '';
   @Input() questionnaire: any = null;
-  @Input() promoCodes: any[] = [];
+  @Input() promo_codes: any[] = [];
   @Input() eventDate: string = '';
   @Input() eventLocation: string = '';
 
@@ -31,6 +31,8 @@ export class RsvpModal implements OnInit {
   appliedPromoCode = signal<any>(null);
   ticketsData = signal<TicketDisplay[]>([]);
   questionnaireResult = signal<any>(null);
+  currentTime = signal<Date>(new Date());
+  private countdownInterval?: any;
 
   isLoggedIn = computed(() => !!this.authService.currentUser());
   hasQuestionnaire = computed(() => {
@@ -41,8 +43,17 @@ export class RsvpModal implements OnInit {
     return this.subscriptionId !== '' && this.subscriptionId !== undefined;
   });
 
+  hasPaidTickets = computed(() => {
+    return this.ticketsData().some((ticket) => {
+      const quantity = ticket.selectedQuantity ?? 0;
+      const price = parseFloat(String(ticket.price)) || 0;
+      const status = this.getTicketStatus(ticket);
+      return quantity > 0 && price > 0 && status === 'available';
+    });
+  });
+
   hasPromoCodes = computed(() => {
-    return this.promoCodes && this.promoCodes.length > 0;
+    return this.promo_codes && this.promo_codes.length > 0 && this.hasPaidTickets();
   });
 
   isPromoCodeApplied = computed(() => {
@@ -50,9 +61,11 @@ export class RsvpModal implements OnInit {
   });
 
   subtotalPrice = computed(() => {
+    this.currentTime();
     return this.ticketsData().reduce((total, ticket) => {
       const quantity = ticket.selectedQuantity ?? 0;
-      if (quantity > 0 && ticket.status === 'available') {
+      const status = this.getTicketStatus(ticket);
+      if (quantity > 0 && status === 'available') {
         const price = parseFloat(String(ticket.price)) || 0;
         return total + price * quantity;
       }
@@ -67,7 +80,15 @@ export class RsvpModal implements OnInit {
   });
 
   formattedTotal = computed(() => {
-    return this.totalPrice().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const total = this.totalPrice();
+    if (!total || total === 0) {
+      return '';
+    }
+
+    return total.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   });
 
   hasSelectedTickets = computed(() => {
@@ -76,15 +97,100 @@ export class RsvpModal implements OnInit {
 
   ngOnInit(): void {
     if (this.tickets && this.tickets.length > 0) {
-      const initializedTickets = this.tickets.map((ticket) => ({
-        ...ticket,
-        selectedQuantity: ticket.selectedQuantity ?? 0
-      }));
+      const initializedTickets = this.tickets.map((ticket: any) => {
+        const saleStartDate = ticket.sales_start_date || ticket.sale_start_date;
+        const saleEndDate = ticket.sales_end_date || ticket.sale_end_date;
+        const availableQuantity = ticket.available_quantity ?? ticket.remainingQuantity;
+
+        const transformedTicket: TicketDisplay = {
+          ...ticket,
+          remainingQuantity: availableQuantity,
+          selectedQuantity: ticket.selectedQuantity ?? 0,
+          sale_start_date: saleStartDate,
+          sale_end_date: saleEndDate,
+          status: 'available'
+        };
+        return transformedTicket;
+      });
       this.ticketsData.set(initializedTickets);
     } else {
       this.ticketsData.set([]);
     }
+    this.startTimeUpdate();
   }
+
+  ngOnDestroy(): void {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+  }
+
+  private startTimeUpdate(): void {
+    this.countdownInterval = setInterval(() => {
+      this.currentTime.set(new Date());
+    }, 1000);
+  }
+
+  getTicketStatus = (ticket: TicketDisplay): 'sale-ended' | 'available' | 'sold-out' | 'upcoming' => {
+    this.currentTime();
+    const now = this.currentTime();
+    const saleStartDate = ticket.sale_start_date;
+    const saleEndDate = ticket.sale_end_date;
+    const availableQuantity = ticket.remainingQuantity;
+
+    if (availableQuantity !== null && availableQuantity !== undefined && availableQuantity <= 0) {
+      return 'sold-out';
+    }
+
+    if (saleEndDate) {
+      const endDate = new Date(saleEndDate);
+      if (now > endDate) {
+        return 'sale-ended';
+      }
+    }
+
+    if (saleStartDate) {
+      const startDate = new Date(saleStartDate);
+      if (now < startDate) {
+        return 'upcoming';
+      }
+    }
+
+    return 'available';
+  };
+
+  getTicketCountdown = (ticket: TicketDisplay): string => {
+    this.currentTime();
+    const saleStartDate = ticket.sale_start_date;
+    if (!saleStartDate) return '';
+
+    const now = this.currentTime();
+    const startDate = new Date(saleStartDate);
+    const diff = startDate.getTime() - now.getTime();
+
+    if (diff <= 0) return '';
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    const parts: string[] = [];
+    if (days > 0) {
+      parts.push(`${days}d`);
+    }
+    if (hours > 0) {
+      parts.push(`${hours}h`);
+    }
+    if (minutes > 0 && days === 0) {
+      parts.push(`${minutes} min`);
+    }
+    if (seconds > 0 && days === 0 && hours === 0) {
+      parts.push(`${seconds} sec`);
+    }
+
+    return parts.length > 0 ? parts.join(' ') : '0 sec';
+  };
 
   getTicketChipImage(ticketType: string): string {
     switch (ticketType) {
@@ -126,13 +232,15 @@ export class RsvpModal implements OnInit {
   }
 
   getStatusText(ticket: TicketDisplay): string {
-    switch (ticket.status) {
+    const status = this.getTicketStatus(ticket);
+    switch (status) {
       case 'sale-ended':
         return 'Sale Ended';
       case 'sold-out':
         return 'Sold Out';
       case 'upcoming':
-        return `Starts in ${ticket.startsIn || ''}`;
+        const countdown = this.getTicketCountdown(ticket);
+        return countdown ? `Starts in ${countdown}` : 'Upcoming';
       default:
         return '';
     }
@@ -149,7 +257,8 @@ export class RsvpModal implements OnInit {
   }
 
   canIncrement(ticket: TicketDisplay): boolean {
-    if (ticket.status !== 'available') return false;
+    const status = this.getTicketStatus(ticket);
+    if (status !== 'available') return false;
     if (ticket.remainingQuantity !== undefined) {
       return (ticket.selectedQuantity ?? 0) < ticket.remainingQuantity;
     }
@@ -185,7 +294,8 @@ export class RsvpModal implements OnInit {
   }
 
   onPromoCodeChange(value: string): void {
-    this.promoCode.set(value);
+    const upperValue = value.toUpperCase();
+    this.promoCode.set(upperValue);
     if (this.appliedPromoCode()) {
       this.appliedPromoCode.set(null);
       this.discountAmount.set(0);
@@ -196,7 +306,10 @@ export class RsvpModal implements OnInit {
     const code = this.promoCode().trim().toUpperCase();
     if (!code) return;
 
-    const foundPromo = this.promoCodes.find((promo) => promo.promoCode.toUpperCase() === code);
+    const foundPromo = this.promo_codes.find((promo) => {
+      const promoCodeValue = promo.promo_code || promo.promoCode;
+      return promoCodeValue?.toUpperCase() === code;
+    });
 
     if (!foundPromo) {
       console.error('Invalid promo code');
@@ -206,19 +319,29 @@ export class RsvpModal implements OnInit {
     const subtotal = this.subtotalPrice();
     let discount = 0;
 
-    if (foundPromo.promotion_type === 'Percentage') {
-      const percentage = foundPromo.value || 0;
+    const promoType = foundPromo.type || foundPromo.promotion_type;
+    const promoValue = foundPromo.value || foundPromo.promoPresent;
+
+    if (promoType === 'Percentage' || promoType === 'percentage') {
+      const percentage = Number(promoValue) || 0;
       discount = (subtotal * percentage) / 100;
 
       if (foundPromo.capped_amount) {
-        const cap = parseFloat(foundPromo.capped_amount);
+        const cap = parseFloat(String(foundPromo.capped_amount));
         discount = Math.min(discount, cap);
       }
-    } else if (foundPromo.promotion_type === 'Fixed') {
-      discount = parseFloat(foundPromo.value) || 0;
+    } else if (promoType === 'Fixed' || promoType === 'fixed') {
+      discount = Number(promoValue) || 0;
     }
 
-    this.appliedPromoCode.set(foundPromo);
+    const normalizedPromo = {
+      ...foundPromo,
+      promoCode: foundPromo.promo_code || foundPromo.promoCode,
+      promotion_type: promoType,
+      value: promoValue
+    };
+
+    this.appliedPromoCode.set(normalizedPromo);
     this.discountAmount.set(discount);
   }
 

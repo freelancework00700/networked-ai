@@ -7,10 +7,18 @@
           @for (item of mediaItems(); track item.id) {
             <div class="swiper-slide">
               <div class="slide-content">
-                <div class="slide-image">
+                <div class="slide-image relative">
                   <!-- IMAGE -->
                   @if (item.type === 'image' || item.type === 'gif') {
-                    <img [src]="item.url" />
+                    <img
+                      fill
+                      placeholder
+                      priority
+                      [alt]="'Event media ' + ($index + 1)"
+                      class="object-cover"
+                      (error)="onImageError($event)"
+                      [ngSrc]="getImageUrl(item.url || '')"
+                    />
                   }
 
                   <!-- VIDEO -->
@@ -32,10 +40,18 @@
       </div>
       <div #scrollContainer class="thumbnail-container" cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="drop($event)">
         @for (item of mediaItems(); track item.id) {
-          <div class="thumbnail" cdkDrag [cdkDragBoundary]="scrollContainer" (click)="goToSlide($index)">
+          <div class="thumbnail relative" cdkDrag [cdkDragBoundary]="scrollContainer" (click)="goToSlide($index)">
             <!-- IMAGE -->
             @if (item.type === 'image' || item.type === 'gif') {
-              <img [src]="item.url" />
+              <img
+                fill
+                placeholder
+                priority
+                [alt]="'Event thumbnail ' + ($index + 1)"
+                class="object-cover"
+                (error)="onImageError($event)"
+                [ngSrc]="getImageUrl(item.url || '')"
+              />
             }
 
             <!-- VIDEO -->
@@ -163,7 +179,6 @@
   <text-input
     [formGroup]="eventForm()"
     [readonly]="true"
-    iconName="pi-tag"
     controlName="category"
     label="Event Category"
     placeholder="Select category"

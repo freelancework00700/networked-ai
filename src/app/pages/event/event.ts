@@ -11,10 +11,12 @@ import {
   PLATFORM_ID,
   ChangeDetectionStrategy
 } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { MenuModule } from 'primeng/menu';
 import { IUser } from '@/interfaces/IUser';
 import { FormsModule } from '@angular/forms';
 import { Button } from '@/components/form/button';
+import { NgOptimizedImage } from '@angular/common';
 import { AuthService } from '@/services/auth.service';
 import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
@@ -24,21 +26,21 @@ import { ToasterService } from '@/services/toaster.service';
 import { EventDisplay } from '@/components/common/event-display';
 import { NavigationService } from '@/services/navigation.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
 import { RsvpDetailsModal } from '@/components/modal/rsvp-details-modal';
-import { IonContent, IonFooter, IonToolbar, IonHeader, IonIcon, NavController } from '@ionic/angular/standalone';
+import { IonContent, IonFooter, IonToolbar, IonHeader, IonIcon } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'event',
   styleUrl: './event.scss',
   templateUrl: './event.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonIcon, IonFooter, IonHeader, IonContent, IonToolbar, MenuModule, FormsModule, EventDisplay]
+  imports: [Button, IonIcon, IonFooter, IonHeader, IonContent, IonToolbar, MenuModule, FormsModule, EventDisplay, NgOptimizedImage]
 })
 export class Event implements OnInit, OnDestroy {
   route = inject(ActivatedRoute);
   router = inject(Router);
-  navCtrl = inject(NavController);
   platformId = inject(PLATFORM_ID);
   sanitizer = inject(DomSanitizer);
   authService = inject(AuthService);
@@ -48,16 +50,31 @@ export class Event implements OnInit, OnDestroy {
   navigationService = inject(NavigationService);
   @Inject(DOCUMENT) private document = inject(DOCUMENT);
 
+  // subscriptions
+  routeParamsSubscription?: Subscription;
+  timerInterval?: any;
+
   // SIGNALS
   event = signal<any>(null);
   selectedDate = signal('');
   isScrolled = signal(false);
-  eventId = signal<string>('');
+  eventId = signal<string>(''); 
   isLoading = signal<boolean>(true);
   subscriptionId = signal<string>('');
   isLoadingChildEvent = signal<boolean>(false);
   selectedChildEventId = signal<string | null>(null);
   childEventData = signal<Map<string, any>>(new Map());
+  timerTrigger = signal(0);
+
+  eventIdFromData = computed(() => {
+    // If a child event is selected, return its ID, otherwise return parent event ID
+    const selectedChildId = this.selectedChildEventId();
+    if (selectedChildId) {
+      return selectedChildId;
+    }
+    const eventData = this.event();
+    return eventData?.id || null;
+  });
 
   currentUser = computed(() => this.authService.currentUser());
   subscriptionPlanType = computed<'event' | 'sponsor' | null>(() => {
@@ -105,95 +122,6 @@ export class Event implements OnInit, OnDestroy {
     };
   });
 
-  tickets = signal<any[]>([
-    {
-      id: '1',
-      name: 'Standard Ticket',
-      ticket_type: 'Standard',
-      is_free_ticket: true,
-      price: 0.0,
-      quantity: 20,
-      remainingQuantity: 20,
-      selectedQuantity: 0,
-      description: 'Insert one or two lines of the description here.',
-      status: 'available'
-    },
-    {
-      id: '2',
-      name: 'Presale 1',
-      ticket_type: 'Early Bird',
-      is_free_ticket: false,
-      price: 5.0,
-      quantity: 0,
-      description: 'Insert one or two lines of the description here.',
-      status: 'sale-ended'
-    },
-    {
-      id: '3',
-      name: 'Presale 1',
-      ticket_type: 'Early Bird',
-      is_free_ticket: false,
-      price: 5.0,
-      quantity: 10,
-      remainingQuantity: 10,
-      selectedQuantity: 0,
-      description: 'Insert one or two lines of the description here.',
-      status: 'available'
-    },
-    {
-      id: '4',
-      name: 'Presale 3',
-      ticket_type: 'Early Bird',
-      is_free_ticket: false,
-      price: 5.0,
-      quantity: 0,
-      description: 'Insert one or two lines of the description here.',
-      status: 'sold-out'
-    },
-    {
-      id: '5',
-      name: 'Standard Ticket',
-      ticket_type: 'Standard',
-      is_free_ticket: false,
-      price: 10.0,
-      quantity: 0,
-      description: 'Insert one or two lines of the description here.',
-      status: 'sold-out'
-    },
-    {
-      id: '6',
-      name: 'Standard Ticket',
-      ticket_type: 'Standard',
-      is_free_ticket: false,
-      price: 30.0,
-      quantity: null,
-      description: 'Insert one or two lines of the description here.',
-      startsIn: '3d',
-      status: 'upcoming'
-    },
-    {
-      id: '7',
-      name: 'VVIP Sponsorship',
-      ticket_type: 'Sponsor',
-      is_free_ticket: false,
-      price: 1999.0,
-      quantity: null,
-      selectedQuantity: 0,
-      description: 'Insert one or two lines of the description here.',
-      status: 'available'
-    },
-    {
-      id: '8',
-      name: 'VVIP Sponsorship',
-      ticket_type: 'Sponsor',
-      is_free_ticket: false,
-      price: 1999.0,
-      quantity: null,
-      description: 'Insert one or two lines of the description here.',
-      startsIn: '3d',
-      status: 'upcoming'
-    }
-  ]);
 
   menuItems: MenuItem[] = [
     { label: 'Edit', icon: 'assets/svg/manage-event/edit.svg', iconType: 'svg', action: 'editEvent' },
@@ -216,66 +144,6 @@ export class Event implements OnInit, OnDestroy {
     { id: '6', name: 'Albert Flores', role: 'CoHost' }
   ];
 
-  staticQuestionnaire = [
-    {
-      question: 'What is your name?',
-      type: 'text',
-      required: true,
-      visibility: 'public'
-    },
-    {
-      question: 'What is your age?',
-      type: 'number',
-      required: false,
-      visibility: 'public'
-    },
-    {
-      question: 'What is your phone number?',
-      type: 'phone',
-      required: true,
-      visibility: 'private'
-    },
-    {
-      question: 'What is your gender?',
-      type: 'single',
-      required: true,
-      visibility: 'private',
-      options: ['Male', 'Female', 'Other']
-    },
-    {
-      question: 'What is your hobbies?',
-      type: 'multiple',
-      required: false,
-      visibility: 'public',
-      options: ['Reading', 'Writing', 'Other']
-    },
-    {
-      question: 'What is your rating?',
-      type: 'rating',
-      required: true,
-      visibility: 'public',
-      scale: 5
-    }
-  ];
-
-  staticPromoCodes = [
-    {
-      promoCode: 'SAVE20',
-      promotion_type: 'percentage',
-      promoPresent: '20',
-      capped_amount: null,
-      redemption_limit: 100,
-      max_use_per_user: 1
-    },
-    {
-      promoCode: 'FLAT10',
-      promotion_type: 'fixed',
-      promoPresent: '10',
-      capped_amount: null,
-      redemption_limit: 50,
-      max_use_per_user: 1
-    }
-  ];
   eventMenuItems: PrimeMenuItem[] = [
     {
       label: 'Report',
@@ -283,6 +151,72 @@ export class Event implements OnInit, OnDestroy {
       command: () => this.reportEvent()
     }
   ];
+
+  isShowTimer = computed(() => {
+    const eventData = this.currentEventData();
+    return eventData?.settings?.is_show_timer === true;
+  });
+
+  countdownTimer = computed(() => {
+    this.timerTrigger(); // Trigger recomputation every second
+    const eventData = this.currentEventData();
+    if (!eventData?.start_date) return null;
+
+    const now = new Date().getTime();
+    const eventStart = new Date(eventData.start_date).getTime();
+    const difference = eventStart - now;
+
+    if (difference <= 0) return null;
+
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+    const isLessThan24Hours = difference < 24 * 60 * 60 * 1000;
+
+    if (isLessThan24Hours) {
+      return {
+        formatted: `${hours.toString().padStart(2, '0')} : ${minutes.toString().padStart(2, '0')} : ${seconds.toString().padStart(2, '0')}`,
+        isLessThan24Hours: true
+      };
+    } else {
+      return {
+        formatted: `${days} d ${hours} h ${minutes.toString().padStart(2, '0')} m`,
+        isLessThan24Hours: false
+      };
+    }
+  });
+
+  mainImageUrl = computed(() => {
+    const displayData = this.eventDisplayData();
+    if (displayData.displayMedias && displayData.displayMedias.length > 0) {
+      const firstMedia = displayData.displayMedias[0];
+      return firstMedia?.url || firstMedia?.media_url || displayData.thumbnail_url;
+    }
+    return displayData.thumbnail_url;
+  });
+
+  formatTimerDisplay(formatted: string, isLessThan24Hours: boolean): string {
+    if (isLessThan24Hours) {
+      const parts = formatted.split(' : ');
+      return parts
+        .map((part, index) => {
+          if (index < parts.length - 1) {
+            return `<span>${part}</span><span class="timer-colon"> : </span>`;
+          }
+          return `<span>${part}</span>`;
+        })
+        .join('');
+    } else {
+      return formatted.replace(/(\d+)\s*([dhm])/g, '<span>$1</span><span class="timer-unit">$2</span>');
+    }
+  }
+
+  isEventLiked = computed(() => {
+    const eventData = this.event();
+    return eventData?.is_like || false;
+  });
 
   eventDisplayData = computed(() => {
     const eventData = this.currentEventData();
@@ -307,17 +241,15 @@ export class Event implements OnInit, OnDestroy {
         isCurrentUserHost: false,
         tickets: [],
         questionnaire: [],
-        promoCodes: [],
+        promo_codes: [],
         subscriptionPlanType: null
       };
     }
     const parentEvent = this.event();
     const currentUser = this.currentUser();
 
-    // Use the helper function from eventService for consistency
     const transformedData = this.eventService.transformEventDataForDisplay(eventData, parentEvent, currentUser);
 
-    // Get date items for repeating events
     const dateItems = this.eventService.createDateItems(parentEvent || eventData);
 
     return {
@@ -327,13 +259,58 @@ export class Event implements OnInit, OnDestroy {
     };
   });
 
-  // Helper functions for date formatting
+  private isInitializing = signal(true);
+
+  constructor() {
+    effect(() => {
+      const date = this.selectedDate();
+      const eventData = this.event();
+      
+      if (this.isInitializing()) return;
+      
+      if (!date || !eventData) return;
+
+      if (eventData.child_events && eventData.child_events.length > 0) {
+        const matchingChild = eventData.child_events.find((child: any) => {
+          if (!child.start_date) return false;
+          const childDateKey = this.eventService.formatDateKey(child.start_date);
+          return childDateKey === date;
+        });
+
+        if (matchingChild && matchingChild.slug) {
+          this.router.navigate(['/event', matchingChild.slug], {
+            replaceUrl: true
+          });
+          return;
+        }
+      }
+
+      const parentDateKey = eventData.start_date ? this.eventService.formatDateKey(eventData.start_date) : '';
+      if (parentDateKey === date && eventData.slug) {
+        this.router.navigate(['/event', eventData.slug], {
+          replaceUrl: true
+        });
+        return;
+      }
+
+      this.onDateChange(date);
+    });
+  }
+
   ngOnInit(): void {
-    const eventId = this.route.snapshot.paramMap.get('id');
-    if (eventId) {
-      this.eventId.set(eventId);
-      this.loadEvent();
-    }
+    this.routeParamsSubscription = this.route.paramMap.subscribe((params) => {
+      const eventSlug = params.get('slug');
+      if (eventSlug) {
+        this.eventId.set(eventSlug);
+        this.loadEvent();
+      }
+    });
+
+    this.timerInterval = setInterval(() => {
+      if (this.isShowTimer() && this.countdownTimer()) {
+        this.timerTrigger.update((v) => v + 1);
+      }
+    }, 1000);
   }
 
   async loadEvent(): Promise<void> {
@@ -342,6 +319,8 @@ export class Event implements OnInit, OnDestroy {
 
     try {
       this.isLoading.set(true);
+      this.isInitializing.set(true);
+      
       const eventData = await this.eventService.getEventById(eventId);
       if (eventData) {
         this.event.set(eventData);
@@ -365,12 +344,15 @@ export class Event implements OnInit, OnDestroy {
       this.toasterService.showError('Failed to load event');
     } finally {
       this.isLoading.set(false);
+      this.isInitializing.set(false);
     }
   }
 
   async onDateChange(date: string): Promise<void> {
     this.selectedDate.set(date);
-
+  }
+  
+  private async handleDateChange(date: string): Promise<void> {
     const eventData = this.event();
     if (!eventData) return;
 
@@ -429,7 +411,7 @@ export class Event implements OnInit, OnDestroy {
   }
 
   openUserList(title: string, users: IUser[]): void {
-    const eventId = this.eventId();
+    const eventId = this.eventIdFromData();
     const displayData = this.eventDisplayData();
     if (eventId && users && users.length > 0) {
       this.router.navigate([`/event/${eventId}/guests`], {
@@ -444,11 +426,12 @@ export class Event implements OnInit, OnDestroy {
   }
 
   async openRsvpModal(): Promise<void> {
+    const displayData = this.eventDisplayData();
     const result = await this.modalService.openRsvpModal(
-      this.tickets(),
-      'Atlanta Makes Me Laugh',
-      this.staticQuestionnaire,
-      this.staticPromoCodes,
+      displayData.tickets || [],
+      displayData.title || '',
+      displayData.questionnaire || [],
+      displayData.promo_codes || [],
       this.subscriptionId()
     );
     if (result) {
@@ -457,7 +440,7 @@ export class Event implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.navCtrl.back();
+    this.navigationService.back();
   }
 
   async openMenu() {
@@ -478,56 +461,63 @@ export class Event implements OnInit, OnDestroy {
     actions[result.role]?.();
   }
 
+  openEventChat(): void {
+    const eventId = this.eventIdFromData();
+    if (eventId) {
+      this.navigationService.navigateForward(`/chat-room/${eventId}`);
+    }
+  }
+
   viewEvent() {
-    this.navCtrl.navigateForward(`/event/1111`);
+    this.navigationService.navigateForward(`/event/1111`);
   }
 
   editEvent() {
-    const eventId = this.eventId();
+    const eventId = this.eventIdFromData();
     if (eventId) {
-      this.navCtrl.navigateForward(`/event/edit/${eventId}`);
+      this.navigationService.navigateForward(`/event/edit/${eventId}`);
     }
   }
 
   viewEventAnalytics() {
-    const eventId = this.eventId();
+    const eventId = this.eventIdFromData();
     if (eventId) {
-      this.navCtrl.navigateForward(`/event/analytics/${eventId}`);
+      this.navigationService.navigateForward(`/event/analytics/${eventId}`);
     }
   }
 
   viewQuestionnaireResponses() {
-    const eventId = this.eventId();
+    const eventId = this.eventIdFromData();
     if (eventId) {
-      this.navCtrl.navigateForward(`/event/questionnaire-response/${eventId}`);
+      this.navigationService.navigateForward(`/event/questionnaire-response/${eventId}`);
     }
   }
 
   async manageRoles() {
-    const eventId = this.eventId();
+    const eventId = this.eventIdFromData();
     if (eventId) {
       const result = await this.modalService.openManageRoleModal(this.networkSuggestions, eventId);
     }
   }
 
   viewGuestList() {
-    const eventId = this.eventId();
+    const eventId = this.eventIdFromData();
     if (eventId) {
-      this.navCtrl.navigateForward(`/event/guests/${eventId}`);
+      this.navigationService.navigateForward(`/event/guests/${eventId}`);
     }
   }
 
   viewEventPageQr() {
-    const eventId = this.eventId();
+    const eventId = this.eventIdFromData();
     if (eventId) {
-      this.navCtrl.navigateForward(`/event/qr/${eventId}`);
+      this.navigationService.navigateForward(`/event/qr/${eventId}`);
     }
   }
 
   viewTapToPay() {}
 
   async shareEvent() {
-    const eventId = this.eventId();
+    const eventId = this.eventIdFromData();
     if (eventId) {
       const result = await this.modalService.openShareModal(eventId, 'Event');
       if (result) {
@@ -541,37 +531,100 @@ export class Event implements OnInit, OnDestroy {
       icon: 'assets/svg/deleteWhiteIcon.svg',
       iconBgColor: '#C73838',
       title: 'Cancel This Event',
-      description: 'Are you sure you want to cancel this event? We’ll notify everyone that have registered, and issue automatic refunds.',
+      description: 'Are you sure you want to cancel this event? We\'ll notify everyone that have registered, and issue automatic refunds.',
       confirmButtonLabel: 'Cancel Event',
       cancelButtonLabel: 'Cancel',
       confirmButtonColor: 'danger',
       iconPosition: 'left'
     });
     if (result && result.role === 'confirm') {
-      this.toasterService.showSuccess('Event cancelled');
+      const eventId = this.eventIdFromData();
+      if (!eventId) return;
+
+      try {
+        await this.eventService.deleteEvent(eventId);
+        this.toasterService.showSuccess('Event cancelled');
+        this.navigationService.back('/home');
+      } catch (error) {
+        console.error('Error cancelling event:', error);
+        this.toasterService.showError('Failed to cancel event. Please try again.');
+      }
     }
   }
 
-  likeEvent(): void {
-    console.log('Like event');
+  async likeEvent(): Promise<void> {
+    const eventId = this.eventIdFromData();
+    const eventData = this.event();
+    if (!eventId || !eventData) return;
+
+    const currentIsLiked = eventData.is_like || false;
+    const newIsLiked = !currentIsLiked;
+
+    this.event.update((e) => ({
+      ...e,
+      is_like: newIsLiked,
+      total_likes: newIsLiked ? (e.total_likes || 0) + 1 : Math.max((e.total_likes || 0) - 1, 0)
+    }));
+
+    try {
+      await this.eventService.likeEvent(eventId);
+
+      await this.loadEvent();
+    } catch (error) {
+      console.error('Error toggling event like:', error);
+      this.event.update((e) => ({
+        ...e,
+        is_like: currentIsLiked,
+        total_likes: eventData.total_likes || 0
+      }));
+      this.toasterService.showError('Failed to like event. Please try again.');
+    }
   }
 
   async reportEvent() {
     const result = await this.modalService.openReportModal('Event');
-    if (!result) return;
-    const resultModal = await this.modalService.openConfirmModal({
-      iconName: 'pi pi-check',
-      iconBgColor: '#F5BC61',
-      title: 'Report Submitted',
-      description: 'We use these reports to show you less of this kind of content in the future.',
-      confirmButtonLabel: 'Done'
-    });
-    if (resultModal && resultModal.role === 'confirm') {
-      this.toasterService.showSuccess('Event reported');
+    if (!result || !result.reason_id) return;
+
+    const eventId = this.eventIdFromData();
+    if (!eventId) return;
+
+    try {
+      const reasonText = result.reason || 'Inappropriate content';
+      
+      await this.eventService.reportEvent(eventId, {
+        report_reason_id: result.reason_id,
+        reason: reasonText
+      });
+
+      const resultModal = await this.modalService.openConfirmModal({
+        iconName: 'pi pi-check',
+        iconBgColor: '#F5BC61',
+        title: 'Report Submitted',
+        description: 'We use these reports to show you less of this kind of content in the future.',
+        confirmButtonLabel: 'Done'
+      });
+      
+      if (resultModal && resultModal.role === 'confirm') {
+        this.toasterService.showSuccess('Event reported');
+      }
+    } catch (error) {
+      console.error('Error reporting event:', error);
+      this.toasterService.showError('Failed to report event. Please try again.');
     }
   }
 
   ngOnDestroy(): void {
-    // Cleanup is handled by EventDisplay component
+    this.routeParamsSubscription?.unsubscribe();
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+    }
+  }
+
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
+  }
+
+  onImageError(event: any): void {
+    onImageError(event);
   }
 }

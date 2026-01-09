@@ -111,14 +111,12 @@ export interface MediaItem {
   media_url?: string;
 }
 
-// User section interface for grouping participants by role
 export interface UserSection {
   title: string;
   users: IUser[];
   overflowLabelClass?: string;
 }
 
-// Event display data interface for event page display
 export interface EventDisplayData {
   thumbnail_url: string;
   title: string;
@@ -138,20 +136,41 @@ export interface EventDisplayData {
   isCurrentUserHost: boolean;
   tickets: Ticket[];
   questionnaire: any[];
-  promoCodes: PromoCode[];
+  promo_codes: PromoCode[];
   subscriptionPlanType?: 'event' | 'sponsor' | null;
 }
 
-// Legacy interfaces - kept for backwards compatibility with other parts of the codebase
 export interface IEvent {
-  date: string;
+  id?: string;
+  slug?: string;
+  title?: string;
+  thumbnail_url?: string;
+  start_date?: string;
+  end_date?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  viewers?: any[];
+  views?: string | number;
+  participants?: Array<{
+    role?: string;
+    user?: {
+      name?: string;
+    };
+  }>;
+  medias?: Array<{
+    media_url?: string;
+    url?: string;
+  }>;
+  is_like?: boolean;
+  // Legacy fields for backward compatibility
+  date?: string;
   day?: string;
-  views: string;
-  title: string;
-  image: string;
-  location: string;
+  image?: string;
+  location?: string;
   dayOfWeek?: string;
-  organization: string;
+  organization?: string;
 }
 
 export interface QuestionnaireQuestion {

@@ -1,10 +1,17 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" mode="ios">
+  <div class="header-top-view-event"></div>
   <ion-toolbar>
     <div class="flex justify-between items-center px-4">
       <ion-icon src="/assets/svg/back-arrow.svg" class="h-[20px] w-[20px]" (click)="goBack()"></ion-icon>
       <div class="flex items-center gap-4">
         <ion-icon src="/assets/svg/share.svg" class="h-[20px] w-[20px]" (click)="shareEvent()"></ion-icon>
-        <ion-icon src="/assets/svg/like.svg" class="h-[20px] w-[20px]" (click)="likeEvent()"></ion-icon>
+        <div class="w-[20px] h-[20px] flex items-center justify-center cursor-pointer" (click)="likeEvent()">
+          @if (isEventLiked()) {
+            <div class="pi pi-heart-fill !text-[19px] accent-red"></div>
+          } @else {
+            <ion-icon src="/assets/svg/like.svg" class="h-[20px] w-[20px]"></ion-icon>
+          }
+        </div>
         <ion-icon src="/assets/svg/dots-vertical.svg" class="h-[20px] w-[20px]" (click)="menu.toggle($event)"></ion-icon>
       </div>
     </div>
@@ -13,8 +20,35 @@
 </ion-header>
 <ion-content [fullscreen]="true" mode="md">
   <div class="w-full max-w-[672px] mx-auto bg-neutral-0">
-    <div class="-mt-[44px]">
-      <img [src]="eventDisplayData().thumbnail_url" [alt]="eventDisplayData().title" class="w-full h-[400px] object-cover" />
+    <div class="-mt-[44px] image-container">
+      <div class="bg-blur-image relative w-full h-full">
+        <img
+          fill
+          placeholder
+          priority
+          [alt]="eventDisplayData().title || 'Event image'"
+          class="object-cover"
+          (error)="onImageError($event)"
+          [ngSrc]="getImageUrl(eventDisplayData().thumbnail_url || '')"
+        />
+      </div>
+      <div class="bg-image relative w-[80%] h-[300px]">
+        <img
+          fill
+          placeholder
+          priority
+          [alt]="eventDisplayData().title || 'Event image'"
+          class="object-cover"
+          (error)="onImageError($event)"
+          [ngSrc]="getImageUrl(mainImageUrl() || '')"
+        />
+      </div>
+      <div class="bg-image-bottom"></div>
+      @if (isShowTimer() && countdownTimer()) {
+        <div class="countdown-timer">
+          <span [innerHTML]="formatTimerDisplay(countdownTimer()!.formatted, countdownTimer()!.isLessThan24Hours)"></span>
+        </div>
+      }
     </div>
     <div class="px-4 pt-2">
       <div
@@ -40,6 +74,9 @@
       [onUserListClick]="openUserList.bind(this)"
       [showPreviewBanner]="false"
       [showHostPromo]="true"
+      [showActionButtons]="true"
+      [onManageEventClick]="openMenu.bind(this)"
+      [onEventChatClick]="openEventChat.bind(this)"
     />
   </div>
 </ion-content>
@@ -47,9 +84,6 @@
   <ion-toolbar class="ion-no-padding" style="--background: transparent" mode="md">
     <div class="pb-4 max-w-[672px] mx-auto">
       <app-button [label]="eventDisplayData().rsvpButtonLabel || ''" height="40px" (click)="openRsvpModal()" />
-      @if (eventDisplayData().isCurrentUserHost) {
-        <app-button label="Manage Event" height="40px" (click)="openMenu()" />
-      }
     </div>
   </ion-toolbar>
 </ion-footer>

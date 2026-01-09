@@ -44,7 +44,7 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
-    path: 'event/:id',
+    path: 'event/:slug',
     renderMode: RenderMode.Server
   },
   {

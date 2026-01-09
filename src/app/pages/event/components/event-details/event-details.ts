@@ -8,8 +8,9 @@ import {
   ViewChild,
   Component,
   ElementRef,
+  DestroyRef,
   ChangeDetectorRef,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { Swiper } from 'swiper';
 import { Button } from '@/components/form/button';
@@ -17,20 +18,21 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { UserService } from '@/services/user.service';
 import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
-import { CommonModule, DOCUMENT } from '@angular/common';
 import { EventCategory, Vibe } from '@/interfaces/event';
 import { TextInput } from '@/components/form/text-input';
 import { EditorInput } from '@/components/form/editor-input';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { NetworkTag } from '@/components/modal/network-tag-modal';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CommonModule, DOCUMENT, NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'event-details',
   styleUrl: './event-details.scss',
   templateUrl: './event-details.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, TextInput, EditorInput, DragDropModule, CheckboxModule, ReactiveFormsModule, CommonModule]
+  imports: [Button, TextInput, EditorInput, DragDropModule, CheckboxModule, ReactiveFormsModule, CommonModule, NgOptimizedImage]
 })
 export class EventDetails implements OnInit {
   eventForm = input.required<FormGroup>();
@@ -42,6 +44,7 @@ export class EventDetails implements OnInit {
   cd = inject(ChangeDetectorRef);
   document = inject(DOCUMENT);
   eventService = inject(EventService);
+  private destroyRef = inject(DestroyRef);
 
   swiper?: Swiper;
   currentSlide = signal(0);
@@ -121,7 +124,7 @@ export class EventDetails implements OnInit {
       if (categoryId && categoryControl && this.eventCategories().length > 0) {
         const category = this.eventCategories().find((cat) => cat.id === categoryId);
         if (category?.name) {
-          categoryControl.setValue(category.name, { emitEvent: true });
+          categoryControl.setValue(`${category.icon}   ${category.name}`, { emitEvent: true });
         }
       }
     });
@@ -310,7 +313,21 @@ export class EventDetails implements OnInit {
     const form = this.eventForm();
     const currentTime = form.get(type)?.value || '';
     const startTime = form.get('start_time')?.value;
-    const min = type === 'end_time' && startTime ? this.addMinutesToTime(startTime, 30) : undefined;
+    const selectedDate = form.get('date')?.value || '';
+    
+    let min: string | undefined = undefined;
+    
+    if (type === 'end_time' && startTime) {
+      min = this.addMinutesToTime(startTime, 30);
+    }
+    
+    // If date is today, ensure time is after current time
+    if (selectedDate && this.isToday(selectedDate)) {
+      const currentTimeStr = this.getCurrentTime();
+      if (!min || this.isTimeAfter(currentTimeStr, min)) {
+        min = currentTimeStr;
+      }
+    }
 
     const time = await this.modalService.openDateTimeModal('time', currentTime, min);
     if (time) {
@@ -367,6 +384,21 @@ export class EventDetails implements OnInit {
       if (Array.isArray(existingMetaTags) && existingMetaTags.length > 0) {
         this.selectedMetaTags.set(new Set(existingMetaTags));
       }
+
+      setTimeout(() => {
+        const descriptionControl = form.get('description');
+        if (descriptionControl) {
+          const currentValue = descriptionControl.value;
+          if (currentValue) {
+            this.updateDescriptionLength(currentValue);
+          }
+
+          descriptionControl.valueChanges
+            .subscribe((value) => {
+              this.updateDescriptionLength(value);
+            });
+        }
+      }, 0);
     } catch (error) {
       console.error('Failed to load event categories or vibes:', error);
     }
@@ -439,6 +471,32 @@ export class EventDetails implements OnInit {
     return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
   }
 
+  isToday(dateString: string): boolean {
+    if (!dateString) return false;
+    const today = new Date();
+    const date = new Date(dateString);
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
+  }
+
+  getCurrentTime(): string {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  isTimeAfter(time1: string, time2: string): boolean {
+    const [hours1, mins1] = time1.split(':').map(Number);
+    const [hours2, mins2] = time2.split(':').map(Number);
+    const totalMins1 = hours1 * 60 + mins1;
+    const totalMins2 = hours2 * 60 + mins2;
+    return totalMins1 > totalMins2;
+  }
+
   handleGenerateClick = (): void => {
     if (this.isCustomize()) {
       this.openAIPromptModal();
@@ -473,5 +531,13 @@ export class EventDetails implements OnInit {
         this.isCustomize.set(true);
       }
     }
+  }
+
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
+  }
+
+  onImageError(event: Event): void {
+    onImageError(event);
   }
 }

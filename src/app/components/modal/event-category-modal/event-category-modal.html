@@ -8,9 +8,7 @@
   <ion-picker (ionChange)="value = $any($event).detail.value">
     <ion-picker-column name="column" [value]="value">
       @for (option of options(); track option.value) {
-        <ion-picker-column-option [value]="option.value">
-          {{ option.label }}
-        </ion-picker-column-option>
+        <ion-picker-column-option [value]="option.value"> {{ option.icon }} {{ option.label }} </ion-picker-column-option>
       }
     </ion-picker-column>
   </ion-picker>
