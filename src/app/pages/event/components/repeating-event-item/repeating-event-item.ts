@@ -17,7 +17,7 @@ export class RepeatingEventItem {
   eventImage = computed(() => {
     const eventData = this.event();
     const mainEvent = this.isMainEvent();
-    
+
     // For main events, use image property or first media from form data
     if (mainEvent) {
       if (eventData?.image) {
@@ -32,7 +32,7 @@ export class RepeatingEventItem {
       }
       return 'assets/images/profile.jpeg';
     }
-    
+
     // For non-main events, find media with order 1
     if (eventData?.medias && Array.isArray(eventData.medias)) {
       const orderOneMedia = eventData.medias.find((media: any) => media.order === 1);
@@ -40,7 +40,7 @@ export class RepeatingEventItem {
         return orderOneMedia.url;
       }
     }
-    
+
     // Fallback to image property or default
     return eventData?.image || 'assets/images/profile.jpeg';
   });

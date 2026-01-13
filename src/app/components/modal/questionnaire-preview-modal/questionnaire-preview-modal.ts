@@ -212,9 +212,11 @@ export class QuestionnairePreviewModal implements OnInit {
           }
 
           return {
+            question_id: (question as any).id || null,
             question: question.question,
             type: questionType,
-            answer: value
+            answer: value,
+            options: question.options || []
           };
         });
         await this.modalCtrl.dismiss({ responses });

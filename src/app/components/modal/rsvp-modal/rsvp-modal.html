@@ -36,8 +36,8 @@
                   }
                 </div>
                 <div class="body-16SB neutral-02">${{ ticket.price.toFixed(2) }}</div>
-                @if (getTicketStatus(ticket) === 'available' && ticket.remainingQuantity !== undefined && ticket.remainingQuantity <= 30) {
-                  <div class="text-sm font-semibold accent-red">{{ ticket.remainingQuantity }} tickets left</div>
+                @if (getTicketStatus(ticket) === 'available' && ticket.available_quantity !== undefined && ticket.available_quantity <= 30) {
+                  <div class="text-sm font-semibold accent-red">{{ ticket.available_quantity }} tickets left</div>
                 }
               </div>
               <div class="flex items-center gap-3">
@@ -89,26 +89,52 @@
 
       <!-- Promo Code Section -->
       @if (hasPromoCodes()) {
-        <div class="flex flex-col">
+        <div class="flex flex-col gap-1">
           <!-- Promo Code Input -->
-          <div class="flex items-center gap-2 border border-surface-300 rounded-lg p-3">
+          <div
+            class="flex items-center gap-2 border rounded-lg p-3"
+            [class.border-surface-300]="!promoValidation().isValid || !promoInput()"
+            [class.border-accent-red]="promoInput() && !promoValidation().isValid && promoCode()"
+            [class.border-brand-03]="promoValidation().isValid && promoCode()"
+          >
             <ion-icon src="assets/svg/ticket/ticket.svg" alt="ticket" class="w-[18px] h-[15px]" />
             <input
               type="text"
               class="flex-1 border-none outline-none body-14R neutral-01 bg-transparent uppercase"
               placeholder="Enter Promo Code"
-              [value]="promoCode()"
+              [value]="promoInput()"
               (input)="onPromoCodeChange($any($event.target).value)"
               style="text-transform: uppercase"
             />
-            <button class="text-primary body-14M font-medium" (click)="applyPromoCode()">Apply</button>
+            <button
+              class="text-primary body-14M font-medium"
+              [class.opacity-50]="isApplyButtonDisabled()"
+              [class.cursor-not-allowed]="isApplyButtonDisabled()"
+              [class.cursor-pointer]="!isApplyButtonDisabled()"
+              (click)="onPromoButtonClick()"
+              type="button"
+            >
+              @if (promoCode() && promoValidation().isValid && promoCode() === promoInput().trim().toUpperCase()) {
+                Remove
+              } @else {
+                Apply
+              }
+            </button>
           </div>
 
+          <!-- Error Message -->
+          @if ((promoInput() || promoCode()) && !promoValidation().isValid && promoValidation().message) {
+            <div class="flex items-start gap-2 accent-red">
+              <ion-icon name="close-circle" class="text-xl flex-shrink-0 mt-0.5"></ion-icon>
+              <span class="body-14R flex-1">{{ promoValidation().message }}</span>
+            </div>
+          }
+
           <!-- Success Message -->
-          @if (isPromoCodeApplied()) {
-            <div class="flex items-center gap-3 p-2 text-primary">
-              <div class="pi pi-check-circle text-brand-03 text-xl flex-shrink-0"></div>
-              <span class="body-14M flex-1"> You saved ${{ discountAmount().toFixed(2) }} on your RSVP </span>
+          @if (promoValidation().isValid && (promoCode() || promoInput()) && promoValidation().discountAmount > 0) {
+            <div class="flex items-start gap-3 text-primary">
+              <ion-icon name="checkmark-circle" class="text-xl flex-shrink-0 mt-0.5"></ion-icon>
+              <span class="body-14M flex-1">{{ promoValidation().message }}</span>
             </div>
           }
         </div>

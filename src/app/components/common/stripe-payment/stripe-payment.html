@@ -1,0 +1,24 @@
+<!-- Stripe Payment Element -->
+@if (clientSecret()) {
+  <div class="flex flex-col gap-2">
+    <div class="stripe-payment-container">
+      <ngx-stripe-elements
+      [stripe]="stripe"
+      [elementsOptions]="elementsOptions"
+    >
+      <ngx-stripe-payment [options]="paymentElementOptions" />
+    </ngx-stripe-elements>
+    </div>
+  </div>
+} @else if (isLoading()) {
+  <div class="flex items-center justify-center py-4">
+    <div class="body-14M neutral-03">Initializing payment...</div>
+  </div>
+}
+
+<!-- Error Message -->
+@if (errorMessage()) {
+  <div class="error-message body-12M">
+    {{ errorMessage() }}
+  </div>
+}

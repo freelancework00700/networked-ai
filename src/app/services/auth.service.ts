@@ -189,4 +189,21 @@ export class AuthService extends BaseApiService {
   async signOut(): Promise<void> {
     this.removeActiveAccount();
   }
+
+   //Fetch current user from API on refresh and update stored account
+   async refreshCurrentUser(): Promise<void> {
+    const activeAccount = this.getActiveAccount();
+    if (!activeAccount?.id || !activeAccount?.token) {
+      return;
+    }
+
+    try {
+      const userService = this.injector.get(UserService);
+      const user = await userService.getUser(activeAccount.id);
+      const updatedUser = { ...user, token: activeAccount.token };
+      this.setActiveAccount(updatedUser);
+    } catch (error) {
+      console.error('Error refreshing current user on app load:', error);
+    }
+  }
 }

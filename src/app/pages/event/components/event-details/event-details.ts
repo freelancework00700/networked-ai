@@ -10,7 +10,7 @@ import {
   ElementRef,
   DestroyRef,
   ChangeDetectorRef,
-  ChangeDetectionStrategy,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { Swiper } from 'swiper';
 import { Button } from '@/components/form/button';
@@ -239,7 +239,7 @@ export class EventDetails implements OnInit {
     if (!input.files?.length) return;
 
     const currentItems = this.mediaItems();
-    const newItems = Array.from(input.files).map((file, index) => 
+    const newItems = Array.from(input.files).map((file, index) =>
       this.createMediaItem(file, file.type.startsWith('video') ? 'video' : 'image', currentItems.length + index + 1)
     );
     this.mediaItems.update((list) => {
@@ -253,7 +253,11 @@ export class EventDetails implements OnInit {
     this.refreshSwiperAndGoToLast();
   }
 
-  createMediaItem(fileOrUrl: File | string, type: 'image' | 'video' | 'gif', order?: number): { id: string; type: string; file?: File; url: string; order?: number } {
+  createMediaItem(
+    fileOrUrl: File | string,
+    type: 'image' | 'video' | 'gif',
+    order?: number
+  ): { id: string; type: string; file?: File; url: string; order?: number } {
     const isFile = fileOrUrl instanceof File;
     return {
       id: crypto.randomUUID(),
@@ -314,13 +318,13 @@ export class EventDetails implements OnInit {
     const currentTime = form.get(type)?.value || '';
     const startTime = form.get('start_time')?.value;
     const selectedDate = form.get('date')?.value || '';
-    
+
     let min: string | undefined = undefined;
-    
+
     if (type === 'end_time' && startTime) {
       min = this.addMinutesToTime(startTime, 30);
     }
-    
+
     // If date is today, ensure time is after current time
     if (selectedDate && this.isToday(selectedDate)) {
       const currentTimeStr = this.getCurrentTime();
@@ -393,10 +397,9 @@ export class EventDetails implements OnInit {
             this.updateDescriptionLength(currentValue);
           }
 
-          descriptionControl.valueChanges
-            .subscribe((value) => {
-              this.updateDescriptionLength(value);
-            });
+          descriptionControl.valueChanges.subscribe((value) => {
+            this.updateDescriptionLength(value);
+          });
         }
       }, 0);
     } catch (error) {
@@ -475,11 +478,7 @@ export class EventDetails implements OnInit {
     if (!dateString) return false;
     const today = new Date();
     const date = new Date(dateString);
-    return (
-      date.getFullYear() === today.getFullYear() &&
-      date.getMonth() === today.getMonth() &&
-      date.getDate() === today.getDate()
-    );
+    return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
   }
 
   getCurrentTime(): string {
@@ -534,7 +533,18 @@ export class EventDetails implements OnInit {
   }
 
   getImageUrl(imageUrl = ''): string {
+    // Don't process blob URLs - return default instead
+    if (this.isBlobUrl(imageUrl)) {
+      return 'assets/images/profile.jpeg';
+    }
     return getImageUrlOrDefault(imageUrl);
+  }
+
+  isBlobUrl(url: string | null | undefined): boolean {
+    if (!url || typeof url !== 'string') {
+      return false;
+    }
+    return url.startsWith('blob:');
   }
 
   onImageError(event: Event): void {

@@ -1,0 +1,68 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex items-center justify-between">
+      <div class="heading-h3 neutral-01">Select Subscription Plan(s)</div>
+      <div class="pi pi-times cursor-pointer text-xl" (click)="close()"></div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="px-4">
+    <!-- Event Plans Section -->
+    @if (eventPlans().length > 0) {
+      <div class="mb-6">
+        <div class="body-16M">Event Plans</div>
+        <div class="body-12R neutral-03 mb-4">Only subscribers of selected plan(s) can RSVP for the event.</div>
+
+        <div class="flex flex-col gap-3">
+          @for (plan of eventPlans(); track plan.product_id) {
+            <app-subscription-card
+              [data]="convertPlanToSubscription(plan)"
+              [mode]="'select'"
+              [checkboxControl]="getPlanControl(plan.product_id)"
+              [isSelected]="isPlanSelected(plan.product_id)"
+              (selectionChange)="updateSelectedCount()"
+            />
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Sponsor Plans Section -->
+    @if (sponsorPlans().length > 0) {
+      <div class="mb-6">
+        <div class="body-16M mb-1">Sponsor Plans</div>
+        <div class="body-12R neutral-03 mb-4">Subscribers of selected plan will be auto-listed as sponsor.</div>
+
+        <div class="flex flex-col gap-3">
+          @for (plan of sponsorPlans(); track plan.product_id) {
+            <app-subscription-card
+              [data]="convertPlanToSubscription(plan)"
+              [mode]="'select'"
+              [checkboxControl]="getPlanControl(plan.product_id)"
+              [isSelected]="isPlanSelected(plan.product_id)"
+              (selectionChange)="updateSelectedCount()"
+            />
+          }
+        </div>
+      </div>
+    }
+  </div>
+</ion-content>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex items-center gap-4">
+      @if (selectedCount() > 0) {
+        <div class="flex flex-col items-center neutral-02">
+          <div class="heading-h3">
+            {{ selectedCount() }}
+          </div>
+          <div class="body-12R">Plan{{ selectedCount() > 1 ? 's' : '' }}</div>
+        </div>
+      }
+      <app-button label="Save" class="flex-1" (click)="save()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

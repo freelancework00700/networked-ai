@@ -10,12 +10,12 @@ import {
   PLATFORM_ID,
   AfterViewInit,
   AfterViewChecked,
-  ChangeDetectionStrategy,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import Swiper from 'swiper';
 import * as Maptiler from '@maptiler/sdk';
 import { Pagination } from 'swiper/modules';
-import { Button } from "@/components/form/button";
+import { Button } from '@/components/form/button';
 import { IonIcon } from '@ionic/angular/standalone';
 import { EventDisplayData } from '@/interfaces/event';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -98,7 +98,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     const swiperElement = this.swiperEventDisplayEl()?.nativeElement;
     const medias = this.displayMediasForDisplay();
     const hasMultiple = this.hasMultipleMedias();
-    
+
     if (swiperElement && hasMultiple) {
       if (!this.swiper) {
         this.swiper = new Swiper(swiperElement, {
@@ -197,4 +197,3 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     onImageError(event);
   }
 }
-

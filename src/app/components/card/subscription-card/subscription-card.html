@@ -1,12 +1,15 @@
-<div 
-  class="subscription-card"
+<div
+  class="subscription-card rounded-xl transition"
   [class.card-event]="data().type === 'event'"
   [class.card-sponsor]="data().type === 'sponsor'"
-  [class.cursor-pointer]="mode() === 'subscription'"
-  (click)="mode() === 'subscription' ? onClick() : null"
+  [class.card-select]="isSelectMode()"
+  [class.cursor-pointer]="mode() === 'subscription' || mode() === 'select'"
+  [class.selected]="isSelectMode() && isSelected()"
+  [class.unselected]="isSelectMode() && !isSelected()"
+  (click)="mode() === 'subscription' ? onClick() : mode() === 'select' && checkboxControl() ? toggleCheckbox() : null"
 >
-  @if (isPlanMode()) {
-    <!-- Plan Mode -->
+  @if (isSelectMode() || isPlanMode()) {
+    <!-- Select Mode or Plan Mode -->
     <div class="flex items-center gap-3">
       <!-- Icon -->
       <div class="bg-white rounded-2xl shadow-md p-2 flex items-center">
@@ -29,12 +32,20 @@
           <div class="body-12R neutral-03">{{ data().priceRange }}</div>
         </div>
       </div>
+
+      <!-- Checkbox (only for select mode) -->
+      @if (isSelectMode() && checkboxControl()) {
+        <p-checkbox [ngModel]="isSelected()" (ngModelChange)="toggleCheckbox($event)" [binary]="true"></p-checkbox>
+      }
     </div>
 
-    <div class="pt-4 flex items-center gap-2">
-      <app-button label="Manage" color="secondary" class="flex-1" (click)="onManage()" iconName="pi-cog" />
-      <app-button label="Events" color="secondary" class="flex-1" (click)="onEvents()" iconName="pi-calendar" />
-    </div>
+    <!-- Buttons (only for plan mode) -->
+    @if (isPlanMode()) {
+      <div class="pt-4 flex items-center gap-2">
+        <app-button label="Manage" color="secondary" class="flex-1" (click)="onManage()" iconName="pi-cog" />
+        <app-button label="Events" color="secondary" class="flex-1" (click)="onEvents()" iconName="pi-calendar" />
+      </div>
+    }
   } @else {
     <!-- Subscription Mode -->
     <div class="">
@@ -65,11 +76,11 @@
       <div class="mt-4 flex justify-between">
         <div class="flex gap-8">
           <div class="body-12 neutral-03 mb-1">
-            <div>Renews on </div>
+            <div>Renews on</div>
             <div class="mt-1">Billing</div>
           </div>
           <div class="body-12M neutral-01">
-            <div>{{ data().renewDate | date:'MMM d, yyyy' }}</div>
+            <div>{{ data().renewDate | date: 'MMM d, yyyy' }}</div>
             <div class="mt-1">{{ data().price }}</div>
           </div>
         </div>

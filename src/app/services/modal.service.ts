@@ -1,6 +1,7 @@
 import { Login } from '@/pages/login';
 import { Signup } from '@/pages/signup/signup';
 import { inject, Injectable } from '@angular/core';
+import { SubscriptionPlan } from '@/interfaces/event';
 import { MenuItem } from '@/components/modal/menu-modal';
 import { CreateEvent } from '@/pages/event/create-event';
 import { RsvpModal } from '@/components/modal/rsvp-modal';
@@ -39,6 +40,7 @@ import { LocationFilterModal } from '@/components/modal/location-filter-modal';
 import { NetworkTagModal, NetworkTag } from '@/components/modal/network-tag-modal';
 import { AchievementDetailModal } from '@/components/modal/achievement-detail-modal';
 import { QuestionnaireFormModal } from '@/components/modal/questionnaire-form-modal';
+import { SubscriptionPlansModal } from '@/components/modal/subscription-plans-modal';
 import { PhoneEmailVerifiedModal } from '@/components/modal/phone-email-verified-modal';
 import { PromoCodeFormModalData, TicketFormData, TicketType } from '@/interfaces/event';
 import { ManageRoleModal } from '@/components/modal/manage-role-modal/manage-role-modal';
@@ -52,7 +54,7 @@ export class ModalService {
   // services
   private modalCtrl = inject(ModalController);
 
-  async openLoadingModal(message: string): Promise<void> {
+  async openLoadingModal(message: string): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -65,6 +67,7 @@ export class ModalService {
     });
 
     await modal.present();
+    return modal;
   }
 
   async openPhoneEmailVerifiedModal(type: 'email' | 'mobile'): Promise<boolean> {
@@ -341,6 +344,27 @@ export class ModalService {
 
     const { data, role } = await modal.onWillDismiss();
     return data && role === 'save' ? { data, role } : null;
+  }
+
+  async openSubscriptionPlansModal(plans: SubscriptionPlan[], selectedPlanIds: string[] = []): Promise<string[] | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: SubscriptionPlansModal,
+      cssClass: 'modal-600px-height',
+      backdropDismiss: true,
+      componentProps: {
+        plans,
+        selectedPlanIds
+      }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    return data && Array.isArray(data) ? data : null;
   }
 
   async openConfirmModal(config: {
@@ -715,7 +739,19 @@ export class ModalService {
     return data || null;
   }
 
-  async openRsvpModal(tickets: any[], eventTitle?: string, questionnaire?: any, promo_codes?: any[], subscriptionId?: string): Promise<any> {
+  async openRsvpModal(
+    tickets: any[],
+    eventTitle?: string,
+    questionnaire?: any,
+    promo_codes?: any[],
+    subscriptionId?: string,
+    hostPaysFees?: boolean,
+    additionalFees?: string | number | null,
+    maxAttendeesPerUser?: number,
+    hostName?: string,
+    eventId?: string,
+    planIds?: string[]
+  ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -723,7 +759,7 @@ export class ModalService {
       initialBreakpoint: 1,
       cssClass: 'modal-600px-height',
       component: RsvpModal,
-      componentProps: { tickets, eventTitle, questionnaire, promo_codes, subscriptionId }
+      componentProps: { tickets, eventTitle, questionnaire, promo_codes, subscriptionId, hostPaysFees, additionalFees, maxAttendeesPerUser, hostName, eventId, planIds }
     });
     await modal.present();
     const { data } = await modal.onDidDismiss();
@@ -769,8 +805,12 @@ export class ModalService {
     eventTitle: string,
     eventDate: string,
     eventLocation: string,
+    eventId: string,
     rsvpData: RsvpDetailsData,
-    subscriptionId?: string
+    subscriptionId?: string,
+    hostPaysFees?: boolean,
+    additionalFees?: string | number | null,
+    hostName?: string
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -779,7 +819,7 @@ export class ModalService {
       initialBreakpoint: 1,
       cssClass: 'modal-600px-height',
       component: RsvpDetailsModal,
-      componentProps: { eventTitle, eventDate, eventLocation, rsvpData, subscriptionId }
+      componentProps: { eventTitle, eventDate, eventLocation, eventId, rsvpData, subscriptionId, hostPaysFees, additionalFees, hostName }
     });
     await modal.present();
     const { data } = await modal.onDidDismiss();
@@ -824,7 +864,7 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      cssClass: 'auto-hight-modal',
+      cssClass: 'modal-600px-height',
       component: Login,
       componentProps: {
         isRsvpModal: true,
@@ -846,7 +886,7 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      cssClass: 'auto-hight-modal',
+      cssClass: 'modal-600px-height',
       component: Signup,
       componentProps: {
         isRsvpModal: true,
@@ -893,4 +933,5 @@ export class ModalService {
     const modal = await this.modalCtrl.getTop();
     if (modal) await modal.dismiss(data, role);
   }
+
 }

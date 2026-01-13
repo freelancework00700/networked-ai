@@ -4,11 +4,12 @@ import {
   UserSection,
   EventCategory,
   EventAttendee,
+  EventAttendeesPayload,
   EventResponse,
   EventsResponse,
   EventDisplayData,
   EventFeedbackPayload,
-  EventCategoriesResponse,
+  EventCategoriesResponse
 } from '@/interfaces/event';
 import { IUser } from '@/interfaces/IUser';
 import { HttpParams } from '@angular/common/http';
@@ -20,7 +21,7 @@ import { SegmentButtonItem } from '@/components/common/segment-button';
 export class EventService extends BaseApiService {
   recommendedEvents = signal<IEvent[]>([]);
   publicEvents = signal<IEvent[]>([]);
-  
+
   async createEvents(eventsPayload: any[]): Promise<EventResponse> {
     try {
       const response = await this.post<EventResponse>('/events', eventsPayload);
@@ -101,7 +102,7 @@ export class EventService extends BaseApiService {
     if (!tickets || tickets.length === 0) return 'Free';
 
     const availableTickets = tickets
-      .filter((t: any) => t.available_quantity != null && t.available_quantity > 0)
+      .filter((t: any) => t.quantity != null && t.quantity > 0)
       .map((t: any) => ({
         ...t,
         price: typeof t.price === 'string' ? parseFloat(t.price) : t.price || 0
@@ -255,11 +256,32 @@ export class EventService extends BaseApiService {
         })
         .filter((user): user is IUser => user !== null);
     };
+
+    const getAttendeesByStatus = (status: string): IUser[] => {
+      if (!attendees || !Array.isArray(attendees)) return [];
+
+      const filteredAttendees = attendees
+        .filter((a: any) => {
+          const rsvpStatus = a.rsvp_status || '';
+          return rsvpStatus === status;
+        })
+        .map((a: any) => {
+          if (a.parent_user_id) {
+            return a;
+          } else {
+            return a.user;
+          }
+        });
+      return filteredAttendees;
+    };
+
     const sections: UserSection[] = [];
     const hosts = getParticipantsByRole('Host');
     const coHosts = getParticipantsByRole('CoHost');
     const sponsors = getParticipantsByRole('Sponsor');
     const speakers = getParticipantsByRole('Speaker');
+    const goingAttendees = getAttendeesByStatus('Yes');
+    const maybeAttendees = getAttendeesByStatus('Maybe');
 
     if (hosts.length > 0) {
       sections.push({ title: 'Host(s)', users: hosts });
@@ -273,40 +295,65 @@ export class EventService extends BaseApiService {
     if (speakers.length > 0) {
       sections.push({ title: 'Speaker(s)', users: speakers });
     }
+    if (goingAttendees.length > 0) {
+      sections.push({ title: 'Going', users: goingAttendees });
+    }
+    if (maybeAttendees.length > 0) {
+      sections.push({ title: 'Maybe', users: maybeAttendees });
+    }
 
     return sections;
   }
 
   createDateItems(parentEvent: any): SegmentButtonItem[] {
-    const dateItems: SegmentButtonItem[] = [];
+    const dateItemsWithDates: Array<{ item: SegmentButtonItem; date: Date }> = [];
 
     if (parentEvent?.start_date) {
-      const parentDateKey = this.formatDateKey(parentEvent.start_date);
-      dateItems.push({
-        value: parentDateKey,
-        label: parentDateKey,
-        icon: 'assets/svg/calendar.svg',
-        activeIcon: 'assets/svg/calendar-selected.svg'
-      });
+      const parentDate = new Date(parentEvent.start_date);
+      // Skip if date is invalid
+      if (!isNaN(parentDate.getTime())) {
+        const parentDateKey = this.formatDateKey(parentEvent.start_date);
+        dateItemsWithDates.push({
+          item: {
+            value: parentDateKey,
+            label: parentDateKey,
+            icon: 'assets/svg/calendar.svg',
+            activeIcon: 'assets/svg/calendar-selected.svg'
+          },
+          date: parentDate
+        });
+      }
     }
 
     if (parentEvent?.child_events && parentEvent.child_events.length > 0) {
       parentEvent.child_events.forEach((childEvt: any) => {
         if (childEvt.start_date) {
-          const childDateKey = this.formatDateKey(childEvt.start_date);
-          if (!dateItems.some((item) => item.value === childDateKey)) {
-            dateItems.push({
-              value: childDateKey,
-              label: childDateKey,
-              icon: 'assets/svg/calendar.svg',
-              activeIcon: 'assets/svg/calendar-selected.svg'
-            });
+          const childDate = new Date(childEvt.start_date);
+          // Skip if date is invalid
+          if (!isNaN(childDate.getTime())) {
+            const childDateKey = this.formatDateKey(childEvt.start_date);
+            // Check if this date key already exists
+            if (!dateItemsWithDates.some((entry) => entry.item.value === childDateKey)) {
+              dateItemsWithDates.push({
+                item: {
+                  value: childDateKey,
+                  label: childDateKey,
+                  icon: 'assets/svg/calendar.svg',
+                  activeIcon: 'assets/svg/calendar-selected.svg'
+                },
+                date: childDate
+              });
+            }
           }
         }
       });
     }
 
-    return dateItems;
+    // Sort dates chronologically (earliest first) using the actual Date objects
+    dateItemsWithDates.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // Extract just the items in sorted order
+    return dateItemsWithDates.map((entry) => entry.item);
   }
 
   transformEventDataToForm(eventData: any): any {
@@ -324,7 +371,7 @@ export class EventService extends BaseApiService {
         id: ticket.id,
         name: ticket.name,
         price: ticket.price,
-        available_quantity: ticket.available_quantity,
+        quantity: ticket.quantity,
         description: ticket.description || null,
         ticket_type: ticket.ticket_type,
         end_at_event_start: ticket.end_at_event_start ?? true,
@@ -421,8 +468,15 @@ export class EventService extends BaseApiService {
       formData.max_attendees_per_user = settings.max_attendees_per_user || null;
       formData.allow_plus_ones = (settings.max_attendees_per_user && settings.max_attendees_per_user > 0) || false;
       formData.host_pays_platform_fee = settings.host_pays_platform_fee ?? false;
-      formData.additional_fees = settings.additional_fees ? String(settings.additional_fees) : '';
+      formData.additional_fees = settings.additional_fees ? Number(settings.additional_fees) : null;
+      formData.guest_fee_enabled = settings.additional_fees && settings.additional_fees > 0 ? true : false;
+      formData.is_subscriber_exclusive = settings.is_subscriber_exclusive ?? false;
     }
+
+    // Handle subscription plans
+    formData.is_subscription = eventData.plan_ids && eventData.plan_ids.length > 0 ? true : false;
+    formData.plan_ids = eventData.plan_ids && Array.isArray(eventData.plan_ids) ? eventData.plan_ids : [];
+
     return formData;
   }
 
@@ -460,34 +514,51 @@ export class EventService extends BaseApiService {
       return [];
     }
 
-    const items: SegmentButtonItem[] = [];
+    const itemsWithDates: Array<{ item: SegmentButtonItem; date: Date }> = [];
 
     if (baseDate) {
-      const baseFormatted = this.formatDateKey(baseDate);
-      items.push({
-        value: baseFormatted,
-        label: baseFormatted,
-        icon: 'assets/svg/calendar.svg',
-        activeIcon: 'assets/svg/calendar-selected.svg'
-      });
+      const baseDateObj = new Date(baseDate);
+      if (!isNaN(baseDateObj.getTime())) {
+        const baseFormatted = this.formatDateKey(baseDate);
+        itemsWithDates.push({
+          item: {
+            value: baseFormatted,
+            label: baseFormatted,
+            icon: 'assets/svg/calendar.svg',
+            activeIcon: 'assets/svg/calendar-selected.svg'
+          },
+          date: baseDateObj
+        });
+      }
     }
 
     repeatingEvents.forEach((event: any) => {
       const dateStr = event.date || baseDate;
       if (dateStr) {
-        const formatted = this.formatDateKey(dateStr);
-        if (!items.some((item) => item.value === formatted)) {
-          items.push({
-            value: formatted,
-            label: formatted,
-            icon: 'assets/svg/calendar.svg',
-            activeIcon: 'assets/svg/calendar-selected.svg'
-          });
+        const dateObj = new Date(dateStr);
+        if (!isNaN(dateObj.getTime())) {
+          const formatted = this.formatDateKey(dateStr);
+          // Check if this date key already exists
+          if (!itemsWithDates.some((entry) => entry.item.value === formatted)) {
+            itemsWithDates.push({
+              item: {
+                value: formatted,
+                label: formatted,
+                icon: 'assets/svg/calendar.svg',
+                activeIcon: 'assets/svg/calendar-selected.svg'
+              },
+              date: dateObj
+            });
+          }
         }
       }
     });
 
-    return items;
+    // Sort dates chronologically (earliest first) using the actual Date objects
+    itemsWithDates.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // Extract just the items in sorted order
+    return itemsWithDates.map((entry) => entry.item);
   }
 
   transformEventDataForDisplay(
@@ -645,7 +716,7 @@ export class EventService extends BaseApiService {
       const formattedTicket: any = {
         name: ticket.name,
         price: Number(ticket.price),
-        available_quantity: ticket.available_quantity,
+        quantity: Number(ticket.quantity),
         description: ticket.description || '',
         ticket_type: ticket.ticket_type,
         end_at_event_start: ticket.end_at_event_start ?? false,
@@ -674,7 +745,7 @@ export class EventService extends BaseApiService {
       type: promo.type,
       value: Number(promo.value),
       capped_amount: promo.capped_amount != null ? Number(promo.capped_amount) : null,
-      redemption_limit: promo.redemption_limit != null ? Math.floor(Number(promo.redemption_limit)) : null,
+      quantity: promo.quantity != null ? Math.floor(Number(promo.quantity)) : null,
       max_uses_per_user: promo.max_uses_per_user != null ? Math.floor(Number(promo.max_uses_per_user)) : null
     }));
   }
@@ -684,7 +755,8 @@ export class EventService extends BaseApiService {
       is_repeating_event: formData.is_repeating_event ?? false,
       is_rsvp_approval_required: formData.is_rsvp_approval_required ?? false,
       is_show_timer: formData.is_show_timer ?? false,
-      host_pays_platform_fee: formData.host_pays_platform_fee ?? false
+      host_pays_platform_fee: formData.host_pays_platform_fee ?? false,
+      is_subscriber_exclusive: formData.is_subscriber_exclusive ?? false
     };
 
     if (formData.repeating_frequency && formData.repeating_frequency !== 'custom') {
@@ -695,8 +767,8 @@ export class EventService extends BaseApiService {
       settings.max_attendees_per_user = formData.max_attendees_per_user;
     }
 
-    if (formData.additional_fees) {
-      const fees = parseFloat(formData.additional_fees);
+    if (formData.additional_fees && formData.guest_fee_enabled) {
+      const fees = Number(formData.additional_fees);
       if (!isNaN(fees)) {
         settings.additional_fees = fees;
       }
@@ -726,7 +798,8 @@ export class EventService extends BaseApiService {
       'subscription_plan',
       'repeat_count',
       'custom_repeat_count',
-      'subscription_id'
+      'subscription_id',
+      'is_subscriber_exclusive'
     ];
 
     fieldsToDelete.forEach((field) => delete payload[field]);
@@ -897,12 +970,12 @@ export class EventService extends BaseApiService {
   }
 
   // Save event attendee (RSVP) - sends single attendee object
-  async saveEventAttendee(eventId: string, attendee: EventAttendee): Promise<any> {
+  async saveEventAttendees(payload: EventAttendeesPayload): Promise<any> {
     try {
-      const response = await this.post<any>(`/events/${eventId}/attendees`, attendee);
+      const response = await this.post<any>(`/event-attendees/`, payload);
       return response;
     } catch (error) {
-      console.error('Error saving event attendee:', error);
+      console.error('Error saving event attendees:', error);
       throw error;
     }
   }
@@ -925,6 +998,34 @@ export class EventService extends BaseApiService {
       return response;
     } catch (error) {
       console.error('Error sending RSVP request:', error);
+      throw error;
+    }
+  }
+
+  // Get pending RSVP requests
+  async getPendingRsvpRequests(eventId: string, page: number = 1, limit: number = 20): Promise<any> {
+    try {
+      let httpParams = new HttpParams();
+      httpParams = httpParams.set('page', page.toString());
+      httpParams = httpParams.set('limit', limit.toString());
+      const response = await this.get<any>(`/rsvp-requests/${eventId}/pending`, { params: httpParams });
+      return response;
+    } catch (error) {
+      console.error('Error fetching pending RSVP requests:', error);
+      throw error;
+    }
+  }
+
+  // Get processed RSVP requests
+  async getProcessedRsvpRequests(eventId: string, page: number = 1, limit: number = 20): Promise<any> {
+    try {
+      let httpParams = new HttpParams();
+      httpParams = httpParams.set('page', page.toString());
+      httpParams = httpParams.set('limit', limit.toString());
+      const response = await this.get<any>(`/rsvp-requests/${eventId}/processed`, { params: httpParams });
+      return response;
+    } catch (error) {
+      console.error('Error fetching processed RSVP requests:', error);
       throw error;
     }
   }

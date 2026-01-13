@@ -56,10 +56,6 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
-    path: 'event/:id/guests',
-    renderMode: RenderMode.Server
-  },
-  {
     path: 'group-invitation/:id',
     renderMode: RenderMode.Server
   },
@@ -77,6 +73,14 @@ export const serverRoutes: ServerRoute[] = [
   },
   {
     path: 'event/analytics/guests/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/rsvp-approval/:eventId',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/guests/:eventId/:section',
     renderMode: RenderMode.Server
   },
   // routes without params - can be server-rendered

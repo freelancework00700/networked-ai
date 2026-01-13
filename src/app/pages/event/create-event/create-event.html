@@ -41,7 +41,7 @@
 
       <!-- step 2: event tickets -->
       <div [hidden]="currentStep() !== 2" class="flex flex-col gap-6">
-        <event-tickets [eventForm]="eventForm()" [storedPlans]="storedPlans()" [openConfirmModal]="handleConfirmModal" />
+        <event-tickets [eventForm]="eventForm()" [openConfirmModal]="handleConfirmModal" />
       </div>
 
       <!-- step 3: event settings -->
@@ -73,18 +73,24 @@
   <ion-toolbar>
     <div class="p-6 max-w-[672px] mx-auto">
       @if (currentStep() == 2) {
-        <div class="flex items-center gap-2">
-          <app-button
-            label="Create Ticket"
-            [icon]="currentStep() === 2 ? 'assets/svg/ticket.svg' : ''"
-            (click)="eventTickets.createTicket()"
-            class="flex-1"
-            [color]="tickets.length > 0 ? 'secondary' : 'primary'"
-          />
-          @if (tickets.length > 0) {
-            <app-button [label]="buttonLabel()" [iconName]="buttonIcon()" [iconPos]="iconPos()" (click)="handleButtonClick()" class="flex-1" />
-          }
-        </div>
+        @if (getFieldValue('is_subscriber_exclusive')) {
+          <!-- When subscriber exclusive, show next button directly -->
+          <app-button [label]="buttonLabel()" [iconName]="buttonIcon()" [iconPos]="iconPos()" (click)="handleButtonClick()" />
+        } @else {
+          <!-- Regular flow: Create Ticket button -->
+          <div class="flex items-center gap-2">
+            <app-button
+              label="Create Ticket"
+              [icon]="currentStep() === 2 ? 'assets/svg/ticket.svg' : ''"
+              (click)="eventTickets.createTicket()"
+              class="flex-1"
+              [color]="tickets.length > 0 ? 'secondary' : 'primary'"
+            />
+            @if (tickets.length > 0) {
+              <app-button [label]="buttonLabel()" [iconName]="buttonIcon()" [iconPos]="iconPos()" (click)="handleButtonClick()" class="flex-1" />
+            }
+          </div>
+        }
       } @else {
         @if (!isModalMode) {
           @if (hasQuestionnaire() && currentStep() === 4) {

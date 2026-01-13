@@ -40,7 +40,7 @@ export class EventSettings {
   // Signals
   repeatOptions = signal<Array<{ label: string; value: RepeatingFrequencyType }>>([
     { label: 'Weekly', value: 'weekly' },
-    { label: 'Monthly', value: 'monthly' },
+    { label: 'Monthly', value: 'monthly' }
     // { label: 'Custom', value: 'custom' }
   ]);
 
@@ -61,7 +61,6 @@ export class EventSettings {
     id: 'main-event',
     eventNumber: 1
   });
-
 
   constructor() {
     this.syncParticipantsToSignals();
@@ -154,7 +153,7 @@ export class EventSettings {
 
       const formEvents = repeatingEventsControl.value;
       if (Array.isArray(formEvents) && formEvents.length > 0 && this.repeatingEvents().length === 0) {
-        this.repeatingEvents.set(formEvents.map(e => ({ ...e })));
+        this.repeatingEvents.set(formEvents.map((e) => ({ ...e })));
         this.cd.markForCheck();
       }
     });
@@ -162,7 +161,7 @@ export class EventSettings {
     // Sync form data to mainEvent signal (reactive to form changes)
     effect(() => {
       const form = this.eventForm();
-      
+
       // Initial update
       const updateMainEvent = () => {
         const formValues = form.getRawValue();
@@ -281,9 +280,7 @@ export class EventSettings {
     if (!questionnaire || !Array.isArray(questionnaire) || questionnaire.length === 0) return [];
 
     const eventPhase = type === 'pre_event' ? 'PreEvent' : 'PostEvent';
-    return questionnaire
-      .filter((q: any) => q.event_phase === eventPhase)
-      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+    return questionnaire.filter((q: any) => q.event_phase === eventPhase).sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
   }
 
   hasQuestions(type: string): boolean {

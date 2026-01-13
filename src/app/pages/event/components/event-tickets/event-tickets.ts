@@ -3,18 +3,23 @@ import { CommonModule } from '@angular/common';
 import { CheckboxModule } from 'primeng/checkbox';
 import { IonIcon } from '@ionic/angular/standalone';
 import { TicketFormData } from '@/interfaces/event';
+import { AuthService } from '@/services/auth.service';
+import { UserService } from '@/services/user.service';
 import { ModalService } from '@/services/modal.service';
+import { StripeService } from '@/services/stripe.service';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TicketCard } from '@/components/card/ticket-card';
 import { PromoCodeFormModalData } from '@/interfaces/event';
+import { ToasterService } from '@/services/toaster.service';
 import { NumberInput } from '@/components/form/number-input';
 import { ToggleInput } from '@/components/form/toggle-input';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { PromoCodeCard } from '@/components/card/promo-code-card';
+import { SubscriptionService } from '@/services/subscription.service';
 import { SubscriptionInput } from '@/pages/event/components/subscription-input';
 import { IonReorderGroup, ItemReorderEventDetail } from '@ionic/angular/standalone';
 import { Ticket, PromoCode, SubscriptionPlan, TicketType } from '@/interfaces/event';
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal, effect, OnInit, ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'event-tickets',
@@ -35,22 +40,29 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal, ef
   templateUrl: './event-tickets.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class EventTickets {
+export class EventTickets implements OnInit {
   // Inputs
   eventForm = input.required<FormGroup>();
-  storedPlans = input.required<SubscriptionPlan[]>();
   openConfirmModal = input.required<(message: string) => Promise<boolean>>();
 
   // Services
-  modalService = inject(ModalService);
   navCtrl = inject(NavController);
+  authService = inject(AuthService);
+  userService = inject(UserService);
+  modalService = inject(ModalService);
+  stripeService = inject(StripeService);
+  toasterService = inject(ToasterService);
+  subscriptionService = inject(SubscriptionService);
+  cdr = inject(ChangeDetectorRef);
 
   tickets = signal<Ticket[]>([]);
   promoCodes = signal<PromoCode[]>([]);
+  subscriptionPlans = signal<SubscriptionPlan[]>([]);
   promoCodeSectionOpen = signal<boolean>(false);
   advancedSettingsOpen = signal<boolean>(false);
   editingPromoIndex = signal<number | null>(null);
   editingTicketIndex = signal<number | null>(null);
+  currentUser = computed(() => this.authService.currentUser());
 
   isEventCompletelyFree = computed(() => {
     return this.tickets().every((ticket) => ticket.ticket_type === 'Free');
@@ -58,6 +70,13 @@ export class EventTickets {
 
   hasFreeTicket = computed(() => {
     return this.tickets().some((t) => t.ticket_type === 'Free');
+  });
+
+  isSubscriberExclusive = signal<boolean>(false);
+  selectedPlanIds = signal<string[]>([]);
+
+  hasSelectedPlans = computed(() => {
+    return this.selectedPlanIds().length > 0;
   });
 
   constructor() {
@@ -72,6 +91,84 @@ export class EventTickets {
     effect(() => {
       this.eventForm().get('promo_codes')?.setValue(this.promoCodes());
     });
+
+    // Handle is_subscriber_exclusive toggle changes
+    effect(() => {
+      const isExclusive = this.isSubscriberExclusive();
+      const planIdsControl = this.eventForm().get('plan_ids');
+      
+      if (isExclusive) {
+        // When enabled, clear tickets and promo codes
+        if (this.tickets().length > 0) {
+          this.tickets.set([]);
+          this.eventForm().get('tickets')?.setValue([], { emitEvent: false });
+        }
+        if (this.promoCodes().length > 0) {
+          this.promoCodes.set([]);
+          this.eventForm().get('promo_codes')?.setValue([], { emitEvent: false });
+        }
+      } else {
+        // When disabled, clear plan_ids
+        if (planIdsControl && planIdsControl.value && planIdsControl.value.length > 0) {
+          planIdsControl.setValue([], { emitEvent: false });
+          this.selectedPlanIds.set([]);
+        }
+      }
+      this.cdr.markForCheck();
+    });
+  }
+
+  async ngOnInit(): Promise<void> {
+    await this.loadSubscriptionPlans();
+    
+    // Watch for changes in is_subscriber_exclusive
+    const isExclusiveControl = this.eventForm().get('is_subscriber_exclusive');
+    const isSubscriptionControl = this.eventForm().get('is_subscription');
+    
+    if (isExclusiveControl) {
+      // Set initial value
+      const initialValue = isExclusiveControl.value ?? false;
+      this.isSubscriberExclusive.set(initialValue);
+      
+      // If true, automatically set is_subscription to true
+      if (initialValue && isSubscriptionControl) {
+        isSubscriptionControl.setValue(true, { emitEvent: false });
+      }
+      
+      // Subscribe to changes
+      isExclusiveControl.valueChanges.subscribe((value) => {
+        this.isSubscriberExclusive.set(value ?? false);
+        
+        // Automatically set is_subscription to true when is_subscriber_exclusive is true
+        if (value === true && isSubscriptionControl) {
+          isSubscriptionControl.setValue(true, { emitEvent: false });
+        }
+        
+        this.cdr.markForCheck();
+      });
+    }
+
+    // Watch for changes in plan_ids
+    const planIdsControl = this.eventForm().get('plan_ids');
+    if (planIdsControl) {
+      // Set initial value
+      this.selectedPlanIds.set(planIdsControl.value || []);
+      
+      // Subscribe to changes
+      planIdsControl.valueChanges.subscribe((value) => {
+        this.selectedPlanIds.set(value || []);
+        this.cdr.markForCheck();
+      });
+    }
+  }
+
+  async loadSubscriptionPlans(): Promise<void> {
+    try {
+      const plans = await this.subscriptionService.getSubscriptionPlans();
+      this.subscriptionPlans.set(plans);
+    } catch (error) {
+      console.error('Error loading subscription plans:', error);
+    }
   }
 
   syncFormToSignal(formControlName: string, signalRef: ReturnType<typeof signal<any[]>>): void {
@@ -116,7 +213,7 @@ export class EventTickets {
       name: data.name,
       ticket_type: data.ticket_type,
       price: data.ticket_type !== 'Free' ? data.price || 0 : 0,
-      available_quantity: data.quantity || null,
+      quantity: data.quantity || null,
       description: data.description || null,
       sale_start_date: data.sale_start_date || null,
       sale_start_time: data.sale_start_time || null,
@@ -132,7 +229,7 @@ export class EventTickets {
       type: data.type,
       value: data.value,
       capped_amount: data.capped_amount || null,
-      redemption_limit: data.redemption_limit || null,
+      quantity: data.quantity || null,
       max_uses_per_user: data.max_uses_per_user || 1
     };
   }
@@ -180,7 +277,7 @@ export class EventTickets {
       id: ticket.id,
       name: ticket.name,
       price: ticket.price || 0,
-      quantity: ticket.available_quantity || null, // Read from available_quantity
+      quantity: ticket.quantity || null, // Read from quantity
       description: (ticket as { description?: string }).description,
       sale_start_date: ticket.sale_start_date || null,
       sale_start_time: ticket.sale_start_time || null,
@@ -247,7 +344,7 @@ export class EventTickets {
       type: promo.type,
       value: promo.value,
       capped_amount: promo.capped_amount || null,
-      redemption_limit: promo.redemption_limit || null,
+      quantity: promo.quantity || null,
       max_uses_per_user: promo.max_uses_per_user || 1
     };
     await this.openPromoCodeModal(initialData);
@@ -271,12 +368,47 @@ export class EventTickets {
     return this.promoCodes().findIndex((p) => p === promo);
   }
 
+  async handleStripeAccountCreation(): Promise<void> {
+    try {
+      const accountResponse = await this.stripeService.createStripeAccount();
+      if (accountResponse?.url) {
+        window.location.href = accountResponse.url;
+      } else {
+        this.toasterService.showError('Failed to get Stripe account URL. Please try again.');
+      }
+    } catch (error) { 
+      console.error('Error creating Stripe account:', error);
+      this.toasterService.showError('Error creating Stripe account. Please try again.');
+      throw error;
+    }
+  }
+
+  async openStripePayoutModal(): Promise<void> {
+    await this.modalService.openConfirmModal({
+      icon: 'assets/svg/payoutIcon.svg',
+      iconBgColor: '#C73838',
+      title: 'Add Payout Details',
+      description: 'To accept ticket sales in app, you must setup your payout details with Stripe.',
+      confirmButtonLabel: 'Connect Payment',
+      cancelButtonLabel: 'Maybe Later',
+      confirmButtonColor: 'primary',
+      iconPosition: 'center',
+      onConfirm: () => this.handleStripeAccountCreation()
+    });
+  }
+
   async createTicket(): Promise<void> {
     const ticketType = await this.modalService.openTicketTypeModal(false, this.hasFreeTicket());
     if (ticketType && ticketType === 'Free') {
       await this.openTicketModal('Free');
     } else if (ticketType && ticketType === 'Paid') {
-      this.createPaidTicket();
+      const user = this.currentUser();
+
+      if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
+        this.createPaidTicket();
+      } else {
+        await this.openStripePayoutModal();
+      }
     }
   }
 }

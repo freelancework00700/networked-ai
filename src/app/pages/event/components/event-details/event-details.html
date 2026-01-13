@@ -10,15 +10,18 @@
                 <div class="slide-image relative">
                   <!-- IMAGE -->
                   @if (item.type === 'image' || item.type === 'gif') {
-                    <img
-                      fill
-                      placeholder
-                      priority
-                      [alt]="'Event media ' + ($index + 1)"
-                      class="object-cover"
-                      (error)="onImageError($event)"
-                      [ngSrc]="getImageUrl(item.url || '')"
-                    />
+                    @if (isBlobUrl(item.url)) {
+                      <img [src]="item.url || ''" class="object-cover" (error)="onImageError($event)" />
+                    } @else {
+                      <img
+                        fill
+                        placeholder
+                        class="object-cover"
+                        (error)="onImageError($event)"
+                        [ngSrc]="getImageUrl(item.url || '')"
+                        [loaderParams]="{ thumbnail: item.url || '' }"
+                      />
+                    }
                   }
 
                   <!-- VIDEO -->
@@ -43,15 +46,18 @@
           <div class="thumbnail relative" cdkDrag [cdkDragBoundary]="scrollContainer" (click)="goToSlide($index)">
             <!-- IMAGE -->
             @if (item.type === 'image' || item.type === 'gif') {
-              <img
-                fill
-                placeholder
-                priority
-                [alt]="'Event thumbnail ' + ($index + 1)"
-                class="object-cover"
-                (error)="onImageError($event)"
-                [ngSrc]="getImageUrl(item.url || '')"
-              />
+              @if (isBlobUrl(item.url)) {
+                <img [src]="item.url || ''" class="object-cover rounded" (error)="onImageError($event)" />
+              } @else {
+                <img
+                  fill
+                  placeholder
+                  class="object-cover rounded"
+                  (error)="onImageError($event)"
+                  [ngSrc]="getImageUrl(item.url || '')"
+                  [loaderParams]="{ thumbnail: item.url || '' }"
+                />
+              }
             }
 
             <!-- VIDEO -->

@@ -2,7 +2,7 @@
   <ion-toolbar mode="md">
     <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
       <div class="pi pi-arrow-left" (click)="navigationService.back()"></div>
-      <div class="body-14M neutral-02 text-center w-full">{{ title() }}</div>
+      <!-- <div class="body-14M neutral-02 text-center w-full">{{ title() }}</div> -->
     </div>
   </ion-toolbar>
 </ion-header>
@@ -40,7 +40,7 @@
           <!-- Details -->
           <div class="flex-1">
             <div class="flex items-center gap-2">
-              <span class="font-medium truncate">{{ user.name }}</span>
+              <span class="font-medium truncate">{{ user.name || user.username }}</span>
 
               @if (getUserValue(user) > 0) {
                 <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">

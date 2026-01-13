@@ -5,11 +5,14 @@ import { UserService } from '@/services/user.service';
 import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
 import { EmailInput } from '@/components/form/email-input';
+import { BaseApiService } from '@/services/base-api.service';
 import { MobileInput } from '@/components/form/mobile-input';
 import { ToggleInput } from '@/components/form/toggle-input';
+import { StripePaymentComponent } from '@/components/common/stripe-payment';
+import { StripePaymentSuccessEvent, StripePaymentErrorEvent } from '@/services/stripe.service';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Input, signal, inject, Component, OnInit, ChangeDetectionStrategy, computed, effect, ViewChild } from '@angular/core';
 import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent } from '@ionic/angular/standalone';
-import { Input, signal, inject, Component, OnInit, ChangeDetectionStrategy, computed, effect } from '@angular/core';
 
 export interface RsvpDetailsData {
   tickets: any[];
@@ -19,6 +22,10 @@ export interface RsvpDetailsData {
   discountAmount?: number;
   subtotal?: number;
   total?: number;
+  platformFee?: number;
+  promoCodeTicketCount?: number;
+  hostFees?: number;
+  subtotalAfterHostFees?: number;
 }
 
 @Component({
@@ -38,15 +45,21 @@ export interface RsvpDetailsData {
     MobileInput,
     ToggleInput,
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    StripePaymentComponent
   ]
 })
-export class RsvpDetailsModal implements OnInit {
+export class RsvpDetailsModal extends BaseApiService implements OnInit {
+  @ViewChild(StripePaymentComponent) paymentComponent!: StripePaymentComponent;
   @Input() eventTitle: string = '';
   @Input() eventDate: string = '';
   @Input() eventLocation: string = '';
+  @Input() eventId: string = '';
   @Input() rsvpData: RsvpDetailsData | null = null;
   @Input() subscriptionId: string = '';
+  @Input() hostPaysFees: boolean = false;
+  @Input() additionalFees: string | number | null = null;
+  @Input() hostName: string = 'Networked AI';
 
   modalCtrl = inject(ModalController);
   rsvpDataSignal = signal<RsvpDetailsData | null>(null);
@@ -62,7 +75,12 @@ export class RsvpDetailsModal implements OnInit {
   guestAttendances = signal<Map<number, 'going' | 'maybe'>>(new Map());
   guestIncognitos = signal<Map<number, boolean>>(new Map());
 
+  // Stripe payment properties
+  isLoadingPayment = signal<boolean>(false);
+  paymentErrorMessage = signal<string>('');
+
   constructor() {
+    super();
     this.form = this.fb.group({
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
@@ -82,26 +100,68 @@ export class RsvpDetailsModal implements OnInit {
     });
   }
 
-  platformFee = computed(() => {
-    return 10.0;
-  });
+  subtotal = computed(() => this.rsvpDataSignal()?.subtotal ?? 0);
 
-  gst = computed(() => {
-    return 10.0;
-  });
+  hostFees = computed(() => this.rsvpDataSignal()?.hostFees ?? 0);
+
+  subtotalAfterHostFees = computed(() => this.rsvpDataSignal()?.subtotalAfterHostFees ?? 0);
+
+  platformFee = computed(() => this.rsvpDataSignal()?.platformFee ?? 0);
 
   subscriberPerk = computed(() => {
+    if (!this.subscriptionId) return 0;
     return 10.0;
+  });
+
+  promoCodeTicketCount = computed(() => {
+    const rsvpData = this.rsvpDataSignal();
+    
+    if (rsvpData?.promoCodeTicketCount !== undefined && rsvpData.promoCodeTicketCount > 0) {
+      return rsvpData.promoCodeTicketCount;
+    }
+    
+    const tickets = rsvpData?.tickets || [];
+    if (tickets.length === 0) return 0;
+
+    return tickets.reduce((sum, ticket) => {
+      const quantity = ticket.selectedQuantity || 0;
+      const price = ticket.price;
+      return sum + (price > 0 ? quantity : 0);
+    }, 0);
+  });
+
+  promoCodeDisplayName = computed(() => {
+    const rsvpData = this.rsvpDataSignal();
+    const promoCode = rsvpData?.promo_code || 
+                      rsvpData?.appliedPromoCode?.promoCode || 
+                      rsvpData?.appliedPromoCode?.promo_code || 
+                      '';
+    const ticketCount = this.promoCodeTicketCount();
+    
+    if (!promoCode) return '';
+    
+    return ticketCount > 0 ? `${promoCode} x${ticketCount}` : promoCode;
   });
 
   totalPrice = computed(() => {
-    return (
-      (this.rsvpDataSignal()?.total || 0) + this.platformFee() + this.gst() - this.subscriberPerk() - (this.rsvpDataSignal()?.discountAmount || 0)
-    );
+    const baseTotal = this.rsvpDataSignal()?.total || 0;
+    const perk = this.subscriberPerk();
+    
+    return Math.max(0, baseTotal - perk);
   });
 
   formattedTotal = computed(() => {
     return this.totalPrice()?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00';
+  });
+
+  confirmButtonLabel = computed(() => {
+    if (this.isLoadingPayment()) {
+      return 'Processing Payment...';
+    }
+    if (this.totalPrice() > 0) {
+      return `Pay $${this.formattedTotal()} and Confirm`;
+    }
+    return 'Confirm RSVP';
   });
 
   totalTicketCount = computed(() => {
@@ -132,9 +192,13 @@ export class RsvpDetailsModal implements OnInit {
     if (ticket.ticket_type === 'Free') {
       return '0.00';
     }
-    const price = typeof ticket.price === 'number' ? ticket.price : parseFloat(ticket.price) || 0;
+    const price = ticket.price;
     const quantity = ticket.selectedQuantity || 0;
     return (price * quantity).toFixed(2);
+  }
+
+  formatCurrency(amount: number): string {
+    return amount.toFixed(2);
   }
 
   async ngOnInit(): Promise<void> {
@@ -145,8 +209,9 @@ export class RsvpDetailsModal implements OnInit {
       this.currentUser.set(user);
       this.populateFormsWithUserData();
     } catch (error) {
-      console.warn('No active user account found, forms will remain empty');
+      console.warn('No active user account found, forms will remain empty', error );
     }
+
   }
 
   populateFormsWithUserData(): void {
@@ -212,29 +277,7 @@ export class RsvpDetailsModal implements OnInit {
       return this.guestForms.at(i)?.valid ?? true;
     }).every((valid) => valid);
 
-    if (this.form.valid && isGuestFormsValid) {
-      const guestDetails = Array.from({ length: this.guestForms.length }, (_, i) => {
-        const guestForm = this.guestForms.at(i) as FormGroup;
-        return {
-          firstName: guestForm.get('guestFirstName')?.value,
-          lastName: guestForm.get('guestLastName')?.value,
-          attendance: this.getGuestAttendance(i),
-          isIncognito: guestForm.get('isIncognito')?.value || false
-        };
-      });
-
-      const formData = {
-        yourDetails: {
-          firstName: this.form.get('firstName')?.value,
-          lastName: this.form.get('lastName')?.value,
-          email: this.form.get('email')?.value,
-          mobile: this.form.get('mobile')?.value
-        },
-        guestDetails: guestDetails.length > 0 ? guestDetails : null,
-        rsvpData: this.rsvpDataSignal()
-      };
-      await this.modalCtrl.dismiss(formData);
-    } else {
+    if (!this.form.valid || !isGuestFormsValid) {
       Object.keys(this.form.controls).forEach((key) => {
         this.form.get(key)?.markAsTouched();
       });
@@ -244,7 +287,60 @@ export class RsvpDetailsModal implements OnInit {
           guestForm.get(key)?.markAsTouched();
         });
       }
+      return;
     }
+
+    // If there's a payment amount, process payment first
+    let stripePaymentIntentId: string | null = null;
+    if (this.totalPrice() > 0) {
+      const formValue = this.form.getRawValue();
+      const { firstName, lastName, email } = formValue;
+      const paymentSuccess = await this.paymentComponent.processPayment({
+        name: `${firstName} ${lastName}`.trim(),
+        email: email as string
+      });
+      if (!paymentSuccess) {
+        return;
+      }
+      // Get the stripe_payment_intent_id after successful payment
+      stripePaymentIntentId = this.paymentComponent.getPaymentIntentId();
+    }
+
+    const guestDetails = Array.from({ length: this.guestForms.length }, (_, i) => {
+      const guestForm = this.guestForms.at(i) as FormGroup;
+      return {
+        firstName: guestForm.get('guestFirstName')?.value,
+        lastName: guestForm.get('guestLastName')?.value,
+        attendance: this.getGuestAttendance(i),
+        isIncognito: guestForm.get('isIncognito')?.value || false
+      };
+    });
+
+    const formData = {
+      yourDetails: {
+        firstName: this.form.get('firstName')?.value,
+        lastName: this.form.get('lastName')?.value,
+        email: this.form.get('email')?.value,
+        mobile: this.form.get('mobile')?.value
+      },
+      guestDetails: guestDetails.length > 0 ? guestDetails : null,
+      rsvpData: this.rsvpDataSignal(),
+      stripePaymentIntentId: stripePaymentIntentId
+    };
+    await this.modalCtrl.dismiss(formData);
+  }
+
+  onPaymentSuccess(event: StripePaymentSuccessEvent): void {
+    // Payment succeeded, can be handled here if needed
+    console.log('Payment succeeded:', event);
+  }
+
+  onPaymentError(event: StripePaymentErrorEvent): void {
+    this.paymentErrorMessage.set(event.error);
+  }
+
+  onPaymentProcessing(isProcessing: boolean): void {
+    this.isLoadingPayment.set(isProcessing);
   }
 
   close(): void {

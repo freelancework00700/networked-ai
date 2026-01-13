@@ -1,8 +1,8 @@
-import { Router } from '@angular/router';
 import { IUser } from '@/interfaces/IUser';
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { Searchbar } from '@/components/common/searchbar';
+import { Router, ActivatedRoute } from '@angular/router';
 import { EmptyState } from '@/components/common/empty-state';
 import { NavigationService } from '@/services/navigation.service';
 import { IonContent, IonHeader, IonToolbar, NavController } from '@ionic/angular/standalone';
@@ -19,9 +19,11 @@ export class EventUserList implements OnInit {
   navCtrl = inject(NavController);
   navigationService = inject(NavigationService);
   router = inject(Router);
+  route = inject(ActivatedRoute);
   title = signal<string>('Host(s)');
   searchQuery = signal<string>('');
   eventTitle = signal<string>('');
+  eventId = signal<string | null>(null);
 
   users = signal<IUser[]>([]);
 
@@ -33,20 +35,35 @@ export class EventUserList implements OnInit {
   });
 
   ngOnInit(): void {
-    // Get navigation state if available
-    const navigation = this.router.getCurrentNavigation();
-    const state = navigation?.extras?.state || history.state;
+    // Get route params
+    const eventId = this.route.snapshot.paramMap.get('eventId');
+    const section = this.route.snapshot.paramMap.get('section');
+
+    if (eventId) {
+      this.eventId.set(eventId);
+    }
+
+    if (section) {
+      this.title.set(decodeURIComponent(section));
+    }
+
+    let state: any = null;
+
+    if (typeof window !== 'undefined' && window.history?.state) {
+      state = window.history.state;
+    } else if (typeof history !== 'undefined' && history.state) {
+      state = history.state;
+    }
+
+    if (!state) {
+      state = this.router.currentNavigation()?.extras?.state;
+    }
 
     if (state && state.users && Array.isArray(state.users)) {
-      // Set users from navigation state
       this.users.set(state.users);
-
-      // Set title from navigation state
-      if (state.role) {
+      if (state.role && !section) {
         this.title.set(state.role);
       }
-
-      // Set event title if available
       if (state.eventTitle) {
         this.eventTitle.set(state.eventTitle);
       }

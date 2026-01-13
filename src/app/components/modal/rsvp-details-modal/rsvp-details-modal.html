@@ -3,7 +3,7 @@
     <div class="p-4 flex items-center justify-between">
       <div class="flex flex-col">
         <div class="heading-h3 neutral-01">{{ eventTitle }}</div>
-        <div class="body-14R neutral-03">by Networked AI</div>
+        <div class="body-14R neutral-03">by {{ hostName }}</div>
       </div>
       <i class="pi pi-times cursor-pointer text-xl text-neutral-01" (click)="close()"></i>
     </div>
@@ -132,28 +132,39 @@
             </div>
           }
         }
-        @if (rsvpDataSignal()?.promo_code) {
+
+        @if (hostFees() > 0) {
           <div class="flex items-center justify-between">
-            <span class="body-14R neutral-02">{{ rsvpDataSignal()?.promo_code }}</span>
-            <span class="body-14M neutral-01">-${{ rsvpDataSignal()?.discountAmount }}</span>
+            <span class="body-14R neutral-02">Additional Fee</span>
+            <span class="body-14M neutral-01">${{ formatCurrency(hostFees()) }}</span>
           </div>
         }
 
-        <div class="flex items-center justify-between">
-          <span class="body-14R neutral-02">Platform Fee</span>
-          <span class="body-14M neutral-01">${{ platformFee() }}</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="body-14R neutral-02">GST</span>
-          <span class="body-14M neutral-01">${{ gst() }}</span>
-        </div>
-        @if (subscriptionId) {
+        @if (rsvpDataSignal()?.promo_code || rsvpDataSignal()?.appliedPromoCode) {
+          <div class="flex items-center justify-between">
+            <span class="body-14R neutral-02">{{ promoCodeDisplayName() }}</span>
+            @if ((rsvpDataSignal()?.discountAmount || 0) > 0) {
+              <span class="body-14M accent-red">-${{ formatCurrency(rsvpDataSignal()?.discountAmount || 0) }}</span>
+            } @else {
+              <span class="body-14M accent-red">-$0.00</span>
+            }
+          </div>
+        }
+
+        @if (platformFee() > 0 && !hostPaysFees) {
+          <div class="flex items-center justify-between">
+            <span class="body-14R neutral-02">Platform Fee</span>
+            <span class="body-14M neutral-01">${{ formatCurrency(platformFee()) }}</span>
+          </div>
+        }
+
+        @if (subscriptionId && subscriberPerk() > 0) {
           <div class="flex items-center justify-between accent-blue">
             <div class="flex items-center gap-1">
               <div class="pi pi-crown"></div>
               <span class="body-14R">Subscriber Perk</span>
             </div>
-            <span class="body-14M">- $ {{ subscriberPerk() }} </span>
+            <span class="body-14M">- ${{ formatCurrency(subscriberPerk()) }}</span>
           </div>
         }
 
@@ -162,14 +173,37 @@
           <span class="body-16M neutral-01">${{ formattedTotal() }}</span>
         </div>
       </div>
+
+      <!-- Payment Section -->
+      @if (totalPrice() > 0) {
+        <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-4">
+          <div class="body-16M neutral-01">Payment Details</div>
+
+          <app-stripe-payment
+            [amount]="totalPrice()"
+            [eventId]="eventId"
+            [subtotal]="rsvpDataSignal()?.subtotal || 0"
+            [total]="rsvpDataSignal()?.total || 0"
+            (paymentSuccess)="onPaymentSuccess($event)"
+            (paymentError)="onPaymentError($event)"
+            (paymentProcessing)="onPaymentProcessing($event)"
+          />
+        </div>
+      }
     </form>
+
   </div>
 </ion-content>
 
 <ion-footer mode="md">
   <ion-toolbar mode="md">
     <div class="p-4">
-      <app-button label="Confirm RSVP" (click)="dismiss()" />
+      <app-button 
+        [label]="confirmButtonLabel()" 
+        [isLoading]="isLoadingPayment()"
+        [disabled]="isLoadingPayment()"
+        (click)="dismiss()" 
+      />
     </div>
   </ion-toolbar>
 </ion-footer>

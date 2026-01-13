@@ -1,4 +1,24 @@
-@if (tickets().length === 0) {
+<!-- Subscribers Exclusive Section -->
+@if (subscriptionPlans().length > 0) {
+  <div class="flex p-3 my-3 border border-surface-300 rounded-lg gap-4" [formGroup]="eventForm()">
+    <!-- left: crown icon -->
+    <img src="assets/svg/subscriber_exclusive.svg" alt="Subscribers Exclusive" class="w-10 h-10" />
+
+    <!-- middle: text -->
+    <div class="flex-1">
+      <div class="font-bold mb-1">Subscribers Exclusive</div>
+      <div class="text-sm text-surface-600">Only subscribers can RSVP for this event.</div>
+    </div>
+
+    <!-- right: toggle switch -->
+    <div class="flex items-center">
+      <p-toggleSwitch formControlName="is_subscriber_exclusive" />
+    </div>
+  </div>
+}
+
+<!-- Regular Ticket/Promo Flow (shown when is_subscriber_exclusive is false) -->
+@if (tickets().length === 0 && subscriptionPlans().length === 0 && !isSubscriberExclusive()) {
   <div class="flex flex-col items-center justify-center">
     <ion-icon src="assets/svg/ticket/no-tickets.svg" class="w-45 h-45 mx-auto pb-8" />
     <div class="heading-h3 neutral-01 text-center">Ready to Sell Tickets?</div>
@@ -7,7 +27,7 @@
 }
 
 <!-- Ticket List Section -->
-@if (tickets().length > 0) {
+@if (tickets().length > 0 && !isSubscriberExclusive()) {
   <ion-reorder-group [disabled]="tickets().length <= 1" (ionItemReorder)="handleTicketReorder($event)">
     @for (ticket of tickets(); track ticket.id || $index; let index = $index) {
       <ticket-card
@@ -21,13 +41,13 @@
   </ion-reorder-group>
 }
 
-<!-- Subscription Section -->
-@if (tickets().length > 0 && !isEventCompletelyFree()) {
-  <subscription-input [plans]="storedPlans()" [onCreateSubscription]="navigateToSubscriptionPlans" />
+<!-- Subscription Section (Free for Plan Subscribers) -->
+@if ((tickets().length > 0 && !isEventCompletelyFree()) || isSubscriberExclusive()) {
+  <subscription-input [plans]="subscriptionPlans()" [onCreateSubscription]="navigateToSubscriptionPlans" [subscriberExclusiveMode]="isSubscriberExclusive()" />
 }
 
 <!-- Promo Code Section -->
-@if (tickets().length > 0) {
+@if (tickets().length > 0 && !isSubscriberExclusive()) {
   <div class="py-4" [class.opacity-50]="isEventCompletelyFree()">
     <div
       class="flex items-center justify-between cursor-pointer"
@@ -70,7 +90,7 @@
 }
 
 <!-- Advanced Settings Section -->
-@if (tickets().length > 0) {
+@if (tickets().length > 0 && !isSubscriberExclusive()) {
   <div class="py-4" [class.opacity-50]="isEventCompletelyFree()" [class.pointer-events-none]="isEventCompletelyFree()">
     <div
       class="flex items-center justify-between"
@@ -111,7 +131,6 @@
             }
             <div class="flex items-center gap-3 mt-4">
               <p-checkbox formControlName="host_pays_platform_fee" [binary]="true"></p-checkbox>
-
               <div class="body-regular-14 natural-01">Hosts will pay the platform fees</div>
             </div>
           </div>

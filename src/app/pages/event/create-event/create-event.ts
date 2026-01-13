@@ -92,6 +92,8 @@ export class CreateEvent implements OnInit, OnDestroy {
       promo_codes: this.fb.control<PromoCode[] | null>([]),
       is_subscription: this.fb.control<boolean | null>(false),
       subscription_plan: this.fb.control<string | null>(null),
+      plan_ids: this.fb.control<string[] | null>([]),
+      is_subscriber_exclusive: this.fb.control<boolean | null>(false),
       host_pays_platform_fee: this.fb.control<boolean | null>(false),
       guest_fee_enabled: this.fb.control<boolean | null>(false),
       additional_fees: this.fb.control<string | null>(''),
@@ -117,7 +119,6 @@ export class CreateEvent implements OnInit, OnDestroy {
   previewFormChangeTrigger = signal(0);
   steps = signal<number[]>([1, 2, 3, 4]);
   editingEventId = signal<string | null>(null);
-  storedPlans = signal<SubscriptionPlan[]>([]);
   currentStep = signal<number>(EVENT_STEPS.EVENT_DETAILS);
 
   step1Fields = ['title', 'date', 'address', 'category_id', 'description', 'vibes', 'start_time', 'end_time', 'until_finished'];
@@ -388,7 +389,10 @@ export class CreateEvent implements OnInit, OnDestroy {
 
     form.get('until_finished')?.valueChanges.subscribe((value) => {
       const endTimeControl = form.get('end_time');
-      value ? endTimeControl?.disable() : endTimeControl?.enable();
+
+      if (value) {
+        endTimeControl?.setValue('23:59', { emitEvent: false });
+      }
     });
 
     form.get('is_repeating_event')?.valueChanges.subscribe((value) => {
@@ -536,11 +540,24 @@ export class CreateEvent implements OnInit, OnDestroy {
 
       this.navigateToStep(EVENT_STEPS.EVENT_TICKETS);
     } else if (this.currentStep() === EVENT_STEPS.EVENT_TICKETS) {
-      const tickets = this.getFieldValue<Ticket[]>('tickets') || [];
-      if (tickets.length === 0) {
-        this.toasterService.showError('Please add at least one ticket.');
-        return;
+      const isSubscriberExclusive = this.getFieldValue<boolean>('is_subscriber_exclusive') ?? false;
+      
+      if (isSubscriberExclusive) {
+        // Validate that at least one plan is selected when subscriber exclusive is enabled
+        const planIds = this.getFieldValue<string[]>('plan_ids') || [];
+        if (planIds.length === 0) {
+          this.toasterService.showError('Please select at least one subscription plan for subscribers exclusive events.');
+          return;
+        }
+      } else {
+        // Regular validation: require at least one ticket
+        const tickets = this.getFieldValue<Ticket[]>('tickets') || [];
+        if (tickets.length === 0) {
+          this.toasterService.showError('Please add at least one ticket.');
+          return;
+        }
       }
+      
       this.navigateToStep(EVENT_STEPS.EVENT_SETTINGS);
     } else if (this.currentStep() === EVENT_STEPS.EVENT_SETTINGS) {
       this.navigateToStep(EVENT_STEPS.EVENT_PREVIEW);
@@ -631,42 +648,63 @@ export class CreateEvent implements OnInit, OnDestroy {
       return [];
     }
 
-    const filesToUpload: Array<{ file: File; originalIndex: number }> = [];
-    mediaItems.forEach((item, index) => {
-      if (item.file) {
-        filesToUpload.push({ file: item.file, originalIndex: index });
-      }
-    });
+    // Upload files that need upload (only files)
+    const filesToUpload = mediaItems.filter((item) => item.file).map((item) => item.file!);
 
-    const uploadedUrls = new Map<number, string>();
-
+    let uploadedResults: any[] = [];
     if (filesToUpload.length > 0) {
       this.isUploadingMedia.set(true);
       try {
-        const files = filesToUpload.map((f) => f.file);
-        const uploadResponse = await this.mediaService.uploadMedia('Event', files);
-
-        if (uploadResponse?.data) {
-          if (Array.isArray(uploadResponse.data)) {
-            uploadResponse.data.forEach((media: any, index: number) => {
-              const originalIndex = filesToUpload[index].originalIndex;
-              uploadedUrls.set(originalIndex, media.url || media.media_url || media.path);
-            });
-          } else if (typeof uploadResponse.data === 'object') {
-            const originalIndex = filesToUpload[0].originalIndex;
-            uploadedUrls.set(originalIndex, uploadResponse.data.url || uploadResponse.data.media_url || uploadResponse.data.path);
-          }
-        }
+        const uploadResponse = await this.mediaService.uploadMedia('Event', filesToUpload);
+        uploadedResults = uploadResponse?.data || [];
       } finally {
         this.isUploadingMedia.set(false);
       }
     }
 
-    return mediaItems.map((item, index) => ({
-      media_url: uploadedUrls.get(index) ?? item.url,
-      media_type: item.type === 'image' ? 'Image' : 'Video',
-      order: index + 1
-    }));
+    // Build medias array maintaining original order
+    const medias: Array<{ media_url: string; media_type: 'Image' | 'Video'; order: number }> = [];
+    let uploadedIndex = 0;
+
+    for (const item of mediaItems) {
+      let mediaUrl: string | undefined;
+      let mediaType: 'Image' | 'Video' | undefined;
+
+      if (item.file) {
+        // Use uploaded URL (new file)
+        const uploaded = uploadedResults[uploadedIndex++];
+        if (!uploaded?.url && !uploaded?.media_url && !uploaded?.path) continue;
+        mediaUrl = uploaded.url || uploaded.media_url || uploaded.path;
+        mediaType = this.getMediaTypeFromMimetype(uploaded.mimetype);
+      } else if (item.url) {
+        // Use existing URL (from gallery or existing event media)
+        // Skip blob URLs as they're temporary
+        if (this.isBlobUrl(item.url)) continue;
+        mediaUrl = item.url;
+        mediaType = item.type === 'video' ? 'Video' : 'Image';
+      }
+
+      if (mediaUrl && mediaType) {
+        medias.push({
+          media_url: mediaUrl,
+          media_type: mediaType,
+          order: medias.length + 1
+        });
+      }
+    }
+
+    return medias;
+  }
+
+  private getMediaTypeFromMimetype(mimetype?: string): 'Image' | 'Video' {
+    return mimetype?.startsWith('video') ? 'Video' : 'Image';
+  }
+
+  isBlobUrl(url: string): boolean {
+    if (!url || typeof url !== 'string') {
+      return false;
+    }
+    return url.startsWith('blob:');
   }
 
   async createEvent(): Promise<void> {
@@ -700,7 +738,7 @@ export class CreateEvent implements OnInit, OnDestroy {
     if (this.isModalMode) {
       this.modalCtrl.dismiss(response, 'updated');
     } else {
-      this.navigationService.navigateForward(`/event/${this.editingEventId()!}`,true);
+      this.navigationService.navigateForward(`/event/${this.editingEventId()!}`, true);
     }
   }
 
@@ -739,18 +777,23 @@ export class CreateEvent implements OnInit, OnDestroy {
     const formattedQuestionnaire = this.eventService.formatQuestionnaire(eventData.questionnaire || []);
     const settings = this.eventService.buildEventSettings(eventData);
 
-    return this.eventService.cleanupEventPayload(
-      {
-        ...eventData,
-        medias: mediasWithOrder,
-        start_date: startDate,
-        end_date: endDate,
-        tickets: formattedTickets,
-        promo_codes: formattedPromoCodes,
-        questionnaire: formattedQuestionnaire
-      },
-      settings
-    );
+    const payload: any = {
+      ...eventData,
+      medias: mediasWithOrder,
+      start_date: startDate,
+      end_date: endDate,
+      tickets: formattedTickets,
+      promo_codes: formattedPromoCodes,
+      questionnaire: formattedQuestionnaire
+    };
+
+    if (eventData.is_subscription === true && eventData.plan_ids) {
+      payload.plan_ids = eventData.plan_ids;
+    } else {
+      payload.plan_ids = [];
+    }
+
+    return this.eventService.cleanupEventPayload(payload, settings);
   }
 
   async createEvents(eventsToCreate: any[]): Promise<void> {
@@ -761,7 +804,7 @@ export class CreateEvent implements OnInit, OnDestroy {
     if (this.isModalMode) {
       this.modalCtrl.dismiss(createResponse, 'created');
     } else {
-      this.navigationService.navigateForward(`/event/${createResponse.data.events[0].slug}`,true);
+      this.navigationService.navigateForward(`/event/${createResponse.data.events[0].slug}`, true);
     }
   }
 

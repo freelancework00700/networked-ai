@@ -35,6 +35,7 @@ export interface IUser {
   settings?: IUserSettings;
   image_url?: File | string;
   stripe_account_id?: string;
+  stripe_account_status?: string;
   stripe_customer_id?: string;
   total_events_liked?: number;
   total_events_hosted?: number;

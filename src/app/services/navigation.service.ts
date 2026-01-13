@@ -31,11 +31,12 @@ export class NavigationService {
     }
   }
 
-  navigateForward(route: string, replaceUrl = false): Promise<boolean> {
+  navigateForward(route: string, replaceUrl = false, state?: any): Promise<boolean> {
     return this.navCtrl.navigateForward(route, {
       replaceUrl,
       animated: true,
-      animationDirection: 'forward'
+      animationDirection: 'forward',
+      ...(state && { state })
     });
   }
 

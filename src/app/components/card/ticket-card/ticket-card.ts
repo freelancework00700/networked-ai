@@ -97,7 +97,7 @@ export class TicketCard {
   });
 
   formattedQuantity = computed(() => {
-    const quantity = this.ticket().available_quantity;
+    const quantity = this.ticket().quantity;
     return quantity ? quantity.toString() : 'Unlimited';
   });
 

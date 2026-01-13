@@ -83,7 +83,24 @@
 <ion-footer class="ion-padding-horizontal" mode="md">
   <ion-toolbar class="ion-no-padding" style="--background: transparent" mode="md">
     <div class="pb-4 max-w-[672px] mx-auto">
-      <app-button [label]="eventDisplayData().rsvpButtonLabel || ''" height="40px" (click)="openRsvpModal()" />
+      @if (!eventDisplayData().isCurrentUserHost && !eventDisplayData().isCurrentUserAttendee) {
+        @if (eventDisplayData().isRsvpApprovalRequired) {
+          @if (eventDisplayData().isCurrentUserRequestApproved) {
+            <app-button [label]="eventDisplayData().rsvpButtonLabel || ''" height="40px" (click)="openRsvpModal()" />
+          } @else if (eventDisplayData().isCurrentUserRequestRejected) {
+            <app-button label="Send RSVP Request" height="40px" (click)="sendRsvpRequest()" />
+          } @else {
+            <app-button
+              [label]="eventDisplayData().hasCurrentUserRsvpRequest ? 'Requested' : 'Send RSVP Request'"
+              height="40px"
+              [disabled]="eventDisplayData().isCurrentUserRequestPending"
+              (click)="sendRsvpRequest()"
+            />
+          }
+        } @else {
+          <app-button [label]="eventDisplayData().rsvpButtonLabel || ''" height="40px" (click)="openRsvpModal()" />
+        }
+      }
     </div>
   </ion-toolbar>
 </ion-footer>

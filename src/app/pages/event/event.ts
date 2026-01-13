@@ -58,7 +58,7 @@ export class Event implements OnInit, OnDestroy {
   event = signal<any>(null);
   selectedDate = signal('');
   isScrolled = signal(false);
-  eventId = signal<string>(''); 
+  eventId = signal<string>('');
   isLoading = signal<boolean>(true);
   subscriptionId = signal<string>('');
   isLoadingChildEvent = signal<boolean>(false);
@@ -122,18 +122,34 @@ export class Event implements OnInit, OnDestroy {
     };
   });
 
+  menuItems = computed<MenuItem[]>(() => {
+    const baseItems: MenuItem[] = [
+      { label: 'Edit', icon: 'assets/svg/manage-event/edit.svg', iconType: 'svg', action: 'editEvent' },
+      { label: 'Analytics', icon: 'assets/svg/manage-event/analytics.svg', iconType: 'svg', action: 'viewEventAnalytics' },
+      { label: 'Questionnaire Responses', icon: 'assets/svg/manage-event/questionnaire.svg', iconType: 'svg', action: 'viewQuestionnaireResponses' },
+      { label: 'Manage Roles', icon: 'assets/svg/manage-event/settings.svg', iconType: 'svg', action: 'manageRoles' },
+      { label: 'Guest List', icon: 'assets/svg/manage-event/users.svg', iconType: 'svg', action: 'viewGuestList' },
+      { label: 'Event Page QR', icon: 'assets/svg/scanner.svg', iconType: 'svg', action: 'viewEventPageQr' },
+      // { label: 'Tap to pay', icon: 'assets/svg/manage-event/tap-to-pay.svg', iconType: 'svg', action: 'viewTapToPay' },
+      { label: 'Share Event', icon: 'pi pi-upload', iconType: 'pi', action: 'shareEvent' },
+      { label: 'Cancel Event', icon: 'assets/svg/manage-event/calendar-x.svg', iconType: 'svg', danger: true, action: 'cancelEvent' }
+    ];
 
-  menuItems: MenuItem[] = [
-    { label: 'Edit', icon: 'assets/svg/manage-event/edit.svg', iconType: 'svg', action: 'editEvent' },
-    { label: 'Analytics', icon: 'assets/svg/manage-event/analytics.svg', iconType: 'svg', action: 'viewEventAnalytics' },
-    { label: 'Questionnaire Responses', icon: 'assets/svg/manage-event/questionnaire.svg', iconType: 'svg', action: 'viewQuestionnaireResponses' },
-    { label: 'Manage Roles', icon: 'assets/svg/manage-event/settings.svg', iconType: 'svg', action: 'manageRoles' },
-    { label: 'Guest List', icon: 'assets/svg/manage-event/users.svg', iconType: 'svg', action: 'viewGuestList' },
-    { label: 'Event Page QR', icon: 'assets/svg/scanner.svg', iconType: 'svg', action: 'viewEventPageQr' },
-    // { label: 'Tap to pay', icon: 'assets/svg/manage-event/tap-to-pay.svg', iconType: 'svg', action: 'viewTapToPay' },
-    { label: 'Share Event', icon: 'pi pi-upload', iconType: 'pi', action: 'shareEvent' },
-    { label: 'Cancel Event', icon: 'assets/svg/manage-event/calendar-x.svg', iconType: 'svg', danger: true, action: 'cancelEvent' }
-  ];
+    // Add RSVP Approval option only if approval is required
+    if (this.eventDisplayData().isRsvpApprovalRequired) {
+      const rsvpApprovalItem: MenuItem = {
+        label: 'RSVP Approval',
+        icon: 'pi pi-check-circle',
+        iconType: 'pi',
+        action: 'viewRsvpApproval'
+      };
+      // Insert after Event Page QR
+      const qrIndex = baseItems.findIndex((item) => item.action === 'viewEventPageQr');
+      baseItems.splice(qrIndex + 1, 0, rsvpApprovalItem);
+    }
+
+    return baseItems;
+  });
 
   networkSuggestions = [
     { id: '1', name: 'Kathryn Murphy', role: 'Staff' },
@@ -158,7 +174,7 @@ export class Event implements OnInit, OnDestroy {
   });
 
   countdownTimer = computed(() => {
-    this.timerTrigger(); // Trigger recomputation every second
+    this.timerTrigger();
     const eventData = this.currentEventData();
     if (!eventData?.start_date) return null;
 
@@ -239,6 +255,12 @@ export class Event implements OnInit, OnDestroy {
         dateItems: [],
         rsvpButtonLabel: 'RSVP Now - Free',
         isCurrentUserHost: false,
+        isCurrentUserAttendee: false,
+        isRsvpApprovalRequired: false,
+        hasCurrentUserRsvpRequest: false,
+        isCurrentUserRequestApproved: false,
+        isCurrentUserRequestPending: false,
+        isCurrentUserRequestRejected: false,
         tickets: [],
         questionnaire: [],
         promo_codes: [],
@@ -252,10 +274,28 @@ export class Event implements OnInit, OnDestroy {
 
     const dateItems = this.eventService.createDateItems(parentEvent || eventData);
 
+    // Check if current user is an attendee
+    const attendees = eventData?.attendees || [];
+    const isCurrentUserAttendee = currentUser?.id ? attendees.some((attendee: any) => attendee.id === currentUser.id) : false;
+
+    // Check if current user has sent an RSVP request and its status
+    const rsvpRequests = eventData?.rsvp_requests || [];
+    const currentUserRequest = currentUser?.id ? rsvpRequests.find((request: any) => request.user_id === currentUser.id) : null;
+
+    const hasCurrentUserRsvpRequest = !!currentUserRequest;
+    const isCurrentUserRequestApproved = currentUserRequest?.status === 'Approved' || currentUserRequest?.status === 'approved';
+    const isCurrentUserRequestPending = currentUserRequest?.status === 'Pending' || currentUserRequest?.status === 'pending';
+    const isCurrentUserRequestRejected = currentUserRequest?.status === 'Rejected' || currentUserRequest?.status === 'rejected';
+
     return {
       ...transformedData,
       dateItems,
-      subscriptionPlanType: this.subscriptionPlanType()
+      subscriptionPlanType: this.subscriptionPlanType(),
+      isCurrentUserAttendee,
+      hasCurrentUserRsvpRequest,
+      isCurrentUserRequestApproved,
+      isCurrentUserRequestPending,
+      isCurrentUserRequestRejected
     };
   });
 
@@ -265,9 +305,9 @@ export class Event implements OnInit, OnDestroy {
     effect(() => {
       const date = this.selectedDate();
       const eventData = this.event();
-      
+
       if (this.isInitializing()) return;
-      
+
       if (!date || !eventData) return;
 
       if (eventData.child_events && eventData.child_events.length > 0) {
@@ -320,7 +360,7 @@ export class Event implements OnInit, OnDestroy {
     try {
       this.isLoading.set(true);
       this.isInitializing.set(true);
-      
+
       const eventData = await this.eventService.getEventById(eventId);
       if (eventData) {
         this.event.set(eventData);
@@ -351,7 +391,7 @@ export class Event implements OnInit, OnDestroy {
   async onDateChange(date: string): Promise<void> {
     this.selectedDate.set(date);
   }
-  
+
   private async handleDateChange(date: string): Promise<void> {
     const eventData = this.event();
     if (!eventData) return;
@@ -414,28 +454,204 @@ export class Event implements OnInit, OnDestroy {
     const eventId = this.eventIdFromData();
     const displayData = this.eventDisplayData();
     if (eventId && users && users.length > 0) {
-      this.router.navigate([`/event/${eventId}/guests`], {
-        state: {
-          users: users,
-          role: title,
-          eventId: eventId,
-          eventTitle: displayData.title
-        }
-      });
+      const sectionParam = encodeURIComponent(title);
+      const route = `/event/guests/${eventId}/${sectionParam.toLowerCase()}`;
+
+      const state = {
+        users: users,
+        role: title,
+        eventId: eventId,
+        eventTitle: displayData.title
+      };
+
+      this.navigationService.navigateForward(route, false, state);
     }
   }
 
   async openRsvpModal(): Promise<void> {
     const displayData = this.eventDisplayData();
+    const eventData = this.currentEventData();
+    const hostPaysFees = eventData?.settings?.host_pays_platform_fee ?? false;
+    const additionalFees = eventData?.settings?.additional_fees ?? null;
+    const maxAttendeesPerUser = eventData?.settings?.max_attendees_per_user ?? 0;
+    const hostName = eventData?.participants?.find((p: any) => p.role === 'Host')?.user?.name || 'Networked AI';
+    const planIds = eventData?.plan_ids || [];
+
     const result = await this.modalService.openRsvpModal(
       displayData.tickets || [],
       displayData.title || '',
       displayData.questionnaire || [],
       displayData.promo_codes || [],
-      this.subscriptionId()
+      this.subscriptionId(),
+      hostPaysFees,
+      additionalFees,
+      maxAttendeesPerUser,
+      hostName,
+      this.eventIdFromData() || '',
+      planIds
     );
     if (result) {
-      await this.modalService.openRsvpConfirmModal(result as RsvpDetailsModal);
+      const loadingModal = await this.modalService.openLoadingModal('Processing your RSVP...');
+
+      try {
+        const feedbackSaved = await this.saveEventFeedback(result);
+        if (feedbackSaved) {
+          await this.saveRsvpAttendees(result, result?.stripe_payment_intent_id || '');
+          await loadingModal.dismiss();
+          await this.modalService.openRsvpConfirmModal(result as RsvpDetailsModal);
+          await this.loadEvent();
+        } else {
+          await loadingModal.dismiss();
+        }
+      } catch (error) {
+        await loadingModal.dismiss();
+        throw error;
+      }
+    }
+  }
+
+  async sendRsvpRequest(): Promise<void> {
+    const eventId = this.eventIdFromData();
+    if (!eventId) {
+      console.error('Event ID not found');
+      return;
+    }
+
+    const loadingModal = await this.modalService.openLoadingModal('Sending RSVP request...');
+
+    try {
+      await this.eventService.sendRsvpRequest(eventId);
+      await loadingModal.dismiss();
+      this.toasterService.showSuccess('RSVP request sent successfully');
+      // Reload event to update RSVP request status
+      await this.loadEvent();
+    } catch (error) {
+      await loadingModal.dismiss();
+      console.error('Error sending RSVP request:', error);
+      this.toasterService.showError('Failed to send RSVP request. Please try again.');
+    }
+  }
+
+  private async saveEventFeedback(rsvpResult: any): Promise<boolean> {
+    try {
+      const eventId = this.eventIdFromData();
+      if (!eventId) {
+        console.error('Event ID not found');
+        return false;
+      }
+
+      const questionnaireResult = rsvpResult?.questionnaireResult;
+      if (!questionnaireResult || !questionnaireResult.responses || questionnaireResult.responses.length === 0) {
+        // No questionnaire responses to save - consider this successful
+        return true;
+      }
+
+      const feedback: any[] = [];
+
+      questionnaireResult.responses.forEach((response: any) => {
+        if (!response.question_id) {
+          return;
+        }
+
+        const questionType = response.type || '';
+        let answer: string | number | string[] = '';
+        let answerOptionId: string | undefined = undefined;
+
+        // Handle different question types
+        if (questionType === 'SingleChoice') {
+          let answerValue: string = '';
+          let optionId: string | undefined = undefined;
+
+          if (typeof response.answer === 'object' && response.answer !== null) {
+            answerValue = response.answer.option || '';
+            optionId = response.answer.id || undefined;
+          } else {
+            answerValue = response.answer || '';
+            const selectedOption = response.options?.find((opt: any) => {
+              const optionText = typeof opt === 'object' ? opt.option : opt;
+              return optionText === answerValue;
+            });
+            optionId = selectedOption?.id || undefined;
+          }
+
+          feedback.push({
+            question_id: response.question_id,
+            answer_option_id: optionId,
+            answer: answerValue
+          });
+        } else if (questionType === 'MultipleChoice') {
+          const selectedOptions = Array.isArray(response.answer) ? response.answer : [response.answer];
+          selectedOptions.forEach((selectedAnswer: any) => {
+            let answerValue: string = '';
+            let optionId: string | undefined = undefined;
+
+            if (typeof selectedAnswer === 'object' && selectedAnswer !== null) {
+              answerValue = selectedAnswer.option || '';
+              optionId = selectedAnswer.id || undefined;
+            } else {
+              answerValue = selectedAnswer || '';
+              const selectedOption = response.options?.find((opt: any) => {
+                const optionText = typeof opt === 'object' ? opt.option : opt;
+                return optionText === answerValue;
+              });
+              optionId = selectedOption?.id || undefined;
+            }
+
+            feedback.push({
+              question_id: response.question_id,
+              answer_option_id: optionId,
+              answer: answerValue
+            });
+          });
+        } else {
+          // For text, number, rating, etc.
+          answer = response.answer || '';
+          feedback.push({
+            question_id: response.question_id,
+            answer_option_id: undefined,
+            answer: answer
+          });
+        }
+      });
+
+      if (feedback.length > 0) {
+        const payload = {
+          feedback: feedback
+        };
+
+        await this.eventService.saveEventFeedback(eventId, payload);
+        return true;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error saving event feedback:', error);
+      this.toasterService.showError('Failed to save questionnaire responses. Please try again.');
+      return false;
+    }
+  }
+
+  private async saveRsvpAttendees(rsvpResult: any, stripe_payment_intent_id: string): Promise<void> {
+    try {
+      const eventId = rsvpResult?.event_id || this.eventIdFromData();
+      if (!eventId) {
+        console.error('Event ID not found');
+        return;
+      }
+
+      const attendees = rsvpResult?.attendees || [];
+      
+      if (attendees.length === 0) {
+        console.warn('No attendees to save');
+        return;
+      }
+
+      await this.eventService.saveEventAttendees({
+        event_id: eventId,
+        attendees: attendees,
+        stripe_payment_intent_id: stripe_payment_intent_id || ''
+      });
+    } catch (error) {
+      console.error('Error saving RSVP attendees:', error);
     }
   }
 
@@ -444,7 +660,7 @@ export class Event implements OnInit, OnDestroy {
   }
 
   async openMenu() {
-    const result = await this.modalService.openMenuModal(this.menuItems);
+    const result = await this.modalService.openMenuModal(this.menuItems());
     if (!result?.role) return;
 
     const actions: Record<string, () => void> = {
@@ -454,6 +670,7 @@ export class Event implements OnInit, OnDestroy {
       manageRoles: () => this.manageRoles(),
       viewGuestList: () => this.viewGuestList(),
       viewEventPageQr: () => this.viewEventPageQr(),
+      viewRsvpApproval: () => this.viewRsvpApproval(),
       viewTapToPay: () => this.viewTapToPay(),
       shareEvent: () => this.shareEvent(),
       cancelEvent: () => this.cancelEvent()
@@ -514,6 +731,13 @@ export class Event implements OnInit, OnDestroy {
     }
   }
 
+  viewRsvpApproval() {
+    const eventId = this.eventIdFromData();
+    if (!eventId) return;
+
+    this.navigationService.navigateForward(`/event/rsvp-approval/${eventId}`, true);
+  }
+
   viewTapToPay() {}
 
   async shareEvent() {
@@ -531,7 +755,7 @@ export class Event implements OnInit, OnDestroy {
       icon: 'assets/svg/deleteWhiteIcon.svg',
       iconBgColor: '#C73838',
       title: 'Cancel This Event',
-      description: 'Are you sure you want to cancel this event? We\'ll notify everyone that have registered, and issue automatic refunds.',
+      description: "Are you sure you want to cancel this event? We'll notify everyone that have registered, and issue automatic refunds.",
       confirmButtonLabel: 'Cancel Event',
       cancelButtonLabel: 'Cancel',
       confirmButtonColor: 'danger',
@@ -590,7 +814,7 @@ export class Event implements OnInit, OnDestroy {
 
     try {
       const reasonText = result.reason || 'Inappropriate content';
-      
+
       await this.eventService.reportEvent(eventId, {
         report_reason_id: result.reason_id,
         reason: reasonText
@@ -603,7 +827,7 @@ export class Event implements OnInit, OnDestroy {
         description: 'We use these reports to show you less of this kind of content in the future.',
         confirmButtonLabel: 'Done'
       });
-      
+
       if (resultModal && resultModal.role === 'confirm') {
         this.toasterService.showSuccess('Event reported');
       }

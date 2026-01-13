@@ -21,9 +21,10 @@ export interface EventForm {
   description?: FormControl<string | null>;
   tickets?: FormControl<Ticket[] | null>;
   promo_codes?: FormControl<PromoCode[] | null>;
-  subscribers_exclusive?: FormControl<boolean | null>;
+  is_subscriber_exclusive?: FormControl<boolean | null>;
   is_subscription?: FormControl<boolean | null>;
   subscription_plan?: FormControl<string | null>;
+  plan_ids?: FormControl<string[] | null>;
   host_pays_platform_fee?: FormControl<boolean | null>;
   additional_fees?: FormControl<string | null>;
   guest_fee_enabled?: FormControl<boolean | null>;
@@ -61,7 +62,7 @@ export interface PromoCodeFormModalData {
   value: number;
   max_uses_per_user?: number;
   capped_amount?: number | null;
-  redemption_limit?: number | null;
+  quantity?: number | null;
   type: 'Percentage' | 'Fixed';
 }
 
@@ -70,7 +71,7 @@ export interface Ticket {
   name: string;
   ticket_type: TicketType;
   price: number;
-  available_quantity?: number | null;
+  quantity?: number | null;
   description?: string | null;
   sale_start_date?: string | null;
   sale_start_time?: string | null;
@@ -82,7 +83,7 @@ export interface Ticket {
 
 export interface TicketDisplay extends Ticket {
   status: 'sale-ended' | 'available' | 'sold-out' | 'upcoming';
-  remainingQuantity?: number;
+  available_quantity?: number;
   selectedQuantity?: number;
   startsIn?: string;
 }
@@ -92,13 +93,20 @@ export interface PromoCode {
   type: 'Percentage' | 'Fixed';
   value: number;
   capped_amount?: number | null;
-  redemption_limit?: number | null;
+  quantity?: number | null;
   max_uses_per_user?: number;
 }
 
 export interface SubscriptionPlan {
-  productId: string;
+  product_id: string;
   name: string;
+  description?: string;
+  type?: 'event' | 'sponsor';
+  is_sponsor?: boolean;
+  active?: boolean;
+  subscribers?: number;
+  priceRange?: string;
+  plan_benefits?: string[];
 }
 
 // Media item interface for event media arrays
@@ -316,6 +324,7 @@ export interface EventAttendee {
 export interface EventAttendeesPayload {
   event_id: string;
   attendees: EventAttendee[];
+  stripe_payment_intent_id?: string;
 }
 
 // Event Feedback Item interface for questionnaire responses

@@ -1,35 +1,68 @@
-<!-- Header: Toggle Switch -->
-<div class="flex items-center justify-between mb-4">
-  <div class="body-medium-16 natural-01">Include as Part of Subscription</div>
-  <div class="flex items-center">
-    <p-toggleSwitch [formControlName]="controlName" />
-  </div>
-</div>
-
-<!-- Content: Subscription Select or Create Button -->
-@if (isEnabled) {
-  @if (hasPlans()) {
-    <!-- Subscription Select Dropdown -->
-    <div class="flex flex-col gap-2">
-      <div class="flex items-center justify-between px-3 py-3 border border-neutral-300 rounded-lg bg-neutral-07" (click)="openSubscriptionSelect()">
-        <span [class.text-surface-500]="!selectedPlanName" [class.text-surface-900]="selectedPlanName" class="text-sm">
-          {{ selectedPlanName || 'Select Subscription' }}
-        </span>
-        <i class="pi pi-chevron-right text-surface-400 text-sm"></i>
-      </div>
-      <div class="text-xs text-surface-600">Subscribers of this plan will be able to RSVP at no cost.</div>
-    </div>
-  } @else {
-    <!-- Create Subscription Card -->
-    <div class="flex items-center justify-between p-4 bg-neutral-07 border border-neutral-300 rounded-2xl gap-4">
-      <div class="flex items-start gap-3 flex-1">
-        <img src="assets/svg/crown-sponsor.svg" alt="Subscription" class="w-8 h-8" />
-        <div class="flex flex-col">
-          <div class="body-16M">Create a Subscription</div>
-          <div class="text-xs text-surface-600">Let members pay monthly for a more premium experience.</div>
-        </div>
-      </div>
-      <app-button (click)="handleCreateSubscription()" iconName="pi pi-arrow-right" width="40px" height="40px" />
+<div>
+  @if (!isSubscriberExclusiveMode()) {
+    <div class="flex items-center justify-between mb-3">
+      <div class="body-medium-16 neutral-01">Free for Plan Subscribers</div>
+      <p-toggleSwitch [formControlName]="controlName" />
     </div>
   }
-}
+
+  @if (isEnabled || isSubscriberExclusiveMode()) {
+    <div class="body-12R neutral-03 mb-2">Subscribers of selected plan(s) will be able to RSVP at no cost.</div>
+
+    @if (hasSelectedPlans()) {
+      <div class="flex flex-col gap-3">
+        @if (!isSubscriberExclusiveMode()) {
+          <div class="body-14M neutral-02">This event is part of:</div>
+        }
+
+        <div class="flex flex-col gap-2">
+          @for (plan of selectedPlans(); track plan.product_id) {
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-neutral-400">
+                <div class="plan-icon" [class.icon-event]="plan.type === 'event'" [class.icon-sponsor]="plan.type === 'sponsor'">
+                  @if (plan.type === 'sponsor') {
+                    <ion-icon src="/assets/svg/subscription/sponsorIcon.svg" class="text-xl!"></ion-icon>
+                  } @else {
+                    <i class="pi pi-crown  text-lg!"></i>
+                  }
+                </div>
+              <span class="body-14M neutral-01 flex-1">{{ plan.name }}</span>
+              <button
+                type="button"
+                class="pi pi-times text-neutral-03 hover:text-neutral-01 cursor-pointer"
+                (click)="removePlan(plan.product_id)"
+              ></button>
+            </div>
+          }
+        </div>
+
+        <button type="button" class="body-14M brand-02 text-left" (click)="openSubscriptionSelect()">Add More +</button>
+      </div>
+    } @else if (hasPlans()) {
+      <div class="flex flex-col gap-2">
+        @if (!isSubscriberExclusiveMode()) {
+          <div class="body-14M neutral-02 mb-2">This event is part of:</div>
+        }
+        <div
+          class="flex items-center justify-between px-3 py-3 border border-neutral-300 rounded-lg bg-neutral-07 cursor-pointer"
+          (click)="openSubscriptionSelect()"
+        >
+          <span class="body-14R neutral-03">Select Subscription Plan(s)</span>
+          <i class="pi pi-chevron-right text-neutral-03"></i>
+        </div>
+      </div>
+    } @else {
+      <div
+        class="flex items-center justify-between rounded-[12px] border border-[#DBDBDB] bg-gradient-to-r from-[#fff7ee] to-[#fefaf3] px-4 py-3 shadow-[0_6px_18px_rgba(0,0,0,0.06)]"
+      >
+        <div class="flex items-start gap-3 flex-1">
+          <img src="assets/svg/crown-sponsor.svg" alt="Subscription" class="w-8 h-8 mt-1" />
+          <div class="flex flex-col">
+            <div class="body-16M">Create a Subscription</div>
+            <div class="text-sm text-surface-600">Let members pay monthly for a more premium experience.</div>
+          </div>
+        </div>
+        <app-button (click)="handleCreateSubscription()" iconName="pi pi-arrow-right" width="40px" height="40px" />
+      </div>
+    }
+  }
+</div>

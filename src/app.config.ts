@@ -8,7 +8,9 @@ import {
 } from '@angular/router';
 import { appRoutes } from './app.routes';
 import CustomPreset from './custom-preset';
+import { provideNgxStripe } from 'ngx-stripe';
 import { providePrimeNG } from 'primeng/config';
+import { environment } from './environments/environment';
 import { apiInterceptor } from '@/interceptors/api.interceptor';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { IMAGE_LOADER, ImageLoaderConfig } from '@angular/common';
@@ -68,6 +70,7 @@ export const appConfig: ApplicationConfig = {
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     { provide: IMAGE_LOADER, useValue: imageLoaderAndPlaceholder },
     provideHttpClient(withFetch(), withInterceptors([apiInterceptor])),
-    providePrimeNG({ theme: { preset: CustomPreset, options: { darkModeSelector: '.app-dark' } } })
+    providePrimeNG({ theme: { preset: CustomPreset, options: { darkModeSelector: '.app-dark' } } }),
+    provideNgxStripe() 
   ]
 };
