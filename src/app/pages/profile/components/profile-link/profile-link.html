@@ -7,9 +7,13 @@
 @if (isExpanded()) {
   <div class="grid grid-cols-2 gap-y-3 text-[#1D5BFF]">
       @for (link of socialLinks(); track link.type) {
-    <div class="flex items-center gap-2 body-14M">
-          <ion-icon [name]="link.icon" class="text-[18px]"></ion-icon>
-          <span>{{ link.value }}</span>
+    <div class="flex items-center gap-2 body-14M min-w-0">
+          <ion-icon [name]="link.icon" class="text-[18px] flex-shrink-0"></ion-icon>
+          @if (link.type === 'phone') {
+            <a [href]="link.href" class="truncate text-[#1D5BFF]!">{{ link.value }}</a>
+          } @else {
+            <a [href]="link.href" target="_blank" rel="noopener noreferrer" class="truncate text-[#1D5BFF]!">{{ link.value }}</a>
+          }
     </div>
       }
     </div>

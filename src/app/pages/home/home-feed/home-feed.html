@@ -15,24 +15,8 @@
 } @else {
   @for (post of posts(); track post.id) {
     @if ($index === 1) {
-      <div class="w-full max-w-[672px] mx-auto bg-neutral-06 py-3 mb-4">
-        <div class="px-4">
-          <div class="flex items-center justify-between">
-            <div class="body-16SB neutral-01">People you might know</div>
-          </div>
-        </div>
-
-        <div class="mt-3">
-          <div class="swiper swiper-user-recommendation">
-            <div class="swiper-wrapper">
-              @for (user of users; track user.name) {
-                <div class="swiper-slide">
-                  <user-card [user]="user" />
-                </div>
-              }
-            </div>
-          </div>
-        </div>
+      <div class="w-full max-w-[672px] mx-auto mb-4">
+        <user-recommendations />
       </div>
     }
 

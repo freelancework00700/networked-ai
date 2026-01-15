@@ -6,7 +6,7 @@ import { MenuItem } from '@/components/modal/menu-modal';
 import { CreateEvent } from '@/pages/event/create-event';
 import { RsvpModal } from '@/components/modal/rsvp-modal';
 import { MenuModal } from '@/components/modal/menu-modal';
-import { ModalController } from '@ionic/angular/standalone';
+import { ModalController, Platform } from '@ionic/angular/standalone';
 import { TitleModal } from '@/components/modal/title-modal';
 import { LoadingModal } from '@/components/modal/loading-modal';
 import { ConfirmModal } from '@/components/modal/confirm-modal';
@@ -48,11 +48,14 @@ import { RsvpDetailsData, RsvpDetailsModal } from '@/components/modal/rsvp-detai
 import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confirm-modal';
 import { QuestionnairePreviewModal } from '@/components/modal/questionnaire-preview-modal';
 import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
+import { IUser } from '@/interfaces/IUser';
+import { ShareProfileModal } from '@/components/modal/share-profile-modal';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
   // services
   private modalCtrl = inject(ModalController);
+  platform = inject(Platform);
 
   async openLoadingModal(message: string): Promise<any> {
     const modal = await this.modalCtrl.create({
@@ -577,14 +580,20 @@ export class ModalService {
     return data;
   }
 
-  async openLocationFilterModal(): Promise<any | null> {
+  async openLocationFilterModal(initialValues?: {
+    location?: string;
+    latitude?: string;
+    longitude?: string;
+    radius?: number;
+  }): Promise<{ location?: string; latitude?: string; longitude?: string; radius?: number } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       cssClass: 'auto-hight-modal',
-      component: LocationFilterModal
+      component: LocationFilterModal,
+      componentProps: { initialValues }
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();
@@ -651,6 +660,26 @@ export class ModalService {
     return data;
   }
 
+  async openShareProfileModal(user: any): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: ShareProfileModal,
+      cssClass: 'auto-hight-modal',
+      componentProps: { user }
+    });
+    await modal.present();
+    const height = this.platform.height() - 180;
+    const innerContent = document.getElementsByClassName('inner-content')[0];
+    if (innerContent && innerContent instanceof HTMLElement) {
+      innerContent.style.maxHeight = `${height}px`;
+    }
+    const { data } = await modal.onWillDismiss();
+    return data;
+  }
+
   async openPostEventModal(): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -673,7 +702,7 @@ export class ModalService {
     await modal.present();
   }
 
-  async openReportModal(type: 'Post' | 'Event' | 'Comment'): Promise<any | null> {
+  async openReportModal(type: 'Post' | 'Event' | 'Comment' | 'User', user?: IUser): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -681,7 +710,7 @@ export class ModalService {
       initialBreakpoint: 1,
       component: ReportModal,
       cssClass: 'auto-hight-modal',
-      componentProps: { type }
+      componentProps: { type, user }
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();
@@ -703,7 +732,7 @@ export class ModalService {
     return data;
   }
 
-  async openAchievementDetailModal(achievement: any): Promise<any | null> {
+  async openAchievementDetailModal(achievement: any, categoryKey?: string): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -712,7 +741,8 @@ export class ModalService {
       component: AchievementDetailModal,
       cssClass: 'auto-hight-modal',
       componentProps: {
-        achievement
+        achievement,
+        categoryKey
       }
     });
     await modal.present();
@@ -724,7 +754,9 @@ export class ModalService {
     location?: string;
     eventDate?: string;
     distance?: number;
-  }): Promise<{ location?: string; eventDate?: string; distance?: number } | null> {
+    latitude?: string;
+    longitude?: string;
+  }): Promise<{ location?: string; eventDate?: string; distance?: number; latitude?: string; longitude?: string } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,

@@ -55,6 +55,9 @@ export interface IUser {
   hobbies?: VibeItem[];
   total_networks?: number;
   connection_status?: string;
+  has_subscribed?: boolean;
+  subscription_plan_count?: number;
+  distance?: number;
 }
 
 export interface IUserResponse {
@@ -106,7 +109,7 @@ export interface NetworkConnection {
 }
 
 export interface NetworkConnectionsData {
-  data?: NetworkConnection[];
+  data?: IUser[];
   pagination?: UserSearchPagination;
 }
 

@@ -1,66 +1,49 @@
-<div class="p-4">
-  <div class="flex items-center gap-4 mb-2">
-    <img src="assets/images/profile.jpeg" alt="Avatar" class="w-25 h-25 rounded-full border-2 border-gray-200" />
-    <div class="flex gap-4 text-center flex-1">
-      <div class="flex-1">
-        <div class="body-16SB neutral-01">249</div>
-        <div class="body-12 neutral-03">Networks</div>
+@if (user) {
+  <div class="p-4">
+    <div class="flex items-center gap-4 mb-2">
+      <div class="w-25 h-25 rounded-full border-2 border-gray-200 overflow-hidden relative">
+        <img [ngSrc]="getUserImage()" [alt]="user.name || user.username || 'User'" fill class="object-cover" (error)="onImageError($event)" />
       </div>
-      <div class="flex-1">
-        <div class="body-16SB neutral-01">60</div>
-        <div class="body-12 neutral-03">Events</div>
-      </div>
-      <div class="flex-1">
-        <div class="body-16SB neutral-01">75</div>
-        <div class="body-12 neutral-03">Attended</div>
+      <div class="flex gap-4 text-center flex-1">
+        <div class="flex-1">
+          <div class="body-16SB neutral-01">{{ user.total_networks || 0 }}</div>
+          <div class="body-12 neutral-03">Networks</div>
+        </div>
+        <div class="flex-1">
+          <div class="body-16SB neutral-01">{{ user.total_events_hosted || 0 }}</div>
+          <div class="body-12 neutral-03">Events</div>
+        </div>
+        <div class="flex-1">
+          <div class="body-16SB neutral-01">{{ user.total_events_attended || 0 }}</div>
+          <div class="body-12 neutral-03">Attended</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Name & location -->
-  <div class="mb-3">
-    <div class="flex items-center space-x-2">
-      <div class="text-lg font-semibold">{{ user.name }}</div>
-      <div class="flex items-center gap-1 rounded-full h-[20px] bg-black border border-black text-white">
-        <img src="assets/svg/diamondYellow.svg" class="h-4 ml-1.5" />
-        <span class="text-sm font-medium pr-2 text-white"> 200 </span>
+    <!-- Name & location -->
+    <div class="mb-3">
+      <div class="flex items-center space-x-2">
+        <div class="text-lg font-semibold">{{ user.name || user.username || 'User' }}</div>
+        <div class="flex items-center gap-1 rounded-full h-[20px] bg-black border border-black text-white">
+          <img [src]="getAchievementDiamondPath()" alt="diamond" class="h-4 w-auto ml-1.5" />
+          <span class="text-sm font-medium pr-2 text-white">{{ user.total_gamification_points || 0 }}</span>
+        </div>
       </div>
+      @if (user.address) {
+        <div class="text-gray-500 text-sm flex items-center mt-1">
+          <i class="pi pi-map-marker mr-1 flex-shrink-0"></i>
+          <span class="location-text">{{ user.address }}</span>
+          @if (user.distance) {
+            <span class="flex-shrink-0">· {{ user.distance }} miles</span>
+          }
+        </div>
+      }
     </div>
-    @if (!user.myProfile) {
-      <div class="text-gray-500 text-sm flex items-center mt-1">
-        <i class="pi pi-map-marker mr-1"></i> Atlanta, GA
-        @if (!user.myProfile) {
-          <span>· 2.5 miles</span>
-        }
-      </div>
-    }
-  </div>
-  @if (messages.length > 0 && !user.myProfile) {
     <div class="flex flex-wrap gap-2 mb-2">
       @for (message of messages; track message) {
         <chip color="secondary" width="auto" height="20px">{{ message }}</chip>
       }
     </div>
     <app-button [label]="'Message'" icon="assets/svg/messageChatIcon.svg" />
-  } @else {
-    <div class="flex p-3 border border-surface-300 rounded-lg gap-4">
-      <!-- left: svg -->
-      @if (isLocationEnabled()) {
-        <img src="assets/svg/locationDisable.svg" alt="Location Disabled" class="w-10 h-10" />
-      } @else {
-        <img src="assets/svg/location.svg" alt="Location Enabled" class="w-10 h-10" />
-      }
-
-      <!-- middle: text -->
-      <div class="flex-1">
-        <div class="font-bold mb-1">Hide Location</div>
-        <div class="text-sm text-surface-600">When enabled, your networks can't see your location.</div>
-      </div>
-
-      <!-- right: toggle switch -->
-      <div class="flex items-center">
-        <p-toggleSwitch (onChange)="isLocationEnabled.set($event.checked)" />
-      </div>
-    </div>
-  }
-</div>
+  </div>
+}

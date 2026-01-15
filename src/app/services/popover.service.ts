@@ -8,12 +8,16 @@ export class PopoverService {
     // services
     private popoverCtrl = inject(PopoverController);
 
-    async openProfileOptionsPopover(event: Event): Promise<void> {
+    async openProfileOptionsPopover(event: Event, isViewingOtherProfile: boolean = false, user?: any): Promise<void> {
         const popover = await this.popoverCtrl.create({
             mode: 'md',
             event: event as MouseEvent,
             cssClass: 'common-popover-css',
-            component: ProfileOptionsPopover
+            component: ProfileOptionsPopover,
+            componentProps: {
+                isViewingOtherProfile,
+                user
+            }
         });
 
         await popover.present();

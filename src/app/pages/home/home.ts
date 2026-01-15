@@ -34,6 +34,7 @@ export class Home implements OnDestroy, ViewWillEnter {
   // signals
   tab = signal<Tab>('events');
   isLoggedIn = computed(() => !!this.authService.currentUser());
+  currentUser = this.authService.currentUser;
   
   // subscriptions
   private queryParamsSubscription?: Subscription;

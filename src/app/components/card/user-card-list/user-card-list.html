@@ -14,19 +14,30 @@
   <!-- name and details -->
   <div class="flex-1 flex flex-col gap-1">
     <div class="flex items-center gap-2">
-      <div class="body-14SB neutral-01 truncate">{{ user().name }}</div>
+      <div class="body-14SB neutral-01 truncate">{{ user().name || user().username }}</div>
       <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full py-0 h-[20px]">
         <img [src]="diamondPath()" alt="diamond" class="h-4 w-auto ml-1.5" />
         <span class="text-sm font-medium pr-2">{{ user().total_gamification_points || 0 }}</span>
       </div>
     </div>
     @if (user().company_name) {
-      <p class="body-12 neutral-03 truncate">
+      <p class="body-12 neutral-03 company-name">
         {{ user().company_name }}
       </p>
     }
   </div>
 
-  <!-- add button -->
-  <app-button height="32px" color="secondary" (click)="onAddClick(user().id)" [label]="isSelected(user().id) ? 'Message' : 'Add'" />
+  <!-- action button -->
+  @if (buttonConfig(); as config) {
+    @if (user().id !== authService.currentUser()?.id) {
+      <app-button 
+        height="32px" 
+        color="secondary" 
+        [label]="config.label"
+        [disabled]="config.disabled"
+        [isLoading]="config.isLoading"
+        (click)="onButtonClick()" 
+      />
+    }
+  }
 </div>

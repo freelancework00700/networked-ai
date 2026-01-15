@@ -11,6 +11,8 @@ export class SocketService implements OnDestroy {
   private authService = inject(AuthService);
   private feedService = inject(FeedService);
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+  private isRegistered = signal<boolean>(false);
+  private registrationCallbacks: (() => void)[] = [];
 
   constructor() {
     effect(() => {
@@ -54,6 +56,7 @@ export class SocketService implements OnDestroy {
 
     this.socket.on('connect', () => {
       console.log('Socket connected');
+      this.isRegistered.set(false);
       const userId = this.authService.currentUser()?.id;
       if (userId) {
         this.socket?.emit('register', userId);
@@ -62,6 +65,7 @@ export class SocketService implements OnDestroy {
 
     this.socket.on('disconnect', () => {
       console.log('Socket disconnected');
+      this.isRegistered.set(false);
     });
 
     this.socket.on('connect_error', (error: any) => {
@@ -71,6 +75,10 @@ export class SocketService implements OnDestroy {
     // Register success handler
     this.socket.on('register:success', (data) => {
       console.log('Socket registration successful:', data);
+      this.isRegistered.set(true);
+      // Execute all pending callbacks
+      this.registrationCallbacks.forEach(callback => callback());
+      this.registrationCallbacks = [];
     });
 
     // Feed event handlers
@@ -144,6 +152,22 @@ export class SocketService implements OnDestroy {
   ): void {
     if (!this.socket) return;
     this.socket.on(eventName, handler as any);
+  }
+
+  // Check if socket is connected and registered
+  isSocketReady(): boolean {
+    return !!(this.socket?.connected && this.isRegistered());
+  }
+
+  // Set up listener after socket is registered, or immediately if already registered
+  onAfterRegistration(callback: () => void): void {
+    if (this.isSocketReady()) {
+      // Socket is already ready, execute immediately
+      callback();
+    } else {
+      // Socket not ready yet, queue the callback
+      this.registrationCallbacks.push(callback);
+    }
   }
 
   off<E extends keyof ServerToClientEvents>(

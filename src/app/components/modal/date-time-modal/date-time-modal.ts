@@ -103,12 +103,9 @@ export class DateTimeModal implements OnInit {
       return this.convertTimeToISO(this.min);
     }
     
+    // For date type, return undefined if min is not provided to allow all dates including past dates
     if (!this.min) {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+      return undefined;
     }
     
     return this.min;

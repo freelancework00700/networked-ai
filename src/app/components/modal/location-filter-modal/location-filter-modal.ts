@@ -2,8 +2,15 @@ import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { inject, signal, Component, ChangeDetectionStrategy } from '@angular/core';
+import { inject, signal, Component, ChangeDetectionStrategy, Input } from '@angular/core';
 import { IonIcon, IonRange, IonFooter, IonHeader, IonToolbar } from '@ionic/angular/standalone';
+
+interface LocationFilterValues {
+  location?: string;
+  latitude?: string;
+  longitude?: string;
+  radius?: number;
+}
 
 @Component({
   selector: 'location-filter-modal',
@@ -19,12 +26,34 @@ export class LocationFilterModal {
 
   // signals
   distance = signal(20);
-  form = signal<FormGroup>(this.fb.group({}));
+  selectedLatitude = signal<string>('');
+  selectedLongitude = signal<string>('');
+  form = signal<FormGroup>(this.fb.group({
+    location: ['']
+  }));
+
+  _initialValues: LocationFilterValues = {};
+
+  @Input() set initialValues(value: LocationFilterValues | undefined) {
+    this._initialValues = value || {};
+    const location = this._initialValues.location || '';
+    const latitude = this._initialValues.latitude || '';
+    const longitude = this._initialValues.longitude || '';
+    const radius = this._initialValues.radius || 20;
+
+    this.form().patchValue({ location });
+    this.selectedLatitude.set(latitude);
+    this.selectedLongitude.set(longitude);
+    this.distance.set(radius);
+  }
 
   reset() {
     this.form().reset();
     this.distance.set(20);
-    this.modalService.close();
+    this.selectedLatitude.set('');
+    this.selectedLongitude.set('');
+    // Return null to indicate reset/clear filters
+    this.modalService.close(null);
   }
 
   onRangeChange(event: any) {
@@ -33,7 +62,20 @@ export class LocationFilterModal {
 
   async openLocationModal() {
     const location = this.form().get('location')?.value || '';
-    const { address } = await this.modalService.openLocationModal(location);
-    this.form().patchValue({ location: address });
+    const { address, latitude, longitude } = await this.modalService.openLocationModal(location);
+    if (address) {
+      this.form().patchValue({ location: address });
+      this.selectedLatitude.set(latitude || '');
+      this.selectedLongitude.set(longitude || '');
+    }
+  }
+
+  apply() {
+    this.modalService.close({
+      location: this.form().get('location')?.value || '',
+      radius: this.distance(),
+      latitude: this.selectedLatitude(),
+      longitude: this.selectedLongitude()
+    });
   }
 }

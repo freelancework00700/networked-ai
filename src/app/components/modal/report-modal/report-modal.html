@@ -1,7 +1,13 @@
 <ion-header mode="md">
   <ion-toolbar mode="md">
     <div class="p-4 flex items-center justify-between">
-      <div class="heading-h3 neutral-01">Report {{ type }}</div>
+      <div class="heading-h3 neutral-01">
+        @if (type === 'User' && user) {
+          Report {{ user.username || user.name }}
+        } @else {
+          Report {{ type }}
+        }
+      </div>
       <i class="pi pi-times" (click)="close()"></i>
     </div>
   </ion-toolbar>

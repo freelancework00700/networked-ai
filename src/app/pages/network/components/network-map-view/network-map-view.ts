@@ -6,6 +6,7 @@ import {
   DOCUMENT,
   Component,
   viewChild,
+  signal,
   OnDestroy,
   ElementRef,
   AfterViewInit,
@@ -14,7 +15,9 @@ import {
 import * as Maptiler from '@maptiler/sdk';
 import { Feature, Polygon } from 'geojson';
 import { ModalService } from '@/services/modal.service';
+import { NetworkService } from '@/services/network.service';
 import { environment } from 'src/environments/environment';
+import { IUser } from '@/interfaces/IUser';
 
 type MapCenter = [number, number];
 
@@ -27,14 +30,20 @@ type MapCenter = [number, number];
 export class NetworkMapView implements AfterViewInit, OnDestroy {
   // inputs
   radius = input(20);
-  users = input<any[]>([]);
+  latitude = input<string>('');
+  longitude = input<string>('');
 
   // view child
   mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 
   // services
   private modalService = inject(ModalService);
+  private networkService = inject(NetworkService);
   @Inject(DOCUMENT) private document = inject(DOCUMENT);
+
+  // signals
+  users = signal<IUser[]>([]);
+  isLoading = signal<boolean>(false);
 
   // map state
   private map: Maptiler.Map | null = null;
@@ -47,18 +56,17 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   private readonly DEFAULT_CENTER: MapCenter = [-84.390648, 33.748533];
 
   constructor() {
-    // radius changes after map is initialized
+    // Load users when radius, latitude, or longitude changes (only after map is initialized)
     effect(() => {
       const radiusValue = this.radius();
-      if (this.map) {
-        this.addOrUpdateRadius(radiusValue);
-      }
+      const lat = this.latitude();
+      const lng = this.longitude();
+      this.loadUsers(radiusValue, lat, lng);
     });
 
-    // users changes after map is initialized
     effect(() => {
       const usersValue = this.users();
-      if (this.map) {
+      if (this.map && usersValue.length > 0) {
         this.addOrUpdateMarkers(usersValue);
       }
     });
@@ -88,16 +96,82 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
     });
 
     this.map.on('load', () => {
-      this.addOrUpdateRadius(this.radius());
-      this.addOrUpdateMarkers(this.users());
+      if (this.users().length > 0) {
+        this.addOrUpdateMarkers(this.users());
+        this.addOrUpdateRadius(this.radius());
+      }
+      // Load initial users if we don't have any yet
+      if (this.users().length === 0) {
+        this.loadUsers(this.radius(), this.latitude(), this.longitude());
+      }
     });
   }
 
+  private async loadUsers(radius: number, latitude?: string, longitude?: string): Promise<void> {
+    try {
+      this.isLoading.set(true);
+      
+      const params: { radius: number; latitude?: string; longitude?: string } = { radius, latitude, longitude };
+      
+      const users = await this.networkService.getNetworksWithinRadius(params);
+      this.users.set(users);
+      
+      // Update markers immediately if map is ready
+      if (this.map) {
+        this.addOrUpdateMarkers(users);
+      }
+      
+      // Update map center and radius circle if we have location and users
+      if (latitude && longitude && users.length > 0 && this.map) {
+        const latNum = parseFloat(latitude);
+        const lngNum = parseFloat(longitude);
+        if (!isNaN(latNum) && !isNaN(lngNum)) {
+          this.map.setCenter([lngNum, latNum]);
+          // Update radius circle with new center
+          this.addOrUpdateRadius(radius);
+        }
+      } else if (users.length > 0 && this.map) {
+        // Center map on first user if no location filter
+        const firstUser = users[0];
+        if (firstUser?.longitude && firstUser?.latitude) {
+          const lngNum = typeof firstUser.longitude === 'string' ? parseFloat(firstUser.longitude) : firstUser.longitude;
+          const latNum = typeof firstUser.latitude === 'string' ? parseFloat(firstUser.latitude) : firstUser.latitude;
+          if (!isNaN(lngNum) && !isNaN(latNum)) {
+            this.map.setCenter([lngNum, latNum]);
+            // Update radius circle with new center
+            this.addOrUpdateRadius(radius);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading users for map:', error);
+      this.users.set([]);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
   private getMapCenter(): MapCenter {
+    const lat = this.latitude();
+    const lng = this.longitude();
+    
+    if (lat && lng) {
+      const latNum = parseFloat(lat);
+      const lngNum = parseFloat(lng);
+      if (!isNaN(latNum) && !isNaN(lngNum)) {
+        return [lngNum, latNum];
+      }
+    }
+    
     const firstUser = this.users()[0];
     if (firstUser?.longitude && firstUser?.latitude) {
-      return [firstUser.longitude, firstUser.latitude];
+      const lngNum = typeof firstUser.longitude === 'string' ? parseFloat(firstUser.longitude) : firstUser.longitude;
+      const latNum = typeof firstUser.latitude === 'string' ? parseFloat(firstUser.latitude) : firstUser.latitude;
+      if (!isNaN(lngNum) && !isNaN(latNum)) {
+        return [lngNum, latNum];
+      }
     }
+    
     return this.DEFAULT_CENTER;
   }
 
@@ -154,7 +228,7 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
     }
   }
 
-  private addOrUpdateMarkers(users: any[]): void {
+  private addOrUpdateMarkers(users: IUser[]): void {
     if (!this.map) return;
 
     // remove old markers
@@ -162,11 +236,17 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
     this.markers = [];
 
     users.forEach((user) => {
-      if (!user.longitude || !user.latitude) return;
+      const longitude = user.longitude 
+        ? (typeof user.longitude === 'string' ? parseFloat(user.longitude) : user.longitude)
+        : null;
+      const latitude = user.latitude 
+        ? (typeof user.latitude === 'string' ? parseFloat(user.latitude) : user.latitude)
+        : null;
+      
+      if (!longitude || !latitude || isNaN(longitude) || isNaN(latitude)) return;
 
       const markerElement = this.createMarkerElement(user);
-      const position = this.getAdjustedPosition(user.longitude, user.latitude);
-
+      const position = this.getAdjustedPosition(longitude, latitude);
       const marker = new Maptiler.Marker({ element: markerElement }).setLngLat(position).addTo(this.map!);
 
       marker.getElement().addEventListener('click', () => {
@@ -177,7 +257,7 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
     });
   }
 
-  private createMarkerElement(user: any): HTMLDivElement {
+  private createMarkerElement(user: IUser): HTMLDivElement {
     const container = this.document.createElement('div');
     container.className = 'custom-marker-container';
 

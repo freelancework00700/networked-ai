@@ -7,143 +7,119 @@ import { AuthEmptyState } from '@/components/common/auth-empty-state';
 import { AuthService } from '@/services/auth.service';
 import { inject, signal, computed, Component, ChangeDetectionStrategy } from '@angular/core';
 import { IonIcon, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
+import { ScrollHandlerDirective } from '@/directives/scroll-handler.directive';
+import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationService } from '@/services/navigation.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'network',
   styleUrl: './network.scss',
   templateUrl: './network.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonIcon, IonHeader, Searchbar, IonToolbar, IonContent, NetworkMapView, NetworkListView, AuthEmptyState]
+  imports: [Button, IonIcon, IonHeader, Searchbar, IonToolbar, IonContent, NetworkMapView, NetworkListView, AuthEmptyState, ScrollHandlerDirective]
 })
 export class Network {
   // signals
   radius = signal<number>(20);
+  latitude = signal<string>('');
+  longitude = signal<string>('');
+  locationAddress = signal<string>('');
   searchQuery = signal<string>('');
   segmentValue = signal<string>('list');
-
+  userId = signal<string | null>(null);
+  
   // services
   private navCtrl = inject(NavController);
   private modalService = inject(ModalService);
   private authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
+  private navigationService = inject(NavigationService);
+  private router = inject(Router);
+
+  currentUser = signal<any>(null);
+  viewedUser = signal<any>(null);
 
   // computed
   isLoggedIn = computed(() => !!this.authService.currentUser());
-
-  filteredSuggestions = computed(() => {
-    return this.networkSuggestions;
+  isViewingOtherUser = computed(() => {
+    const uid = this.userId();
+    const currentUser = this.authService.currentUser();
+    return !!uid && !!currentUser && uid !== currentUser.id;
+  });
+  shouldShowSegments = computed(() => !this.isViewingOtherUser());
+  
+  // Check if location filter is active
+  isFilterActive = computed(() => {
+    const lat = this.latitude();
+    const lng = this.longitude();
+    const radius = this.radius();
+    return !!(lat || lng || radius !== 20);
   });
 
-  networkSuggestions: any[] = [
-    {
-      id: '1',
-      name: 'Kathryn Murphy',
-      title: 'Founder & CEO',
-      company_name: 'Cortazzo Consulting',
-      total_gamification_points: 200,
-      connection_status: 'Connected',
-      latitude: 33.748533,
-      longitude: -84.390648
-    },
-    {
-      id: '2',
-      name: 'Esther Howard',
-      title: 'Founder & CEO',
-      company_name: 'Cortazzo Consulting',
-      total_gamification_points: 200,
-      connection_status: 'Connected',
-      latitude: 33.75,
-      longitude: -84.395
-    },
-    {
-      id: '3',
-      name: 'Arlene McCoy',
-      title: 'Founder & CEO',
-      company_name: 'Cortazzo Consulting',
-      total_gamification_points: 200,
-      connection_status: 'NotConnected',
-      latitude: 33.745,
-      longitude: -84.385
-    },
-    {
-      id: '4',
-      name: 'Darlene Robertson',
-      title: 'Founder & CEO',
-      company_name: 'Cortazzo Consulting',
-      total_gamification_points: 200,
-      connection_status: 'Connected',
-      latitude: 33.747,
-      longitude: -84.392
-    },
-    {
-      id: '5',
-      name: 'Ronald Richards',
-      title: 'Founder & CEO',
-      company_name: 'Cortazzo Consulting',
-      total_gamification_points: 200,
-      connection_status: 'Connected',
-      latitude: 33.749,
-      longitude: -84.388
-    },
-    {
-      id: '6',
-      name: 'Albert Flores',
-      title: 'Founder & CEO',
-      company_name: 'Cortazzo Consulting',
-      total_gamification_points: 200,
-      connection_status: 'Connected',
-      latitude: 33.746,
-      longitude: -84.391
-    },
-    {
-      id: '7',
-      name: 'Eleanor Pena',
-      title: 'Founder & CEO',
-      company_name: 'Cortazzo Consulting',
-      total_gamification_points: 200,
-      connection_status: 'NotConnected',
-      latitude: 33.744,
-      longitude: -84.387
-    },
-    {
-      id: '8',
-      name: 'Savannah Nguyen',
-      title: 'Founder & CEO',
-      company_name: 'Cortazzo Consulting',
-      total_gamification_points: 200,
-      connection_status: 'Connected',
-      latitude: 33.751,
-      longitude: -84.394
-    },
-    {
-      id: '9',
-      name: 'Guy Hawkins',
-      title: 'CTO',
-      company_name: 'Cortazzo Consulting',
-      total_gamification_points: 200,
-      connection_status: 'NotConnected',
-      latitude: 33.748,
-      longitude: -84.389
-    },
-    {
-      id: '10',
-      name: 'Cody Fisher',
-      title: 'CFO',
-      company_name: 'Cortazzo Consulting',
-      total_gamification_points: 200,
-      connection_status: 'NotConnected',
-      latitude: 33.7475,
-      longitude: -84.386
-    }
-  ];
+  constructor() {
+    this.route.queryParamMap
+    .pipe(takeUntilDestroyed())
+    .subscribe(params => {
+      const userId = params.get('userId');
+
+      if (userId) {
+        this.userId.set(userId);
+        this.segmentValue.set('list');
+
+        const navigation = this.router.currentNavigation();
+        const state = navigation?.extras?.state || history.state;
+        if (state?.user) {
+          this.viewedUser.set(state.user);
+        }
+      } else {
+        this.userId.set(this.authService.currentUser()!.id);
+        this.viewedUser.set(null);
+      }
+    });
+  }
+
+  // Computed property for header text
+  headerText = computed(() => {
+    const user = this.viewedUser();
+    if (!user) return '';
+    
+    const name = user.name || user.username || '';
+    if (name) return name;
+    
+    return '';
+  });
+
+  goBack(): void {
+    this.navCtrl.back();
+  }
 
   async openLocationFilterModal() {
-    const result = await this.modalService.openLocationFilterModal();
-    if (result) {
-      this.radius.set(result as number);
+    const result = await this.modalService.openLocationFilterModal({
+      location: this.locationAddress(),
+      latitude: this.latitude(),
+      longitude: this.longitude(),
+      radius: this.radius()
+    });
+    if (result === null) {
+      // Reset was clicked - clear location filters
+      this.radius.set(20);
+      this.latitude.set('');
+      this.longitude.set('');
+      this.locationAddress.set('');
+    } else if (result && typeof result === 'object') {
+      // Apply was clicked with location data
+      this.radius.set(result.radius || 20);
+      this.latitude.set(result.latitude || '');
+      this.longitude.set(result.longitude || '');
+      if (result.location) {
+        this.locationAddress.set(result.location);
+      }
     }
   }
 
   navigateToAddNetwork() {
-    this.navCtrl.navigateForward('/add-network');
+    this.navigationService.navigateForward('/add-network');
   }
 }

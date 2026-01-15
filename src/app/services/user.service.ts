@@ -4,7 +4,8 @@ import { map, catchError } from 'rxjs/operators';
 import { inject, Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { BaseApiService } from '@/services/base-api.service';
-import { IUser, VibeItem, IUserResponse, UserSearchResponse, UserSearchApiResponse, NetworkConnectionsApiResponse, NetworkConnection, NetworkConnectionsData } from '@/interfaces/IUser';
+import { IUser, VibeItem, IUserResponse, UserSearchResponse, UserSearchApiResponse } from '@/interfaces/IUser';
+import { UserGamificationResponse, LeaderboardResponse } from '@/interfaces/IGamification';
 
 @Injectable({ providedIn: 'root' })
 export class UserService extends BaseApiService {
@@ -206,33 +207,25 @@ export class UserService extends BaseApiService {
     }
   }
 
-  // get my network connections
-  async getMyConnections(params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-  } = {}): Promise<NetworkConnectionsData> {
+  // Get user gamification badges
+  async getUserGamificationBadges(userId?: string): Promise<UserGamificationResponse> {
     try {
-      let httpParams = new HttpParams();
-      
-      if (params.page) {
-        httpParams = httpParams.set('page', params.page.toString());
-      }
-      if (params.limit) {
-        httpParams = httpParams.set('limit', params.limit.toString());
-      }
-      if (params.search && params.search.trim()) {
-        httpParams = httpParams.set('search', params.search.trim());
-      }
-
-      const response = await this.get<NetworkConnectionsApiResponse>('/network-connections/my-connections', { params: httpParams });
-
-      const data = response?.data?.data || [];
-      const pagination = response?.data?.pagination || { totalCount: 0, currentPage: 1, totalPages: 0 };
-
-      return { data, pagination };
+      const url = `/gamification/user/${userId}`;
+      const response = await this.get<UserGamificationResponse>(url);
+      return response;
     } catch (error) {
-      console.error('Error fetching network connections:', error);
+      console.error('Error fetching user gamification badges:', error);
+      throw error;
+    }
+  }
+
+  // Get leaderboard
+  async getLeaderboard(): Promise<LeaderboardResponse> {
+    try {
+      const response = await this.get<LeaderboardResponse>('/gamification/leaderboard');
+      return response;
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
       throw error;
     }
   }

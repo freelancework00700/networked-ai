@@ -9,6 +9,8 @@ interface FilterValues {
   location?: string;
   eventDate?: string;
   distance?: number;
+  latitude?: string;
+  longitude?: string;
 }
 
 @Component({
@@ -25,6 +27,8 @@ export class EventFilterModal {
 
   // signals
   distanceSignal = signal(20);
+  latitude = signal<string>('');
+  longitude = signal<string>('');
   form = signal<FormGroup>(
     this.fb.group({
       location: [''],
@@ -39,9 +43,13 @@ export class EventFilterModal {
     const location = this._initialValues.location || '';
     const eventDate = this._initialValues.eventDate || '';
     const distance = this._initialValues.distance || 20;
+    const latitude = this._initialValues.latitude || '';
+    const longitude = this._initialValues.longitude || '';
 
     this.form().patchValue({ location, eventDate });
     this.distanceSignal.set(distance);
+    this.latitude.set(latitude);
+    this.longitude.set(longitude);
   }
 
   get initialValues(): FilterValues {
@@ -51,6 +59,8 @@ export class EventFilterModal {
   reset() {
     this.form().reset();
     this.distanceSignal.set(20);
+    this.latitude.set('');
+    this.longitude.set('');
   }
 
   onRangeChange(event: any) {
@@ -58,18 +68,20 @@ export class EventFilterModal {
   }
 
   async openLocationModal() {
-    const result = await this.modalService.openCitySelectionModal();
-    if (result) {
-      this.form().patchValue({ location: result.fullName });
+    const location = this.form().get('location')?.value || '';
+    const { address, latitude, longitude } = await this.modalService.openLocationModal(location);
+    if (address) {
+      this.form().patchValue({ location: address });
+      this.latitude.set(latitude || '');
+      this.longitude.set(longitude || '');
     }
   }
 
   async openDateModal() {
     const currentDate = this.form().get('eventDate')?.value || '';
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
 
-    const date = await this.modalService.openDateTimeModal('date', currentDate, todayStr);
+    // Allow all dates including past dates - no min or max restriction
+    const date = await this.modalService.openDateTimeModal('date', currentDate, undefined, undefined);
     if (date) {
       this.form().patchValue({ eventDate: date });
     }
@@ -80,7 +92,9 @@ export class EventFilterModal {
     this.modalService.close({
       location: formValue.location,
       eventDate: formValue.eventDate,
-      distance: this.distanceSignal()
+      distance: this.distanceSignal(),
+      latitude: this.latitude(),
+      longitude: this.longitude()
     });
   }
 

@@ -9,16 +9,14 @@
   </ion-header>
 
   <ion-content [fullscreen]="true" mode="md">
-    <achievements-content
-      [showHeader]="true"
-      [showNetworkingScore]="true"
-    />
+    <achievements-content [showHeader]="true" [showNetworkingScore]="true" [user]="effectiveUser()" />
   </ion-content>
-          } @else {
+} @else {
   <achievements-content
     [showHeader]="false"
     [showSeeAll]="true"
     [showNetworkingScore]="false"
+    [user]="effectiveUser()"
     (onSeeAll)="navigateToAchievements()"
   />
-        }
+}

@@ -1,9 +1,14 @@
 import { Button } from '@/components/form/button';
 import { NavController } from '@ionic/angular/standalone';
 import { NgOptimizedImage } from '@angular/common';
-import { input, inject, output, Component, ChangeDetectionStrategy, computed } from '@angular/core';
+import { input, inject, Component, ChangeDetectionStrategy, computed, signal } from '@angular/core';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
+import { NetworkService } from '@/services/network.service';
+import { ToasterService } from '@/services/toaster.service';
+import { ModalService } from '@/services/modal.service';
+import { ConnectionStatus } from '@/enums/connection-status.enum';
+import { AuthService } from '@/services/auth.service';
 
 @Component({
   imports: [Button, NgOptimizedImage],
@@ -16,12 +21,18 @@ export class UserCardList {
   // inputs
   user = input.required<any>();
 
-  // outputs
-  handleClick = output<string>();
-
   // services
   private navCtrl = inject(NavController);
   private navigationService = inject(NavigationService);
+  private networkService = inject(NetworkService);
+  private toasterService = inject(ToasterService);
+  private modalService = inject(ModalService);
+  authService = inject(AuthService);
+
+  // signals
+  isAdding = signal<boolean>(false);
+  isAccepting = signal<boolean>(false);
+  isWithdrawing = signal<boolean>(false);
 
   // computed
   userImage = computed(() => {
@@ -50,21 +61,114 @@ export class UserCardList {
     }
   });
 
-  onAddClick(id: string): void {
-    if (this.isSelected(id)) {
-      this.navCtrl.navigateForward(['/chat-room', id]);
+  connectionStatus = computed(() => {
+    const user = this.user();
+    return user?.connection_status as ConnectionStatus | undefined;
+  });
+
+  isConnected = computed(() => this.connectionStatus() === ConnectionStatus.CONNECTED);
+  isRequestSent = computed(() => this.connectionStatus() === ConnectionStatus.REQUEST_SENT);
+  isRequestReceived = computed(() => this.connectionStatus() === ConnectionStatus.REQUEST_RECEIVED);
+  isNotConnected = computed(() => !this.connectionStatus() || this.connectionStatus() === ConnectionStatus.NOT_CONNECTED);
+
+  // Get button config based on connection status
+  buttonConfig = computed(() => {
+    if (this.isConnected()) {
+      return { label: 'Message', isLoading: false, disabled: false };
+    } else if (this.isRequestSent()) {
+      return { label: 'Pending', isLoading: this.isWithdrawing(), disabled: this.isWithdrawing() };
+    } else if (this.isRequestReceived()) {
+      return { label: 'Accept', isLoading: this.isAccepting(), disabled: this.isAccepting() };
     } else {
-      this.handleClick.emit(id);
+      return { label: 'Add', isLoading: this.isAdding(), disabled: this.isAdding() };
     }
+  });
+
+  async onButtonClick(): Promise<void> {
+    const user = this.user();
+    const userId = user?.id;
+    if (!userId) return;
+
+    if (this.isConnected()) {
+      this.messageUser();
+    } else if (this.isRequestSent()) {
+      this.showWithdrawInvitationAlert();
+    } else if (this.isRequestReceived()) {
+      this.acceptNetworkRequest();
+    } else {
+      this.addToNetwork();
+    }
+  }
+
+  messageUser(): void {
+    const userId = this.user()?.id;
+    if (userId) {
+      this.navCtrl.navigateForward(['/chat-room', userId]);
+    }
+  }
+
+  async addToNetwork(): Promise<void> {
+    const userId = this.user()?.id;
+    if (!userId) return;
+    try {
+      this.isAdding.set(true);
+      await this.networkService.sendNetworkRequest(userId);
+      this.toasterService.showSuccess('Network request sent successfully');
+    } catch (error) {
+      console.error('Error sending network request:', error);
+      this.toasterService.showError('Failed to send network request');
+    } finally {
+      this.isAdding.set(false);
+    }
+  }
+
+  async acceptNetworkRequest(): Promise<void> {
+    const userId = this.user()?.id;
+    if (!userId) return;
+    try {
+      this.isAccepting.set(true);
+      await this.networkService.acceptNetworkRequest(userId);
+      this.toasterService.showSuccess('Network request accepted');
+    } catch (error) {
+      console.error('Error accepting network request:', error);
+      this.toasterService.showError('Failed to accept network request');
+    } finally {
+      this.isAccepting.set(false);
+    }
+  }
+
+  async showWithdrawInvitationAlert(): Promise<void> {
+    const user = this.user();
+    const username = user?.username || user?.name || 'this user';
+    
+    const result = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/alert-white.svg',
+      title: 'Withdraw Invitation?',
+      description: `Are you sure you want to withdraw your network invitation to ${username}?`,
+      confirmButtonLabel: 'Withdraw',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      iconBgColor: '#C73838',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        try {
+          this.isWithdrawing.set(true);
+          await this.networkService.cancelNetworkRequest(user.id);
+          this.toasterService.showSuccess('Network invitation withdrawn');
+        } catch (error) {
+          console.error('Error withdrawing network invitation:', error);
+          this.toasterService.showError('Failed to withdraw network invitation');
+          throw error;
+        } finally {
+          this.isWithdrawing.set(false);
+        }
+      }
+    });
   }
 
   onCardClick(): void {
     const username = this.user()?.username;
     this.navigationService.navigateForward(`/${username}`);
-  }
-
-  isSelected(id: string): boolean {
-    return this.user().connection_status === 'Connected';
   }
 
   onImageError(event: Event): void {

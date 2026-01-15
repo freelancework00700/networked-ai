@@ -1,8 +1,8 @@
 <ion-header mode="md">
   <ion-toolbar mode="md">
-    <div class="p-4 max-w-[672px] mx-auto grid grid-cols-3 items-center">
-      <div class="pi pi-arrow-left cursor-pointer justify-self-start" (click)="goBack()"></div>
-      <div class="body-16SB neutral-01 text-center">Browse Events</div>
+    <div class="p-4 max-w-[672px] mx-auto grid grid-cols-[auto_1fr_auto] items-center gap-2">
+      <div class="pi pi-arrow-left cursor-pointer" (click)="goBack()"></div>
+      <div class="body-16SB neutral-01 text-center whitespace-nowrap overflow-hidden text-ellipsis min-w-0">{{ headerText() }}</div>
       <div></div>
     </div>
   </ion-toolbar>
@@ -18,39 +18,32 @@
         (clear)="onSearchClear()"
         class="flex-1"
       />
-      <app-button icon="/assets/svg/network/filterIcon.svg" color="secondary" (click)="openFilter()" />
+      <div class="relative">
+        <app-button icon="/assets/svg/network/filterIcon.svg" color="secondary" (click)="openFilter()" />
+        @if (isFilterActive()) {
+          <div class="absolute top-[-3px] right-[-3px] w-4 h-4 bg-[#F4A600] rounded-full border-2 border-white"></div>
+        }
+      </div>
     </div>
     <!-- Events list -->
     <div class="flex flex-col gap-4">
-      @if (isLoadingEvents()) {
+      @if (isLoadingEvents() && allEvents().length === 0) {
         <div class="flex justify-center items-center py-8">
           <div class="body-14 neutral-05">Loading events...</div>
         </div>
+      } @else if (allEvents().length === 0) {
+        <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
       } @else {
         @for (event of filteredEvents(); track event.id || event.title || $index) {
           <event-card [event]="event" />
-        } @empty {
-          <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
+        }
+        
+        @if (hasMore()) {
+          <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreEvents($event)">
+            <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more events..." />
+          </ion-infinite-scroll>
         }
       }
     </div>
-
-    <!-- Load more button -->
-    @if (hasMoreEvents()) {
-      <div class="flex justify-center mt-6">
-        <button 
-          type="button" 
-          class="body-14SB brand-02 py-2 px-4" 
-          (click)="loadMore()"
-          [disabled]="isLoadingEvents()"
-        >
-          @if (isLoadingEvents()) {
-            Loading...
-          } @else {
-            Load more
-          }
-        </button>
-      </div>
-    }
   </div>
 </ion-content>

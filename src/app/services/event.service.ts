@@ -820,10 +820,10 @@ export class EventService extends BaseApiService {
 
   async getRecommendedEvents(
     params: {
-      page?: number;
-      limit?: number;
-      search?: string;
-      start_date?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+    start_date?: string;
       append?: boolean; // If true, append to existing events instead of replacing
     } = {}
   ): Promise<EventsResponse> {
@@ -843,7 +843,7 @@ export class EventService extends BaseApiService {
         httpParams = httpParams.set('start_date', params.start_date);
       }
 
-      const response = await this.get<EventsResponse>('/events/recommended', { params: httpParams });
+      const response = await this.get<EventsResponse>('/events/recommendations', { params: httpParams });
       const events = response?.data?.data || [];
 
       // Store events
@@ -862,24 +862,30 @@ export class EventService extends BaseApiService {
 
   async getEvents(
     params: {
-      page?: number;
-      limit?: number;
-      search?: string;
-      include_participant_events?: boolean;
-      order_by?: string;
-      order_direction?: 'ASC' | 'DESC';
-      is_my_events?: boolean;
-      is_included_me_event?: boolean;
-      city?: string;
-      state?: string;
-      is_public?: boolean;
-      start_date?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+    include_participant_events?: boolean;
+    order_by?: string;
+    order_direction?: 'ASC' | 'DESC';
+    is_my_events?: boolean;
+    is_included_me_event?: boolean;
+    city?: string;
+    state?: string;
+    latitude?: string;
+    longitude?: string;
+    radius?: number;
+    is_public?: boolean;
+    start_date?: string;
+    roles?: string;
+    user_id?: string;
+    is_liked?: boolean;
       append?: boolean; // If true, append to existing events instead of replacing
     } = {}
   ): Promise<EventsResponse> {
     try {
       let httpParams = new HttpParams();
-
+      
       if (params.page) {
         httpParams = httpParams.set('page', params.page.toString());
       }
@@ -910,11 +916,29 @@ export class EventService extends BaseApiService {
       if (params.state) {
         httpParams = httpParams.set('state', params.state);
       }
+      if (params.latitude) {
+        httpParams = httpParams.set('latitude', params.latitude);
+      }
+      if (params.longitude) {
+        httpParams = httpParams.set('longitude', params.longitude);
+      }
+      if (params.radius !== undefined) {
+        httpParams = httpParams.set('radius', params.radius.toString());
+      }
       if (params.is_public !== undefined) {
         httpParams = httpParams.set('is_public', params.is_public.toString());
       }
       if (params.start_date) {
         httpParams = httpParams.set('start_date', params.start_date);
+      }
+      if (params.roles) {
+        httpParams = httpParams.set('roles', params.roles);
+      }
+      if (params.user_id) {
+        httpParams = httpParams.set('user_id', params.user_id);
+      }
+      if (params.is_liked !== undefined) {
+        httpParams = httpParams.set('is_liked', params.is_liked.toString());
       }
 
       const response = await this.get<EventsResponse>('/events', { params: httpParams });
@@ -1045,5 +1069,39 @@ export class EventService extends BaseApiService {
   resetAllEvents(): void {
     this.recommendedEvents.set([]);
     this.publicEvents.set([]);
+  }
+
+  async getMyEvents(params: {
+    page?: number;
+    limit?: number;
+    roles?: string;
+    user_id?: string;
+    is_upcoming_event?: boolean;
+  } = {}): Promise<EventsResponse> {
+    try {
+      let httpParams = new HttpParams();
+      
+      if (params.page) {
+        httpParams = httpParams.set('page', params.page.toString());
+      }
+      if (params.limit) {
+        httpParams = httpParams.set('limit', params.limit.toString());
+      }
+      if (params.roles) {
+        httpParams = httpParams.set('roles', params.roles);
+      }
+      if (params.user_id) {
+        httpParams = httpParams.set('user_id', params.user_id);
+      }
+      if (params.is_upcoming_event !== undefined) {
+        httpParams = httpParams.set('is_upcoming_event', params.is_upcoming_event.toString());
+      }
+ 
+      const response = await this.get<EventsResponse>('/events/user-events', { params: httpParams });
+      return response;
+    } catch (error) {
+      console.error('Error fetching my events:', error);
+      throw error;
+    }
   }
 }

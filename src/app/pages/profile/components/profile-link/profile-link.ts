@@ -1,12 +1,12 @@
 import { IonIcon } from '@ionic/angular/standalone';
-import { signal, Component, ChangeDetectionStrategy, computed, inject, input } from '@angular/core';
-import { AuthService } from '@/services/auth.service';
+import { signal, Component, ChangeDetectionStrategy, computed, input } from '@angular/core';
 import { IAuthUser } from '@/interfaces/IAuth';
 
 interface SocialLink {
   type: 'website' | 'facebook' | 'twitter' | 'instagram' | 'snapchat' | 'linkedin' | 'phone';
   icon: string;
   value: string;
+  href: string;
 }
 
 @Component({
@@ -17,8 +17,6 @@ interface SocialLink {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProfileLink {
-  private authService = inject(AuthService);
-
   isExpanded = signal(false);
   currentUser = input<IAuthUser | null>(null);
 
@@ -31,6 +29,36 @@ export class ProfileLink {
     { type: 'linkedin', icon: 'logo-linkedin', key: 'linkedin' }
   ] as const;
 
+  private extractUsername(value: string, type: string): string {
+    if (!value || value.trim() === '') return '';
+    
+    const trimmedValue = value.trim();
+    
+    // If not a URL, return as is (already just username)
+    if (!trimmedValue.startsWith('http://') && !trimmedValue.startsWith('https://')) {
+      return type === 'website' ? trimmedValue : (trimmedValue.startsWith('@') ? trimmedValue : `@${trimmedValue}`);
+    }
+    
+    try {
+      const url = new URL(trimmedValue);
+      const pathname = url.pathname.replace(/^\/+|\/+$/g, '');
+      
+      if (type === 'website') {
+        return trimmedValue.replace(/^https?:\/\//, '');
+      }
+      
+      if (type === 'linkedin') {
+        const username = pathname.replace(/^in\/+/, '');
+        return username.startsWith('@') ? username : `@${username}`;
+      }
+
+      const username = pathname || trimmedValue;
+      return username.startsWith('@') ? username : `@${username}`;
+    } catch {
+      return type === 'website' ? trimmedValue : (trimmedValue.startsWith('@') ? trimmedValue : `@${trimmedValue}`);
+    }
+  }
+
   socialLinks = computed(() => {
     const user = this.currentUser();
     if (!user) return [];
@@ -38,22 +66,29 @@ export class ProfileLink {
     const links: SocialLink[] = [];
 
     if (user.mobile?.trim()) {
+      const mobileValue = user.mobile.trim();
       links.push({
         type: 'phone',
         icon: 'call-outline',
-        value: user.mobile.trim()
+        value: mobileValue,
+        href: `tel:${mobileValue}`
       });
     }
 
     if (user.socials) {
       for (const config of this.socialConfigs) {
-        const value = user.socials[config.key];
+        const value = user.socials[config.key as keyof typeof user.socials];
         if (value?.trim()) {
+          const trimmedValue = value.trim();
+          const displayValue = this.extractUsername(trimmedValue, config.type);
+          if (displayValue) {
           links.push({
             type: config.type,
             icon: config.icon,
-            value: value.trim()
+              value: displayValue,
+              href: trimmedValue
           });
+          }
         }
       }
     }

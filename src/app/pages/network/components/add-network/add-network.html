@@ -9,65 +9,69 @@
 
 <ion-content [fullscreen]="true">
   <div class="min-h-full">
-    <div class="w-full p-6 max-w-[672px] mx-auto">
-      <searchbar
-        [searchQuery]="searchQuery()"
-        (searchChange)="searchQuery.set($event)"
-        placeholder="Search by username"
-        (clear)="searchQuery.set('')"
-      />
+    <div class="w-full py-6 max-w-[672px] mx-auto">
+      <div class="px-4">
+        <searchbar
+          [searchQuery]="searchQuery()"
+          (searchChange)="searchQuery.set($event)"
+          placeholder="Search by username"
+          (clear)="searchQuery.set('')"
+        />
+      </div>
 
-      @if (searchQuery() && filteredSuggestions().length) {
-        <div class="flex flex-col gap-4 pt-4">
-          @for (suggestion of filteredSuggestions(); track suggestion.id) {
+      @if (searchQuery().trim()) {
+        @if (searchResults().length > 0) {
+        <div class="flex flex-col gap-4 pt-4 px-4">
+          @for (suggestion of searchResults(); track suggestion.id) {
             <user-card-list [user]="suggestion" />
           }
+            
+            @if (hasMore()) {
+              <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreSearchResults($event)">
+                <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more users..." />
+              </ion-infinite-scroll>
+            }
         </div>
-      } @else if (searchQuery() && !filteredSuggestions().length) {
-        <search-empty-state (clearSearch)="searchQuery.set('')" />
+        } @else if (!isSearching()) {
+        <div class="px-4">
+          <search-empty-state (clearSearch)="searchQuery.set('')" />
+        </div>
+        }
       } @else {
         <div>
-          <div class="flex items-center gap-3 my-2">
-            <div class="flex-1 border-t border-surface-300"></div>
-            <div class="text-surface-500 body-14M">or</div>
-            <div class="flex-1 border-t border-surface-300"></div>
-          </div>
-          <app-button label="Scan QR Code" (click)="scanQRCode()" icon="/assets/svg/scannerBlack.svg" />
-
-          <div class="mt-4">
-            <div class="flex items-center justify-between">
-              <div class="body-16SB neutral-01">Added You</div>
+          @if (isNativePlatform()) {
+            <div class="px-4">
+              <div class="flex items-center gap-3 my-2">
+                <div class="flex-1 border-t border-surface-300"></div>
+                <div class="text-surface-500 body-14M">or</div>
+                <div class="flex-1 border-t border-surface-300"></div>
+              </div>
+              <app-button label="Scan QR Code" (click)="scanQRCode()" icon="/assets/svg/scannerBlack.svg" />
             </div>
+          }
 
-            <div class="mt-3">
-              @for (user of visibleSuggestions(); track user.id) {
-                <user-network-request-card [user]="user" (accept)="acceptNetwork($event)" (reject)="rejectNetwork($event)" />
-              }
-              @if (remainingCount() > 0) {
-                <div class="text-center py-3 text-sm text-surface-500 cursor-pointer" (click)="toggleView()">
-                  {{ showAll() ? 'View less' : 'View ' + remainingCount() + ' more' }}
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- user recommendations -->
-          <div>
-            <div class="flex items-center justify-between">
-              <div class="body-16SB neutral-01">People you might know</div>
-            </div>
-
-            <div class="mt-3">
-              <div class="swiper swiper-user-recommendation">
-                <div class="swiper-wrapper">
-                  @for (person of peopleCards; track person.name) {
-                    <div class="swiper-slide first:pl-4 last:pr-4">
-                      <user-card [user]="person" />
-                    </div>
-                  }
-                </div>
+          @if (networkRequests().length > 0) {
+            <div class="mt-4 px-4">
+              <div class="flex items-center justify-between">
+                <div class="body-16SB neutral-01">Added You</div>
+              </div>
+  
+              <div class="mt-3">
+                @for (user of visibleSuggestions(); track user.id) {
+                  <user-network-request-card [user]="user" (accept)="acceptNetwork($event)" (reject)="rejectNetwork($event)" />
+                }
+                @if (remainingCount() > 0) {
+                  <div class="text-center py-3 text-sm text-surface-500 cursor-pointer" (click)="toggleView()">
+                    {{ showAll() ? 'View less' : 'View ' + remainingCount() + ' more' }}
+                  </div>
+                }
               </div>
             </div>
+          }
+
+          <!-- user recommendations -->
+          <div class="mt-8">
+            <user-recommendations />
           </div>
         </div>
       }

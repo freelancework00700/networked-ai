@@ -3,7 +3,6 @@ import { Subscription } from 'rxjs';
 import { IEvent } from '@/interfaces/event';
 import { SwiperOptions } from 'swiper/types';
 import { Button } from '@/components/form/button';
-import { UserCard } from '@/components/card/user-card';
 import { EventService } from '@/services/event.service';
 import { AuthService } from '@/services/auth.service';
 import { EventCard } from '@/components/card/event-card';
@@ -13,6 +12,7 @@ import { NavigationService } from '@/services/navigation.service';
 import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
 import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
+import { UserRecommendations } from '@/components/common/user-recommendations';
 import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect } from '@angular/core';
 
 interface FeedPost {
@@ -40,7 +40,7 @@ interface NetworkSuggestion {
   styleUrl: './home-event.scss',
   templateUrl: './home-event.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, UserCard, CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard]
+  imports: [Button, CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard, UserRecommendations]
 })
 export class HomeEvent implements OnInit, OnDestroy {
   navigationService = inject(NavigationService);
@@ -83,23 +83,6 @@ export class HomeEvent implements OnInit, OnDestroy {
     }
   ];
 
-  peopleCards = [
-    {
-      name: 'Kathryn Murphy',
-      location: 'Atlanta, GA',
-      profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80'
-    },
-    {
-      name: 'Esther Howard',
-      location: 'Atlanta, GA',
-      profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80'
-    },
-    {
-      name: 'Arlene McCoy',
-      location: 'Atlanta, GA',
-      profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80'
-    }
-  ];
 
   feedPosts: FeedPost[] = [
     {
@@ -300,7 +283,6 @@ export class HomeEvent implements OnInit, OnDestroy {
   private initSwipers(): void {
     this.initializeSwiper('.swiper-city', this.swiperConfigs['cities']);
     this.initializeSwiper('.swiper-public-event', this.swiperConfigs['events']);
-    this.initializeSwiper('.swiper-user-recommendation', this.swiperConfigs['people']);
     this.initializeSwiper('.swiper-event-recommendation', this.swiperConfigs['events']);
   }
 

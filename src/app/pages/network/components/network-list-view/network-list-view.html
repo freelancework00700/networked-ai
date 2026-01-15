@@ -1,15 +1,19 @@
-@if (users().length === 0) {
+<ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
+  <ion-refresher-content mode="md"></ion-refresher-content>
+</ion-refresher>
+
+@if (users().length === 0 && !isLoading()) {
   <app-empty-state
-    title="No Network Found"
-    message="Check your spelling or try searching for a different keyword."
+    [title]="searchQuery().trim() ? 'No Network Found' : 'No Connections'"
+    [message]="searchQuery().trim() ? 'Check your spelling or try searching for a different keyword.' : 'You don\'t have any connections yet.'"
     icon="assets/svg/noUserIcon.svg"
     iconStyle="network"
-    [showClearButton]="true"
+    [showClearButton]="!!searchQuery().trim()"
     (clear)="clearSearch.emit()"
   />
 } @else {
   @for (user of users(); track user.id) {
-    <user-card-list [user]="user" (handleClick)="handleClick($event)" />
+    <user-card-list [user]="user" />
   }
   
   @if (hasMore()) {

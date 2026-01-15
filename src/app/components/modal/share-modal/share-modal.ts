@@ -3,7 +3,7 @@ import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { Searchbar } from '@/components/common/searchbar';
 import { ToasterService } from '@/services/toaster.service';
-import { UserService } from '@/services/user.service';
+import { NetworkService } from '@/services/network.service';
 import { FeedService } from '@/services/feed.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { IonIcon, IonHeader, IonFooter, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner, ModalController } from '@ionic/angular/standalone';
@@ -24,7 +24,7 @@ export class ShareModal implements OnInit {
   // services
   private modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
-  private userService = inject(UserService);
+  private networkService = inject(NetworkService);
   private feedService = inject(FeedService);
   private modalCtrl = inject(ModalController);
   private destroyRef = inject(DestroyRef);
@@ -85,7 +85,7 @@ export class ShareModal implements OnInit {
           this.isLoading.set(true);
           this.currentPage.set(1);
           
-          return from(this.userService.getMyConnections({
+          return from(this.networkService.getMyConnections({
             page: 1,
             limit: 20,
             search: searchText || undefined
@@ -100,8 +100,7 @@ export class ShareModal implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((response) => {
-        // Extract users from peer property in connections
-        const users: IUser[] = (response.data || []).map((connection) => connection.peer).filter((peer): peer is IUser => !!peer);
+        const users: IUser[] = response.data || [];
         
         this.yourNetwork.set(users);
         this.currentPage.set(response.pagination?.currentPage || 1);
@@ -136,14 +135,13 @@ export class ShareModal implements OnInit {
         this.isLoadingMore.set(true);
       }
 
-      const response = await this.userService.getMyConnections({
+      const response = await this.networkService.getMyConnections({
         page,
         limit: 20,
         search: this.searchQuery() || undefined
       });
 
-      // Extract users from peer property in connections
-      const users: IUser[] = (response.data || []).map((connection) => connection.peer).filter((peer): peer is IUser => !!peer);
+      const users: IUser[] = response.data || [];
 
       if (append) {
         this.yourNetwork.update(current => [...current, ...users]);

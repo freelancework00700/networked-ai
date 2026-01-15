@@ -57,7 +57,7 @@
     </div>
 
     <!-- events for you -->
-    @if (isLoggedIn()) {
+    @if (isLoggedIn() && recommendedEvents().length > 0) {
       <div class="px-4">
         <div class="flex items-center justify-between">
           <div class="body-16SB neutral-01">Events for you</div>
@@ -79,25 +79,7 @@
     }
 
     <!-- user recommendations -->
-    <div class="bg-neutral-06 py-3">
-      <div class="px-4">
-        <div class="flex items-center justify-between">
-          <div class="body-16SB neutral-01">People you might know</div>
-        </div>
-      </div>
-
-      <div class="mt-3">
-        <div class="swiper swiper-user-recommendation">
-          <div class="swiper-wrapper">
-            @for (person of peopleCards; track person.name) {
-              <div class="swiper-slide">
-                <user-card [user]="person" />
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-    </div>
+    <user-recommendations />
 
     <!-- feed recommendations -->
     <div class="px-4">
@@ -172,23 +154,25 @@
     </div>
 
     <!-- public events -->
-    <div class="px-4">
-      <div class="flex items-center justify-between">
-        <div class="body-16SB neutral-01">Public events</div>
-          <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=public',true)">See all</button>
-      </div>
-    </div>
-
-    <div>
-      <div class="swiper swiper-public-event">
-        <div class="swiper-wrapper">
-          @for (event of publicEvents(); track event.id || event.title) {
-            <div class="swiper-slide">
-              <event-card [event]="event" />
-            </div>
-          }
+    @if (publicEvents().length > 0) {
+      <div class="px-4">
+        <div class="flex items-center justify-between">
+          <div class="body-16SB neutral-01">Public events</div>
+            <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=public',true)">See all</button>
         </div>
       </div>
-    </div>
+  
+      <div>
+        <div class="swiper swiper-public-event">
+          <div class="swiper-wrapper">
+            @for (event of publicEvents(); track event.id || event.title) {
+              <div class="swiper-slide">
+                <event-card [event]="event" />
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
   }
 </div>

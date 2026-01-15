@@ -1,26 +1,25 @@
-import { Swiper } from 'swiper';
-import { afterNextRender, effect } from '@angular/core';
+import { afterNextRender, effect, input, untracked } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import { IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
-import { UserCard } from '@/components/card/user-card';
 import { PostCard } from '@/components/card/post-card';
 import { ModalService } from '@/services/modal.service';
 import { FeedService } from '@/services/feed.service';
 import { AuthService } from '@/services/auth.service';
-import { NgOptimizedImage } from '@angular/common';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
-import { signal, Component, afterEveryRender, ChangeDetectionStrategy, inject, computed, OnInit, OnDestroy } from '@angular/core';
+import { signal, Component, ChangeDetectionStrategy, inject, computed, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ProfileEmptyState } from '@/components/common/profile-empty-state';
 import { AuthEmptyState } from '@/components/common/auth-empty-state';
+import { UserRecommendations } from '@/components/common/user-recommendations';
 import { FeedPost } from '@/interfaces/IFeed';
+import { IUser } from '@/interfaces/IUser';
 
 type Filter = 'public' | 'networked';
 
 @Component({
   selector: 'home-feed',
-  imports: [UserCard, PostCard, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, NgOptimizedImage, ProfileEmptyState, AuthEmptyState],
+  imports: [PostCard, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, ProfileEmptyState, AuthEmptyState, UserRecommendations],
   styleUrl: './home-feed.scss',
   templateUrl: './home-feed.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -39,24 +38,6 @@ export class HomeFeed implements OnDestroy {
   // subscriptions
   private queryParamsSubscription?: Subscription;
 
-  users = [
-    {
-      name: 'Kathryn Murphy',
-      location: 'Atlanta, GA',
-      profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80'
-    },
-    {
-      name: 'Esther Howard',
-      location: 'Atlanta, GA',
-      profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80'
-    },
-    {
-      name: 'Arlene McCoy',
-      location: 'Atlanta, GA',
-      profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80'
-    }
-  ];
-
   // Computed posts based on current filter (no API call on filter change)
   posts = computed<FeedPost[]>(() => {
     const filter = this.feedFilter();
@@ -70,8 +51,8 @@ export class HomeFeed implements OnDestroy {
     return filter === 'public' ? this.feedService.publicFeedsHasMore() : this.feedService.networkedFeedsHasMore();
   });
 
-  // Current user data
-  currentUser = this.authService.currentUser;
+  // Current user data input
+  currentUser = input<IUser | null>(null);
   currentUserName = computed(() => this.currentUser()?.name || this.authService.currentUser()?.username || '');
   currentUserImage = computed(() => {
     const user = this.currentUser();
@@ -84,44 +65,19 @@ export class HomeFeed implements OnDestroy {
   isLoading = signal(false);
   isLoadingMore = signal(false);
 
-  // Track previous user ID to detect account changes
-  private previousUserId: string | null = null;
-  private previousLoginState: boolean | null = null;
-
   // Constants
   private readonly pageLimit = 10;
 
   constructor() {
-    afterEveryRender(() => this.initSwiper());
-
-    // Watch for user changes and login state - ONLY call APIs when auth state changes
     effect(() => {
       const currentUser = this.currentUser();
-      const currentUserId = currentUser?.id || null;
-      const currentLoginState = this.isLoggedIn();
-
-      // Initialize previous state on first run (don't load on first run)
-      if (this.previousLoginState === null) {
-        this.previousUserId = currentUserId;
-        this.previousLoginState = currentLoginState;
-        
-        // On initial mount, check if feeds exist, if not load them
-        this.loadFeedsIfNeeded();
-        return;
+      if (currentUser) {
+        untracked(() => {
+          this.loadAllFeeds();
+        })
+      } else {
+        this.loadPublicFeeds();
       }
-
-      const loginStateChanged = this.previousLoginState !== currentLoginState;
-      const userIdChanged = this.previousUserId !== null && this.previousUserId !== currentUserId;
-
-      // Only call APIs when auth state changes
-      if (userIdChanged) {
-        this.handleAccountChangeAndLogin();
-      } else if (loginStateChanged && currentLoginState && !this.previousLoginState) {
-        this.handleAccountChangeAndLogin();
-      }
-
-      this.previousUserId = currentUserId;
-      this.previousLoginState = currentLoginState;
     });
 
     afterNextRender(() => {
@@ -143,34 +99,6 @@ export class HomeFeed implements OnDestroy {
 
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
-  }
-
-  private async handleAccountChangeAndLogin(): Promise<void> {
-    this.feedService.resetAllFeeds();
-    await this.loadAllFeeds(true);
-  }
-
-  private async loadFeedsIfNeeded(): Promise<void> {
-    // Only load if feeds don't exist in service (on initial mount)
-    const hasPublicFeeds = this.feedService.publicFeeds().length > 0;
-    const hasNetworkedFeeds = this.feedService.networkedFeeds().length > 0;
-    const loggedIn = this.isLoggedIn();
-
-    // If feeds already exist in service, don't load (just use global state)
-    if (loggedIn && hasPublicFeeds && hasNetworkedFeeds) return;
-
-    if (!loggedIn && hasPublicFeeds) return;
-
-    // Only load if feeds don't exist
-    if (!loggedIn) {
-      if (!hasPublicFeeds) {
-        await this.loadPublicFeeds();
-      }
-    } else {
-      if (!hasPublicFeeds && !hasNetworkedFeeds) {
-        await this.loadAllFeeds();
-      }
-    }
   }
 
   private async loadPublicFeeds(reset: boolean = true): Promise<void> {
@@ -296,16 +224,6 @@ export class HomeFeed implements OnDestroy {
       relativeTo: this.route,
       queryParams: { feedFilter: this.feedFilter() },
       queryParamsHandling: 'merge'
-    });
-  }
-
-  private initSwiper(): void {
-    new Swiper('.swiper-user-recommendation', {
-      spaceBetween: 8,
-      slidesPerView: 2.2,
-      allowTouchMove: true,
-      slidesOffsetAfter: 16,
-      slidesOffsetBefore: 16
     });
   }
 

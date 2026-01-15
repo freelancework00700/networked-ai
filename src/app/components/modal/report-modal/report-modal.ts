@@ -6,6 +6,7 @@ import { TextInput } from '@/components/form/text-input';
 import { inject, signal, Component, Input, OnInit } from '@angular/core';
 import { IonHeader, IonFooter, IonToolbar, IonSpinner, ModalController } from '@ionic/angular/standalone';
 import { FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { IUser } from '@/interfaces/IUser';
 
 @Component({
   selector: 'report-modal',
@@ -19,7 +20,8 @@ export class ReportModal implements OnInit {
   private feedService = inject(FeedService);
   private modalCtrl = inject(ModalController);
 
-  @Input() type: 'Post' | 'Event' | 'Comment' = 'Post';
+  @Input() type: 'Post' | 'Event' | 'Comment' | 'User' = 'Post';
+  @Input() user?: IUser;
   
   // signals
   form = signal<FormGroup>(
