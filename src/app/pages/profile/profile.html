@@ -175,23 +175,24 @@
                 />
               }
 
-              @if (isSubscribedToUser()) {
-                <app-button
-                  label="Subscribed"
-                  icon="/assets/svg/crown-black.svg"
-                  color="secondary"
-                  (click)="navigateToUserSubscriptionPlans()"
-                  class="flex-1"
-                />
-              } @else if (shouldShowSubscribe()) {
-                <!-- Subscribe Button for Other User's Profile -->
-                <app-button
-                  label="Subscribe"
-                  icon="/assets/svg/crown-white.svg"
-                  customColor="#2B5BDE"
-                  (click)="navigateToUserSubscriptionPlans()"
-                  class="flex-1"
-                />
+              @if (hasSubscriptionPlan()) {
+                @if (isSubscribedToUser()) {
+                  <app-button
+                    label="Subscribed"
+                    icon="/assets/svg/crown-black.svg"
+                    color="secondary"
+                    (click)="navigateToUserSubscriptionPlans()"
+                    class="flex-1"
+                  />
+                } @else if (shouldShowSubscribe()) {
+                  <app-button
+                    label="Subscribe"
+                    icon="/assets/svg/crown-white.svg"
+                    customColor="#2B5BDE"
+                    (click)="navigateToUserSubscriptionPlans()"
+                    class="flex-1"
+                  />
+                }
               }
               <!-- Remove Connection Button (only when connected) -->
               @if (isConnected()) {
@@ -232,15 +233,13 @@
                 }
               </div>
               <!-- Bottom Row: Set Up Subscription -->
-              @if (currentUser()?.stripe_account_id && currentUser()?.stripe_account_status === 'active') {
-                <app-button
-                  [label]="!hasSubscriptionPlan() ? 'Set Up Subscription': 'My Subscription Plans'"
-                  icon="/assets/svg/crown-white.svg"
-                  customColor="#2B5BDE"
-                  (click)="navigateToSubscriptionPlans()"
-                  class="w-full"
-                />
-              }
+              <app-button
+                [label]="!hasSubscriptionPlan() ? 'Set Up Subscription': 'My Subscription Plans'"
+                icon="/assets/svg/crown-white.svg"
+                customColor="#2B5BDE"
+                (click)="navigateToSubscriptionPlans()"
+                class="w-full"
+              />
             </div>
 
             <!-- Networking Score Card -->

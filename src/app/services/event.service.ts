@@ -12,14 +12,16 @@ import {
   EventCategoriesResponse
 } from '@/interfaces/event';
 import { IUser } from '@/interfaces/IUser';
+import { DatePipe } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
 import { ICity } from '@/components/card/city-card';
 import { SegmentButtonItem } from '@/components/common/segment-button';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
+  datePipe = new DatePipe('en-US');
   recommendedEvents = signal<IEvent[]>([]);
   publicEvents = signal<IEvent[]>([]);
   upcomingEvents = signal<IEvent[]>([]);
@@ -81,8 +83,7 @@ export class EventService extends BaseApiService {
   formatDateTime(startDateString: string, endDateString?: string): string {
     if (!startDateString) return '';
     const startDate = new Date(startDateString);
-    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const dayOfWeek = daysOfWeek[startDate.getDay()];
+    const dayOfWeek = this.datePipe.transform(startDate, 'EEE') || '';
     const month = startDate.getMonth() + 1;
     const day = startDate.getDate();
 

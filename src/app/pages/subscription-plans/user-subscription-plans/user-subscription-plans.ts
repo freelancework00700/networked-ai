@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { ActivatedRoute } from '@angular/router';
 import { ModalService } from '@/services/modal.service';
@@ -41,6 +41,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private modalService = inject(ModalService);
   private navigationService = inject(NavigationService);
+  private datePipe = new DatePipe('en-US');
   isLoading = signal<boolean>(false);
   plans = signal<PlanData[]>([]);
   selectedPlanIndex = signal<number>(0);
@@ -430,8 +431,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     const startDate = new Date(event.start_date);
     const endDate = event.end_date ? new Date(event.end_date) : null;
 
-    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const dayOfWeek = daysOfWeek[startDate.getDay()];
+    const dayOfWeek = this.datePipe.transform(startDate, 'EEE') || '';
     const day = startDate.getDate().toString();
     const dateStr = startDate.toISOString().split('T')[0];
 

@@ -14,18 +14,7 @@ import { ProfileHostedEvents } from '@/pages/profile/components/profile-hosted-e
 import { ProfileUpcomingEvents } from '@/pages/profile/components/profile-upcoming-events';
 import { ProfileAttendedEvents } from '@/pages/profile/components/profile-attended-events';
 import { IonIcon, IonHeader, IonToolbar, IonContent, NavController, IonSkeletonText } from '@ionic/angular/standalone';
-import {
-  inject,
-  Component,
-  AfterViewInit,
-  OnDestroy,
-  signal,
-  computed,
-  ChangeDetectionStrategy,
-  PLATFORM_ID,
-  effect,
-  input
-} from '@angular/core';
+import { inject, Component, AfterViewInit, OnDestroy, signal, computed, ChangeDetectionStrategy, PLATFORM_ID, effect, input } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { onImageError } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
@@ -39,6 +28,7 @@ import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { ToasterService } from '@/services/toaster.service';
 import { SocketService } from '@/services/socket.service';
 import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
+import { StripeService } from '@/services/stripe.service';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
@@ -89,6 +79,7 @@ export class Profile implements AfterViewInit, OnDestroy {
   private navCtrl = inject(NavController);
   private toasterService = inject(ToasterService);
   private socketService = inject(SocketService);
+  private stripeService = inject(StripeService);
 
   // computed & signals
   currentSlide = signal<ProfileTabs>('hosted-events');
@@ -99,7 +90,7 @@ export class Profile implements AfterViewInit, OnDestroy {
     const loggedInUser = this.authService.currentUser();
     const viewedUser = this.currentUser();
     if (!loggedInUser || !viewedUser) return false;
-    return (viewedUser.id && viewedUser.id !== loggedInUser.id);
+    return viewedUser.id && viewedUser.id !== loggedInUser.id;
   });
 
   // Connection status computed properties
@@ -138,33 +129,33 @@ export class Profile implements AfterViewInit, OnDestroy {
   // Get primary action button config based on connection status
   getPrimaryActionButton = computed(() => {
     if (this.isConnected()) {
-      return { 
-        label: 'Message', 
-        iconName: 'pi-comment', 
+      return {
+        label: 'Message',
+        iconName: 'pi-comment',
         action: 'message',
         isLoading: false,
         disabled: false
       };
     } else if (this.isRequestSent()) {
-      return { 
-        label: 'Pending', 
-        iconName: 'pi-clock', 
+      return {
+        label: 'Pending',
+        iconName: 'pi-clock',
         action: 'pending',
         isLoading: this.isWithdrawingInvitation(),
         disabled: this.isWithdrawingInvitation()
       };
     } else if (this.isRequestReceived()) {
-      return { 
-        label: 'Accept', 
-        iconName: 'pi-check', 
+      return {
+        label: 'Accept',
+        iconName: 'pi-check',
         action: 'accept',
         isLoading: this.isAcceptingRequest(),
         disabled: this.isAcceptingRequest()
       };
     } else {
-      return { 
-        label: 'Add', 
-        iconName: 'pi-user-plus', 
+      return {
+        label: 'Add',
+        iconName: 'pi-user-plus',
         action: 'add',
         isLoading: this.isAddingToNetwork(),
         disabled: this.isAddingToNetwork()
@@ -183,7 +174,7 @@ export class Profile implements AfterViewInit, OnDestroy {
 
   achievementDiamondPath = computed(() => {
     const points = this.currentUser()?.total_gamification_points || 0;
-    
+
     if (points >= 50000) {
       return '/assets/svg/gamification/diamond-50k.svg';
     } else if (points >= 40000) {
@@ -204,11 +195,11 @@ export class Profile implements AfterViewInit, OnDestroy {
   shouldShowCreateCard = computed(() => {
     const user = this.currentUser();
     if (!user) return false;
-    
+
     const socials = user.socials || {};
     const hasEmail = !!user.email?.trim();
     const hasMobile = !!user.mobile?.trim();
-    
+
     // Check if all social links are missing
     const allSocialsMissing = !(
       socials.website?.trim() ||
@@ -218,7 +209,7 @@ export class Profile implements AfterViewInit, OnDestroy {
       socials.linkedin?.trim() ||
       socials.snapchat?.trim()
     );
-    
+
     // Show card if: (no email AND no phone) OR (all socials missing)
     return (!hasEmail && !hasMobile) || allSocialsMissing;
   });
@@ -317,9 +308,46 @@ export class Profile implements AfterViewInit, OnDestroy {
       this.navigationService.navigateForward(`/event/all?eventFilter=attended&userId=${userId}`, false, { user });
     }
   }
-  
-  navigateToSubscriptionPlans(): void {
-    this.navigationService.navigateForward('/subscription/plans');
+
+  async navigateToSubscriptionPlans(): Promise<void> {
+    const user = this.currentUser();
+    if (!user?.email) {
+      this.toasterService.showError('Please add your email to your profile to add subscription plans.');
+      return;
+    }
+    if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
+      this.navigationService.navigateForward('/subscription/plans');
+    } else {
+      await this.openStripePayoutModal();
+    }
+  }
+
+  async openStripePayoutModal(): Promise<void> {
+    await this.modalService.openConfirmModal({
+      icon: 'assets/svg/payoutIcon.svg',
+      iconBgColor: '#C73838',
+      title: 'Add Payout Details',
+      description: 'To add subscription plans in app, you must setup your payout details with Stripe.',
+      confirmButtonLabel: 'Connect Payment',
+      cancelButtonLabel: 'Maybe Later',
+      confirmButtonColor: 'primary',
+      iconPosition: 'center',
+      onConfirm: () => this.handleStripeAccountCreation()
+    });
+  }
+
+  async handleStripeAccountCreation(): Promise<void> {
+    try {
+      const accountResponse = await this.stripeService.createStripeAccount();
+      if (accountResponse?.url) {
+        window.location.href = accountResponse.url;
+      } else {
+        this.toasterService.showError('Failed to get Stripe account URL. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating Stripe account:', error);
+      this.toasterService.showError('Error creating Stripe account. Please try again.');
+    }
   }
 
   navigateToUserSubscriptionPlans(): void {
@@ -386,7 +414,7 @@ export class Profile implements AfterViewInit, OnDestroy {
 
   handlePrimaryAction(action: string | null): void {
     if (!action) return;
-    
+
     const userId = this.currentUser()?.id;
     if (!userId) return;
 
@@ -457,7 +485,7 @@ export class Profile implements AfterViewInit, OnDestroy {
   async showRemoveConnectionAlert(): Promise<void> {
     const user = this.currentUser();
     const username = user?.username || user?.name || 'this user';
-    
+
     const result = await this.modalService.openConfirmModal({
       icon: 'assets/svg/alert-white.svg',
       title: 'Remove Network?',
@@ -484,7 +512,7 @@ export class Profile implements AfterViewInit, OnDestroy {
   async showWithdrawInvitationAlert(): Promise<void> {
     const user = this.currentUser();
     const username = user?.username || user?.name || 'this user';
-    
+
     const result = await this.modalService.openConfirmModal({
       icon: 'assets/svg/alert-white.svg',
       title: 'Withdraw Invitation?',

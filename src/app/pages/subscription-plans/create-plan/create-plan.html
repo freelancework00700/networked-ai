@@ -66,10 +66,21 @@
             <div>
               <text-area-input controlName="description" label="Description" placeholder="Enter description" [required]="false" />
               <div class="flex justify-end pt-1">
-                <button type="button" class="flex items-center gap-1.5 brand-02 body-14M" (click)="handleGenerateClick()">
-                  {{ isCustomize() ? 'Customize' : 'Generate' }}
+               @if (isAnnualSubscriptionEnabled()) {
+                <button 
+                type="button" 
+                class="flex items-center gap-1.5 brand-02 body-14M" 
+                [disabled]="isGeneratingDescription()"
+                (click)="handleGenerateClick()"
+              >
+                @if (isGeneratingDescription()) {
+                  <i class="pi pi-spinner pi-spin"></i>
+                } @else {
+                  <span>{{ isCustomize() ? 'Customize' : 'Generate' }}</span>
                   <img src="assets/svg/generateIcon.svg" alt="Generate" class="w-5 h-5" />
-                </button>
+                }
+              </button>
+               }
               </div>
             </div>
 

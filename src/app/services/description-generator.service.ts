@@ -199,4 +199,85 @@ export class DescriptionGeneratorService {
       throw new Error(error?.message || 'Failed to generate ticket description. Please try again.');
     }
   }
+
+  /**
+   * Generate subscription plan description using OpenAI API
+   * @param data Subscription plan data
+   * @returns Generated description from AI
+   */
+  async generateSubscriptionPlanDescription(data: {
+    name?: string;
+    monthlyPrice?: number | string;
+    isSponsor?: boolean;
+    planBenefits?: string[];
+    annualPrice?: number | string;
+  }): Promise<string> {
+    try {
+      const { name, monthlyPrice, isSponsor, planBenefits, annualPrice } = data;
+
+      // Build prompt parts
+      const promptParts: string[] = [];
+      
+      if (name && name !== 'TBD') {
+        promptParts.push(`planName=${name}`);
+      }
+      if (monthlyPrice && monthlyPrice !== '0' && monthlyPrice !== 'TBD') {
+        promptParts.push(`monthlyPrice=$${monthlyPrice}`);
+      }
+      if (annualPrice && annualPrice !== '0' && annualPrice !== 'TBD') {
+        promptParts.push(`annualPrice=$${annualPrice}`);
+      }
+      if (isSponsor !== undefined) {
+        promptParts.push(`planType=${isSponsor ? 'Sponsor' : 'Event'} subscription`);
+      }
+      if (planBenefits && planBenefits.length > 0) {
+        const benefitsList = planBenefits.filter(b => b && b.trim() !== '').join(', ');
+        if (benefitsList) {
+          promptParts.push(`benefits=${benefitsList}`);
+        }
+      }
+
+      const prompt = `Generate a compelling and engaging description for a subscription plan${name ? ` named "${name}"` : ''}${monthlyPrice && monthlyPrice !== '0' ? ` priced at $${monthlyPrice}/month` : ''}${annualPrice && annualPrice !== '0' ? ` (or $${annualPrice}/year with discount)` : ''}${isSponsor ? ' (Sponsor plan)' : ' (Event plan)'}. ${planBenefits && planBenefits.length > 0 ? `The plan includes benefits like: ${planBenefits.filter(b => b && b.trim() !== '').join(', ')}. ` : ''}Make it concise (3-4 paragraphs), highlight the value proposition, and include 2-3 relevant emoji's. Focus on why subscribers should join and what they'll gain.`;
+
+      const headers = new HttpHeaders({
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${environment.openaiKey}`
+      });
+
+      const messages: OpenAIMessage[] = [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ];
+
+      const result = await firstValueFrom(
+        this.http.post<OpenAIResponse>(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model: 'gpt-3.5-turbo',
+            messages: messages,
+            max_tokens: 500
+          },
+          { headers }
+        )
+      );
+
+      if (result?.choices?.[0]?.message?.content) {
+        // Replace width attributes in HTML if present
+        const description = result.choices[0].message.content.replace(/width="\d+"/, 'width="100%"');
+        return description;
+      }
+
+      throw new Error('No description generated from AI');
+    } catch (error: any) {
+      console.error('Error generating subscription plan description:', error);
+      
+      if (error?.error?.error?.message) {
+        throw new Error(error.error.error.message);
+      }
+
+      throw new Error(error?.message || 'Failed to generate subscription plan description. Please try again.');
+    }
+  }
 }

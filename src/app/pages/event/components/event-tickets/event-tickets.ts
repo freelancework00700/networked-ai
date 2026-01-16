@@ -96,7 +96,7 @@ export class EventTickets implements OnInit {
     effect(() => {
       const isExclusive = this.isSubscriberExclusive();
       const planIdsControl = this.eventForm().get('plan_ids');
-      
+
       if (isExclusive) {
         // When enabled, clear tickets and promo codes
         if (this.tickets().length > 0) {
@@ -120,30 +120,30 @@ export class EventTickets implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.loadSubscriptionPlans();
-    
+
     // Watch for changes in is_subscriber_exclusive
     const isExclusiveControl = this.eventForm().get('is_subscriber_exclusive');
     const isSubscriptionControl = this.eventForm().get('is_subscription');
-    
+
     if (isExclusiveControl) {
       // Set initial value
       const initialValue = isExclusiveControl.value ?? false;
       this.isSubscriberExclusive.set(initialValue);
-      
+
       // If true, automatically set is_subscription to true
       if (initialValue && isSubscriptionControl) {
         isSubscriptionControl.setValue(true, { emitEvent: false });
       }
-      
+
       // Subscribe to changes
       isExclusiveControl.valueChanges.subscribe((value) => {
         this.isSubscriberExclusive.set(value ?? false);
-        
+
         // Automatically set is_subscription to true when is_subscriber_exclusive is true
         if (value === true && isSubscriptionControl) {
           isSubscriptionControl.setValue(true, { emitEvent: false });
         }
-        
+
         this.cdr.markForCheck();
       });
     }
@@ -153,7 +153,7 @@ export class EventTickets implements OnInit {
     if (planIdsControl) {
       // Set initial value
       this.selectedPlanIds.set(planIdsControl.value || []);
-      
+
       // Subscribe to changes
       planIdsControl.valueChanges.subscribe((value) => {
         this.selectedPlanIds.set(value || []);
@@ -376,7 +376,7 @@ export class EventTickets implements OnInit {
       } else {
         this.toasterService.showError('Failed to get Stripe account URL. Please try again.');
       }
-    } catch (error) { 
+    } catch (error) {
       console.error('Error creating Stripe account:', error);
       this.toasterService.showError('Error creating Stripe account. Please try again.');
       throw error;
@@ -404,6 +404,10 @@ export class EventTickets implements OnInit {
     } else if (ticketType && ticketType === 'Paid') {
       const user = this.currentUser();
 
+      if (!user?.email) {
+        this.toasterService.showError('Please add your email to your profile to create a paid ticket.');
+        return;
+      }
       if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
         this.createPaidTicket();
       } else {

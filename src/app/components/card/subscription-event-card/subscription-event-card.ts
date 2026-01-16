@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy, computed } from '@angular/core';
 @Component({
   selector: 'subscription-event-card',
   imports: [CommonModule, CheckboxModule, FormsModule],
@@ -14,6 +14,26 @@ export class SubscriptionEventCard {
   selected = input<boolean>(false);
 
   toggle = output<string>();
+
+  isWeekend = computed(() => {
+    const eventData = this.event();
+    if (!eventData) return false;
+    
+    // Check if dayOfWeek is Saturday or Sunday
+    const dayOfWeek = eventData.dayOfWeek;
+    if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
+      return true;
+    }
+    
+    // Fallback: check date property if available
+    if (eventData.date) {
+      const date = new Date(eventData.date);
+      const day = date.getDay();
+      return day === 0 || day === 6; // 0 = Sunday, 6 = Saturday
+    }
+    
+    return false;
+  });
 
   onToggle(): void {
     this.toggle.emit(this.event().id);

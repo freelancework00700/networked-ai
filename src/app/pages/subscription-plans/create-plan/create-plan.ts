@@ -1,5 +1,5 @@
 import { IEvent } from '@/interfaces/event';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Chip } from '@/components/common/chip';
 import { ActivatedRoute } from '@angular/router';
 import { Button } from '@/components/form/button';
@@ -17,6 +17,7 @@ import { TextAreaInput } from '@/components/form/text-area-input';
 import { SubscriptionService } from '@/services/subscription.service';
 import { PlanPreview } from '@/pages/subscription-plans/plan-preview';
 import { SubscriptionEventCard } from '@/components/card/subscription-event-card';
+import { DescriptionGeneratorService } from '@/services/description-generator.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, ChangeDetectorRef, Input } from '@angular/core';
 import { IonHeader, IonToolbar, IonContent, IonFooter, IonReorderGroup, IonReorder, ItemReorderEventDetail } from '@ionic/angular/standalone';
@@ -72,6 +73,8 @@ export class CreatePlan implements OnInit {
   eventService = inject(EventService);
   authService = inject(AuthService);
   route = inject(ActivatedRoute);
+  descriptionGeneratorService = inject(DescriptionGeneratorService);
+  datePipe = new DatePipe('en-US');
 
   nameValue = signal<string>('');
   currentStep = signal<number>(1);
@@ -82,6 +85,7 @@ export class CreatePlan implements OnInit {
   selectedEvents = signal<string[]>([]);
   monthlyPriceValue = signal<number>(0);
   showDescriptionEditor = signal<boolean>(false);
+  isGeneratingDescription = signal<boolean>(false);
   discountType = signal<'percentage' | 'amount'>('percentage');
 
   planForm = signal<FormGroup<any>>(
@@ -359,9 +363,8 @@ export class CreatePlan implements OnInit {
     const startDate = new Date(event.start_date);
     const endDate = event.end_date ? new Date(event.end_date) : null;
 
-    // Format day of week (e.g., "Fri") using EventService approach
-    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const dayOfWeek = daysOfWeek[startDate.getDay()];
+    // Format day of week (e.g., "Fri") using DatePipe
+    const dayOfWeek = this.datePipe.transform(startDate, 'EEE') || '';
 
     // Format day (e.g., "12")
     const day = startDate.getDate().toString();
@@ -745,15 +748,42 @@ export class CreatePlan implements OnInit {
     }
   }
 
-  generateDescription(): void {
+  async generateDescription(): Promise<void> {
+    if (this.isGeneratingDescription()) return;
+
     const form = this.planForm();
     const descriptionControl = form.get('description');
 
-    if (descriptionControl) {
-      const generatedDescription = 'This is a generated plan description. You can customize this content to better match your plan details.';
+    if (!descriptionControl) return;
+
+    try {
+      this.isGeneratingDescription.set(true);
+      
+      // Get form values
+      const formValue = form.getRawValue();
+      const planBenefits = this.benefits()
+        .map(b => b.text)
+        .filter(text => text && text.trim() !== '');
+
+      // Generate description using the service
+      const generatedDescription = await this.descriptionGeneratorService.generateSubscriptionPlanDescription({
+        name: formValue.name || undefined,
+        monthlyPrice: formValue.monthlyPrice || undefined,
+        isSponsor: formValue.is_sponsor ?? true,
+        planBenefits: planBenefits.length > 0 ? planBenefits : undefined,
+        annualPrice: formValue.annualPrice || undefined
+      });
+
       descriptionControl.setValue(generatedDescription);
       descriptionControl.markAsTouched();
       this.showDescriptionEditor.set(true);
+      this.cdr.markForCheck();
+    } catch (error: any) {
+      console.error('Error generating description:', error);
+      const errorMessage = error?.message || 'Failed to generate description. Please try again.';
+      this.toasterService.showError(errorMessage);
+    } finally {
+      this.isGeneratingDescription.set(false);
     }
   }
 
