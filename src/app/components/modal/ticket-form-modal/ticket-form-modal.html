@@ -8,7 +8,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content mode="md">
   <div class="px-4">
     <form [formGroup]="ticketForm()" class="flex flex-col gap-4">
       <!-- Ticket Name -->
@@ -39,9 +39,13 @@
       <div>
         <text-area-input controlName="description" label="Description" placeholder="Enter description" [required]="false" />
         <div class="flex justify-end pt-1">
-          <button type="button" class="flex items-center gap-1.5 brand-02 body-14M" (click)="handleGenerateClick()">
-            {{ isCustomize() ? 'Customize' : 'Generate' }}
-            <img src="assets/svg/generateIcon.svg" alt="Generate" class="w-5 h-5" />
+          <button type="button" class="flex items-center gap-1.5 brand-02 body-14M" (click)="handleGenerateClick()" [disabled]="isGeneratingDescription()">
+            @if (isGeneratingDescription()) {
+              <ion-spinner name="crescent" class="w-5 h-5"></ion-spinner>
+            } @else {
+              {{ isCustomize() ? 'Customize' : 'Generate' }}
+              <img src="assets/svg/generateIcon.svg" alt="Generate" class="w-5 h-5" />
+            }
           </button>
         </div>
       </div>

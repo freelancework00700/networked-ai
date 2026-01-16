@@ -6,7 +6,6 @@ import { MenuItem } from '@/components/modal/menu-modal';
 import { CreateEvent } from '@/pages/event/create-event';
 import { RsvpModal } from '@/components/modal/rsvp-modal';
 import { MenuModal } from '@/components/modal/menu-modal';
-import { ModalController, Platform } from '@ionic/angular/standalone';
 import { TitleModal } from '@/components/modal/title-modal';
 import { LoadingModal } from '@/components/modal/loading-modal';
 import { ConfirmModal } from '@/components/modal/confirm-modal';
@@ -17,12 +16,14 @@ import { UserDetail } from '@/pages/network/components/user-detail';
 import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
 import { PostEventModal } from '@/components/modal/post-event-modal';
 import { ShareGroup } from '@/pages/messages/components/share-group';
+import { ModalController, Platform } from '@ionic/angular/standalone';
 import { GifGalleryModal } from '@/components/modal/gif-gallery-modal';
 import { BlockModal } from '@/components/modal/block-modal/block-modal';
 import { TicketTypeModal } from '@/components/modal/ticket-type-modal';
 import { ShareModal } from '@/components/modal/share-modal/share-modal';
 import { AccountTypeModal } from '@/components/modal/account-type-modal';
 import { TicketFormModal } from '@/components/modal/ticket-form-modal';
+import { TicketsListModal } from '@/components/modal/tickets-list-modal';
 import { EventFilterModal } from '@/components/modal/event-filter-modal';
 import { GuestFilterModal } from '@/components/modal/guest-filter-modal';
 import { ForgotPassword } from '@/pages/forgot-password/forgot-password';
@@ -41,12 +42,14 @@ import { NetworkTagModal, NetworkTag } from '@/components/modal/network-tag-moda
 import { AchievementDetailModal } from '@/components/modal/achievement-detail-modal';
 import { QuestionnaireFormModal } from '@/components/modal/questionnaire-form-modal';
 import { SubscriptionPlansModal } from '@/components/modal/subscription-plans-modal';
+import { UnsubscribeConfirmModal } from '@/components/modal/unsubscribe-confirm-modal';
 import { PhoneEmailVerifiedModal } from '@/components/modal/phone-email-verified-modal';
 import { PromoCodeFormModalData, TicketFormData, TicketType } from '@/interfaces/event';
 import { ManageRoleModal } from '@/components/modal/manage-role-modal/manage-role-modal';
 import { RsvpDetailsData, RsvpDetailsModal } from '@/components/modal/rsvp-details-modal';
 import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confirm-modal';
 import { QuestionnairePreviewModal } from '@/components/modal/questionnaire-preview-modal';
+import { StripePaymentComponent } from '@/components/common/stripe-payment/stripe-payment';
 import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
 import { IUser } from '@/interfaces/IUser';
 import { ShareProfileModal } from '@/components/modal/share-profile-modal';
@@ -378,10 +381,12 @@ export class ModalService {
     iconBgColor?: string;
     confirmButtonLabel: string;
     cancelButtonLabel?: string;
+    shareButtonLabel?: string;
     confirmButtonColor?: string;
     iconPosition?: 'left' | 'center';
     customColor?: string;
     onConfirm?: () => Promise<any>;
+    onShare?: () => void | Promise<void>;
   }): Promise<{ data: any; role: string } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -782,7 +787,9 @@ export class ModalService {
     maxAttendeesPerUser?: number,
     hostName?: string,
     eventId?: string,
-    planIds?: string[]
+    hasPlans?: boolean,
+    hasSubscribed?: boolean,
+    isSubscriberExclusive?: boolean
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -791,7 +798,7 @@ export class ModalService {
       initialBreakpoint: 1,
       cssClass: 'modal-600px-height',
       component: RsvpModal,
-      componentProps: { tickets, eventTitle, questionnaire, promo_codes, subscriptionId, hostPaysFees, additionalFees, maxAttendeesPerUser, hostName, eventId, planIds }
+      componentProps: { tickets, eventTitle, questionnaire, promo_codes, subscriptionId, hostPaysFees, additionalFees, maxAttendeesPerUser, hostName, eventId, hasPlans, hasSubscribed, isSubscriberExclusive }
     });
     await modal.present();
     const { data } = await modal.onDidDismiss();
@@ -858,7 +865,7 @@ export class ModalService {
     return data || null;
   }
 
-  async openCitySelectionModal(): Promise<{ city: string; state: string; fullName: string } | null> {
+  async openCitySelectionModal(selectedCity?: { city: string; state: string }): Promise<{ city: string; state: string; fullName: string } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -866,6 +873,9 @@ export class ModalService {
       initialBreakpoint: 1,
       backdropDismiss: true,
       component: CitySelectionModal,
+      componentProps: {
+        selectedCity: selectedCity
+      },
       cssClass: 'modal-600px-height'
     });
 
@@ -887,6 +897,26 @@ export class ModalService {
     });
     await modal.present();
     const { data } = await modal.onDidDismiss();
+    return data || null;
+  }
+
+  async openUnsubscribeConfirmModal(config: {
+    planName: string;
+    endDate: string;
+    onConfirm?: () => Promise<void>;
+  }): Promise<{ confirmed: boolean } | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: UnsubscribeConfirmModal,
+      cssClass: 'auto-hight-modal',
+      componentProps: config,
+      backdropDismiss: false
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
     return data || null;
   }
 
@@ -964,6 +994,56 @@ export class ModalService {
   async close(data?: any, role?: string): Promise<void> {
     const modal = await this.modalCtrl.getTop();
     if (modal) await modal.dismiss(data, role);
+  }
+
+  async openSubscriptionPaymentModal(config: {
+    clientSecret: string;
+    amount: number;
+    description: string;
+  }): Promise<{ success: boolean; subscriptionId?: string } | null> {
+    const modal = await this.modalCtrl.create({
+      component: StripePaymentComponent,
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      backdropDismiss: false,
+      cssClass: 'auto-hight-modal',
+      componentProps: {
+        amount: config.amount,
+        description: config.description,
+        clientSecretInput: config.clientSecret,
+        showButtons: true,
+        isModalMode: true
+      }
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    
+    if (role === 'success') {
+      return { success: true, subscriptionId: data?.subscriptionId };
+    }
+    
+    return null;
+  }
+
+  async openTicketsListModal(tickets: any[]): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: TicketsListModal,
+      cssClass: 'modal-600px-height',
+      componentProps: { tickets }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    return data || null;
   }
 
 }

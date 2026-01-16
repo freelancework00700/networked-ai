@@ -73,6 +73,11 @@ export class UserCardList {
 
   // Get button config based on connection status
   buttonConfig = computed(() => {
+    // Hide buttons if hideButtons is true or if user has parent_user_id (is a guest)
+    if (this.user()?.parent_user_id) {
+      return null;
+    }
+
     if (this.isConnected()) {
       return { label: 'Message', isLoading: false, disabled: false };
     } else if (this.isRequestSent()) {
@@ -167,8 +172,14 @@ export class UserCardList {
   }
 
   onCardClick(): void {
-    const username = this.user()?.username;
-    this.navigationService.navigateForward(`/${username}`);
+    const user = this.user();
+    if (user?.parent_user_id) {
+      return;
+    }
+    const username = user?.username;
+    if (username) {
+      this.navigationService.navigateForward(`/${username}`);
+    }
   }
 
   onImageError(event: Event): void {

@@ -130,7 +130,7 @@ export interface EventDisplayData {
   title: string;
   description: string;
   displayMedias: MediaItem[];
-  views: string;
+  total_views: string;
   isPublic: boolean;
   location: string;
   hostName: string;
@@ -152,6 +152,9 @@ export interface EventDisplayData {
   questionnaire: any[];
   promo_codes: PromoCode[];
   subscriptionPlanType?: 'event' | 'sponsor' | null;
+  has_plans?: boolean;
+  is_subscriber_exclusive?: boolean;
+  has_subscribed?: boolean;
 }
 
 export interface IEvent {
@@ -165,8 +168,6 @@ export interface IEvent {
   city?: string;
   state?: string;
   country?: string;
-  viewers?: any[];
-  views?: string | number;
   participants?: Array<{
     role?: string;
     user?: {
@@ -185,6 +186,9 @@ export interface IEvent {
   location?: string;
   dayOfWeek?: string;
   organization?: string;
+  total_views?: string | number;
+  total_likes?: string | number;
+  image_url?: string;
 }
 
 export interface QuestionnaireQuestion {

@@ -21,6 +21,7 @@ export const appRoutes: Routes = [
   },
   { path: 'profile', loadChildren: () => import('@/pages/profile/profile.routes') },
   { path: 'event', loadChildren: () => import('@/pages/event/event.routes') },
+  { path: 'subscription', loadChildren: () => import('@/pages/subscription-plans/subscription.routes').then((m) => m.default) },
 
   // authentication routes (lazy loaded)
   {
@@ -109,11 +110,6 @@ export const appRoutes: Routes = [
     path: 'leaderboard',
     loadComponent: () => import('@/pages/leaderboard').then((m) => m.Leaderboard)
   },
-  // subscription routes (lazy loaded)
-  {
-    path: 'create-plan',
-    loadComponent: () => import('@/pages/create-plan').then((m) => m.CreatePlan)
-  },
   {
     path: 'notification',
     loadComponent: () => import('@/pages/notification').then((m) => m.Notification)
@@ -121,14 +117,6 @@ export const appRoutes: Routes = [
   {
     path: 'settings',
     loadChildren: () => import('@/pages/settings/settings.routes').then((m) => m.default)
-  },
-  {
-    path: 'subscription-plans',
-    loadComponent: () => import('@/pages/subscription-plans').then((m) => m.SubscriptionPlans)
-  },
-  {
-    path: 'subscriptions',
-    loadComponent: () => import('@/pages/subscriptions').then((m) => m.Subscriptions)
   },
   { path: 'not-found', component: NotFound },
   {

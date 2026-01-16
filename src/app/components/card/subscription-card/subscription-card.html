@@ -10,7 +10,7 @@
 >
   @if (isSelectMode() || isPlanMode()) {
     <!-- Select Mode or Plan Mode -->
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 relative">
       <!-- Icon -->
       <div class="bg-white rounded-2xl shadow-md p-2 flex items-center">
         <div class="plan-icon" [class.icon-event]="data().type === 'event'" [class.icon-sponsor]="data().type === 'sponsor'">
@@ -32,6 +32,18 @@
           <div class="body-12R neutral-03">{{ data().priceRange }}</div>
         </div>
       </div>
+
+      <!-- Delete Icon (only for plan mode) -->
+      @if (isPlanMode()) {
+        <button 
+          type="button"
+          class="absolute top-0 right-0 p-2 text-neutral-03 hover:opacity-70 transition-opacity cursor-pointer"
+          (click)="onDelete($event)"
+          aria-label="Delete plan"
+        >
+          <img src="/assets/svg/deleteIcon.svg" alt="Delete" class="w-5 h-5" />
+        </button>
+      }
 
       <!-- Checkbox (only for select mode) -->
       @if (isSelectMode() && checkboxControl()) {

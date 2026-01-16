@@ -97,7 +97,7 @@ export class HomeEvent implements OnInit, OnDestroy {
         organization: 'Networked AI',
         date: 'Fri 8/30, 7.00AM',
         location: 'Atlanta, GA',
-        views: '12',
+        total_views: '12',
         image: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80'
       }
     }

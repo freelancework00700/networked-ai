@@ -175,13 +175,24 @@
                 />
               }
 
-              <!-- Subscription Button (Subscribe/Subscribed) -->
-              @if (shouldShowSubscribe()) {
-                <app-button label="Subscribe" iconName="pi-star" color="info" (click)="subscribeToUser()" class="flex-1" />
-              } @else if (isSubscribedToUser()) {
-                <app-button label="Subscribed" iconName="pi-star" color="secondary" [disabled]="true" class="flex-1" />
+              @if (isSubscribedToUser()) {
+                <app-button
+                  label="Subscribed"
+                  icon="/assets/svg/crown-black.svg"
+                  color="secondary"
+                  (click)="navigateToUserSubscriptionPlans()"
+                  class="flex-1"
+                />
+              } @else if (shouldShowSubscribe()) {
+                <!-- Subscribe Button for Other User's Profile -->
+                <app-button
+                  label="Subscribe"
+                  icon="/assets/svg/crown-white.svg"
+                  customColor="#2B5BDE"
+                  (click)="navigateToUserSubscriptionPlans()"
+                  class="flex-1"
+                />
               }
-
               <!-- Remove Connection Button (only when connected) -->
               @if (isConnected()) {
                 <app-button
@@ -221,10 +232,15 @@
                 }
               </div>
               <!-- Bottom Row: Set Up Subscription -->
-              <button type="button" class="w-full h-[44px] body-14SB neutral-01 !rounded-lg bg-[#2B5BDE] flex gap-2 justify-center items-center">
-                <ion-icon src="/assets/svg/crown-white.svg" class="text-[18px]"></ion-icon>
-                <span class="body-14SB neutral-07">Set Up Subscription</span>
-              </button>
+              @if (!isViewingOtherProfile() && shouldShowSubscribe()) {
+                <app-button
+                  label="set up subscription"
+                  icon="/assets/svg/crown-white.svg"
+                  customColor="#2B5BDE"
+                  (click)="navigateToSubscriptionPlans()"
+                  class="w-full"
+                />
+              }
             </div>
 
             <!-- Networking Score Card -->

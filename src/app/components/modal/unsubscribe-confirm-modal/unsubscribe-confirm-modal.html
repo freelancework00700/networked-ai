@@ -1,0 +1,39 @@
+<div class="inner-content px-4 pt-10 flex flex-col h-full w-full">
+  <div class="flex mb-4">
+    <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center">
+      <div class="icon-container" style="background-color: #9e0a0a">
+        <ion-icon src="/assets/svg/alert-triangle-white.svg" class="w-6 h-6"></ion-icon>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-2 mb-8">
+    <div class="heading-h3">Unsubscribe?</div>
+    <div class="flex flex-col gap-2">
+      <p class="body-14R neutral-01">
+        Are you sure you want to stop subscribing to <span class="font-semibold">{{ planName }}</span
+        >?
+      </p>
+      <p class="body-14R neutral-01">
+        You'll still have full access to this plan until the next billing period on <span class="font-semibold">{{ endDate }}</span
+        >.
+      </p>
+    </div>
+  </div>
+</div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex gap-2">
+      <app-button label="Stay Subscribed" (click)="staySubscribed()" color="secondary" class="flex-1" [disabled]="isLoading()" />
+      <app-button
+        label="Unsubscribe"
+        (click)="unsubscribe()"
+        [customColor]="'#9e0a0a'"
+        class="flex-1"
+        [isLoading]="isLoading()"
+        [disabled]="isLoading()"
+      />
+    </div>
+  </ion-toolbar>
+</ion-footer>

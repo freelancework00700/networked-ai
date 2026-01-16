@@ -1,5 +1,6 @@
 import { Editor } from 'primeng/editor';
 import { CommonModule } from '@angular/common';
+import { IonSpinner } from '@ionic/angular/standalone';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { input, OnInit, Inject, inject, DOCUMENT, Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormGroup, Validators, FormBuilder, ValidatorFn, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
@@ -9,7 +10,7 @@ import { FormGroup, Validators, FormBuilder, ValidatorFn, AbstractControl, Contr
   styleUrl: './editor-input.scss',
   templateUrl: './editor-input.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Editor, ReactiveFormsModule, CommonModule],
+  imports: [Editor, ReactiveFormsModule, CommonModule, IonSpinner],
   viewProviders: [
     {
       provide: ControlContainer,
@@ -26,6 +27,7 @@ export class EditorInput implements OnInit {
   placeholder = input('');
   showGenerateButton = input(false);
   isCustomize = input(false);
+  isGenerating = input(false);
   onGenerateClick = input<() => void>();
 
   constructor(

@@ -10,7 +10,19 @@
 <ion-content mode="md">
   <div class="px-4">
     <div class="px-4 py-4 flex flex-col gap-4">
-      @for (ticket of ticketsData(); track ticket.id) {
+      @if (isSubscriberExclusive && !hasSubscribed) {
+        <!-- Subscriber Exclusive Message -->
+        <div class="flex flex-col items-center justify-center gap-4 py-8">
+          <div class="flex flex-col items-center gap-3">
+            <ion-icon src="assets/svg/crown-white.svg" alt="crown" class="w-[48px] h-[48px] text-neutral-03"></ion-icon>
+            <div class="body-16M neutral-01 text-center">You have not subscribed</div>
+            <div class="body-14R neutral-03 text-center max-w-md">
+              This event is exclusively for subscribers. Please subscribe to access this event.
+            </div>
+          </div>
+        </div>
+      } @else {
+        @for (ticket of ticketsData(); track ticket.id) {
         <div
           class="flex flex-col rounded-lg overflow-hidden mb-4"
           [class.ticket-early-bird]="ticket.ticket_type === 'Early Bird'"
@@ -35,7 +47,14 @@
                     <ion-icon src="assets/svg/crown-sponsor.svg" class="w-[20px] h-[20px]" />
                   }
                 </div>
-                <div class="body-16SB neutral-02">${{ ticket.price.toFixed(2) }}</div>
+                <div class="flex items-center gap-2">
+                  @if (isTicketFreeForSubscriber(ticket) && getFreeTicketCount(ticket) > 0) {
+                    <div class="body-16SB neutral-03 line-through">${{ ticket.price.toFixed(2) }}</div>
+                    <div class="body-16SB text-blue-500">Free x{{ getFreeTicketCount(ticket) }}</div>
+                  } @else {
+                    <div class="body-16SB neutral-02">${{ ticket.price.toFixed(2) }}</div>
+                  }
+                </div>
                 @if (getTicketStatus(ticket) === 'available' && ticket.available_quantity !== undefined && ticket.available_quantity <= 30) {
                   <div class="text-sm font-semibold accent-red">{{ ticket.available_quantity }} tickets left</div>
                 }
@@ -161,18 +180,21 @@
           </div>
         </div>
       }
+      }
     </div>
   </div>
 </ion-content>
 
-<ion-footer mode="md">
-  <ion-toolbar mode="md">
-    <div class="p-4">
-      <app-button
-        [label]="formattedTotal() ? 'Continue - $' + formattedTotal() : 'Continue'"
-        (click)="dismiss()"
-        [disabled]="!hasSelectedTickets()"
-      />
-    </div>
-  </ion-toolbar>
-</ion-footer>
+@if (!(isSubscriberExclusive && !hasSubscribed)) {
+  <ion-footer mode="md">
+    <ion-toolbar mode="md">
+      <div class="p-4">
+        <app-button
+          [label]="formattedTotal() ? 'Continue - $' + formattedTotal() : 'Continue'"
+          (click)="dismiss()"
+          [disabled]="!hasSelectedTickets()"
+        />
+      </div>
+    </ion-toolbar>
+  </ion-footer>
+}

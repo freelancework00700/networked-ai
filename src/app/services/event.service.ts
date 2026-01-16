@@ -15,12 +15,16 @@ import { IUser } from '@/interfaces/IUser';
 import { HttpParams } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
+import { ICity } from '@/components/card/city-card';
 import { SegmentButtonItem } from '@/components/common/segment-button';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
   recommendedEvents = signal<IEvent[]>([]);
   publicEvents = signal<IEvent[]>([]);
+  upcomingEvents = signal<IEvent[]>([]);
+  cityCards = signal<ICity[]>([]);
+  isLoadingCities = signal<boolean>(false);
 
   async createEvents(eventsPayload: any[]): Promise<EventResponse> {
     try {
@@ -51,6 +55,15 @@ export class EventService extends BaseApiService {
     } catch (error) {
       console.error('Error fetching event:', error);
       throw error;
+    }
+  }
+
+  // track event view
+  async addView(eventId: string, deviceId: string): Promise<void> {
+    try {
+      await this.post(`/events/${eventId}/view`, { device_id: deviceId });
+    } catch (error) {
+      console.error('Error tracking event view:', error);
     }
   }
 
@@ -110,6 +123,16 @@ export class EventService extends BaseApiService {
 
     if (availableTickets.length === 0) return 'Free';
 
+    // If there's only one ticket, show the direct price
+    if (availableTickets.length === 1) {
+      const price = availableTickets[0].price || 0;
+      if (price > 0) {
+        return `$${price.toFixed(2)}`;
+      }
+      return 'Free';
+    }
+
+    // If there are multiple tickets, show "from $X.00"
     const minPrice = Math.min(...availableTickets.map((t: any) => t.price || 0));
     if (minPrice > 0) {
       return `from $${minPrice.toFixed(2)}`;
@@ -243,7 +266,8 @@ export class EventService extends BaseApiService {
       mobile: user.mobile,
       username: user.username,
       thumbnail_url: user.thumbnail_url || user.image_url,
-      image_url: user.image_url || user.thumbnail_url
+      image_url: user.image_url || user.thumbnail_url,
+      connection_status: user.connection_status
     });
 
     const getParticipantsByRole = (role: string): IUser[] => {
@@ -267,11 +291,20 @@ export class EventService extends BaseApiService {
         })
         .map((a: any) => {
           if (a.parent_user_id) {
-            return a;
+            // For attendees with parent_user_id, use attendee's name and default image
+            return {
+              id: a.id,
+              name: a.name,
+              parent_user_id: a.parent_user_id,
+              connection_status: a.user?.connection_status // Include connection_status from user object
+            };
           } else {
-            return a.user;
+            // For regular attendees, use user data
+            const user = a.user || a;
+            return user ? mapUser(user) : null;
           }
-        });
+        })
+        .filter((user): user is IUser => user !== null);
       return filteredAttendees;
     };
 
@@ -581,7 +614,6 @@ export class EventService extends BaseApiService {
     const thumbnailMedia = allMedias.find((m: any) => m.order === 1) || allMedias[0];
     const thumbnailUrl = thumbnailMedia?.url || '';
 
-    const views = Array.isArray(eventData?.viewers) ? eventData.viewers.length.toString() : eventData?.views?.toString() || '0';
 
     const location = options?.formattedLocation || this.formatLocation(eventData?.address, eventData?.city, eventData?.state, eventData?.country);
 
@@ -608,7 +640,7 @@ export class EventService extends BaseApiService {
       }
     }
 
-    const rsvpButtonLabel = admission === 'Free' ? 'RSVP Now - Free' : `RSVP Now ${admission}`;
+    const rsvpButtonLabel = admission === 'Free' ? 'RSVP Now for Free' : `RSVP Now from ${admission}`;
 
     const isCurrentUserHost = participants.some((p: any) => {
       const userId = p.user_id || p.user?.id;
@@ -632,7 +664,6 @@ export class EventService extends BaseApiService {
       title: eventData?.title || '',
       description: eventData?.description || '',
       displayMedias,
-      views,
       hostName,
       isPublic: eventData?.is_public !== false,
       location,
@@ -647,7 +678,8 @@ export class EventService extends BaseApiService {
       isRsvpApprovalRequired,
       tickets: eventData?.tickets || [],
       questionnaire: eventData?.questionnaire || eventData?.questions || [],
-      promo_codes: eventData?.promo_codes || []
+      promo_codes: eventData?.promo_codes || [],
+      total_views: eventData?.total_views || 0
     };
   }
 
@@ -880,7 +912,9 @@ export class EventService extends BaseApiService {
     roles?: string;
     user_id?: string;
     is_liked?: boolean;
-      append?: boolean; // If true, append to existing events instead of replacing
+    append?: boolean; // If true, append to existing events instead of replacing
+    is_upcoming_event?: boolean;
+    is_recommended?: boolean;
     } = {}
   ): Promise<EventsResponse> {
     try {
@@ -939,6 +973,12 @@ export class EventService extends BaseApiService {
       }
       if (params.is_liked !== undefined) {
         httpParams = httpParams.set('is_liked', params.is_liked.toString());
+      }
+      if (params.is_upcoming_event !== undefined) {
+        httpParams = httpParams.set('is_upcoming_event', params.is_upcoming_event.toString());
+      }
+      if (params.is_recommended !== undefined) {
+        httpParams = httpParams.set('is_recommended', params.is_recommended.toString());
       }
 
       const response = await this.get<EventsResponse>('/events', { params: httpParams });
@@ -1069,6 +1109,9 @@ export class EventService extends BaseApiService {
   resetAllEvents(): void {
     this.recommendedEvents.set([]);
     this.publicEvents.set([]);
+    this.upcomingEvents.set([]);
+    this.cityCards.set([]);
+    this.isLoadingCities.set(false);
   }
 
   async getMyEvents(params: {
@@ -1077,6 +1120,7 @@ export class EventService extends BaseApiService {
     roles?: string;
     user_id?: string;
     is_upcoming_event?: boolean;
+    append?: boolean; // If true, append to existing events instead of replacing
   } = {}): Promise<EventsResponse> {
     try {
       let httpParams = new HttpParams();
@@ -1098,9 +1142,30 @@ export class EventService extends BaseApiService {
       }
  
       const response = await this.get<EventsResponse>('/events/user-events', { params: httpParams });
+      const events = response?.data?.data || [];
+ 
+      // Store upcoming events if is_upcoming_event is true
+      if (params.is_upcoming_event === true) {
+        if (params.append) {
+          this.upcomingEvents.update((current) => [...current, ...events]);
+        } else {
+          this.upcomingEvents.set(events);
+        }
+      }
+ 
       return response;
     } catch (error) {
       console.error('Error fetching my events:', error);
+      throw error;
+    }
+  }
+ 
+  async getTopCities(): Promise<ICity[]> {
+    try {
+      const response = await this.get<{ success: boolean; message: string; data: ICity[] }>('/events/top-cities');
+      return response?.data || [];
+    } catch (error) {
+      console.error('Error fetching top cities:', error);
       throw error;
     }
   }

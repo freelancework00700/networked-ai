@@ -317,6 +317,17 @@ export class Profile implements AfterViewInit, OnDestroy {
       this.navigationService.navigateForward(`/event/all?eventFilter=attended&userId=${userId}`, false, { user });
     }
   }
+  
+  navigateToSubscriptionPlans(): void {
+    this.navigationService.navigateForward('/subscription/plans');
+  }
+
+  navigateToUserSubscriptionPlans(): void {
+    const userId = this.currentUser()?.id;
+    if (userId) {
+      this.navigationService.navigateForward(`/subscription/user/${userId}`);
+    }
+  }
 
   ngAfterViewInit(): void {
     const initialSlide = this.tabs.indexOf(this.currentSlide());

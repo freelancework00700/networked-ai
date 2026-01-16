@@ -1,23 +1,31 @@
-import { Component, inject, ChangeDetectionStrategy, signal, computed } from '@angular/core';
-import { NavController, IonHeader, IonToolbar, IonContent, IonFooter, IonIcon } from '@ionic/angular/standalone';
-import { DatePipe } from '@angular/common';
 import { Button } from '@/components/form/button';
+import { SubscriptionPlan } from '@/interfaces/event';
+import { ModalService } from '@/services/modal.service';
+import { ToasterService } from '@/services/toaster.service';
+import { SubscriptionService } from '@/services/subscription.service';
 import { SubscriptionCard, ISubscription } from '@/components/card/subscription-card';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit } from '@angular/core';
+import { NavController, IonHeader, IonToolbar, IonContent, IonFooter, IonIcon, ViewWillEnter } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'subscription-plans',
   templateUrl: './subscription-plans.html',
   styleUrl: './subscription-plans.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonHeader, IonToolbar, IonContent, IonFooter, IonIcon, DatePipe, Button, SubscriptionCard, SegmentButton]
+  imports: [IonHeader, IonToolbar, IonContent, IonFooter, IonIcon, Button, SubscriptionCard, SegmentButton]
 })
-export class SubscriptionPlans {
+export class SubscriptionPlans implements OnInit, ViewWillEnter {
   // services
   navCtrl = inject(NavController);
+  subscriptionService = inject(SubscriptionService);
+  modalService = inject(ModalService);
+  toasterService = inject(ToasterService);
 
   // signals
-  segmentValue = signal<string>('event');
+  segmentValue = signal<'event' | 'sponsor'>('event');
+  isLoading = signal<boolean>(false);
+  allPlans = signal<SubscriptionPlan[]>([]);
 
   // Segment items
   segmentItems: SegmentButtonItem[] = [
@@ -31,61 +39,128 @@ export class SubscriptionPlans {
     }
   ];
 
-  // Mock data
-  eventPlans = signal<ISubscription[]>([
-    {
-      id: '1',
-      name: 'Skills & Agility',
-      subscribers: 122,
-      priceRange: '$60/m / $300/y',
-      type: 'event'
-    },
-    {
-      id: '2',
-      name: 'Skills & Agility',
-      subscribers: 122,
-      priceRange: '$60/m / $300/y',
-      type: 'event'
-    }
-  ]);
-
-  sponsorPlans = signal<ISubscription[]>([
-    {
-      id: '3',
-      name: 'Skills & Agility',
-      subscribers: 122,
-      priceRange: '$60/m / $300/y',
-      type: 'sponsor'
-    },
-    {
-      id: '4',
-      name: 'Skills & Agility',
-      subscribers: 122,
-      priceRange: '$60/m / $300/y',
-      type: 'sponsor'
-    }
-  ]);
-
   // computed
+  eventPlans = computed(() => {
+    return this.transformPlansToISubscription(
+      this.allPlans().filter(plan => !plan.is_sponsor)
+    );
+  });
+
+  sponsorPlans = computed(() => {
+    return this.transformPlansToISubscription(
+      this.allPlans().filter(plan => plan.is_sponsor)
+    );
+  });
+
   currentPlans = computed(() => {
     return this.segmentValue() === 'event' ? this.eventPlans() : this.sponsorPlans();
   });
 
   hasPlans = computed(() => this.currentPlans().length > 0);
+  
+  hasAnyPlans = computed(() => this.allPlans().length > 0);
+
+  hasEventPlans = computed(() => this.eventPlans().length > 0);
+  
+  hasSponsorPlans = computed(() => this.sponsorPlans().length > 0);
+
+  // Check if we should show segment-specific empty state
+  showEventEmptyState = computed(() => {
+    return !this.hasEventPlans() && this.hasSponsorPlans();
+  });
+
+  showSponsorEmptyState = computed(() => {
+    return !this.hasSponsorPlans() && this.hasEventPlans();
+  });
+
+  showGenericEmptyState = computed(() => {
+    return !this.hasEventPlans() && !this.hasSponsorPlans();
+  });
+
+  /**
+   * Transform SubscriptionPlan to ISubscription format
+   */
+  private transformPlansToISubscription(plans: SubscriptionPlan[]): ISubscription[] {
+    return plans.map(plan => ({
+      id: plan.product_id,
+      name: plan.name,
+      subscribers: plan.subscribers || 0,
+      priceRange: plan.priceRange || '',
+      type: plan.type || (plan.is_sponsor ? 'sponsor' : 'event')
+    }));
+  }
+
+  async ngOnInit(): Promise<void> {
+    await this.loadPlans();
+  }
+
+  async ionViewWillEnter(): Promise<void> {
+    // Reload plans when returning to this page (e.g., after editing)
+    await this.loadPlans();
+  }
+
+  async loadPlans(): Promise<void> {
+    this.isLoading.set(true);
+    try {
+      const plans = await this.subscriptionService.getSubscriptionPlans();
+      this.allPlans.set(plans);
+    } catch (error) {
+      console.error('Error loading subscription plans:', error);
+      this.allPlans.set([]);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
 
   back(): void {
     this.navCtrl.back();
   }
 
   onSegmentChange(value: string): void {
-    this.segmentValue.set(value);
+    if (value === 'event' || value === 'sponsor') {
+      this.segmentValue.set(value);
+    }
   }
 
   onManage(plan: ISubscription): void {
-    console.log('Manage plan:', plan);
+    // Navigate to create-plan page with plan ID for edit mode
+    this.navCtrl.navigateForward(`/subscription/edit/${plan.id}`);
   }
 
   onEvents(plan: ISubscription): void {
     console.log('Plan events:', plan);
+    // TODO: Navigate to plan events page with plan.id
+  }
+
+  async onDelete(plan: ISubscription): Promise<void> {
+    const result = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/deleteWhiteIcon.svg',
+      iconBgColor: '#C73838',
+      title: 'Delete Subscription Plan',
+      description: `Are you sure you want to delete "${plan.name}"? This action cannot be undone.`,
+      confirmButtonLabel: 'Delete',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        if (!plan.id) {
+          throw new Error('Plan ID is required');
+        }
+        const response = await this.subscriptionService.deletePlan(plan.id);
+        this.toasterService.showSuccess(response?.message || 'Plan deleted successfully');
+        // Reload plans after deletion
+        await this.loadPlans();
+        return response;
+      }
+    });
+
+    if (result && result.role === 'error') {
+      this.toasterService.showError('Failed to delete plan. Please try again.');
+    }
+  }
+
+  onCreatePlan(planType: 'event' | 'sponsor'): void {
+    const isSponsor = planType === 'sponsor';
+    this.navCtrl.navigateForward(`/subscription/create?is_sponsor=${isSponsor ? 'true' : 'false'}`);
   }
 }

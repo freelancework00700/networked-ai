@@ -42,6 +42,7 @@ export class SubscriptionCard {
   // Outputs for plan mode
   manage = output<ISubscription>();
   events = output<ISubscription>();
+  delete = output<ISubscription>();
 
   // Output for subscription mode
   click = output<ISubscription>();
@@ -55,6 +56,11 @@ export class SubscriptionCard {
 
   onEvents(): void {
     this.events.emit(this.data());
+  }
+
+  onDelete(event: Event): void {
+    event.stopPropagation(); // Prevent card click event
+    this.delete.emit(this.data());
   }
 
   onClick(): void {

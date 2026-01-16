@@ -18,6 +18,7 @@ import { Pagination } from 'swiper/modules';
 import { Button } from '@/components/form/button';
 import { IonIcon } from '@ionic/angular/standalone';
 import { EventDisplayData } from '@/interfaces/event';
+import { ModalService } from '@/services/modal.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
 import { SegmentButton } from '@/components/common/segment-button';
@@ -48,6 +49,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   private platformId = inject(PLATFORM_ID);
   private destroyRef = inject(DestroyRef);
   private sanitizer = inject(DomSanitizer);
+  private modalService = inject(ModalService);
   mapContainer = viewChild<ElementRef<HTMLDivElement>>('mapContainer');
   swiperEventDisplayEl = viewChild<ElementRef<HTMLDivElement>>('swiperEl');
 
@@ -72,6 +74,11 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
 
   hasMultipleMedias = computed(() => {
     return this.displayMediasForDisplay().length > 1;
+  });
+
+  hasMultipleTickets = computed(() => {
+    const tickets = this.eventData().tickets || [];
+    return tickets.length > 1;
   });
 
   handleDateChange(date: string): void {
@@ -195,5 +202,12 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
 
   onImageError(event: Event): void {
     onImageError(event);
+  }
+
+  async handleAdmissionClick(): Promise<void> {
+    if (this.hasMultipleTickets()) {
+      const tickets = this.eventData().tickets || [];
+      await this.modalService.openTicketsListModal(tickets);
+    }
   }
 }

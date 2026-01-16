@@ -18,14 +18,16 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { UserService } from '@/services/user.service';
 import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
+import { ToasterService } from '@/services/toaster.service';
 import { EventCategory, Vibe } from '@/interfaces/event';
 import { TextInput } from '@/components/form/text-input';
 import { EditorInput } from '@/components/form/editor-input';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { NetworkTag } from '@/components/modal/network-tag-modal';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
-import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule, DOCUMENT, NgOptimizedImage } from '@angular/common';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { DescriptionGeneratorService } from '@/services/description-generator.service';
 
 @Component({
   selector: 'event-details',
@@ -44,6 +46,8 @@ export class EventDetails implements OnInit {
   cd = inject(ChangeDetectorRef);
   document = inject(DOCUMENT);
   eventService = inject(EventService);
+  descriptionGenerator = inject(DescriptionGeneratorService);
+  toasterService = inject(ToasterService);
   private destroyRef = inject(DestroyRef);
 
   swiper?: Swiper;
@@ -57,6 +61,7 @@ export class EventDetails implements OnInit {
   selectedMetaTags = signal<Set<string>>(new Set());
   eventCategories = signal<EventCategory[]>([]);
   vibes = signal<Vibe[]>([]);
+  isGeneratingDescription = signal<boolean>(false);
 
   selectedCategoryName = computed(() => {
     const form = this.eventForm();
@@ -504,17 +509,69 @@ export class EventDetails implements OnInit {
     }
   };
 
-  generateDescription(): void {
+  async generateDescription(): Promise<void> {
     const form = this.eventForm();
     const descriptionControl = form.get('description');
 
-    if (descriptionControl) {
-      const generatedDescription =
-        '<p>This is a generated event description. You can customize this content to better match your event details and requirements.</p>';
+    if (!descriptionControl) return;
+
+    this.isGeneratingDescription.set(true);
+
+    try {
+      // Get form values
+      const title = form.get('title')?.value || '';
+      const categoryControl = form.get('category')?.value || '';
+      // Extract category name (remove icon if present)
+      const category = categoryControl.replace(/^[^\w\s]+/, '').trim() || '';
+      const location = form.get('location')?.value || '';
+      const address = form.get('address')?.value || '';
+      const date = form.get('date')?.value || '';
+      const startTime = form.get('start_time')?.value || '';
+      const endTime = form.get('end_time')?.value || '';
+
+      // Build zoned times if date and times are available
+      let zonedStartTime: string | undefined;
+      let zonedEndTime: string | undefined;
+
+      if (date && startTime) {
+        zonedStartTime = `${date}T${startTime}`;
+      }
+      if (date && endTime) {
+        zonedEndTime = `${date}T${endTime}`;
+      }
+
+      // Generate description using the service
+      const generatedDescription = await this.descriptionGenerator.generateEventDescription({
+        event: {
+          title: title || undefined,
+          category: category || undefined,
+          location: location || undefined,
+          address: address || undefined,
+          dates: date ? [{
+            start: zonedStartTime,
+            end: zonedEndTime
+          }] : undefined
+        },
+        zonedStartTime,
+        zonedEndTime
+      });
+
       descriptionControl.setValue(generatedDescription);
       descriptionControl.markAsTouched();
       this.updateDescriptionLength(generatedDescription);
       this.isCustomize.set(true);
+    } catch (error: any) {
+      console.error('Error generating description:', error);
+      this.toasterService.showError(error?.message || 'Failed to generate description. Please try again.');
+      
+      // Set a fallback description on error
+      const fallbackDescription = '<p>This is a generated event description. You can customize this content to better match your event details and requirements.</p>';
+      descriptionControl.setValue(fallbackDescription);
+      descriptionControl.markAsTouched();
+      this.updateDescriptionLength(fallbackDescription);
+      this.isCustomize.set(true);
+    } finally {
+      this.isGeneratingDescription.set(false);
     }
   }
 

@@ -33,43 +33,9 @@
       </div>
 
       <!-- User List -->
-      @for (user of filteredUsers(); track user.id; let i = $index) {
-        <div class="flex items-center gap-3 py-3 border-b border-gray-200">
-          <!-- Profile -->
-          <img [src]="getUserImage(user)" class="w-12 h-12 rounded-full object-cover" />
-          <!-- Details -->
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <span class="font-medium truncate">{{ user.name || user.username }}</span>
-
-              @if (getUserValue(user) > 0) {
-                <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
-                  <img src="assets/svg/diamondYellow.svg" class="h-4" />
-                  <span class="text-xs font-semibold">{{ getUserValue(user) }}</span>
-                </div>
-              }
-            </div>
-
-            @if (getUserJobTitle(user) || getUserCompany(user)) {
-              <div class="text-xs text-gray-500">
-                @if (getUserJobTitle(user) && getUserCompany(user)) {
-                  {{ getUserJobTitle(user) }}, {{ getUserCompany(user) }}
-                } @else if (getUserJobTitle(user)) {
-                  {{ getUserJobTitle(user) }}
-                } @else if (getUserCompany(user)) {
-                  {{ getUserCompany(user) }}
-                }
-              </div>
-            }
-          </div>
-          <!-- Action Button -->
-          <div>
-            @if (i === 0) {
-              <app-button label="Message" color="secondary" [height]="'32px'" (click)="onMessage(user)" />
-            } @else {
-              <app-button label="Add" [height]="'32px'" (click)="onAdd(user)" />
-            }
-          </div>
+      @for (user of filteredUsers(); track user.id) {
+        <div class="border-b border-gray-200">
+          <user-card-list [user]="user" />
         </div>
       } @empty {
         <app-empty-state title="No users found" message="" />

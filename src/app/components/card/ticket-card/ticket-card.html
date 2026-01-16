@@ -32,11 +32,13 @@
     </div>
 
     <!-- Description -->
-    <div class="body-14R neutral-03 min-h-[2.5rem] py-2 border-t border-b border-[var(--surface-border)] leading-relaxed">
+     @if (description()) {
+    <div class="body-14R neutral-03 min-h-[2.5rem] py-2 border-t border-[var(--surface-border)] leading-relaxed">
       {{ description() }}
     </div>
+    }
 
-    <div class="flex flex-col gap-3 pt-3">
+    <div class="flex flex-col gap-3 pt-3 border-t border-[var(--surface-border)]">
       <div class="flex justify-between items-start gap-4">
         <span class="detail-label body-14R neutral-03">Quantity</span>
         <span class="detail-value body-14M neutral-01 text-right flex-1">{{ formattedQuantity() }}</span>

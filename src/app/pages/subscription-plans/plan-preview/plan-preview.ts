@@ -1,32 +1,30 @@
 import {
   input,
+  output,
   OnInit,
-  inject,
   signal,
   computed,
-  ViewChild,
   OnDestroy,
   Component,
-  ElementRef,
-  AfterViewChecked,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  afterEveryRender
 } from '@angular/core';
 import { Swiper } from 'swiper';
+import { SwiperOptions } from 'swiper/types';
 import { CommonModule } from '@angular/common';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { EventCard } from '@/components/card/event-card';
 import { FormGroup, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ISubscription, SubscriptionCard } from '@/components/card/subscription-card';
 
 @Component({
   selector: 'plan-preview',
   styleUrl: './plan-preview.scss',
   templateUrl: './plan-preview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, EventCard, RadioButtonModule, ReactiveFormsModule]
+  imports: [CommonModule, EventCard, RadioButtonModule, ReactiveFormsModule, SubscriptionCard]
 })
-export class PlanPreview implements AfterViewChecked, OnDestroy, OnInit {
-  @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
-
+export class PlanPreview implements OnDestroy, OnInit {
   planForm = input.required<FormGroup>();
   benefits = input.required<any[]>();
   selectedEvents = input.required<string[]>();
@@ -35,12 +33,24 @@ export class PlanPreview implements AfterViewChecked, OnDestroy, OnInit {
   monthlyPriceValue = input.required<number>();
   discountValue = input.required<number>();
   planType = input<'event' | 'sponsor' | null>(null);
+  subscriptionCardData = input<ISubscription | null>(null); // Optional subscription card data
 
-  swiper?: Swiper;
+  // Output to emit selected plan interval
+  planSelected = output<'annual' | 'monthly'>();
+
+  private swiper?: Swiper;
   isDescriptionExpanded = signal<boolean>(false);
   selectedPlan = signal<'annual' | 'monthly'>('monthly');
 
   planControl = new FormControl<'annual' | 'monthly'>('monthly');
+
+  private readonly swiperConfig: SwiperOptions = {
+    spaceBetween: 12,
+    slidesPerView: 'auto',
+    allowTouchMove: true,
+    slidesOffsetBefore: 20,
+    slidesOffsetAfter: 20
+  };
 
   shouldShowReadMore = computed(() => {
     const description = this.getFieldValue('description');
@@ -136,16 +146,29 @@ export class PlanPreview implements AfterViewChecked, OnDestroy, OnInit {
     return plans;
   });
 
-  ngOnInit(): void {
-    this.planControl.valueChanges.subscribe((value: 'annual' | 'monthly' | null) => {
-      if (value) {
-        this.selectedPlan.set(value);
-      }
-    });
+  constructor() {
+    afterEveryRender(() => this.initSwiper());
   }
 
-  ngAfterViewChecked(): void {
-    if (!this.hasMultipleEvents()) {
+  ngOnInit(): void {
+    // Sync signal with form control when value changes
+    // This handles cases where form control is updated externally
+    this.planControl.valueChanges.subscribe((value: 'annual' | 'monthly' | null) => {
+      if (value && value !== this.selectedPlan()) {
+        this.selectedPlan.set(value);
+        // Emit output to notify parent component
+        this.planSelected.emit(value);
+      }
+    });
+    
+    // Emit initial selection after view is initialized to sync with parent
+    setTimeout(() => {
+      this.planSelected.emit(this.selectedPlan());
+    }, 0);
+  }
+
+  private initSwiper(): void {
+    if (!this.hasMultipleEvents() || this.selectedEvents().length === 0) {
       if (this.swiper) {
         this.swiper.destroy(true, true);
         this.swiper = undefined;
@@ -153,29 +176,20 @@ export class PlanPreview implements AfterViewChecked, OnDestroy, OnInit {
       return;
     }
 
-    if (!this.swiperEl?.nativeElement) return;
-    if (this.selectedEvents().length === 0) {
-      if (this.swiper) {
-        this.swiper.destroy(true, true);
-        this.swiper = undefined;
-      }
-      return;
-    }
+    this.initializeSwiper('.swiper-plan-events', this.swiperConfig);
+  }
+
+  private initializeSwiper(selector: string, config: SwiperOptions): Swiper | undefined {
+    const element = document.querySelector(selector) as HTMLElement;
+    if (!element) return undefined;
 
     if (this.swiper) {
-      requestAnimationFrame(() => {
-        this.swiper!.update();
-      });
-      return;
+      this.swiper.destroy(true, true);
+      this.swiper = undefined;
     }
 
-    this.swiper = new Swiper(this.swiperEl.nativeElement, {
-      slidesPerView: 'auto',
-      spaceBetween: 12,
-      allowTouchMove: true,
-      observer: true,
-      observeParents: true
-    });
+    this.swiper = new Swiper(selector, config);
+    return this.swiper;
   }
 
   ngOnDestroy(): void {
@@ -211,7 +225,11 @@ export class PlanPreview implements AfterViewChecked, OnDestroy, OnInit {
   }
 
   selectPlan(plan: 'annual' | 'monthly'): void {
+    // Always update and emit, even if already selected, to ensure parent is notified
     this.selectedPlan.set(plan);
-    this.planControl.setValue(plan);
+    // Update form control - this will trigger valueChanges
+    this.planControl.setValue(plan, { emitEvent: false }); // Prevent double emission
+    // Emit the output event to notify parent component
+    this.planSelected.emit(plan);
   }
 }

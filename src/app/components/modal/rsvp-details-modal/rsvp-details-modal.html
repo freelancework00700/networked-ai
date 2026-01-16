@@ -133,6 +133,13 @@
           }
         }
 
+        @if (freeTicketDiscount() > 0) {
+          <div class="flex items-center justify-between">
+            <span class="body-14R neutral-02">{{ freeTicketName() }} x1</span>
+            <span class="body-14M accent-red">-${{ formatCurrency(freeTicketDiscount()) }}</span>
+          </div>
+        }
+
         @if (hostFees() > 0) {
           <div class="flex items-center justify-between">
             <span class="body-14R neutral-02">Additional Fee</span>
@@ -175,15 +182,14 @@
       </div>
 
       <!-- Payment Section -->
-      @if (totalPrice() > 0) {
+      @if (totalPrice() > 0 && clientSecret()) {
         <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-4">
           <div class="body-16M neutral-01">Payment Details</div>
 
           <app-stripe-payment
-            [amount]="totalPrice()"
-            [eventId]="eventId"
-            [subtotal]="rsvpDataSignal()?.subtotal || 0"
-            [total]="rsvpDataSignal()?.total || 0"
+            [clientSecretInput]="clientSecret()"
+            [showButtons]="false"
+            [isModalMode]="false"
             (paymentSuccess)="onPaymentSuccess($event)"
             (paymentError)="onPaymentError($event)"
             (paymentProcessing)="onPaymentProcessing($event)"

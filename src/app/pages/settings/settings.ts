@@ -92,12 +92,12 @@ export class Settings implements OnInit {
     {
       label: 'My Subscriptions Plans',
       icon: 'pi pi-crown',
-      route: '/subscription-plans'
+      route: '/subscription/plans'
     },
     {
       label: 'My Subscriptions',
       icon: 'pi pi-crown',
-      route: '/subscriptions'
+      route: '/subscription/list'
     }
   ]);
 

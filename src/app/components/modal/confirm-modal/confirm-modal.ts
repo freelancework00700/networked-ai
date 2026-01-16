@@ -37,6 +37,8 @@ export class ConfirmModal {
   @Input() iconPosition: 'left' | 'center' = 'center';
   @Input() confirmButtonColor: 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' = 'primary';
   @Input() onConfirm?: () => Promise<any>;
+  @Input() shareButtonLabel?: string;
+  @Input() onShare?: () => void | Promise<void>;
 
   isLoading = signal(false);
 
@@ -59,6 +61,12 @@ export class ConfirmModal {
   cancel(): void {
     if (!this.isLoading()) {
       this.modalService.close(false, 'cancel');
+    }
+  }
+
+  async share(): Promise<void> {
+    if (this.onShare) {
+      await this.onShare();
     }
   }
 }

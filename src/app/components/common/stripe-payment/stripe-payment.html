@@ -1,24 +1,36 @@
-<!-- Stripe Payment Element -->
-@if (clientSecret()) {
-  <div class="flex flex-col gap-2">
-    <div class="stripe-payment-container">
-      <ngx-stripe-elements
-      [stripe]="stripe"
-      [elementsOptions]="elementsOptions"
-    >
-      <ngx-stripe-payment [options]="paymentElementOptions" />
-    </ngx-stripe-elements>
-    </div>
-  </div>
-} @else if (isLoading()) {
-  <div class="flex items-center justify-center py-4">
-    <div class="body-14M neutral-03">Initializing payment...</div>
-  </div>
-}
+<div class="inner-content"
+[class.p-4]="isModalMode">
+  @if (clientSecret() && elementsOptions()) {
+    <div class="flex flex-col gap-2">
+      <div class="stripe-payment-container">
+        <ngx-stripe-elements [stripe]="stripe" [elementsOptions]="elementsOptions()!">
+          <ngx-stripe-payment [options]="paymentElementOptions" />
+        </ngx-stripe-elements>
+      </div>
 
-<!-- Error Message -->
-@if (errorMessage()) {
-  <div class="error-message body-12M">
-    {{ errorMessage() }}
-  </div>
-}
+      @if (errorMessage()) {
+        <div class="error-message body-12M text-red-600">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <!-- Payment Button - Only show when opened from subscription page -->
+      @if (showButtons) {
+        <div class="flex gap-2">
+          <app-button label="Cancel" [disabled]="isProcessingPayment()" (click)="closeModal()" color="secondary" class="w-full" />
+          <app-button
+            label="Pay Now"
+            [isLoading]="isProcessingPayment()"
+            [disabled]="isProcessingPayment()"
+            (click)="processPayment()"
+            class="w-full"
+          />
+        </div>
+      }
+    </div>
+  } @else if (isLoading()) {
+    <div class="flex items-center justify-center py-4">
+      <div class="body-14M neutral-03">Initializing payment...</div>
+    </div>
+  }
+</div>

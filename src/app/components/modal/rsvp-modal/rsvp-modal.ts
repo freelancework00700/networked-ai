@@ -26,7 +26,9 @@ export class RsvpModal implements OnInit, OnDestroy {
   @Input() additionalFees: string | number | null = null;
   @Input() maxAttendeesPerUser: number = 0;
   @Input() hostName: string = 'Networked AI';
-  @Input() planIds: string[] = [];
+  @Input() hasPlans: boolean = false;
+  @Input() hasSubscribed: boolean = false;
+  @Input() isSubscriberExclusive: boolean = false;
 
   modalCtrl = inject(ModalController);
   authService = inject(AuthService);
@@ -64,6 +66,9 @@ export class RsvpModal implements OnInit, OnDestroy {
   ticketPricesByTier = signal<{ [key: string]: number }>({});
   actualPricesByTier = signal<{ [key: string]: number }>({});
   discountAmountsByTier = signal<{ [key: string]: number }>({});
+  
+  // Track the first paid ticket ID that was selected (for free subscription benefit)
+  firstSelectedPaidTicketId = signal<string | null>(null);
 
   isLoggedIn = computed(() => !!this.authService.currentUser());
   hasQuestionnaire = computed(() => {
@@ -71,9 +76,48 @@ export class RsvpModal implements OnInit, OnDestroy {
   });
 
   hasSubscription = computed(() => {
-    const hasPlanIds = this.planIds && this.planIds.length > 0;
-    return hasPlanIds;
+    return this.hasPlans && this.hasSubscribed;
   });
+
+  // Check if a ticket is eligible for free subscription benefit
+  isTicketFreeForSubscriber = (ticket: TicketDisplay): boolean => {
+    if (!this.hasSubscribed || ticket.price <= 0) return false;
+    
+    const firstPaidTicketId = this.firstSelectedPaidTicketId();
+    
+    // If we haven't tracked a first paid ticket yet, find it
+    if (!firstPaidTicketId) {
+      const selectedPaidTickets = this.ticketsData().filter(t => {
+        const quantity = t.selectedQuantity ?? 0;
+        return t.price > 0 && quantity > 0;
+      });
+      
+      if (selectedPaidTickets.length === 0) return false;
+      
+      // Set the first paid ticket ID
+      const firstSelectedPaidTicket = selectedPaidTickets[0];
+      this.firstSelectedPaidTicketId.set(String(firstSelectedPaidTicket.id));
+      return ticket.id === firstSelectedPaidTicket.id;
+    }
+    
+    // Always use the tracked first paid ticket ID
+    return String(ticket.id) === firstPaidTicketId;
+  };
+
+  // Get the number of free tickets for a given ticket (max 1 for first paid ticket)
+  getFreeTicketCount = (ticket: TicketDisplay): number => {
+    if (!this.isTicketFreeForSubscriber(ticket)) return 0;
+    const quantity = ticket.selectedQuantity ?? 0;
+    return Math.min(1, quantity); // Max 1 free ticket
+  };
+
+  // Get the effective price for display (0 if free, original price otherwise)
+  getEffectivePrice = (ticket: TicketDisplay): number => {
+    if (this.isTicketFreeForSubscriber(ticket) && this.getFreeTicketCount(ticket) > 0) {
+      return 0;
+    }
+    return ticket.price;
+  };
 
   hasPaidTickets = computed(() => {
     return this.ticketsData().some((ticket) => {
@@ -198,8 +242,13 @@ export class RsvpModal implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    // Reset the first paid ticket tracking when modal opens
+    this.firstSelectedPaidTicketId.set(null);
+    
+    let ticketsToInitialize: TicketDisplay[] = [];
+    
     if (this.tickets && this.tickets.length > 0) {
-      const initializedTickets = this.tickets.map((ticket: any) => {
+      ticketsToInitialize = this.tickets.map((ticket: any) => {
         const saleStartDate = ticket.sales_start_date || ticket.sale_start_date;
         const saleEndDate = ticket.sales_end_date || ticket.sale_end_date;
         const availableQuantity = ticket.available_quantity;
@@ -214,10 +263,19 @@ export class RsvpModal implements OnInit, OnDestroy {
         };
         return transformedTicket;
       });
-      this.ticketsData.set(initializedTickets);
-    } else {
-      this.ticketsData.set([]);
     }
+    
+    this.ticketsData.set(ticketsToInitialize);
+    
+    // If tickets are pre-selected, find the first paid ticket
+    const firstPaidTicket = ticketsToInitialize.find(t => {
+      const quantity = t.selectedQuantity ?? 0;
+      return t.price > 0 && quantity > 0;
+    });
+    if (firstPaidTicket) {
+      this.firstSelectedPaidTicketId.set(String(firstPaidTicket.id));
+    }
+    
     this.startTimeUpdate();
   }
 
@@ -232,20 +290,10 @@ export class RsvpModal implements OnInit, OnDestroy {
     const newActualPricesByTier: { [key: string]: number } = {};
     const newDiscountAmountsByTier: { [key: string]: number } = {};
 
-    let totalPaidTicketCount = 0;
-    let totalSubtotalForFees = 0;
-
-    tickets.forEach((ticket) => {
-      if (!ticket.id) return;
-      const ticketQuantity = ticket.selectedQuantity ?? 0;
-      if (ticketQuantity <= 0) return;
-
-      const priceInCents = ticket.price * 100;
-      if (priceInCents > 0) {
-        totalPaidTicketCount += ticketQuantity;
-        totalSubtotalForFees += priceInCents * ticketQuantity;
-      }
-    });
+    // Track if we've already applied the free ticket discount
+    let freeTicketApplied = false;
+    
+    const firstSelectedPaidTicketId = this.firstSelectedPaidTicketId();
 
     tickets.forEach((ticket) => {
       if (!ticket.id) return;
@@ -261,7 +309,14 @@ export class RsvpModal implements OnInit, OnDestroy {
 
       const ticketCount = ticketQuantity;
 
-      let subTotal = priceInCents * ticketCount;
+      let freeTicketCount = 0;
+      if (this.hasSubscribed && priceInCents > 0 && !freeTicketApplied && firstSelectedPaidTicketId && ticketId === firstSelectedPaidTicketId) {
+        freeTicketCount = Math.min(1, ticketCount);
+        freeTicketApplied = true;
+      }
+
+      // Calculate subtotal after free ticket discount
+      let subTotal = priceInCents * (ticketCount - freeTicketCount);
 
       let additionalCharge = 0;
 
@@ -273,18 +328,21 @@ export class RsvpModal implements OnInit, OnDestroy {
         }
       }
 
-      const discountAmount = 0;
+      // Store the free ticket discount amount
+      const freeTicketDiscountAmount = freeTicketCount * originalPriceInCents;
 
       let fees = 0;
       let total = 0;
 
       // Only calculate fees for paid tickets (price > 0)
+      // Fees should be calculated on the paid ticket count (excluding free tickets)
       if (subTotal > 0 && originalPriceInCents > 0) {
         // Fixed fee (e.g., $1.00 per paid ticket) + 10% (7% + 3%) of subtotal
         // Stripe flat fee is added once per transaction (allocated to first paid tier)
-        const fixedFeeInCents = 100 * ticketCount;
+        const paidTicketCount = ticketCount - freeTicketCount;
+        const fixedFeeInCents = 100 * paidTicketCount;
         const percentageFee = subTotal * 0.1;
-        const stripeFlatFee = 30;
+        const stripeFlatFee = paidTicketCount > 0 ? 30 : 0; // Only add Stripe fee if there are paid tickets
 
         fees = fixedFeeInCents + percentageFee + stripeFlatFee;
         total = this.hostPaysFees ? subTotal : subTotal + fees;
@@ -296,7 +354,8 @@ export class RsvpModal implements OnInit, OnDestroy {
       newHostFeesByTier[ticketId] = additionalCharge;
       newTicketPricesByTier[ticketId] = Math.trunc(subTotal);
       newActualPricesByTier[ticketId] = originalPriceInCents * ticketCount;
-      newDiscountAmountsByTier[ticketId] = discountAmount;
+      // Store free ticket discount amount
+      newDiscountAmountsByTier[ticketId] = freeTicketDiscountAmount;
     });
 
     this.totalsByTier.set(newTotalsByTier);
@@ -455,11 +514,31 @@ export class RsvpModal implements OnInit, OnDestroy {
     const index = tickets.findIndex((t) => t.id === ticket.id);
     if (index !== -1) {
       const updatedTickets = [...tickets];
+      const newQuantity = (updatedTickets[index].selectedQuantity ?? 0) - 1;
       updatedTickets[index] = {
         ...updatedTickets[index],
-        selectedQuantity: (updatedTickets[index].selectedQuantity ?? 0) - 1
+        selectedQuantity: newQuantity
       };
       this.ticketsData.set(updatedTickets);
+      
+      // If the first paid ticket is removed completely (quantity = 0), move free benefit to next paid ticket
+      const firstPaidTicketId = this.firstSelectedPaidTicketId();
+      if (firstPaidTicketId && String(ticket.id) === firstPaidTicketId && newQuantity === 0) {
+        // Find the next available paid ticket that is selected
+        const nextPaidTicket = updatedTickets.find(t => {
+          const quantity = t.selectedQuantity ?? 0;
+          return t.price > 0 && quantity > 0 && String(t.id) !== firstPaidTicketId;
+        });
+        
+        if (nextPaidTicket) {
+          // Move the free benefit to the next paid ticket
+          this.firstSelectedPaidTicketId.set(String(nextPaidTicket.id));
+        } else {
+          // No other paid tickets selected, clear the tracking
+          this.firstSelectedPaidTicketId.set(null);
+        }
+      }
+      
       this.removeAttendeeForTicket(String(ticket.id));
     }
   }
@@ -470,11 +549,19 @@ export class RsvpModal implements OnInit, OnDestroy {
     const index = tickets.findIndex((t) => t.id === ticket.id);
     if (index !== -1) {
       const updatedTickets = [...tickets];
+      const previousQuantity = updatedTickets[index].selectedQuantity ?? 0;
       updatedTickets[index] = {
         ...updatedTickets[index],
-        selectedQuantity: (updatedTickets[index].selectedQuantity ?? 0) + 1
+        selectedQuantity: previousQuantity + 1
       };
       this.ticketsData.set(updatedTickets);
+      
+      // Track the first paid ticket selected (ignore free tickets with price = 0)
+      // Only set if this is the first time selecting this paid ticket (quantity was 0)
+      if (ticket.price > 0 && previousQuantity === 0 && !this.firstSelectedPaidTicketId()) {
+        this.firstSelectedPaidTicketId.set(String(ticket.id));
+      }
+      
       this.addAttendeeForTicket(ticket);
     }
   }
@@ -806,16 +893,41 @@ export class RsvpModal implements OnInit, OnDestroy {
 
       let eligibleTicketIndex = 0;
       const ticketCounts: { [key: string]: number } = {};
+      const freeTicketCountByTicket: { [key: string]: number } = {};
+      const freeTicketUsedByTicket: { [key: string]: number } = {};
 
       selectedTickets.forEach((ticket) => {
-        ticketCounts[String(ticket.id)] = ticket.selectedQuantity ?? 0;
+        const ticketId = String(ticket.id);
+        ticketCounts[ticketId] = ticket.selectedQuantity ?? 0;
+        // Check if this ticket is eligible for free subscription benefit
+        if (this.hasSubscribed && this.isTicketFreeForSubscriber(ticket)) {
+          freeTicketCountByTicket[ticketId] = this.getFreeTicketCount(ticket);
+          freeTicketUsedByTicket[ticketId] = 0;
+        }
       });
 
       const updatedAttendees = currentAttendees.map((attendee) => {
         const ticketId = attendee.event_ticket_id;
-        const priceInCents = (selectedTickets.find((t) => String(t.id) === ticketId)?.price || 0) * 100;
+        const ticket = selectedTickets.find((t) => String(t.id) === ticketId);
+        const priceInCents = (ticket?.price || 0) * 100;
 
         if (priceInCents <= 0) {
+          return {
+            ...attendee,
+            event_promo_code_id: null,
+            platform_fee_amount: 0,
+            amount_paid: 0,
+            host_payout_amount: 0
+          };
+        }
+
+        // Check if this attendee should get the free ticket benefit
+        const freeTicketCount = freeTicketCountByTicket[ticketId] || 0;
+        const freeTicketsUsed = freeTicketUsedByTicket[ticketId] || 0;
+        const isFreeTicketForSubscriber = freeTicketCount > 0 && freeTicketsUsed < freeTicketCount;
+        
+        if (isFreeTicketForSubscriber) {
+          freeTicketUsedByTicket[ticketId] = freeTicketsUsed + 1;
           return {
             ...attendee,
             event_promo_code_id: null,
@@ -829,8 +941,11 @@ export class RsvpModal implements OnInit, OnDestroy {
         const totalPlatformFeeInCents = platformFeesByTier[ticketId] || 0;
         const totalTicketPriceInCents = ticketPricesByTier[ticketId] || 0;
 
-        const platformFeePerTicketInCents = quantity > 0 ? totalPlatformFeeInCents / quantity : 0;
-        const ticketPricePerTicketInCents = quantity > 0 ? totalTicketPriceInCents / quantity : 0;
+        // Calculate per-ticket amounts, accounting for the free ticket
+        const paidTicketCount = quantity - freeTicketCount;
+        
+        const platformFeePerTicketInCents = paidTicketCount > 0 ? totalPlatformFeeInCents / paidTicketCount : 0;
+        const ticketPricePerTicketInCents = paidTicketCount > 0 ? totalTicketPriceInCents / paidTicketCount : 0;
 
         const isEligibleForPromo = eligibleTicketIndex < eligibleTicketCount;
         const ticketDiscount = isEligibleForPromo ? discountPerEligibleTicket : 0;
@@ -918,6 +1033,10 @@ export class RsvpModal implements OnInit, OnDestroy {
     const totalPlatformFeesInCents = Object.values(this.platformFeesByTier()).reduce((sum, fee) => sum + fee, 0);
     const totalPlatformFees = totalPlatformFeesInCents / 100;
 
+    // Calculate total free ticket discount in dollars
+    const totalFreeTicketDiscountInCents = Object.values(this.discountAmountsByTier()).reduce((sum, discount) => sum + discount, 0);
+    const totalFreeTicketDiscount = totalFreeTicketDiscountInCents / 100;
+
     const rsvpData = {
       tickets: selectedTickets,
       promo_code: this.normalizedPromoCode(),
@@ -928,7 +1047,8 @@ export class RsvpModal implements OnInit, OnDestroy {
       platformFee: totalPlatformFees,
       hostFees: this.hostFeesTotal(),
       subtotalAfterHostFees: this.subtotalAfterHostFees(),
-      promoCodeTicketCount: this.promoValidation().eligibleTicketCount || 0
+      promoCodeTicketCount: this.promoValidation().eligibleTicketCount || 0,
+      freeTicketDiscount: totalFreeTicketDiscount
     };
 
     if (this.hasQuestionnaire() && this.questionnaire && this.questionnaire.length > 0 && !this.questionnaireResult()) {
@@ -962,7 +1082,7 @@ export class RsvpModal implements OnInit, OnDestroy {
       this.subscriptionId,
       this.hostPaysFees,
       this.additionalFees,
-      this.hostName
+      this.hostName,
     );
 
     if (!rsvpConfirmData) {

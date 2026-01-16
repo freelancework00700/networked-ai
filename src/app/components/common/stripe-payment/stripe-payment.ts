@@ -1,92 +1,93 @@
 import { CommonModule } from '@angular/common';
+import { Button } from '@/components/form/button';
 import { environment } from 'src/environments/environment';
+import { ModalController } from '@ionic/angular/standalone';
 import { StripeElementsOptions, StripePaymentElementOptions } from '@stripe/stripe-js';
+import { StripePaymentSuccessEvent, StripePaymentErrorEvent } from '@/services/stripe.service';
 import { injectStripe, StripePaymentElementComponent, StripeElementsDirective } from 'ngx-stripe';
-import { StripeService, StripePaymentSuccessEvent, StripePaymentErrorEvent } from '@/services/stripe.service';
-import { input, output, signal, inject, Component, ViewChild, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { output, signal, computed, effect, inject, Component, ViewChild, ChangeDetectionStrategy, Input } from '@angular/core';
 @Component({
   selector: 'app-stripe-payment',
   styleUrl: './stripe-payment.scss',
   templateUrl: './stripe-payment.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, StripeElementsDirective, StripePaymentElementComponent]
+  imports: [CommonModule, StripeElementsDirective, StripePaymentElementComponent, Button]
 })
-export class StripePaymentComponent implements OnInit {
+export class StripePaymentComponent {
   @ViewChild(StripePaymentElementComponent)
   paymentElement!: StripePaymentElementComponent;
 
-  stripe = injectStripe(environment.stripe_key);
-  stripeService = inject(StripeService);
+  stripe = injectStripe(environment.stripeKey);
+  modalCtrl = inject(ModalController);
 
   // Inputs
-  amount = input.required<number>();
-  currency = input<string>('usd');
-  description = input<string>('');
-  metadata = input<Record<string, string>>({});
-  showBillingAddress = input<boolean>(true);
-  requiredBillingAddress = input<boolean>(false);
-  
-  // Payment Intent inputs
-  eventId = input<string>('');
-  subtotal = input<number>(0);
-  total = input<number>(0);
+  @Input() clientSecretInput = '';
+  @Input() showButtons = false;
+  @Input() isModalMode = false;
 
-  // Outputs
   paymentSuccess = output<StripePaymentSuccessEvent>();
   paymentError = output<StripePaymentErrorEvent>();
   paymentProcessing = output<boolean>();
 
-  // State
   isLoading = signal<boolean>(false);
   errorMessage = signal<string>('');
   clientSecret = signal<string>('');
   stripePaymentIntentId = signal<string>('');
+  isProcessingPayment = signal<boolean>(false);
 
-  elementsOptions: StripeElementsOptions = {
-    locale: 'en',
-    appearance: {
-      theme: 'flat',
-      variables: {
-        colorPrimary: '#f5bc61',
-        colorBackground: '#ffffff',
-        colorDanger: '#c73838',
-        colorTextSecondary: '#767676',
-        colorTextPlaceholder: '#a3a3a3',
-        borderRadius: '8px',
-        spacingUnit: '4px',
-        fontSizeBase: '14px',
-        spacingGridRow: '16px'
-      },
-      rules: {
-        '.Input': {
-          border: '1px solid #dbdbdb',
-          color: '#191919',
-          backgroundColor: '#ffffff',
-          boxShadow: 'none',
-          transition: 'border-color 0.2s ease'
-        },
-        '.Input:focus': {
-          border: '1px solid #191919',
-          boxShadow: 'none',
-          outline: 'none'
-        },
-        '.Input:hover': {
-          border: '1px solid #191919'
-        },
-        '.Input--invalid': {
-          border: '1px solid #c73838',
-        },
-        '.Select': {
-          border: '1px solid #dbdbdb',
-          backgroundColor: '#ffffff'
-        },
-        '.Select:focus': {
-          border: '1px solid #f5bc61',
-          boxShadow: 'none'
-        }
-      }
+  // Computed signal for elementsOptions that updates when clientSecret changes
+  elementsOptions = computed<StripeElementsOptions | null>(() => {
+    const secret = this.clientSecret();
+    if (!secret || secret.trim() === '') {
+      return null;
     }
-  };
+    return {
+      locale: 'en',
+      appearance: {
+        theme: 'flat',
+        variables: {
+          colorPrimary: '#f5bc61',
+          colorBackground: '#ffffff',
+          colorDanger: '#c73838',
+          colorTextSecondary: '#767676',
+          colorTextPlaceholder: '#a3a3a3',
+          borderRadius: '8px',
+          spacingUnit: '4px',
+          fontSizeBase: '14px',
+          spacingGridRow: '16px'
+        },
+        rules: {
+          '.Input': {
+            border: '1px solid #dbdbdb',
+            color: '#191919',
+            backgroundColor: '#ffffff',
+            boxShadow: 'none',
+            transition: 'border-color 0.2s ease'
+          },
+          '.Input:focus': {
+            border: '1px solid #191919',
+            boxShadow: 'none',
+            outline: 'none'
+          },
+          '.Input:hover': {
+            border: '1px solid #191919'
+          },
+          '.Input--invalid': {
+            border: '1px solid #c73838'
+          },
+          '.Select': {
+            border: '1px solid #dbdbdb',
+            backgroundColor: '#ffffff'
+          },
+          '.Select:focus': {
+            border: '1px solid #f5bc61',
+            boxShadow: 'none'
+          }
+        }
+      },
+      clientSecret: secret
+    };
+  });
 
   paymentElementOptions: StripePaymentElementOptions = {
     layout: {
@@ -97,49 +98,15 @@ export class StripePaymentComponent implements OnInit {
     }
   };
 
-  ngOnInit(): void {
-    this.fetchPaymentIntent();
-  }
-
-  async fetchPaymentIntent(): Promise<void> {
-    try {
-      this.isLoading.set(true);
-      this.errorMessage.set('');
-
-      const response = await this.stripeService.createPaymentIntent({
-        event_id: this.eventId(),
-        subtotal: this.subtotal(),
-        total: this.total()
-      });
-
-      if (response?.client_secret) {
-        this.clientSecret.set(response.client_secret);
-        // Store stripe_payment_intent_id for use in create attendees API
-        if (response.stripe_payment_intent_id) {
-          this.stripePaymentIntentId.set(response.stripe_payment_intent_id);
-        }
-        this.elementsOptions = {
-          locale: this.elementsOptions.locale,
-          appearance: this.elementsOptions.appearance,
-          clientSecret: response.client_secret
-        };
+  constructor() {
+    effect(() => {
+      const secret = this.clientSecretInput;
+      if (secret && secret.trim() !== '') {
+        this.clientSecret.set(secret);
       } else {
-        this.errorMessage.set('Failed to initialize payment');
-        this.paymentError.emit({
-          success: false,
-          error: 'Failed to initialize payment'
-        });
+        this.clientSecret.set('');
       }
-    } catch (error: any) {
-      console.error('Error fetching payment intent:', error);
-      this.errorMessage.set(error?.message || 'Failed to initialize payment');
-      this.paymentError.emit({
-        success: false,
-        error: error?.message || 'Failed to initialize payment'
-      });
-    } finally {
-      this.isLoading.set(false);
-    }
+    });
   }
 
   getPaymentIntentId(): string {
@@ -152,10 +119,11 @@ export class StripePaymentComponent implements OnInit {
       return false;
     }
 
-    if (this.isLoading()) {
+    if (this.isLoading() || this.isProcessingPayment()) {
       return false;
     }
 
+    this.isProcessingPayment.set(true);
     this.isLoading.set(true);
     this.errorMessage.set('');
     this.paymentProcessing.emit(true);
@@ -178,6 +146,7 @@ export class StripePaymentComponent implements OnInit {
           .subscribe({
             next: (result) => {
               this.isLoading.set(false);
+              this.isProcessingPayment.set(false);
               this.paymentProcessing.emit(false);
 
               if (result.error) {
@@ -189,11 +158,18 @@ export class StripePaymentComponent implements OnInit {
                 resolve(false);
               } else {
                 if (result.paymentIntent?.status === 'succeeded') {
+                  // Store payment intent ID from the result
+                  if (result.paymentIntent.id) {
+                    this.stripePaymentIntentId.set(result.paymentIntent.id);
+                  }
                   this.paymentSuccess.emit({
                     success: true,
                     paymentIntentId: result.paymentIntent.id,
                     paymentIntent: result.paymentIntent
                   });
+                  if (this.isModalMode) {
+                    this.modalCtrl.dismiss({ success: true }, 'success');
+                  }
                   resolve(true);
                 } else {
                   this.errorMessage.set('Payment was not completed');
@@ -209,6 +185,7 @@ export class StripePaymentComponent implements OnInit {
               console.error('Stripe error:', error);
               this.errorMessage.set(error?.message || 'Payment processing failed');
               this.isLoading.set(false);
+              this.isProcessingPayment.set(false);
               this.paymentProcessing.emit(false);
               this.paymentError.emit({
                 success: false,
@@ -222,6 +199,7 @@ export class StripePaymentComponent implements OnInit {
       console.error('Payment error:', error);
       this.errorMessage.set(error?.message || 'An unexpected error occurred');
       this.isLoading.set(false);
+      this.isProcessingPayment.set(false);
       this.paymentProcessing.emit(false);
       this.paymentError.emit({
         success: false,
@@ -229,5 +207,9 @@ export class StripePaymentComponent implements OnInit {
       });
       return false;
     }
+  }
+
+  async closeModal(): Promise<void> {
+    await this.modalCtrl.dismiss(null, 'cancel');
   }
 }

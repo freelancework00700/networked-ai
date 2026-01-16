@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header mode="md">
   <ion-toolbar>
     <div class="flex items-center px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
       <i class="pi pi-arrow-left neutral-03" (click)="back()"></i>
@@ -6,47 +6,92 @@
       <div class="w-6"></div>
     </div>
 
-    <segment-button [items]="segmentItems" [value]="segmentValue()" (valueChange)="onSegmentChange($event)" />
+    @if (hasAnyPlans()) {
+      <segment-button [items]="segmentItems" [value]="segmentValue()" (valueChange)="onSegmentChange($event)" />
+    }
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" mode="md">
   <div class="w-full max-w-[672px] mx-auto h-full">
     <div class="p-5 h-full">
-      @if (hasPlans()) {
+      @if (isLoading()) {
+        <div class="flex items-center justify-center h-full min-h-[400px]">
+          <div class="body-14M neutral-03">Loading subscription plans...</div>
+        </div>
+      } @else if (hasPlans()) {
         <div class="flex flex-col gap-4 mb-6">
           @for (plan of currentPlans(); track plan.id) {
-            <app-subscription-card [data]="plan" mode="plan" (manage)="onManage($event)" (events)="onEvents($event)" />
+            <app-subscription-card [data]="plan" mode="plan" (manage)="onManage($event)" (events)="onEvents($event)" (delete)="onDelete($event)" />
           }
         </div>
       } @else {
-        <div class="flex items-center justify-center h-full min-h-[400px]">
-          <div class="flex flex-col items-center justify-center gap-1 text-center px-5">
-            <div class="flex items-center gap-4 mb-6">
-              <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center">
-                <div class="icon-container icon-event">
-                  <i class="pi pi-crown text-white text-3xl!"></i>
+        <!-- Event-specific empty state (when sponsor has plans but event doesn't) -->
+        @if (showEventEmptyState()) {
+          <div class="flex items-center justify-center h-full min-h-[400px]">
+            <div class="flex flex-col items-center justify-center gap-1 text-center px-5">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center">
+                  <div class="icon-container icon-event">
+                    <i class="pi pi-crown text-white text-3xl!"></i>
+                  </div>
                 </div>
               </div>
-              <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center">
-                <div class="icon-container icon-sponsor">
-                  <ion-icon src="/assets/svg/subscription/sponsorIcon.svg" class="text-4xl!"></ion-icon>
-                </div>
+              <div class="heading-h2 neutral-01 mb-2">Start an Event Subscription Model</div>
+              <div class="body-14M neutral-02 mb-6">
+                Let members pay you monthly for a more premium experience with access to exclusive events!
               </div>
-            </div>
-            <div class="heading-h2 neutral-01 mb-2">Start a Subscription Model</div>
-            <div class="body-14M neutral-02 mb-6">
-              Let members pay you monthly for a more premium experience, or create a sponsorship plan for sponsors to pay regularly to sponsor your
-              events!
             </div>
           </div>
-        </div>
+        }
+        <!-- Sponsor-specific empty state (when event has plans but sponsor doesn't) -->
+        @else if (showSponsorEmptyState()) {
+          <div class="flex items-center justify-center h-full min-h-[400px]">
+            <div class="flex flex-col items-center justify-center gap-1 text-center px-5">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center">
+                  <div class="icon-container icon-sponsor">
+                    <ion-icon src="/assets/svg/subscription/sponsorIcon.svg" class="text-4xl!"></ion-icon>
+                  </div>
+                </div>
+              </div>
+              <div class="heading-h2 neutral-01 mb-2">Start a Sponsor Subscription Model</div>
+              <div class="body-14M neutral-02 mb-6">
+                Create a sponsorship plan for sponsors to pay regularly to sponsor your events!
+              </div>
+            </div>
+          </div>
+        }
+        <!-- Generic empty state (when both have no plans) -->
+        @else if (showGenericEmptyState()) {
+          <div class="flex items-center justify-center h-full min-h-[400px]">
+            <div class="flex flex-col items-center justify-center gap-1 text-center px-5">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center">
+                  <div class="icon-container icon-event">
+                    <i class="pi pi-crown text-white text-3xl!"></i>
+                  </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center">
+                  <div class="icon-container icon-sponsor">
+                    <ion-icon src="/assets/svg/subscription/sponsorIcon.svg" class="text-4xl!"></ion-icon>
+                  </div>
+                </div>
+              </div>
+              <div class="heading-h2 neutral-01 mb-2">Start a Subscription Model</div>
+              <div class="body-14M neutral-02 mb-6">
+                Let members pay you monthly for a more premium experience, or create a sponsorship plan for sponsors to pay regularly to sponsor your
+                events!
+              </div>
+            </div>
+          </div>
+        }
       }
     </div>
   </div>
 </ion-content>
 
-<ion-footer>
+<ion-footer mode="md">
   <ion-toolbar>
     @if (hasPlans()) {
       <div class="p-5 max-w-[672px] mx-auto">
@@ -54,13 +99,49 @@
           iconName="pi-plus"
           [label]="segmentValue() === 'event' ? 'Create New Event Plan' : 'Create New Sponsor Plan'"
           [color]="segmentValue() === 'event' ? 'info' : 'primary'"
+          (click)="onCreatePlan(segmentValue())"
         />
       </div>
     } @else {
-      <div class="flex flex-col gap-2 w-full p-3">
-        <app-button label="Create Event Subscription Plan" color="info" iconName="pi-crown" />
-        <app-button label="Create Sponsor Subscription Plan" color="primary" iconName="pi-crown" />
-      </div>
+      <!-- Event-specific button (when sponsor has plans but event doesn't) -->
+      @if (showEventEmptyState()) {
+        <div class="p-5 max-w-[672px] mx-auto">
+          <app-button 
+            label="Create Event Subscription Plan" 
+            color="info" 
+            iconName="pi-crown"
+            (click)="onCreatePlan('event')"
+          />
+        </div>
+      }
+      <!-- Sponsor-specific button (when event has plans but sponsor doesn't) -->
+      @else if (showSponsorEmptyState()) {
+        <div class="p-5 max-w-[672px] mx-auto">
+          <app-button 
+            label="Create Sponsor Subscription Plan" 
+            color="primary" 
+            iconName="pi-crown"
+            (click)="onCreatePlan('sponsor')"
+          />
+        </div>
+      }
+      <!-- Generic buttons (when both have no plans) -->
+      @else if (showGenericEmptyState()) {
+        <div class="flex flex-col gap-2 w-full p-3">
+          <app-button 
+            label="Create Event Subscription Plan" 
+            color="info" 
+            iconName="pi-crown"
+            (click)="onCreatePlan('event')"
+          />
+          <app-button 
+            label="Create Sponsor Subscription Plan" 
+            color="primary" 
+            iconName="pi-crown"
+            (click)="onCreatePlan('sponsor')"
+          />
+        </div>
+      }
     }
   </ion-toolbar>
 </ion-footer>

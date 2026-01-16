@@ -772,7 +772,33 @@ export class CreateEvent implements OnInit, OnDestroy {
     const startDate = this.eventService.combineDateAndTime(eventDate, eventStartTime);
     const endDate = untilFinished ? null : this.eventService.combineDateAndTime(eventDate, eventEndTime);
 
-    const formattedTickets = this.eventService.formatTickets(eventData.tickets || [], eventDate, eventStartTime);
+    // Add subscriber exclusive ticket if is_subscriber_exclusive is true
+    let tickets = eventData.tickets || [];
+    const isSubscriberExclusive = eventData.is_subscriber_exclusive || eventData.settings?.is_subscriber_exclusive || false;
+    
+    if (isSubscriberExclusive) {
+      // Check if subscriber exclusive ticket already exists
+      const existingSubscriberTicket = tickets.find(
+        (t: any) => t.name === 'Subscriber exclusive' && t.ticket_type === 'Free'
+      );
+      
+      if (!existingSubscriberTicket) {
+        const subscriberExclusiveTicket: any = {
+          name: 'Subscriber exclusive',
+          ticket_type: 'Free',
+          price: 0,
+          quantity: 999,
+          description: 'This event is exclusively for subscribers. Join us for this special experience!',
+          sale_start_date: new Date().toISOString().split('T')[0],
+          sale_end_date: endDate,
+          end_at_event_start: true,
+          order: 1
+        };
+        tickets = [subscriberExclusiveTicket, ...tickets];
+      }
+    }
+
+    const formattedTickets = this.eventService.formatTickets(tickets, eventDate, eventStartTime);
     const formattedPromoCodes = this.eventService.formatPromoCodes(eventData.promo_codes || []);
     const formattedQuestionnaire = this.eventService.formatQuestionnaire(eventData.questionnaire || []);
     const settings = this.eventService.buildEventSettings(eventData);

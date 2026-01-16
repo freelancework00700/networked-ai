@@ -1,54 +1,38 @@
-import {
-  OnInit,
-  inject,
-  signal,
-  Inject,
-  computed,
-  effect,
-  DOCUMENT,
-  Component,
-  OnDestroy,
-  PLATFORM_ID,
-  ChangeDetectionStrategy
-} from '@angular/core';
 import { Subscription } from 'rxjs';
 import { MenuModule } from 'primeng/menu';
 import { IUser } from '@/interfaces/IUser';
-import { FormsModule } from '@angular/forms';
+import { Device } from '@capacitor/device';
+import { ActivatedRoute } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { NgOptimizedImage } from '@angular/common';
 import { AuthService } from '@/services/auth.service';
 import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
 import { MenuItem as PrimeMenuItem } from 'primeng/api';
-import { ActivatedRoute, Router } from '@angular/router';
 import { ToasterService } from '@/services/toaster.service';
 import { EventDisplay } from '@/components/common/event-display';
 import { NavigationService } from '@/services/navigation.service';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
 import { RsvpDetailsModal } from '@/components/modal/rsvp-details-modal';
-import { IonContent, IonFooter, IonToolbar, IonHeader, IonIcon } from '@ionic/angular/standalone';
+import { IonContent, IonFooter, IonToolbar, IonHeader, IonIcon, IonSkeletonText } from '@ionic/angular/standalone';
+import { OnInit, inject, signal, computed, effect, Component, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'event',
   styleUrl: './event.scss',
   templateUrl: './event.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonIcon, IonFooter, IonHeader, IonContent, IonToolbar, MenuModule, FormsModule, EventDisplay, NgOptimizedImage]
+  imports: [Button, IonIcon, IonFooter, IonHeader, IonContent, IonToolbar, IonSkeletonText, MenuModule, EventDisplay, NgOptimizedImage]
 })
 export class Event implements OnInit, OnDestroy {
   route = inject(ActivatedRoute);
-  router = inject(Router);
-  platformId = inject(PLATFORM_ID);
-  sanitizer = inject(DomSanitizer);
   authService = inject(AuthService);
   modalService = inject(ModalService);
   eventService = inject(EventService);
   toasterService = inject(ToasterService);
   navigationService = inject(NavigationService);
-  @Inject(DOCUMENT) private document = inject(DOCUMENT);
+  platformId = inject(PLATFORM_ID);
 
   // subscriptions
   routeParamsSubscription?: Subscription;
@@ -57,11 +41,11 @@ export class Event implements OnInit, OnDestroy {
   // SIGNALS
   event = signal<any>(null);
   selectedDate = signal('');
-  isScrolled = signal(false);
   eventId = signal<string>('');
   isLoading = signal<boolean>(true);
   subscriptionId = signal<string>('');
   isLoadingChildEvent = signal<boolean>(false);
+  isSendingRsvpRequest = signal<boolean>(false);
   selectedChildEventId = signal<string | null>(null);
   childEventData = signal<Map<string, any>>(new Map());
   timerTrigger = signal(0);
@@ -230,7 +214,7 @@ export class Event implements OnInit, OnDestroy {
   }
 
   isEventLiked = computed(() => {
-    const eventData = this.event();
+    const eventData = this.currentEventData();    
     return eventData?.is_like || false;
   });
 
@@ -243,7 +227,7 @@ export class Event implements OnInit, OnDestroy {
         description: '',
         images: [],
         displayMedias: [],
-        views: '0',
+        total_views: '0',
         isPublic: true,
         location: '',
         hostName: 'Networked AI',
@@ -253,7 +237,7 @@ export class Event implements OnInit, OnDestroy {
         userSections: [],
         isRepeatingEvent: false,
         dateItems: [],
-        rsvpButtonLabel: 'RSVP Now - Free',
+        rsvpButtonLabel: 'RSVP Now for Free',
         isCurrentUserHost: false,
         isCurrentUserAttendee: false,
         isRsvpApprovalRequired: false,
@@ -264,7 +248,10 @@ export class Event implements OnInit, OnDestroy {
         tickets: [],
         questionnaire: [],
         promo_codes: [],
-        subscriptionPlanType: null
+        subscriptionPlanType: null,
+        has_plans: false,
+        is_subscriber_exclusive: false,
+        has_subscribed: false
       };
     }
     const parentEvent = this.event();
@@ -276,7 +263,8 @@ export class Event implements OnInit, OnDestroy {
 
     // Check if current user is an attendee
     const attendees = eventData?.attendees || [];
-    const isCurrentUserAttendee = currentUser?.id ? attendees.some((attendee: any) => attendee.id === currentUser.id) : false;
+    const isCurrentUserAttendee = currentUser?.id ? attendees.some((attendee: any) => attendee.user?.id === currentUser.id) : false;
+    // const isCurrentUserAttendee = currentUser?.id ? attendees.some((attendee: any) => attendee.id === currentUser.id) : false;
 
     // Check if current user has sent an RSVP request and its status
     const rsvpRequests = eventData?.rsvp_requests || [];
@@ -295,47 +283,12 @@ export class Event implements OnInit, OnDestroy {
       hasCurrentUserRsvpRequest,
       isCurrentUserRequestApproved,
       isCurrentUserRequestPending,
-      isCurrentUserRequestRejected
+      isCurrentUserRequestRejected,
+      has_plans: eventData?.has_plans || false,
+      is_subscriber_exclusive: eventData?.settings?.is_subscriber_exclusive ?? false,
+      has_subscribed: eventData?.has_subscribed || false
     };
   });
-
-  private isInitializing = signal(true);
-
-  constructor() {
-    effect(() => {
-      const date = this.selectedDate();
-      const eventData = this.event();
-
-      if (this.isInitializing()) return;
-
-      if (!date || !eventData) return;
-
-      if (eventData.child_events && eventData.child_events.length > 0) {
-        const matchingChild = eventData.child_events.find((child: any) => {
-          if (!child.start_date) return false;
-          const childDateKey = this.eventService.formatDateKey(child.start_date);
-          return childDateKey === date;
-        });
-
-        if (matchingChild && matchingChild.slug) {
-          this.router.navigate(['/event', matchingChild.slug], {
-            replaceUrl: true
-          });
-          return;
-        }
-      }
-
-      const parentDateKey = eventData.start_date ? this.eventService.formatDateKey(eventData.start_date) : '';
-      if (parentDateKey === date && eventData.slug) {
-        this.router.navigate(['/event', eventData.slug], {
-          replaceUrl: true
-        });
-        return;
-      }
-
-      this.onDateChange(date);
-    });
-  }
 
   ngOnInit(): void {
     this.routeParamsSubscription = this.route.paramMap.subscribe((params) => {
@@ -353,19 +306,27 @@ export class Event implements OnInit, OnDestroy {
     }, 1000);
   }
 
+  async trackEventView(eventId: string): Promise<void> {
+    try {
+      const deviceInfo = await Device.getId();
+      if (deviceInfo?.identifier) {
+        await this.eventService.addView(eventId, deviceInfo.identifier);
+      }
+    } catch (deviceError) {
+      console.error('Error tracking event view:', deviceError);
+    }
+  }
+
   async loadEvent(): Promise<void> {
     const eventId = this.eventId();
     if (!eventId) return;
 
     try {
       this.isLoading.set(true);
-      this.isInitializing.set(true);
 
       const eventData = await this.eventService.getEventById(eventId);
       if (eventData) {
         this.event.set(eventData);
-
-        this.updateTicketsAndParticipants(eventData);
 
         if (eventData.subscription_id) {
           this.subscriptionId.set(eventData.subscription_id);
@@ -378,21 +339,22 @@ export class Event implements OnInit, OnDestroy {
         } else if (this.eventDisplayData().dateItems.length > 0) {
           this.selectedDate.set(this.eventDisplayData().dateItems[0].value);
         }
+        await this.trackEventView(eventData.id);
       }
     } catch (error) {
       console.error('Error loading event:', error);
       this.toasterService.showError('Failed to load event');
     } finally {
       this.isLoading.set(false);
-      this.isInitializing.set(false);
     }
   }
 
   async onDateChange(date: string): Promise<void> {
     this.selectedDate.set(date);
+    this.handleDateChange(date);
   }
 
-  private async handleDateChange(date: string): Promise<void> {
+  async handleDateChange(date: string): Promise<void> {
     const eventData = this.event();
     if (!eventData) return;
 
@@ -410,7 +372,6 @@ export class Event implements OnInit, OnDestroy {
         const parentDateKey = this.eventService.formatDateKey(eventData.start_date);
         if (parentDateKey === date) {
           this.selectedChildEventId.set(null);
-          this.updateTicketsAndParticipants(eventData);
         }
       }
     } else {
@@ -421,7 +382,6 @@ export class Event implements OnInit, OnDestroy {
   async loadChildEvent(childEventId: string): Promise<void> {
     const childEventsMap = this.childEventData();
     if (childEventsMap.has(childEventId)) {
-      this.updateTicketsAndParticipants(childEventsMap.get(childEventId));
       return;
     }
 
@@ -432,8 +392,7 @@ export class Event implements OnInit, OnDestroy {
         const updatedMap = new Map(childEventsMap);
         updatedMap.set(childEventId, childEventData);
         this.childEventData.set(updatedMap);
-
-        this.updateTicketsAndParticipants(childEventData);
+        await this.trackEventView(childEventData.id);
       }
     } catch (error) {
       console.error('Error loading child event:', error);
@@ -441,13 +400,6 @@ export class Event implements OnInit, OnDestroy {
     } finally {
       this.isLoadingChildEvent.set(false);
     }
-  }
-
-  private updateTicketsAndParticipants(eventData: any): void {}
-
-  onScroll(event: CustomEvent) {
-    const scrollTop = event.detail.scrollTop;
-    this.isScrolled.set(scrollTop > 100);
   }
 
   openUserList(title: string, users: IUser[]): void {
@@ -475,7 +427,9 @@ export class Event implements OnInit, OnDestroy {
     const additionalFees = eventData?.settings?.additional_fees ?? null;
     const maxAttendeesPerUser = eventData?.settings?.max_attendees_per_user ?? 0;
     const hostName = eventData?.participants?.find((p: any) => p.role === 'Host')?.user?.name || 'Networked AI';
-    const planIds = eventData?.plan_ids || [];
+    const hasPlans = eventData?.has_plans || false;
+    const hasSubscribed = eventData?.has_subscribed || false;
+    const isSubscriberExclusive = eventData?.settings?.is_subscriber_exclusive ?? false;
 
     const result = await this.modalService.openRsvpModal(
       displayData.tickets || [],
@@ -488,7 +442,9 @@ export class Event implements OnInit, OnDestroy {
       maxAttendeesPerUser,
       hostName,
       this.eventIdFromData() || '',
-      planIds
+      hasPlans,
+      hasSubscribed,
+      isSubscriberExclusive
     );
     if (result) {
       const loadingModal = await this.modalService.openLoadingModal('Processing your RSVP...');
@@ -496,16 +452,24 @@ export class Event implements OnInit, OnDestroy {
       try {
         const feedbackSaved = await this.saveEventFeedback(result);
         if (feedbackSaved) {
-          await this.saveRsvpAttendees(result, result?.stripe_payment_intent_id || '');
-          await loadingModal.dismiss();
-          await this.modalService.openRsvpConfirmModal(result as RsvpDetailsModal);
-          await this.loadEvent();
+          try {
+            await this.saveRsvpAttendees(result, result?.stripe_payment_intent_id || '');
+            await loadingModal.dismiss();
+            await this.modalService.openRsvpConfirmModal(result as RsvpDetailsModal);
+            await this.loadEvent();
+          } catch (attendeeError) {
+            await loadingModal.dismiss();
+            console.error('Error saving RSVP attendees:', attendeeError);
+            this.toasterService.showError('Failed to save RSVP. Please try again.');
+            return;
+          }
         } else {
           await loadingModal.dismiss();
         }
       } catch (error) {
         await loadingModal.dismiss();
-        throw error;
+        console.error('Error processing RSVP:', error);
+        this.toasterService.showError('Failed to process RSVP. Please try again.');
       }
     }
   }
@@ -517,22 +481,21 @@ export class Event implements OnInit, OnDestroy {
       return;
     }
 
-    const loadingModal = await this.modalService.openLoadingModal('Sending RSVP request...');
+    this.isSendingRsvpRequest.set(true);
 
     try {
       await this.eventService.sendRsvpRequest(eventId);
-      await loadingModal.dismiss();
-      this.toasterService.showSuccess('RSVP request sent successfully');
-      // Reload event to update RSVP request status
+      this.toasterService.showSuccess('RSVP request sent successfully');  
       await this.loadEvent();
     } catch (error) {
-      await loadingModal.dismiss();
       console.error('Error sending RSVP request:', error);
       this.toasterService.showError('Failed to send RSVP request. Please try again.');
+    } finally {
+      this.isSendingRsvpRequest.set(false);
     }
   }
 
-  private async saveEventFeedback(rsvpResult: any): Promise<boolean> {
+  async saveEventFeedback(rsvpResult: any): Promise<boolean> {
     try {
       const eventId = this.eventIdFromData();
       if (!eventId) {
@@ -542,7 +505,6 @@ export class Event implements OnInit, OnDestroy {
 
       const questionnaireResult = rsvpResult?.questionnaireResult;
       if (!questionnaireResult || !questionnaireResult.responses || questionnaireResult.responses.length === 0) {
-        // No questionnaire responses to save - consider this successful
         return true;
       }
 
@@ -555,9 +517,7 @@ export class Event implements OnInit, OnDestroy {
 
         const questionType = response.type || '';
         let answer: string | number | string[] = '';
-        let answerOptionId: string | undefined = undefined;
 
-        // Handle different question types
         if (questionType === 'SingleChoice') {
           let answerValue: string = '';
           let optionId: string | undefined = undefined;
@@ -604,7 +564,6 @@ export class Event implements OnInit, OnDestroy {
             });
           });
         } else {
-          // For text, number, rating, etc.
           answer = response.answer || '';
           feedback.push({
             question_id: response.question_id,
@@ -630,29 +589,29 @@ export class Event implements OnInit, OnDestroy {
     }
   }
 
-  private async saveRsvpAttendees(rsvpResult: any, stripe_payment_intent_id: string): Promise<void> {
-    try {
-      const eventId = rsvpResult?.event_id || this.eventIdFromData();
-      if (!eventId) {
-        console.error('Event ID not found');
-        return;
-      }
-
-      const attendees = rsvpResult?.attendees || [];
-      
-      if (attendees.length === 0) {
-        console.warn('No attendees to save');
-        return;
-      }
-
-      await this.eventService.saveEventAttendees({
-        event_id: eventId,
-        attendees: attendees,
-        stripe_payment_intent_id: stripe_payment_intent_id || ''
-      });
-    } catch (error) {
-      console.error('Error saving RSVP attendees:', error);
+  async saveRsvpAttendees(rsvpResult: any, stripe_payment_intent_id: string): Promise<void> {
+    const eventId = rsvpResult?.event_id || this.eventIdFromData();
+    if (!eventId) {
+      throw new Error('Event ID not found');
     }
+
+    const attendees = rsvpResult?.attendees || [];
+
+    if (attendees.length === 0) {
+      console.warn('No attendees to save');
+      return;
+    }
+
+    const payload: any = {
+      event_id: eventId,
+      attendees: attendees
+    };
+
+    if (stripe_payment_intent_id) {
+      payload.stripe_payment_intent_id = stripe_payment_intent_id;
+    }
+
+    await this.eventService.saveEventAttendees(payload);
   }
 
   goBack(): void {
@@ -683,10 +642,6 @@ export class Event implements OnInit, OnDestroy {
     if (eventId) {
       this.navigationService.navigateForward(`/chat-room/${eventId}`);
     }
-  }
-
-  viewEvent() {
-    this.navigationService.navigateForward(`/event/1111`);
   }
 
   editEvent() {
@@ -768,7 +723,7 @@ export class Event implements OnInit, OnDestroy {
       try {
         await this.eventService.deleteEvent(eventId);
         this.toasterService.showSuccess('Event cancelled');
-        this.navigationService.back('/home');
+        this.navigationService.navigateForward('/', true);
       } catch (error) {
         console.error('Error cancelling event:', error);
         this.toasterService.showError('Failed to cancel event. Please try again.');
@@ -778,29 +733,43 @@ export class Event implements OnInit, OnDestroy {
 
   async likeEvent(): Promise<void> {
     const eventId = this.eventIdFromData();
-    const eventData = this.event();
-    if (!eventId || !eventData) return;
+    const currentEventData = this.currentEventData();
+    if (!eventId || !currentEventData) return;
 
-    const currentIsLiked = eventData.is_like || false;
+    const currentIsLiked = currentEventData.is_like || false;
     const newIsLiked = !currentIsLiked;
 
-    this.event.update((e) => ({
-      ...e,
-      is_like: newIsLiked,
-      total_likes: newIsLiked ? (e.total_likes || 0) + 1 : Math.max((e.total_likes || 0) - 1, 0)
-    }));
+    // Check if we're dealing with a child event
+    const selectedChildId = this.selectedChildEventId();
+    if (selectedChildId) {
+      // Update child event data
+      const childEventsMap = this.childEventData();
+      const childEvent = childEventsMap.get(selectedChildId);
+      
+      if (childEvent) {
+        const updatedChildEvent = {
+          ...childEvent,
+          is_like: newIsLiked,
+          total_likes: newIsLiked ? (childEvent.total_likes || 0) + 1 : Math.max((childEvent.total_likes || 0) - 1, 0)
+        };
+        
+        const updatedMap = new Map(childEventsMap);
+        updatedMap.set(selectedChildId, updatedChildEvent);
+        this.childEventData.set(updatedMap);
+      }
+    } else {
+      // Update parent event
+      this.event.update((e) => ({
+        ...e,
+        is_like: newIsLiked,
+        total_likes: newIsLiked ? (e.total_likes || 0) + 1 : Math.max((e.total_likes || 0) - 1, 0)
+      }));
+    }
 
     try {
       await this.eventService.likeEvent(eventId);
-
-      await this.loadEvent();
     } catch (error) {
       console.error('Error toggling event like:', error);
-      this.event.update((e) => ({
-        ...e,
-        is_like: currentIsLiked,
-        total_likes: eventData.total_likes || 0
-      }));
       this.toasterService.showError('Failed to like event. Please try again.');
     }
   }
@@ -834,6 +803,16 @@ export class Event implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error reporting event:', error);
       this.toasterService.showError('Failed to report event. Please try again.');
+    }
+  }
+
+  navigateToSubscriptionPlans(): void {
+    const eventData = this.currentEventData();
+    const planIds = eventData?.plan_ids;
+    
+    if (planIds && planIds.length > 0) {
+      const planId = planIds[0];
+      this.navigationService.navigateForward(`/subscription/${planId}`);
     }
   }
 

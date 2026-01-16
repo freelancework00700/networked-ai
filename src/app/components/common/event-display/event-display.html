@@ -41,26 +41,24 @@
             <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-neutral-06 body-10 neutral-02 border border-[#E5E5E5]">
               {{ eventData().isPublic ? 'Public Event' : 'Private Event' }}
             </span>
-            @if (eventData().views) {
+            @if (eventData().total_views) {
               <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-neutral-06 body-10 neutral-02 border border-[#E5E5E5]">
-                {{ eventData().views }} Views
+                {{ eventData().total_views }} Views
               </span>
             }
           </div>
-          @if (eventData().subscriptionPlanType) {
-            @if (eventData().subscriptionPlanType === 'event') {
-              <div class="inline-flex items-center px-2 py-1 body-10 gap-1.5 text-white rounded-full bg-blue-600">
+            @if (eventData().has_plans && !eventData().is_subscriber_exclusive) {
+              <div class="inline-flex items-center px-2 py-1 body-10 gap-1.5 text-white rounded-full bg-[#2B5BDE]">
                 <ion-icon src="/assets/svg/crown-white.svg" class="text-[12px]"></ion-icon>
                 <span>Free for Subscribers</span>
               </div>
             }
-            @if (eventData().subscriptionPlanType === 'sponsor') {
+            @if (eventData().is_subscriber_exclusive) {
               <div class="subscriber-chip inline-flex items-center px-2 py-1 gap-1.5 body-10 text-[#5c3c09f0]">
                 <ion-icon src="/assets/svg/crown-sponsor.svg" class="text-[12px]"></ion-icon>
                 <span>Subscribers Exclusive</span>
               </div>
             }
-          }
         </div>
         <!-- title & host -->
         <div class="body-16SB neutral-01 truncate">{{ eventData().title || 'Event Title' }}</div>
@@ -99,9 +97,15 @@
         <!-- admission -->
         <div class="flex items-start gap-1.5">
           <div class="pi pi-ticket neutral-03 !text-[16px] mt-0.5 flex-shrink-0"></div>
-          <div class="flex items-center justify-between gap-4 w-full min-w-0">
+          <div 
+            class="flex items-center justify-between gap-4 w-full min-w-0"
+            [class.cursor-pointer]="hasMultipleTickets()"
+            (click)="handleAdmissionClick()"
+          >
             <div class="body-14R neutral-03 flex-shrink-0">Admission</div>
-            <div class="body-14R neutral-01 truncate text-right">{{ eventData().admission || 'Free' }}</div>
+            <div class="body-14R neutral-01 truncate text-right flex items-center gap-1">
+              {{ eventData().admission || 'Free' }}
+            </div>
           </div>
         </div>
 

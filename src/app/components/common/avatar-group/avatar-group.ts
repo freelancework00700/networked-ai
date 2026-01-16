@@ -1,6 +1,7 @@
 import { Avatar } from 'primeng/avatar';
 import { IUser } from '@/interfaces/IUser';
 import { AvatarGroup } from 'primeng/avatargroup';
+import { getImageUrlOrDefault } from '@/utils/helper';
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
@@ -48,6 +49,9 @@ export class AvatarGroupComponent {
   }
 
   getUserImage(user: IUser): string {
-    return (user.image_url as string) || user.thumbnail_url || 'assets/images/profile.jpeg';
+    const thumbnailUrl = user?.thumbnail_url;
+    const imageUrl = user?.image_url;
+    const imageUrlString = typeof imageUrl === 'string' ? imageUrl : '';
+    return getImageUrlOrDefault(thumbnailUrl || imageUrlString || '');
   }
 }

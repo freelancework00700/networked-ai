@@ -137,13 +137,9 @@ export class TicketCard {
 
   description = computed(() => {
     const ticketDescription = this.ticket().description;
-    if (!ticketDescription) {
-      return 'Insert one or two lines of the description here.';
-    }
     const tempDiv = this.document.createElement('div');
-    tempDiv.innerHTML = ticketDescription;
-    const plainText = tempDiv.textContent || tempDiv.innerText || '';
-    return plainText.trim() || 'Insert one or two lines of the description here.';
+    tempDiv.innerHTML = ticketDescription || '';
+    return tempDiv.textContent || tempDiv.innerText || '';
   });
 
   onEdit(): void {

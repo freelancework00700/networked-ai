@@ -2,11 +2,13 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
+import { ToasterService } from '@/services/toaster.service';
 import { NumberInput } from '@/components/form/number-input';
 import { TicketFormData, TicketType } from '@/interfaces/event';
 import { TextAreaInput } from '@/components/form/text-area-input';
+import { DescriptionGeneratorService } from '@/services/description-generator.service';
 import { FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { IonHeader, IonFooter, IonContent, IonToolbar } from '@ionic/angular/standalone';
+import { IonHeader, IonFooter, IonContent, IonToolbar, IonSpinner } from '@ionic/angular/standalone';
 import { Input, OnInit, inject, signal, computed, Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
@@ -14,12 +16,14 @@ import { Input, OnInit, inject, signal, computed, Component, ChangeDetectionStra
   styleUrl: './ticket-form-modal.scss',
   templateUrl: './ticket-form-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, Button, TextInput, NumberInput, TextAreaInput, IonHeader, IonToolbar, IonContent, IonFooter, CheckboxModule]
+  imports: [IonSpinner, ReactiveFormsModule, Button, TextInput, NumberInput, TextAreaInput, IonHeader, IonToolbar, IonContent, IonFooter, IonSpinner, CheckboxModule]
 })
 export class TicketFormModal implements OnInit {
   // services
   private fb = inject(FormBuilder);
   private modalService = inject(ModalService);
+  private descriptionGenerator = inject(DescriptionGeneratorService);
+  private toasterService = inject(ToasterService);
 
   // inputs
   @Input() ticketType: TicketType = 'Free';
@@ -40,6 +44,7 @@ export class TicketFormModal implements OnInit {
   showDescriptionEditor = signal<boolean>(false);
   endSaleOnEventStart = signal<boolean>(true);
   conversation = signal<any[]>([]);
+  isGeneratingDescription = signal<boolean>(false);
 
   showEndSaleInputs = computed(() => !this.endSaleOnEventStart());
   isCustomize = computed(() => this.showDescriptionEditor());
@@ -158,15 +163,45 @@ export class TicketFormModal implements OnInit {
     }
   }
 
-  generateDescription(): void {
+  async generateDescription(): Promise<void> {
     const form = this.ticketForm();
     const descriptionControl = form.get('description');
 
-    if (descriptionControl) {
-      const generatedDescription = 'This is a generated ticket description. You can customize this content to better match your ticket details.';
+    if (!descriptionControl) return;
+
+    this.isGeneratingDescription.set(true);
+
+    try {
+      // Get form values
+      const ticketName = form.get('name')?.value || '';
+      const price = form.get('price')?.value || '';
+      const quantity = form.get('quantity')?.value || '';
+      const ticketType = this.ticketType;
+
+      // Generate description using the service
+      const generatedDescription = await this.descriptionGenerator.generateTicketDescription({
+        ticketName: ticketName || undefined,
+        ticketType: ticketType || undefined,
+        price: price || undefined,
+        quantity: quantity || undefined,
+        eventDate: this.eventDate || undefined,
+        eventStartTime: this.eventStartTime || undefined
+      });
+
       descriptionControl.setValue(generatedDescription);
       descriptionControl.markAsTouched();
       this.showDescriptionEditor.set(true);
+    } catch (error: any) {
+      console.error('Error generating ticket description:', error);
+      this.toasterService.showError(error?.message || 'Failed to generate description. Please try again.');
+      
+      // Set a fallback description on error
+      const fallbackDescription = 'This is a generated ticket description. You can customize this content to better match your ticket details.';
+      descriptionControl.setValue(fallbackDescription);
+      descriptionControl.markAsTouched();
+      this.showDescriptionEditor.set(true);
+    } finally {
+      this.isGeneratingDescription.set(false);
     }
   }
 

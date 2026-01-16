@@ -1,25 +1,28 @@
 import { IUser } from '@/interfaces/IUser';
 import { CommonModule } from '@angular/common';
-import { Button } from '@/components/form/button';
-import { Searchbar } from '@/components/common/searchbar';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Searchbar } from '@/components/common/searchbar';
+import { SocketService } from '@/services/socket.service';
 import { EmptyState } from '@/components/common/empty-state';
+import { UserCardList } from '@/components/card/user-card-list';
 import { NavigationService } from '@/services/navigation.service';
+import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 import { IonContent, IonHeader, IonToolbar, NavController } from '@ionic/angular/standalone';
-import { Component, inject, signal, ChangeDetectionStrategy, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, computed, OnInit, OnDestroy } from '@angular/core';
 
 @Component({
   selector: 'event-user-list',
   styleUrl: './event-user-list.scss',
   templateUrl: './event-user-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonToolbar, IonHeader, IonContent, CommonModule, Searchbar, Button, EmptyState]
+  imports: [IonToolbar, IonHeader, IonContent, CommonModule, Searchbar, EmptyState, UserCardList]
 })
-export class EventUserList implements OnInit {
+export class EventUserList implements OnInit, OnDestroy {
   navCtrl = inject(NavController);
   navigationService = inject(NavigationService);
   router = inject(Router);
   route = inject(ActivatedRoute);
+  private socketService = inject(SocketService);
   title = signal<string>('Host(s)');
   searchQuery = signal<string>('');
   eventTitle = signal<string>('');
@@ -68,31 +71,32 @@ export class EventUserList implements OnInit {
         this.eventTitle.set(state.eventTitle);
       }
     }
+
+    this.setupNetworkConnectionListener();
   }
 
-  getUserImage(user: IUser): string {
-    return (user.image_url as string) || user.thumbnail_url || 'assets/images/profile.jpeg';
+  private setupNetworkConnectionListener(): void {
+    this.socketService.onAfterRegistration(() => {
+      this.socketService.on('network:connection:update', this.networkConnectionHandler);
+    });
   }
 
-  getUserValue(user: IUser): number {
-    return (user as any).total_gamification_points || (user as any).value || 0;
-  }
+  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+    if (!payload || !payload.id) return;
 
-  getUserJobTitle(user: IUser): string {
-    return user.title || (user as any).jobTitle || '';
-  }
+    const userId = payload.id;
+    const newStatus = payload.connection_status;
 
-  getUserCompany(user: IUser): string {
-    return user.company_name || (user as any).company || '';
-  }
+    this.users.update((users) =>
+      users.map((user) =>
+        user.id === userId
+          ? { ...user, connection_status: newStatus }
+          : user
+      )
+    );
+  };
 
-  onMessage(user: IUser): void {
-    // Handle message action
-    console.log('Message user:', user);
-  }
-
-  onAdd(user: IUser): void {
-    // Handle add action
-    console.log('Add user:', user);
+  ngOnDestroy(): void {
+    this.socketService.off('network:connection:update', this.networkConnectionHandler);
   }
 }

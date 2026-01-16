@@ -16,7 +16,7 @@
   <div class="h-full flex justify-center">
     <div class="w-full max-w-[672px] p-6 flex flex-col">
       <div class="grid grid-cols-4 gap-2 my-4">
-        @for (item of stats; track item.key) {
+        @for (item of stats(); track item.key) {
           <div class="stat-border {{ item.class }}">
             <div class="stat-card">
               <div class="body-12M">{{ item.label }}</div>
@@ -42,14 +42,26 @@
 
       <div class="flex items-center gap-2 mt-3 text-sm">
         <ion-icon src="assets/svg/checkmark-circle.svg" class="w-6 h-6" />
-        <div class="body-16M">Checked-in: <span class="font-bold">112</span></div>
+        <div class="body-16M">Checked-in: <span class="font-bold">{{ checkedInCount() }}</span></div>
       </div>
 
-      <div class="mt-4 space-y-3">
-        @for (s of filteredGuestList(); track s.id) {
-          <div class="flex items-center gap-3 py-3 border-b border-gray-200">
-            <div class="relative">
-              <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" />
+      @if (isLoading()) {
+        <div class="flex items-center justify-center py-8">
+          <div class="body-14M neutral-03">Loading guests...</div>
+        </div>
+      } @else {
+        <div class="mt-4 space-y-3">
+          @for (s of filteredGuestList(); track s.id) {
+            <div class="flex items-center gap-3 py-3 border-b border-gray-200">
+              <div class="relative w-12 h-12 rounded-full overflow-hidden">
+                <img 
+                  [ngSrc]="getImageUrl(s.imageUrl)" 
+                  [alt]="s.name" 
+                  fill
+                  placeholder
+                  (error)="onImageError($event)"
+                  class="object-cover rounded-full" 
+                />
 
               @if (s.checkedIn) {
                 <ion-icon src="assets/svg/checkmark-circle.svg" class="w-5 h-5 absolute -bottom-1 -right-1" />
@@ -108,10 +120,11 @@
               </div>
             </ng-template>
           </p-menu>
-        } @empty {
-          <app-empty-state title="No guests found" message="" />
-        }
-      </div>
+          } @empty {
+            <app-empty-state title="No guests found" message="" />
+          }
+        </div>
+      }
     </div>
   </div>
 </ion-content>

@@ -1,18 +1,18 @@
-import { IonicModule } from '@ionic/angular';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { Subscriptions } from './subscriptions';
+import { IonicModule } from '@ionic/angular';
 
-describe('Subscriptions', () => {
-  let component: Subscriptions;
-  let fixture: ComponentFixture<Subscriptions>;
+import { UnsubscribeConfirmModal } from './unsubscribe-confirm-modal';
+describe('UnsubscribeConfirmModal', () => {
+  let component: UnsubscribeConfirmModal;
+  let fixture: ComponentFixture<UnsubscribeConfirmModal>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [Subscriptions],
+      declarations: [UnsubscribeConfirmModal],
       imports: [IonicModule.forRoot()]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Subscriptions);
+    fixture = TestBed.createComponent(UnsubscribeConfirmModal);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }));

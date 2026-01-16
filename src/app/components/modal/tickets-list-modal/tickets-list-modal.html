@@ -1,0 +1,41 @@
+<ion-header mode="md">
+  <ion-toolbar>
+    <div class="p-4 flex items-center justify-between">
+      <div class="heading-h3 neutral-01">Tickets & Admission</div>
+      <i class="pi pi-times cursor-pointer text-xl" (click)="close()"></i>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content mode="md">
+  <div class="p-6">
+    @for (ticket of tickets; track ticket.id || $index) {
+      <div class="flex items-center gap-3 py-4 border-b border-[#dbdbdb] last:border-b-0">
+        <!-- Left arrow -->
+        <div class="flex-shrink-0">
+          <div class="pi pi-angle-right text-neutral-04 !text-[20px]"></div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 min-w-0">
+          <div class="body-16SB neutral-01 mb-1">
+            {{ ticket.name }}
+          </div>
+
+          @if (ticket.description) {
+            <div class="body-14R neutral-03 line-clamp-2">
+              {{ ticket.description }}
+            </div>
+          }
+        </div>
+
+        <!-- Price -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <div class="body-16SB neutral-01">
+            {{ formatPrice(ticket.price, ticket.ticket_type) }}
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</ion-content>

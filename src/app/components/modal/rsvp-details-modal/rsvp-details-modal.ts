@@ -9,7 +9,7 @@ import { BaseApiService } from '@/services/base-api.service';
 import { MobileInput } from '@/components/form/mobile-input';
 import { ToggleInput } from '@/components/form/toggle-input';
 import { StripePaymentComponent } from '@/components/common/stripe-payment';
-import { StripePaymentSuccessEvent, StripePaymentErrorEvent } from '@/services/stripe.service';
+import { StripePaymentSuccessEvent, StripePaymentErrorEvent, StripeService } from '@/services/stripe.service';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Input, signal, inject, Component, OnInit, ChangeDetectionStrategy, computed, effect, ViewChild } from '@angular/core';
 import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent } from '@ionic/angular/standalone';
@@ -26,6 +26,7 @@ export interface RsvpDetailsData {
   promoCodeTicketCount?: number;
   hostFees?: number;
   subtotalAfterHostFees?: number;
+  freeTicketDiscount?: number;
 }
 
 @Component({
@@ -67,6 +68,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   private fb = inject(FormBuilder);
   private userService = inject(UserService);
   private modalService = inject(ModalService);
+  private stripeService = inject(StripeService);
 
   form: FormGroup;
   guestForms: FormArray;
@@ -78,6 +80,8 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   // Stripe payment properties
   isLoadingPayment = signal<boolean>(false);
   paymentErrorMessage = signal<string>('');
+  clientSecret = signal<string>('');
+  stripePaymentIntentId = signal<string>('');
 
   constructor() {
     super();
@@ -107,6 +111,57 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   subtotalAfterHostFees = computed(() => this.rsvpDataSignal()?.subtotalAfterHostFees ?? 0);
 
   platformFee = computed(() => this.rsvpDataSignal()?.platformFee ?? 0);
+
+  freeTicketDiscount = computed(() => {
+    // First, check if freeTicketDiscount is already provided in rsvpData
+    const rsvpData = this.rsvpDataSignal();
+    if (rsvpData?.freeTicketDiscount !== undefined && rsvpData.freeTicketDiscount > 0) {
+      return rsvpData.freeTicketDiscount;
+    }
+    
+    // Fallback: Calculate it ourselves if not provided
+    // Check if subscription exists (subscriptionId is truthy and not empty)
+    if (!this.subscriptionId || this.subscriptionId.trim() === '') return 0;
+    
+    const tickets = rsvpData?.tickets || [];
+    if (tickets.length === 0) return 0;
+    
+    // Filter to get only paid tickets (price > 0) with selected quantity > 0
+    const paidTickets = tickets.filter(ticket => {
+      const quantity = ticket.selectedQuantity || 0;
+      const price = ticket.price || 0;
+      return price > 0 && quantity > 0;
+    });
+    
+    if (paidTickets.length === 0) return 0;
+    
+    // Get the first paid ticket (matching rsvp-modal logic)
+    const firstPaidTicket = paidTickets[0];
+    
+    // Return the price of the first paid ticket as the discount (max 1 free ticket)
+    // The discount is the price of 1 ticket, not the total
+    return firstPaidTicket.price || 0;
+  });
+
+  freeTicketName = computed(() => {
+    if (this.freeTicketDiscount() === 0) return '';
+    
+    const tickets = this.rsvpDataSignal()?.tickets || [];
+    if (tickets.length === 0) return '';
+    
+    // Filter to get only paid tickets (price > 0) with selected quantity > 0
+    const paidTickets = tickets.filter(ticket => {
+      const quantity = ticket.selectedQuantity || 0;
+      const price = ticket.price || 0;
+      return price > 0 && quantity > 0;
+    });
+    
+    if (paidTickets.length === 0) return '';
+    
+    // Get the first paid ticket name
+    const firstPaidTicket = paidTickets[0];
+    return firstPaidTicket.name || 'Free Ticket';
+  });
 
   subscriberPerk = computed(() => {
     if (!this.subscriptionId) return 0;
@@ -212,6 +267,40 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
       console.warn('No active user account found, forms will remain empty', error );
     }
 
+    // Fetch payment intent if total price > 0
+    if (this.totalPrice() > 0) {
+      await this.fetchPaymentIntent();
+    }
+  }
+
+  async fetchPaymentIntent(): Promise<void> {
+    try {
+      this.isLoadingPayment.set(true);
+      this.paymentErrorMessage.set('');
+
+      const response = await this.stripeService.createPaymentIntent({
+        event_id: this.eventId,
+        subtotal: this.rsvpDataSignal()?.subtotal || 0,
+        total: this.rsvpDataSignal()?.total || 0
+      });
+
+      if (response?.client_secret) {
+        
+        
+        this.clientSecret.set(response.client_secret);
+        console.log('clientSecret',this.clientSecret());
+        if (response.stripe_payment_intent_id) {
+          this.stripePaymentIntentId.set(response.stripe_payment_intent_id);
+        }
+      } else {
+        this.paymentErrorMessage.set('Failed to initialize payment');
+      }
+    } catch (error: any) {
+      console.error('Error fetching payment intent:', error);
+      this.paymentErrorMessage.set(error?.message || 'Failed to initialize payment');
+    } finally {
+      this.isLoadingPayment.set(false);
+    }
   }
 
   populateFormsWithUserData(): void {
@@ -291,7 +380,6 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     }
 
     // If there's a payment amount, process payment first
-    let stripePaymentIntentId: string | null = null;
     if (this.totalPrice() > 0) {
       const formValue = this.form.getRawValue();
       const { firstName, lastName, email } = formValue;
@@ -302,8 +390,6 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
       if (!paymentSuccess) {
         return;
       }
-      // Get the stripe_payment_intent_id after successful payment
-      stripePaymentIntentId = this.paymentComponent.getPaymentIntentId();
     }
 
     const guestDetails = Array.from({ length: this.guestForms.length }, (_, i) => {
@@ -325,13 +411,16 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
       },
       guestDetails: guestDetails.length > 0 ? guestDetails : null,
       rsvpData: this.rsvpDataSignal(),
-      stripePaymentIntentId: stripePaymentIntentId
+      stripePaymentIntentId: this.stripePaymentIntentId()
     };
     await this.modalCtrl.dismiss(formData);
   }
 
   onPaymentSuccess(event: StripePaymentSuccessEvent): void {
-    // Payment succeeded, can be handled here if needed
+    // Payment succeeded - update payment intent ID from the event
+    if (event.paymentIntentId) {
+      this.stripePaymentIntentId.set(event.paymentIntentId);
+    }
     console.log('Payment succeeded:', event);
   }
 
