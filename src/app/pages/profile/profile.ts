@@ -14,7 +14,7 @@ import { ProfileHostedEvents } from '@/pages/profile/components/profile-hosted-e
 import { ProfileUpcomingEvents } from '@/pages/profile/components/profile-upcoming-events';
 import { ProfileAttendedEvents } from '@/pages/profile/components/profile-attended-events';
 import { IonIcon, IonHeader, IonToolbar, IonContent, NavController, IonSkeletonText } from '@ionic/angular/standalone';
-import { inject, Component, AfterViewInit, OnDestroy, signal, computed, ChangeDetectionStrategy, PLATFORM_ID, effect, input } from '@angular/core';
+import { inject, Component, OnDestroy, signal, computed, ChangeDetectionStrategy, PLATFORM_ID, effect, input } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { onImageError } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
@@ -65,7 +65,7 @@ interface TabConfig {
     IonSkeletonText
   ]
 })
-export class Profile implements AfterViewInit, OnDestroy {
+export class Profile implements OnDestroy {
   // Route username param
   username = input<string>();
   // services
@@ -227,6 +227,15 @@ export class Profile implements AfterViewInit, OnDestroy {
       }
     });
 
+    effect(() => {
+      const user = this.currentUser();
+      const loading = this.isLoading();
+
+      if (!loading && user && isPlatformBrowser(this.platformId)) {
+        setTimeout(() => this.initializeSwiper());
+      }
+    });
+
     this.setupNetworkConnectionListener();
   }
 
@@ -277,7 +286,18 @@ export class Profile implements AfterViewInit, OnDestroy {
   changeTab(value: ProfileTabs): void {
     this.currentSlide.set(value);
     const slideIndex = this.tabs.indexOf(value);
-    this.swiper?.slideTo(slideIndex);
+    this.getActiveSwiper()?.slideTo(slideIndex);
+  }
+
+  private getActiveSwiper(): Swiper | null {
+    if (!this.swiper) return null;
+  
+    // if swiper is an array, use the last one
+    if (Array.isArray(this.swiper)) {
+      return this.swiper[this.swiper.length - 1] ?? null;
+    }
+  
+    return this.swiper;
   }
 
   goToCreateEvent(): void {
@@ -357,27 +377,30 @@ export class Profile implements AfterViewInit, OnDestroy {
     }
   }
 
-  ngAfterViewInit(): void {
+  private initializeSwiper(): void {
+    // Destroy existing Swiper instance if it exists
+    if (this.getActiveSwiper()) {
+      this.getActiveSwiper()?.destroy(true, true);
+    }
+
     const initialSlide = this.tabs.indexOf(this.currentSlide());
 
-    if (isPlatformBrowser(this.platformId)) {
-      this.swiper = new Swiper('.swiper-profile', {
-        initialSlide,
-        spaceBetween: 0,
-        slidesPerView: 1,
-        autoHeight: true,
-        modules: [Scrollbar],
-        scrollbar: {
-          el: '.swiper-scrollbar'
-        },
-        on: {
-          slideChange: (swiper) => {
-            const newTab = this.tabs[swiper.activeIndex];
-            if (newTab) this.currentSlide.set(newTab);
-          }
+    this.swiper = new Swiper('.swiper-profile', {
+      initialSlide,
+      spaceBetween: 0,
+      slidesPerView: 1,
+      autoHeight: true,
+      modules: [Scrollbar],
+      scrollbar: {
+        el: '.swiper-scrollbar'
+      },
+      on: {
+        slideChange: (swiper) => {
+          const newTab = this.tabs[swiper.activeIndex];
+          if (newTab) this.currentSlide.set(newTab);
         }
-      });
-    }
+      }
+    });
   }
 
   onImageError(event: Event): void {
