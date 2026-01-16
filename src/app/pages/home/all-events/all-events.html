@@ -5,12 +5,7 @@
       <div class="body-16SB neutral-01 text-center whitespace-nowrap overflow-hidden text-ellipsis min-w-0">{{ headerText() }}</div>
       <div></div>
     </div>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content mode="md">
-  <div class="w-full p-4 max-w-[672px] mx-auto">
-    <div class="flex items-center gap-2 mb-6">
+    <div class="flex items-center gap-2 mb-3 px-4 max-w-[672px] mx-auto">
       <searchbar
         [searchQuery]="searchQuery()"
         [placeholder]="'Search events'"
@@ -25,6 +20,11 @@
         }
       </div>
     </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content mode="md">
+  <div class="w-full p-4 max-w-[672px] mx-auto">
     <!-- Events list -->
     <div class="flex flex-col gap-4">
       @if (isLoadingEvents()) {
