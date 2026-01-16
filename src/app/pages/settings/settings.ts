@@ -1,25 +1,28 @@
-import { SettingListItem, SettingsListItem } from '@/pages/settings/components/settings-list-item';
-import { SettingsProfileHeader } from '@/pages/settings/components/settings-profile-header';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
+import { StripeService } from '@/services/stripe.service';
 import { ToasterService } from '@/services/toaster.service';
+import { NavigationService } from '@/services/navigation.service';
 import { signal, inject, Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, NavController, IonIcon } from '@ionic/angular/standalone';
-import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
+import { SettingsProfileHeader } from '@/pages/settings/components/settings-profile-header';
+import { SettingListItem, SettingsListItem } from '@/pages/settings/components/settings-list-item';
 
 @Component({
   selector: 'settings',
   styleUrl: './settings.scss',
   templateUrl: './settings.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SettingsProfileHeader, SettingsListItem, IonHeader, IonToolbar, IonContent, IonIcon]
+  imports: [SettingsProfileHeader, SettingsListItem, IonHeader, IonToolbar, IonContent]
 })
 export class Settings implements OnInit {
   // services
   navCtrl = inject(NavController);
   private authService = inject(AuthService);
   private modalService = inject(ModalService);
+  private stripeService = inject(StripeService);
   private toasterService = inject(ToasterService);
+  private navigationService = inject(NavigationService);
 
   // signals
   userName = signal<string>('Sandra Tanner');
@@ -92,7 +95,7 @@ export class Settings implements OnInit {
     {
       label: 'My Subscriptions Plans',
       icon: 'pi pi-crown',
-      route: '/subscription/plans'
+      action: 'subscription-plans'
     },
     {
       label: 'My Subscriptions',
@@ -142,13 +145,57 @@ export class Settings implements OnInit {
     }
   }
 
-  private handleAction(action: string): void {
+  async navigateToSubscriptionPlans(): Promise<void> {
+    const user = this.authService.currentUser();
+    if (!user?.email) {
+      this.toasterService.showError('Please add your email to your profile to view subscription plans.');
+      return;
+    }
+    if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
+      this.navigationService.navigateForward('/subscription/plans');
+    } else {
+      await this.openStripePayoutModal();
+    }
+  }
+
+  async openStripePayoutModal(): Promise<void> {
+    await this.modalService.openConfirmModal({
+      icon: 'assets/svg/payoutIcon.svg',
+      iconBgColor: '#C73838',
+      title: 'Add Payout Details',
+      description: 'To view subscription plans in app, you must setup your payout details with Stripe.',
+      confirmButtonLabel: 'Connect Payment',
+      cancelButtonLabel: 'Maybe Later',
+      confirmButtonColor: 'primary',
+      iconPosition: 'center',
+      onConfirm: () => this.handleStripeAccountCreation()
+    });
+  }
+
+  async handleStripeAccountCreation(): Promise<void> {
+    try {
+      const accountResponse = await this.stripeService.createStripeAccount();
+      if (accountResponse?.url) {
+        window.location.href = accountResponse.url;
+      } else {
+        this.toasterService.showError('Failed to get Stripe account URL. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating Stripe account:', error);
+      this.toasterService.showError('Error creating Stripe account. Please try again.');
+    }
+  }
+
+  private async handleAction(action: string): Promise<void> {
     switch (action) {
       case 'rate-app':
         this.toasterService.showSuccess('Rate app feature coming soon!');
         break;
       case 'invite-friend':
         this.toasterService.showSuccess('Invite friend feature coming soon!');
+        break;
+      case 'subscription-plans':
+        await this.navigateToSubscriptionPlans();
         break;
     }
   }
