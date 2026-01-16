@@ -29,6 +29,7 @@ export class Home implements OnDestroy, ViewWillEnter {
   private route = inject(ActivatedRoute);
   
   homeFeedRefSignal = viewChild<HomeFeed>('homeFeedRef');
+  homeEventRefSignal = viewChild<HomeEvent>('homeEventRef');
   
 
   // signals
@@ -90,13 +91,21 @@ export class Home implements OnDestroy, ViewWillEnter {
   
   async onRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      // Refresh will be handled by the child component if needed
-      const homeFeed = this.homeFeedRefSignal();
-      if (homeFeed) {
-        await homeFeed.refresh();
+      const currentTab = this.tab();
+      
+      if (currentTab === 'events') {
+        const homeEvent = this.homeEventRefSignal();
+        if (homeEvent) {
+          await homeEvent.refresh();
+        }
+      } else if (currentTab === 'feed') {
+        const homeFeed = this.homeFeedRefSignal();
+        if (homeFeed) {
+          await homeFeed.refresh();
+        }
       }
     } catch (error) {
-      console.error('Error refreshing feed:', error);
+      console.error('Error refreshing:', error);
     } finally {
       event.target.complete();
     }

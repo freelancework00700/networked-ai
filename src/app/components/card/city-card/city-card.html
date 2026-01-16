@@ -1,4 +1,4 @@
-<div class="relative h-[120px] shrink-0 rounded-[12px] overflow-hidden bg-cover bg-center" [style.background-image]="'url(' + city().image + ')'">
+<div class="relative h-[120px] shrink-0 rounded-[12px] overflow-hidden bg-cover bg-center" [style.background-image]="'url(' + city().image_url + ')'">
   <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
   <div
@@ -8,7 +8,7 @@
   </div>
 
   <div class="absolute bottom-3 left-3 right-3">
-    <div class="body-14SB neutral-07">{{ city().city }}</div>
-    <div class="body-12 neutral-05">{{ city().events }}</div>
+    <div class="body-14SB neutral-07">{{ city().city ? city().city + ', ' + city().state : city().state }}</div>
+    <div class="body-12 neutral-05">{{ city().event_count }} Events</div>
   </div>
 </div>

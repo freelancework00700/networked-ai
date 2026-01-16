@@ -1,4 +1,4 @@
-<div class="rounded-[14px] bg-neutral-07 border border-[#f0f0f0] shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden p-2">
+<div class="rounded-[14px] bg-neutral-07 border border-[#f0f0f0] shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden p-2" (click)="viewEvent()">
   <div class="flex items-center gap-3 pb-2">
     <!-- image -->
     <div class="relative w-[80px] h-[80px] flex-shrink-0">
@@ -39,12 +39,12 @@
     <!-- day of week and day -->
     <div class="flex flex-col items-center justify-center w-[64px] bg-neutral-06 rounded-[8px] p-2">
       @if (event().start_date) {
-        <div class="body-12 neutral-03">{{ event().start_date | date:'EEE' }}</div>
-        <div class="heading-h1 neutral-01">{{ event().start_date | date:'d' }}</div>
+        <div [class]="isWeekend() ? 'body-12 text-red-600' : 'body-12 neutral-03'">{{ event().start_date | date:'EEE' }}</div>
+        <div [class]="isWeekend() ? 'heading-h1 text-red-600' : 'heading-h1 neutral-01'">{{ event().start_date | date:'d' }}</div>
       }
     </div>
   </div>
 
   <!-- view ticket button -->
-  <app-button label="View Ticket" iconName="pi-ticket" height="40px" (click)="onViewTicket.emit()" />
+  <!-- <app-button label="View Ticket" iconName="pi-ticket" height="40px" (click)="viewEvent()" /> -->
 </div>

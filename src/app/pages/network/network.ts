@@ -86,7 +86,7 @@ export class Network {
     if (!user) return '';
     
     const name = user.name || user.username || '';
-    if (name) return name;
+    if (name) return `${name}'s Network`;
     
     return '';
   });

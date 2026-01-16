@@ -134,7 +134,7 @@ export class NetworkListView implements OnDestroy {
 
       const result = await this.networkService.getMyConnections({
         page,
-        limit: 10,
+        limit: 15,
         search: search || undefined,
         latitude: lat || undefined,
         longitude: lng || undefined,

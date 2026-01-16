@@ -5,11 +5,11 @@
   <img
     fill
     placeholder
-    priority
     [alt]="currentEvent().title || 'Event image'"
     class="object-cover"
     (error)="onImageError($event)"
     [ngSrc]="eventImage()"
+    [loaderParams]="{ thumbnail: currentEvent().thumbnail_url }"
   />
   <!-- dark overlay at bottom -->
   <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
@@ -19,7 +19,7 @@
     <div
       class="flex p-2 justify-center items-center gap-2 rounded-full border border-white/10 bg-black/20 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
     >
-      <div class="body-12 neutral-07">{{ eventViews() }} views</div>
+      <div class="body-12 neutral-07">{{ currentEvent().total_views || 0 }} views</div>
     </div>
   </div>
 
@@ -62,21 +62,21 @@
             <span class="body-12 neutral-05">{{ formattedDate() }}</span>
           </div>
 
-          <div class="flex items-center gap-1.5 min-w-0 flex-1">
+          <div class="flex items-center gap-1.5 min-w-0 flex-1 max-w-full">
             <div class="pi pi-map-marker neutral-07 !text-[12px] shrink-0"></div>
-            <span class="body-12 neutral-05 truncate">{{ formattedLocation() }}</span>
+            <span class="body-12 neutral-05 truncate flex-1 min-w-0 max-w-full">{{ formattedLocation() }}</span>
           </div>
         </div>
       } @else {
-        <div class="flex items-start gap-1 flex-col">
+        <div class="flex items-start gap-1 flex-col max-w-full">
           <div class="flex items-center gap-1.5">
             <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
             <span class="body-12 neutral-05">{{ formattedDate() }}</span>
           </div>
 
-          <div class="flex items-center gap-1.5 min-w-0 w-full">
+          <div class="flex items-center gap-1.5 min-w-0 w-full max-w-full">
             <div class="pi pi-map-marker neutral-07 !text-[12px] shrink-0"></div>
-            <span class="body-12 neutral-05 truncate">{{ formattedLocation() }}</span>
+            <span class="body-12 neutral-05 truncate flex-1 min-w-0 max-w-full">{{ formattedLocation() }}</span>
           </div>
         </div>
       }

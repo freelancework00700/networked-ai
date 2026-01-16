@@ -3,7 +3,7 @@
     <div class="relative w-full h-[140px] p-2 max-w-[672px] mx-auto">
       <div
         class="absolute inset-0 bg-cover bg-center events-bg"
-        style="background-image: url('https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80')"
+        [style.background-image]="'url(' + (selectedCity().thumbnail_url || selectedCity().image_url || 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80') + ')'"
       ></div>
 
       <div class="absolute inset-0 bg-black/40"></div>
@@ -23,7 +23,7 @@
             <div class="pi pi-map-marker text-white !text-[20px]"></div>
 
             <span class="text-white text-xl font-semibold">
-              {{ selectedCity().fullName }}
+              {{ selectedCity().fullName || 'Select Location' }}
             </span>
 
             <div class="pi pi-chevron-down text-white"></div>
@@ -43,22 +43,34 @@
 
       <div class="flex flex-col gap-4">
         @if (isLoadingEvents()) {
-          <div class="flex justify-center items-center py-8">
-            <div class="body-14 neutral-05">Loading events...</div>
-          </div>
+          <!-- Skeleton loaders -->
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <div class="rounded-xl overflow-hidden">
+              <ion-skeleton-text animated class="w-full h-48 rounded-t-xl"></ion-skeleton-text>
+              <div class="p-4 flex flex-col gap-2">
+                <ion-skeleton-text animated class="w-3/4 h-5 rounded"></ion-skeleton-text>
+                <ion-skeleton-text animated class="w-1/2 h-4 rounded"></ion-skeleton-text>
+                <ion-skeleton-text animated class="w-2/3 h-4 rounded"></ion-skeleton-text>
+                <div class="flex items-center gap-2 mt-2">
+                  <ion-skeleton-text animated class="w-16 h-4 rounded"></ion-skeleton-text>
+                  <ion-skeleton-text animated class="w-20 h-4 rounded"></ion-skeleton-text>
+                </div>
+              </div>
+            </div>
+          }
+        } @else if (allEvents().length === 0) {
+          <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
         } @else {
-          @for (event of displayedEvents(); track event.id || event.title || $index) {
+          @for (event of allEvents(); track event.id || event.title || $index) {
             <event-card [event]="event" />
-          } @empty {
-            <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
           }
         }
       </div>
 
-      @if (hasMoreEvents()) {
-        <div class="flex justify-center mt-6">
-          <button type="button" class="body-14SB brand-02 py-2 px-4" (click)="loadMore()">Load more</button>
-        </div>
+      @if (hasMore()) {
+        <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreEvents($event)">
+          <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more events..." />
+        </ion-infinite-scroll>
       }
     </div>
   </div>

@@ -97,7 +97,7 @@ export class AddNetwork implements OnDestroy {
           this.currentPage.set(1);
           this.totalPages.set(0);
           
-          return from(this.userService.searchUsers(trimmedQuery, 1, 10)).pipe(
+          return from(this.userService.searchUsers(trimmedQuery, 1, 15)).pipe(
             map((result) => {
               this.searchResults.set(result.users);
               this.currentPage.set(result.pagination.currentPage);
@@ -135,7 +135,7 @@ export class AddNetwork implements OnDestroy {
       this.isLoadingMore.set(true);
       
       const nextPage = this.currentPage() + 1;
-      const result = await this.userService.searchUsers(search, nextPage, 10);
+      const result = await this.userService.searchUsers(search, nextPage, 15);
       
       // Append new results to existing ones
       this.searchResults.update(current => [...current, ...result.users]);

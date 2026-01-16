@@ -15,7 +15,7 @@ export class HostFirstEventCard {
 
   onClick(): void {
     if (this.isLoggedIn()) {
-      this.navCtrl.navigateForward('/create-event');
+      this.navCtrl.navigateForward('/event');
     } else {
       this.navCtrl.navigateForward('/login');
     }

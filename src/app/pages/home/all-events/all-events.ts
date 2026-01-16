@@ -7,18 +7,19 @@ import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { EventService } from '@/services/event.service';
 import { EventCard } from '@/components/card/event-card';
+import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
 import { Searchbar } from '@/components/common/searchbar';
 import { EmptyState } from '@/components/common/empty-state';
 import { NavigationService } from '@/services/navigation.service';
 import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
-import { IonHeader, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, IonSkeletonText } from '@ionic/angular/standalone';
 import { inject, signal, computed, Component, OnInit, OnDestroy, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-all-events',
-  imports: [CommonModule, IonHeader, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, EventCard, Searchbar, Button, EmptyState],
+  imports: [CommonModule, IonHeader, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, IonSkeletonText, EventCard, UpcomingEventCard, Searchbar, Button, EmptyState],
   templateUrl: './all-events.html',
   styleUrl: './all-events.scss'
 })
@@ -121,16 +122,7 @@ export class AllEvents implements OnInit, OnDestroy {
     const isHostedEvents = eventFilter === 'hosted';
     const isAttendedEvents = eventFilter === 'attended';
     const isLikedEvents = eventFilter === 'liked';
-
-    const defaultStartDate = useTodayAsDefault ? todayDate : startDate;
-
-    if (isRecommendedEvents) {
-      return await this.eventService.getRecommendedEvents({
-        page,
-        limit: this.pageLimit,
-        start_date: defaultStartDate || todayDate
-      });
-    }
+    const isUpcomingEvents = eventFilter === 'upcoming';
 
     const baseParams: any = {
       page,
@@ -171,6 +163,22 @@ export class AllEvents implements OnInit, OnDestroy {
       });
     }
 
+    if (isUpcomingEvents) {
+      return await this.eventService.getEvents({
+        ...baseParams,
+        roles: 'Host,CoHost,Sponsor,Speaker,Staff,Attendees',
+        user_id: this.authService.currentUser()?.id,
+        is_upcoming_event: true
+      });
+    }
+
+    if (isRecommendedEvents) {
+      return await this.eventService.getEvents({
+        ...baseParams,
+        is_recommended: true
+      });
+    }
+
     return await this.eventService.getEvents({
       ...baseParams,
       ...(isPublicEvents ? { is_public: true } : { is_my_events: false, is_included_me_event: true })
@@ -206,6 +214,7 @@ export class AllEvents implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
+    this.modalService.dismissAllModals();
   }
 
   private async loadEvents(reset: boolean = false, isSearch: boolean = false): Promise<void> {
@@ -225,6 +234,12 @@ export class AllEvents implements OnInit, OnDestroy {
   }
 
   filteredEvents = computed(() => this.allEvents());
+  
+  // Check if we should use upcoming event card
+  isUpcomingFilter = computed(() => {
+    const { eventFilter } = this.getQueryParams();
+    return eventFilter === 'upcoming';
+  });
 
   // Computed header text based on user and event filter
   headerText = computed(() => {
@@ -238,7 +253,15 @@ export class AllEvents implements OnInit, OnDestroy {
     // Get user name for display
     const userName = user?.name || user?.username || '';
     
-    if (eventFilter === 'hosted') {
+    if (eventFilter === 'upcoming') {
+      return 'My Upcoming Events';
+    } else if (eventFilter === 'recommended') {
+      return 'Recommended Events';
+    } else if (eventFilter === 'public') {
+      return 'Public Events';
+    } else if (eventFilter === 'liked') {
+      return 'Liked Events';
+    } else if (eventFilter === 'hosted') {
       return isCurrentUser ? 'My Events' : userName ? `${userName}'s Events` : 'Browse Events';
     } else if (eventFilter === 'attended') {
       return isCurrentUser ? 'My Attended Events' : userName ? `${userName}'s Attended Events` : 'Browse Events';

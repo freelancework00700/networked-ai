@@ -9,9 +9,9 @@ import { FeedService } from '@/services/feed.service';
 import { NavigationService } from '@/services/navigation.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
-import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { DatePipe, NgOptimizedImage, isPlatformBrowser } from '@angular/common';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
-import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output, signal, ViewChild, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output, signal, ViewChild, computed, PLATFORM_ID } from '@angular/core';
 import { FeedPost } from '@/interfaces/IFeed';
 import { Router } from '@angular/router';
 
@@ -35,6 +35,7 @@ post = input.required<FeedPost>();
   feedService = inject(FeedService);
   navigationService = inject(NavigationService);
   router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
   
   private datePipe = new DatePipe('en-US');
 
@@ -86,6 +87,9 @@ post = input.required<FeedPost>();
   });
 
   ngAfterViewChecked() {
+    // Only initialize Swiper in browser environment (not during SSR)
+    if (!isPlatformBrowser(this.platformId)) return;
+    
     if (this.swiper) return;
     if (!this.swiperEl?.nativeElement) return;
     if (!this.sortedMedias().length) return;

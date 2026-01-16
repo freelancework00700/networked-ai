@@ -4,7 +4,6 @@
       <img
         fill
         placeholder
-        priority
         [alt]="post().user?.name || 'avatar'"
         class="rounded-full object-cover"
         (error)="onImageError($event)"
@@ -74,7 +73,6 @@
                 <div class="w-full relative h-[160px]">
                   <img
                     fill
-                    priority
                     placeholder
                     class="rounded-[8px] overflow-hidden object-cover"
                     (error)="onImageError($event)"

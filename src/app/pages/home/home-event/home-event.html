@@ -1,63 +1,139 @@
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-6 pt-3">
   <!-- host your first event card -->
-  <div class="pt-4 px-4">
+  @if (currentUser()?.total_events_hosted === 0 || !isLoggedIn()) {
+    <div class="pt-1 px-4">
     <host-first-event-card />
   </div>
+  }
 
+  @if (isLoggedIn()) {
   <!-- filter buttons -->
   <div class="flex gap-2 px-4">
     <button class="filter-button" (click)="filter.set('browse'); onFilterChange()" [class.active]="isBrowseMode()">Browse Events</button>
     <button class="filter-button" (click)="filter.set('upcoming'); onFilterChange()" [class.active]="isUpcomingMode()">My Upcoming Events</button>
-  </div>
-
-  <!-- no upcoming events -->
-  @if (isUpcomingMode()) {
-    <div class="px-4">
-      <no-upcoming-event-card (onBrowseClick)="filter.set('browse'); onFilterChange()" />
     </div>
   }
 
   <!-- my upcoming events -->
   @if (isUpcomingMode()) {
+    @if (isLoading()) {
+      <!-- Skeleton for upcoming events -->
+      <div class="px-4">
+        <div class="flex items-center justify-between mb-4">
+          <ion-skeleton-text animated class="w-40 h-5 rounded"></ion-skeleton-text>
+          <ion-skeleton-text animated class="w-16 h-4 rounded"></ion-skeleton-text>
+        </div>
+      </div>
+      <div class="flex flex-col gap-3 px-4">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="rounded-xl overflow-hidden">
+            <div class="flex gap-4 p-4">
+              <ion-skeleton-text animated class="w-20 h-20 rounded-lg flex-shrink-0"></ion-skeleton-text>
+              <div class="flex-1 flex flex-col gap-2">
+                <ion-skeleton-text animated class="w-3/4 h-5 rounded"></ion-skeleton-text>
+                <ion-skeleton-text animated class="w-1/2 h-4 rounded"></ion-skeleton-text>
+                <ion-skeleton-text animated class="w-2/3 h-4 rounded"></ion-skeleton-text>
+                <ion-skeleton-text animated class="w-full h-10 rounded-lg mt-2"></ion-skeleton-text>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (upcomingEvents().length > 0) {
     <div class="px-4">
       <div class="flex items-center justify-between">
         <div class="body-16SB neutral-01">My Upcoming Events</div>
-        <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all',true)">See all</button>
+          <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=upcoming',true)">See all</button>
       </div>
     </div>
 
     <div>
       <div class="flex flex-col gap-3 px-4">
-        @for (event of eventCards(); track event.id || event.title) {
-          <upcoming-event-card [event]="event" (onViewTicket)="handleViewTicket()" />
+          @for (event of upcomingEvents(); track event.id || event.title) {
+            <upcoming-event-card [event]="event" />
         }
       </div>
     </div>
+    } @else {
+      <div class="px-4">
+        <no-upcoming-event-card (onBrowseClick)="filter.set('browse'); onFilterChange()" />
+      </div>
+    }
   }
 
-  @if (isBrowseMode()) {
     <!-- browse events by cities -->
-    <div class="px-4">
-      <div class="flex items-center justify-between">
-        <div class="body-16SB neutral-01">Browse events by cities</div>
-        <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/city',true)">See all</button>
-      </div>
-    </div>
-
-    <div>
-      <div class="swiper swiper-city">
-        <div class="swiper-wrapper">
-          @for (city of cityCards; track city.city) {
-            <div class="swiper-slide">
-              <city-card [city]="city" />
-            </div>
-          }
+    @if (isLoadingCities()) {
+      <div class="px-4">
+        <div class="flex items-center justify-between">
+          <ion-skeleton-text animated class="w-40 h-5 rounded"></ion-skeleton-text>
+          <ion-skeleton-text animated class="w-16 h-4 rounded"></ion-skeleton-text>
         </div>
       </div>
+    } @else {
+      <div class="px-4">
+        <div class="flex items-center justify-between">
+          <div class="body-16SB neutral-01">Browse events by cities</div>
+          <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/city')">See all</button>
+        </div>
+      </div>
+    }
+
+    <div>
+      @if (isLoadingCities()) {
+        <!-- Skeleton for cities -->
+        <div class="swiper swiper-city">
+          <div class="swiper-wrapper">
+            @for (i of [1, 2, 3, 4]; track i) {
+              <div class="swiper-slide">
+                <div class="relative h-[120px] shrink-0 rounded-[12px] overflow-hidden">
+                  <ion-skeleton-text animated class="w-full h-full"></ion-skeleton-text>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="swiper swiper-city">
+          <div class="swiper-wrapper">
+            @for (city of cityCards(); track city.city) {
+              <div class="swiper-slide" (click)="onCityClick(city)">
+                <city-card [city]="city" />
+              </div>
+            }
+          </div>
+        </div>
+      }
     </div>
 
     <!-- events for you -->
-    @if (isLoggedIn() && recommendedEvents().length > 0) {
+    @if (isLoggedIn()) {
+      @if (isLoading() && recommendedEvents().length === 0) {
+        <!-- Skeleton for recommended events -->
+        <div class="px-4">
+          <div class="flex items-center justify-between mb-4">
+            <ion-skeleton-text animated class="w-32 h-5 rounded"></ion-skeleton-text>
+            <ion-skeleton-text animated class="w-16 h-4 rounded"></ion-skeleton-text>
+          </div>
+        </div>
+        <div class="px-4">
+          <div class="swiper swiper-event-recommendation">
+            <div class="swiper-wrapper">
+              @for (i of [1, 2, 3]; track i) {
+                <div class="swiper-slide">
+                  <div class="rounded-xl overflow-hidden">
+                    <ion-skeleton-text animated class="w-full h-48 rounded-t-xl"></ion-skeleton-text>
+                    <div class="p-4 flex flex-col gap-2">
+                      <ion-skeleton-text animated class="w-3/4 h-5 rounded"></ion-skeleton-text>
+                      <ion-skeleton-text animated class="w-1/2 h-4 rounded"></ion-skeleton-text>
+                      <ion-skeleton-text animated class="w-2/3 h-4 rounded"></ion-skeleton-text>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      } @else if (recommendedEvents().length > 0) {
       <div class="px-4">
         <div class="flex items-center justify-between">
           <div class="body-16SB neutral-01">Events for you</div>
@@ -76,13 +152,16 @@
           </div>
         </div>
       </div>
+      }
     }
+
+  @if (isBrowseMode()) {
 
     <!-- user recommendations -->
     <user-recommendations />
 
     <!-- feed recommendations -->
-    <div class="px-4">
+    <!-- <div class="px-4">
       @for (post of feedPosts; track post.id) {
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-3">
@@ -104,10 +183,10 @@
           <event-card [event]="post.event" variant="compact" />
         </div>
       }
-    </div>
+    </div> -->
 
     <!-- message recommendations -->
-    <div class="px-4 py-3 bg-neutral-06">
+    <!-- <div class="px-4 py-3 bg-neutral-06">
       @for (suggestion of networkSuggestions; track suggestion.id) {
         <div class="flex gap-4">
           <div class="flex-1 flex flex-col gap-3">
@@ -151,10 +230,36 @@
           </div>
         </div>
       }
-    </div>
+    </div> -->
 
     <!-- public events -->
-    @if (publicEvents().length > 0) {
+    @if (isLoading() && publicEvents().length === 0) {
+      <!-- Skeleton for public events -->
+      <div class="px-4">
+        <div class="flex items-center justify-between mb-4">
+          <ion-skeleton-text animated class="w-32 h-5 rounded"></ion-skeleton-text>
+          <ion-skeleton-text animated class="w-16 h-4 rounded"></ion-skeleton-text>
+        </div>
+      </div>
+      <div class="px-4">
+        <div class="swiper swiper-public-event">
+          <div class="swiper-wrapper">
+            @for (i of [1, 2, 3]; track i) {
+              <div class="swiper-slide">
+                <div class="rounded-xl overflow-hidden">
+                  <ion-skeleton-text animated class="w-full h-48 rounded-t-xl"></ion-skeleton-text>
+                  <div class="p-4 flex flex-col gap-2">
+                    <ion-skeleton-text animated class="w-3/4 h-5 rounded"></ion-skeleton-text>
+                    <ion-skeleton-text animated class="w-1/2 h-4 rounded"></ion-skeleton-text>
+                    <ion-skeleton-text animated class="w-2/3 h-4 rounded"></ion-skeleton-text>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    } @else if (publicEvents().length > 0) {
       <div class="px-4">
         <div class="flex items-center justify-between">
           <div class="body-16SB neutral-01">Public events</div>

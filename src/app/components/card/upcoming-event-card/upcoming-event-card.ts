@@ -4,6 +4,7 @@ import { NgOptimizedImage, DatePipe } from '@angular/common';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { EventService } from '@/services/event.service';
 import { input, output, Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
+import { NavigationService } from '@/services/navigation.service';
 
 @Component({
   imports: [Button, NgOptimizedImage, DatePipe],
@@ -14,8 +15,8 @@ import { input, output, Component, ChangeDetectionStrategy, computed, inject } f
 })
 export class UpcomingEventCard {
   private eventService = inject(EventService);
+  private navigationService = inject(NavigationService);
 
-  onViewTicket = output<void>();
   event = input.required<IEvent>();
 
   eventImage = computed(() => {
@@ -32,6 +33,21 @@ export class UpcomingEventCard {
     const event = this.event();
     return this.eventService.formatLocation(event.city, event.state);
   });
+
+  isWeekend = computed(() => {
+    const startDate = this.event()?.start_date;
+    if (!startDate) return false;
+    const date = new Date(startDate);
+    const dayOfWeek = date.getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6;
+  });
+
+  viewEvent() {
+    const eventSlug = this.event().slug;
+    if (eventSlug) {
+      this.navigationService.navigateForward(`/event/${eventSlug}`);
+    }
+  }
 
   onImageError = onImageError;
 }

@@ -59,20 +59,8 @@ export class EventCard {
 
   eventImage = computed(() => {
     const event = this.currentEvent();
-    const imageUrl = event?.thumbnail_url || 
-      (event?.medias && event.medias.length > 0 
-        ? (event.medias[0].media_url || event.medias[0].url) 
-        : '') ||
-      event?.image || '';
+    const imageUrl = event?.image_url || '';
     return getImageUrlOrDefault(imageUrl);
-  });
-
-  eventViews = computed(() => {
-    const event = this.currentEvent();
-    if (Array.isArray(event?.viewers)) {
-      return event.viewers.length.toString();
-    }
-    return event?.views?.toString() || '0';
   });
 
   eventOrganization = computed(() => {

@@ -2,7 +2,6 @@ import { Swiper } from 'swiper';
 import { Subscription } from 'rxjs';
 import { IEvent } from '@/interfaces/event';
 import { SwiperOptions } from 'swiper/types';
-import { Button } from '@/components/form/button';
 import { EventService } from '@/services/event.service';
 import { AuthService } from '@/services/auth.service';
 import { EventCard } from '@/components/card/event-card';
@@ -13,6 +12,7 @@ import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
 import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
 import { UserRecommendations } from '@/components/common/user-recommendations';
+import { IonSkeletonText } from '@ionic/angular/standalone';
 import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect } from '@angular/core';
 
 interface FeedPost {
@@ -40,7 +40,7 @@ interface NetworkSuggestion {
   styleUrl: './home-event.scss',
   templateUrl: './home-event.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard, UserRecommendations]
+  imports: [CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard, UserRecommendations, IonSkeletonText]
 })
 export class HomeEvent implements OnInit, OnDestroy {
   navigationService = inject(NavigationService);
@@ -50,8 +50,6 @@ export class HomeEvent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
 
   filter = signal<'browse' | 'upcoming'>('browse');
-  upcomingEvents = signal<IEvent[]>([]);
-  eventCards = signal<IEvent[]>([]);
   isLoading = signal<boolean>(false);
 
   private queryParamsSubscription?: Subscription;
@@ -64,24 +62,10 @@ export class HomeEvent implements OnInit, OnDestroy {
 
   recommendedEvents = computed(() => this.eventService.recommendedEvents());
   publicEvents = computed(() => this.eventService.publicEvents());
+  upcomingEvents = computed(() => this.eventService.upcomingEvents());
 
-  cityCards: ICity[] = [
-    {
-      city: 'Atlanta, GA',
-      events: '17 Events',
-      image: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      city: 'Chicago, IL',
-      events: '17 Events',
-      image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      city: 'Denver, CO',
-      events: '12 Events',
-      image: 'https://images.unsplash.com/photo-1444840535719-195841cb6e2b?auto=format&fit=crop&w=800&q=80'
-    }
-  ];
+  cityCards = computed(() => this.eventService.cityCards());
+  isLoadingCities = computed(() => this.eventService.isLoadingCities());
 
 
   feedPosts: FeedPost[] = [
@@ -131,6 +115,7 @@ export class HomeEvent implements OnInit, OnDestroy {
         this.previousLoginState = currentLoginState;
         
         this.loadEventsIfNeeded();
+        this.loadTopCities();
         return;
       }
 
@@ -141,6 +126,15 @@ export class HomeEvent implements OnInit, OnDestroy {
         this.handleAccountChangeAndLogin();
       } else if (loginStateChanged && currentLoginState && !this.previousLoginState) {
         this.handleAccountChangeAndLogin();
+      } else if (loginStateChanged && !currentLoginState && this.previousLoginState) {
+        // User logged out - reset filter to browse and reset cities
+        this.filter.set('browse');
+        this.eventService.cityCards.set([]);
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { eventFilter: 'browse' },
+          queryParamsHandling: 'merge'
+        });
       }
 
       this.previousUserId = currentUserId;
@@ -169,6 +163,7 @@ export class HomeEvent implements OnInit, OnDestroy {
   private async loadEventsIfNeeded(): Promise<void> {
     const hasRecommendedEvents = this.eventService.recommendedEvents().length > 0;
     const hasPublicEvents = this.eventService.publicEvents().length > 0;
+    const hasUpcomingEvents = this.eventService.upcomingEvents().length > 0;
     const loggedIn = this.isLoggedIn();
     
     if (loggedIn && hasRecommendedEvents && hasPublicEvents) return;
@@ -187,12 +182,20 @@ export class HomeEvent implements OnInit, OnDestroy {
       } else if (!hasPublicEvents) {
         await this.loadPublicEvents();
       }
+      
+      // Load upcoming events if in upcoming mode and not already loaded
+      if (!hasUpcomingEvents) {
+        await this.loadUpcomingEvents();
+      }
     }
   }
 
   private async handleAccountChangeAndLogin(): Promise<void> {
     this.eventService.resetAllEvents();
+    this.eventService.cityCards.set([]);
     await this.loadAllEvents(true);
+    await this.loadUpcomingEvents();
+    await this.loadTopCities(true);
   }
 
   private async loadRecommendedEvents(reset: boolean = true): Promise<void> {
@@ -270,8 +273,62 @@ export class HomeEvent implements OnInit, OnDestroy {
     });
   }
 
-  handleViewTicket(): void {
-    // TODO: Implement view ticket functionality
+  async refresh(): Promise<void> {
+    try {
+      this.eventService.resetAllEvents();
+      this.loadAllEvents(true);
+      if (this.isLoggedIn()) {
+        this.loadUpcomingEvents(true);
+      }
+      this.loadTopCities(true);
+    } catch (error) {
+      console.error('Error refreshing events:', error);
+    }
+  }
+
+  private async loadTopCities(reset: boolean = false): Promise<void> {
+    if (!reset && this.eventService.cityCards().length > 0) return;
+
+    try {
+      this.eventService.isLoadingCities.set(true);
+      const cities = await this.eventService.getTopCities();
+      this.eventService.cityCards.set(cities);
+    } catch (error) {
+      console.error('Error loading top cities:', error);
+    } finally {
+      this.eventService.isLoadingCities.set(false);
+    }
+  }
+
+  onCityClick(city: ICity): void {
+    this.navigationService.navigateForward(
+      `/event/city?city=${encodeURIComponent(city.city || '')}&state=${encodeURIComponent(city.state)}`,
+      false,
+      { city: city }
+    );
+  }
+
+  private async loadUpcomingEvents(reset: boolean = true): Promise<void> {
+    if (!this.isLoggedIn()) return;
+    
+    const currentUser = this.currentUser();
+    if (!currentUser?.id) return;
+
+    try {
+      this.isLoading.set(true);
+      await this.eventService.getMyEvents({
+        page: 1,
+        limit: 3,
+        roles: 'Host,CoHost,Sponsor,Speaker,Staff,Attendees',
+        user_id: currentUser.id,
+        is_upcoming_event: true,
+        append: !reset
+      });
+    } catch (error) {
+      console.error('Error loading upcoming events:', error);
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 
   private readonly swiperConfigs: Record<string, SwiperOptions> = {
