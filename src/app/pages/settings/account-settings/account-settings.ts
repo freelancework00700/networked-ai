@@ -1,15 +1,14 @@
-import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
 import { signal, inject, Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, NavController, IonIcon } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'account-settings',
   styleUrl: './account-settings.scss',
   templateUrl: './account-settings.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonHeader, IonToolbar, IonContent, IonIcon]
+  imports: [IonHeader, IonToolbar, IonContent]
 })
 export class AccountSettings implements OnInit {
   // services

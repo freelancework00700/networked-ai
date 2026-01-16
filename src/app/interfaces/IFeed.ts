@@ -29,7 +29,7 @@ export interface FeedPost {
   deleted_at?: string | null;
   created_at?: string;
   updated_at?: string;
-  user: {
+  user?: {
     id: string;
     name: string;
     username: string;
@@ -126,7 +126,7 @@ export interface FeedComment {
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
-  user: FeedCommentUser;
+  user?: FeedCommentUser;
   comment_mentions: any[];
   replies?: FeedComment[];
   is_like: boolean;

@@ -1,8 +1,8 @@
 import { Button } from '@/components/form/button';
 import { PasswordInput } from '@/components/form/password-input';
-import { IonFooter, IonHeader, IonToolbar, ModalController, NavController } from '@ionic/angular/standalone';
+import { IonFooter, IonToolbar, ModalController, NavController } from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
-import { FormGroup, FormBuilder, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FormGroup, FormBuilder, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { validateFields } from '@/utils/form-validation';
 import { ToasterService } from '@/services/toaster.service';
 import { AuthService } from '@/services/auth.service';
@@ -17,7 +17,7 @@ interface DeleteAccountForm {
   templateUrl: './delete-account-modal.html',
   styleUrl: './delete-account-modal.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, PasswordInput, IonHeader, IonToolbar, IonFooter, ReactiveFormsModule]
+  imports: [Button, PasswordInput, IonToolbar, IonFooter, ReactiveFormsModule]
 })
 export class DeleteAccountModal {
   // services

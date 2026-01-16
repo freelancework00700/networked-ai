@@ -21,7 +21,7 @@
                 <span class="body-12 neutral-04"> {{ getTimeAgo(createdAtTimestamp(), updatedAtTimestamp()) }}</span>
               </div>
 
-              @if (!isCurrentUserPost() && post().user && post().user.connection_status === 'NotConnected') {
+              @if (!isCurrentUserPost() && post().user && post().user?.connection_status === 'NotConnected') {
                 <div class="neutral-03 body-10">Suggested for you</div>
               }
             </div>

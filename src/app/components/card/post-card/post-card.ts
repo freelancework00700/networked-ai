@@ -25,7 +25,7 @@ import { Router } from '@angular/router';
 export class PostCard {
   @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
 
-post = input.required<FeedPost>();
+  post = input.required<FeedPost>();
 
   navCtrl = inject(NavController);
   sanitizer = inject(DomSanitizer);

@@ -1,13 +1,12 @@
 import { IEvent } from '@/interfaces/event';
-import { Button } from '@/components/form/button';
 import { NgOptimizedImage, DatePipe } from '@angular/common';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { EventService } from '@/services/event.service';
-import { input, output, Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
+import { input, Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 import { NavigationService } from '@/services/navigation.service';
 
 @Component({
-  imports: [Button, NgOptimizedImage, DatePipe],
+  imports: [NgOptimizedImage, DatePipe],
   selector: 'upcoming-event-card',
   styleUrl: './upcoming-event-card.scss',
   templateUrl: './upcoming-event-card.html',

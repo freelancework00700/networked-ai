@@ -1,10 +1,7 @@
 import { Component, inject, ChangeDetectionStrategy, input, output } from '@angular/core';
-import { IonContent } from '@ionic/angular/standalone';
 import { IonIcon } from '@ionic/angular/standalone';
 import { NgOptimizedImage } from '@angular/common';
 import { ToasterService } from '@/services/toaster.service';
-import { AuthService } from '@/services/auth.service';
-import { NavigationService } from '@/services/navigation.service';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { IUser } from '@/interfaces/IUser';
 import { environment } from 'src/environments/environment';
@@ -13,7 +10,7 @@ import { environment } from 'src/environments/environment';
   selector: 'profile-image-preview-overlay',
   styleUrl: './profile-image-preview-overlay.scss',
   templateUrl: './profile-image-preview-overlay.html',
-  imports: [IonIcon, IonContent, NgOptimizedImage],
+  imports: [IonIcon, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProfileImagePreviewOverlay {
