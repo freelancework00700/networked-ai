@@ -232,9 +232,9 @@
                 }
               </div>
               <!-- Bottom Row: Set Up Subscription -->
-              @if (!isViewingOtherProfile() && shouldShowSubscribe()) {
+              @if (currentUser()?.stripe_account_id && currentUser()?.stripe_account_status === 'active') {
                 <app-button
-                  label="set up subscription"
+                  [label]="!hasSubscriptionPlan() ? 'Set Up Subscription': 'My Subscription Plans'"
                   icon="/assets/svg/crown-white.svg"
                   customColor="#2B5BDE"
                   (click)="navigateToSubscriptionPlans()"
