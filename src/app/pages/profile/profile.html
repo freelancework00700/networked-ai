@@ -75,7 +75,7 @@
         <div class="w-full py-6 px-4 max-w-[672px] mx-auto">
           @if (isViewingOtherProfile()) {
             <div class="flex items-center justify-between">
-              <ion-icon name="arrow-back" class="text-[20px] cursor-pointer neutral-03" (click)="navigationService.back()"></ion-icon>
+              <ion-icon name="arrow-back" class="text-[20px] cursor-pointer neutral-03" (click)="navCtrl.back()"></ion-icon>
               <div class="body-14SB neutral-01">{{ currentUser()?.username || currentUser()?.name }}</div>
               <ion-icon src="/assets/svg/menu-dot.svg" (click)="openProfileOptionsPopover($event)" class="text-[20px] cursor-pointer" />
             </div>
@@ -107,15 +107,15 @@
 
               <!-- Stats -->
               <div class="flex items-center w-full">
-                <div class="flex flex-col items-center w-full cursor-pointer" (click)="navigateToNetworks()">
+                <div class="flex flex-col items-center w-full cursor-pointer" (click)="currentUser()?.total_networks > 0 && navigateToNetworks()">
                   <div class="heading-h3 neutral-01">{{ currentUser()?.total_networks || 0 }}</div>
                   <div class="body-12 neutral-03">Networks</div>
                 </div>
-                <div class="flex flex-col items-center w-full cursor-pointer" (click)="navigateToHostedEvents()">
+                <div class="flex flex-col items-center w-full cursor-pointer" (click)="eventsCount() > 0 && navigateToHostedEvents()">
                   <div class="heading-h3 neutral-01">{{ eventsCount() }}</div>
                   <div class="body-12 neutral-03">Events</div>
                 </div>
-                <div class="flex flex-col items-center w-full cursor-pointer" (click)="navigateToAttendedEvents()">
+                <div class="flex flex-col items-center w-full cursor-pointer" (click)="currentUser()?.total_events_attended > 0 && navigateToAttendedEvents()">
                   <div class="heading-h3 neutral-01">{{ currentUser()?.total_events_attended || 0 }}</div>
                   <div class="body-12 neutral-03">Attended</div>
                 </div>

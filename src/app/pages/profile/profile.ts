@@ -29,6 +29,8 @@ import { ToasterService } from '@/services/toaster.service';
 import { SocketService } from '@/services/socket.service';
 import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 import { StripeService } from '@/services/stripe.service';
+import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
@@ -76,10 +78,13 @@ export class Profile implements OnDestroy {
   private networkService = inject(NetworkService);
   private popoverService = inject(PopoverService);
   private modalService = inject(ModalService);
-  private navCtrl = inject(NavController);
+  navCtrl = inject(NavController);
   private toasterService = inject(ToasterService);
   private socketService = inject(SocketService);
   private stripeService = inject(StripeService);
+  private route = inject(ActivatedRoute);
+
+  private routeParamSubscription?: Subscription;
 
   // computed & signals
   currentSlide = signal<ProfileTabs>('hosted-events');
@@ -215,20 +220,15 @@ export class Profile implements OnDestroy {
   });
 
   constructor() {
-    effect(() => {
-      const username = this.username();
-      console.log('username', username);
-      this.isLoading.set(true);
-      if (username) {
-        this.loadUserByUsername(username);
-      } else {
-        this.currentUser.set(this.authService.currentUser());
-        this.isLoading.set(false);
-      }
-    });
+    const routeParamSubscription = this.route.params.subscribe(() => this.handleProfileLoad());
 
     effect(() => {
-      const user = this.currentUser();
+      const currentUserId = this.authService.currentUser()?.id;
+      if (currentUserId) this.handleProfileLoad();
+    })
+
+    effect(() => {
+      const user = this.currentUser()?.id;
       const loading = this.isLoading();
 
       if (!loading && user && isPlatformBrowser(this.platformId)) {
@@ -239,8 +239,19 @@ export class Profile implements OnDestroy {
     this.setupNetworkConnectionListener();
   }
 
+  private handleProfileLoad() {
+    this.isLoading.set(true);
+  
+    const username = this.username();
+    if (username) {
+      this.loadUserByUsername(username);
+    } else {
+      this.currentUser.set(this.authService.currentUser());
+      this.isLoading.set(false);
+    }
+  }
+
   private setupNetworkConnectionListener(): void {
-    // Set up listener after socket is registered, or immediately if already registered
     this.socketService.onAfterRegistration(() => {
       this.socketService.on('network:connection:update', this.networkConnectionHandler);
     });
@@ -257,6 +268,10 @@ export class Profile implements OnDestroy {
 
   ngOnDestroy(): void {
     this.socketService.off('network:connection:update', this.networkConnectionHandler);
+  }
+  
+  ionViewDidLeave() {
+    this.routeParamSubscription?.unsubscribe();
   }
 
   private async loadUserByUsername(username: string): Promise<void> {
@@ -315,18 +330,12 @@ export class Profile implements OnDestroy {
 
   navigateToHostedEvents(): void {
     const user = this.currentUser();
-    const userId = user?.id;
-    if (userId) {
-      this.navigationService.navigateForward(`/event/all?eventFilter=hosted&userId=${userId}`, false, { user });
-    }
+    this.navigationService.navigateForward(`/event/all?eventFilter=hosted&userId=${user?.id}`, false, { user });
   }
 
   navigateToAttendedEvents(): void {
     const user = this.currentUser();
-    const userId = user?.id;
-    if (userId) {
-      this.navigationService.navigateForward(`/event/all?eventFilter=attended&userId=${userId}`, false, { user });
-    }
+    this.navigationService.navigateForward(`/event/all?eventFilter=attended&userId=${user?.id}`, false, { user });
   }
 
   async navigateToSubscriptionPlans(): Promise<void> {
@@ -424,7 +433,7 @@ export class Profile implements OnDestroy {
   openBusinessCard(): void {
     const user = this.currentUser();
     if (user) {
-      this.navCtrl.navigateForward('/profile/business-card', { state: { user } });
+      this.navigationService.navigateForward('/profile/business-card', false, { user });
     }
   }
 

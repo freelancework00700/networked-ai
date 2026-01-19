@@ -28,6 +28,17 @@ export class FeedService extends BaseApiService {
   myFeedsTotal = signal(0);
   myFeedsHasMore = signal(true);
 
+  async ensureMyFeedsLoaded(limit = 10): Promise<void> {
+    if (this.myPosts().length > 0) return;
+    await this.getMyFeeds({ page: 1, limit });
+  }
+
+  async resetMyFeeds() {
+    this.myPosts.set([]);
+    this.myFeedsPage.set(1);
+    this.myFeedsHasMore.set(true);
+  }
+
   async getMyFeeds(params: {
     page?: number;
     limit?: number;
@@ -217,29 +228,6 @@ export class FeedService extends BaseApiService {
       console.error('Error toggling like:', error);
       throw error;
     }
-  }
-
-  /**
-   * Resets all feed signals and pagination state
-   * reset feeds on account switch
-   */
-  resetAllFeeds(): void {
-    // Reset all feed signals
-    this.myPosts.set([]);
-    this.publicFeeds.set([]);
-    this.networkedFeeds.set([]);
-    this.posts.set([]);
-    
-    // Reset pagination state
-    this.publicFeedsPage.set(1);
-    this.networkedFeedsPage.set(1);
-    this.myFeedsPage.set(1);
-    this.publicFeedsTotal.set(0);
-    this.networkedFeedsTotal.set(0);
-    this.myFeedsTotal.set(0);
-    this.publicFeedsHasMore.set(true);
-    this.networkedFeedsHasMore.set(true);
-    this.myFeedsHasMore.set(true);
   }
 
   /**

@@ -1,10 +1,10 @@
 import { NavController, RefresherCustomEvent } from '@ionic/angular/standalone';
 import { IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner, IonRefresher, IonRefresherContent } from '@ionic/angular/standalone';
-import { inject, Component, ChangeDetectionStrategy, OnInit, signal, computed, input, effect } from '@angular/core';
+import { inject, Component, ChangeDetectionStrategy, signal, computed, input, effect, untracked } from '@angular/core';
 import { PostCard } from '@/components/card/post-card';
 import { FeedService } from '@/services/feed.service';
-import { ViewWillEnter } from '@ionic/angular/standalone';
 import { ProfileEmptyState } from '@/components/common/profile-empty-state';
+import { AuthService } from '@/services/auth.service';
 
 @Component({
   selector: 'profile-posts',
@@ -13,146 +13,117 @@ import { ProfileEmptyState } from '@/components/common/profile-empty-state';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [PostCard, IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner, IonRefresher, IonRefresherContent, ProfileEmptyState]
 })
-export class ProfilePosts implements OnInit, ViewWillEnter {
+export class ProfilePosts {
   // services
   navCtrl = inject(NavController);
   feedService = inject(FeedService);
+  authService = inject(AuthService);
 
   userId = input<string | null>(null);
 
   // signals
-  posts = this.feedService.myPosts;
+  posts = signal<any[]>([]);
   isLoading = signal(false);
   isLoadingMore = signal(false);
-  hasLoadedOnce = signal(false);
   hasMore = signal(true);
   currentPage = signal(1);
   totalPages = signal(0);
+
+  isCurrentUser = computed(() => {
+    const viewedUserId = this.userId();
+    const loggedInUserId = this.authService.currentUser()?.id;
+    return viewedUserId === loggedInUserId;
+  });
 
   // Constants
   private readonly pageLimit = 10;
 
   constructor() {
-    // Reload feeds when userId changes
     effect(() => {
       const userId = this.userId();
-      if (this.hasLoadedOnce()) {
-        this.loadFeeds(true);
-      }
+      if (!userId) return;
+
+      const isCurrent = this.isCurrentUser();
+      untracked(async () => {
+        if (isCurrent) {
+          await this.feedService.resetMyFeeds();
+          this.attachCurrentUserFeeds();
+        } else {
+          this.resetLocalState();
+          this.loadOtherUserFeeds(true);
+        }
+      });
     });
   }
 
-  async ngOnInit(): Promise<void> {
-    await this.checkAndLoadFeeds();
+  private async attachCurrentUserFeeds() {
+    this.isLoading.set(true);
+    await this.feedService.ensureMyFeedsLoaded(this.pageLimit);
+    this.posts = this.feedService.myPosts;
+    this.currentPage.set(this.feedService.myFeedsPage());
+    this.hasMore.set(this.feedService.myFeedsHasMore());
+    this.isLoading.set(false);
   }
 
-  async ionViewWillEnter(): Promise<void> {
-    await this.checkAndLoadFeeds();
+  private resetLocalState() {
+    this.posts.set([]);
+    this.currentPage.set(1);
+    this.hasMore.set(true);
   }
 
-  private async checkAndLoadFeeds(): Promise<void> {
-    await this.loadFeeds();
-  }
+  private async loadOtherUserFeeds(reset = true) {
+    if (this.isLoading()) return;
 
-  private async loadFeeds(reset: boolean = true): Promise<void> {
     try {
-      this.isLoading.set(true);
+      if (reset) this.isLoading.set(true);
 
-      const userId = this.userId();
-      const page = reset ? 1 : this.currentPage();
+      const response = await this.feedService.getUserFeeds(this.userId()!, {
+        page: reset ? 1 : this.currentPage() + 1,
+        limit: this.pageLimit
+      });
 
-      if (userId) {
-        // Fetch other user's feeds
-        const response = await this.feedService.getUserFeeds(userId, {
-          page,
-          limit: this.pageLimit
-        });
-
-        if (reset) {
-          this.posts.set(response.posts);
-        } else {
-          this.posts.update(current => [...current, ...response.posts]);
-        }
-
-        this.currentPage.set(response.page);
-        this.totalPages.set(Math.ceil(response.total / this.pageLimit));
-        this.hasMore.set(response.hasMore);
-      } 
-      else {
-        // Fetch current user's feeds
-        if (reset) {
-          this.feedService.myFeedsPage.set(1);
-        }
-
-        await this.feedService.getMyFeeds({
-          page,
-          limit: this.pageLimit,
-          append: !reset
-        });
-
-        // Use the service's myPosts signal
-        this.posts.set(this.feedService.myPosts());
-        this.currentPage.set(this.feedService.myFeedsPage());
-        this.hasMore.set(this.feedService.myFeedsHasMore());
+      if (reset) {
+        this.posts.set(response.posts);
+      } else {
+        this.posts.update(p => [...p, ...response.posts]);
       }
 
-      this.hasLoadedOnce.set(true);
-    } catch (error) {
-      console.error('Error loading feeds:', error);
+      this.currentPage.set(response.page);
+      this.hasMore.set(response.hasMore);
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  async loadMoreFeeds(event: Event): Promise<void> {
-    const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
-
-    if (this.isLoadingMore() || !this.hasMore()) {
-      infiniteScroll.complete();
-      return;
-    }
+  async loadMoreFeeds(event: Event) {
+    const infiniteScroll = event.target as HTMLIonInfiniteScrollElement;
 
     try {
-      this.isLoadingMore.set(true);
-
-      const userId = this.userId();
-      const nextPage = this.currentPage() + 1;
-
-      if (userId) {
-        // Load more for other user's feeds
-        const response = await this.feedService.getUserFeeds(userId, {
-          page: nextPage,
-          limit: this.pageLimit
-        });
-
-        this.posts.update(current => [...current, ...response.posts]);
-        this.currentPage.set(response.page);
-        this.hasMore.set(response.hasMore);
-      } else {
-        // Load more for current user's feeds
+      if (this.isCurrentUser()) {
         await this.feedService.getMyFeeds({
-          page: nextPage,
+          page: this.feedService.myFeedsPage() + 1,
           limit: this.pageLimit,
           append: true
         });
 
-        this.posts.set(this.feedService.myPosts());
-        this.currentPage.set(this.feedService.myFeedsPage());
-        this.hasMore.set(this.feedService.myFeedsHasMore());
+        this.attachCurrentUserFeeds();
+      } else {
+        await this.loadOtherUserFeeds(false);
       }
-    } catch (error) {
-      console.error('Error loading more feeds:', error);
     } finally {
-      this.isLoadingMore.set(false);
       infiniteScroll.complete();
     }
   }
 
-  async onRefresh(event: RefresherCustomEvent): Promise<void> {
+  async onRefresh(event: RefresherCustomEvent) {
     try {
-      await this.loadFeeds(true);
-    } catch (error) {
-      console.error('Error refreshing feeds:', error);
+      if (this.isCurrentUser()) {
+        await this.feedService.resetMyFeeds();
+        this.attachCurrentUserFeeds();
+      } else {
+        this.resetLocalState();
+        await this.loadOtherUserFeeds(true);
+      }
     } finally {
       event.target.complete();
     }
