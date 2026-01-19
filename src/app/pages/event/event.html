@@ -131,9 +131,9 @@
     </div>
   }
 </ion-content>
-<ion-footer class="ion-padding-horizontal" mode="md">
+<ion-footer class="ion-padding-horizontal">
   @if (!isLoading() && event()) {
-    <ion-toolbar class="ion-no-padding" style="--background: transparent" mode="md">
+    <ion-toolbar class="ion-no-padding" style="--background: transparent" >
       <div class="pb-4 max-w-[672px] mx-auto">
         @if (!eventDisplayData().isCurrentUserHost && !eventDisplayData().isCurrentUserAttendee) {
           @if (eventDisplayData().is_subscriber_exclusive && !eventDisplayData().has_subscribed) {

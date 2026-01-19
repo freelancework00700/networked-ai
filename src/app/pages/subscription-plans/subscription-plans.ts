@@ -123,13 +123,18 @@ export class SubscriptionPlans implements OnInit, ViewWillEnter {
   }
 
   onManage(plan: ISubscription): void {
-    // Navigate to create-plan page with plan ID for edit mode
-    this.navCtrl.navigateForward(`/subscription/edit/${plan.id}`);
+    // Navigate to manage page with plan ID
+    if (plan.id) {
+      const isSponsor = plan.type === 'sponsor';
+      this.navCtrl.navigateForward(`/subscription/manage/${plan.id}?is_sponsor=${isSponsor ? 'true' : 'false'}`);
+    }
   }
 
   onEvents(plan: ISubscription): void {
-    console.log('Plan events:', plan);
-    // TODO: Navigate to plan events page with plan.id
+    if (plan.id) {
+      const isSponsor = plan.type === 'sponsor';
+      this.navCtrl.navigateForward(`/subscription/${plan.id}/events?is_sponsor=${isSponsor ? 'true' : 'false'}`);
+    }
   }
 
   async onDelete(plan: ISubscription): Promise<void> {

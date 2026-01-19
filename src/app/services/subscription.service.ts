@@ -1,7 +1,8 @@
+import { HttpParams } from '@angular/common/http';
+import { AuthService } from '@/services/auth.service';
+import { SubscriptionPlan } from '@/interfaces/event';
 import { Injectable, signal, inject } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
-import { SubscriptionPlan } from '@/interfaces/event';
-import { AuthService } from '@/services/auth.service';
 
 export interface PlanData {
   id: string;
@@ -15,6 +16,8 @@ export interface PlanData {
     amount: string;
     interval: 'month' | 'year';
     active: boolean;
+    discount_percentage?: number | null;
+    banner_display_type?: 'percentage' | 'fixed' | null;
     subscriptions: Array<{
       id: string;
       user_id: string;
@@ -136,6 +139,20 @@ export class SubscriptionService extends BaseApiService {
   }
 
   // Get a single subscription plan by ID
+  async getPlanSubscribers(planId: string, page: number = 1, limit: number = 10): Promise<any> {
+    try {
+      const params = new HttpParams()
+        .set('page', page.toString())
+        .set('limit', limit.toString());
+
+      const response = await this.get(`/subscription/plan/${planId}/subscribers`, { params });
+      return response;
+    } catch (error) {
+      console.error('Error fetching plan subscribers:', error);
+      throw error;
+    }
+  }
+
   async getPlanById(planId: string): Promise<any> {
     try {
       const response = await this.get<any>(`/subscription/plan/${planId}`);
@@ -153,6 +170,8 @@ export class SubscriptionService extends BaseApiService {
     prices: Array<{
       amount: number;
       interval: 'month' | 'year';
+      discount_percentage?: number | null;
+      banner_display_type?: 'percentage' | 'fixed' | null;
     }>;
     is_sponsor: boolean;
     plan_benefits?: string[];

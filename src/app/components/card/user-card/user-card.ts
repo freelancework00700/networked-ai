@@ -41,7 +41,7 @@ export class UserCard {
 
   userLocation = computed(() => {
     const user = this.user();
-    return user?.location || user?.address || '';
+    return user?.address || '';
   });
 
   onImageError(event: Event): void {

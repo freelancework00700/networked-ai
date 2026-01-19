@@ -1,8 +1,8 @@
-import { CommonModule, DatePipe } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { ActivatedRoute } from '@angular/router';
 import { ModalService } from '@/services/modal.service';
 import { EventService } from '@/services/event.service';
+import { CommonModule, DatePipe } from '@angular/common';
 import { ToasterService } from '@/services/toaster.service';
 import { NavigationService } from '@/services/navigation.service';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -42,6 +42,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   private modalService = inject(ModalService);
   private navigationService = inject(NavigationService);
   private datePipe = new DatePipe('en-US');
+  isFromMySubscriptions = signal<boolean>(false);
   isLoading = signal<boolean>(false);
   plans = signal<PlanData[]>([]);
   selectedPlanIndex = signal<number>(0);
@@ -156,8 +157,15 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   discountValue = computed(() => {
     const plan = this.currentPlan();
     if (!plan) return 0;
-    const monthlyPrice = plan.prices.find(p => p.interval === 'month');
     const annualPrice = plan.prices.find(p => p.interval === 'year');
+    
+    // Use discount_percentage from API if available
+    if (annualPrice?.discount_percentage !== null && annualPrice?.discount_percentage !== undefined) {
+      return Number(annualPrice.discount_percentage);
+    }
+    
+    // Otherwise calculate from prices
+    const monthlyPrice = plan.prices.find(p => p.interval === 'month');
     if (!monthlyPrice || !annualPrice) return 0;
     const annualBase = parseFloat(monthlyPrice.amount) * 12;
     const annualActual = parseFloat(annualPrice.amount);
@@ -166,7 +174,16 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   });
 
   discountType = computed(() => {
-    return 'percentage' as 'percentage' | 'amount';
+    const plan = this.currentPlan();
+    if (!plan) return 'percentage' as 'percentage' | 'fixed';
+    const annualPrice = plan.prices.find(p => p.interval === 'year');
+    
+    // Map banner_display_type from API to discountType
+    // API uses 'fixed' or 'percentage', component uses 'fixed' or 'percentage'
+    if (annualPrice?.banner_display_type === 'fixed') {
+      return 'fixed' as 'percentage' | 'fixed';
+    }
+    return 'percentage' as 'percentage' | 'fixed';
   });
 
   planType = computed(() => {
@@ -313,6 +330,10 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
 
 
   async ngOnInit(): Promise<void> {
+    // Check if coming from my-subscriptions page using navigation state
+    const state = window.history.state;
+    const fromValue = state?.from;
+    this.isFromMySubscriptions.set(fromValue === 'my-subscriptions');
     const planId = this.route.snapshot.paramMap.get('planId');
     if (planId) {
       // Load plan by ID using API
@@ -421,10 +442,10 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
         date: '',
         dayOfWeek: '',
         day: '',
-        location: this.eventService.formatLocation(event.address, city, state, country),
+        address: event.address || '',
         time: '',
         organization: 'Networked AI',
-        image: event.thumbnail_url || event.image_url || ''
+        image_url: event.image_url || ''
       };
     }
 
@@ -454,10 +475,10 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
       date: dateStr,
       dayOfWeek,
       day,
-      location: this.eventService.formatLocation(event.address, city, state, country),
+      address: event.address || '',
       time: timeStr,
       organization: 'Networked AI',
-      image: event.thumbnail_url || event.image_url || ''
+      image_url: event.image_url || ''
     };
   }
 

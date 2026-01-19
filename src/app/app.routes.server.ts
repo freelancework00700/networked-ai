@@ -157,11 +157,7 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
-    path: 'subscription/edit/:id',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'subscription/list',
+    path: 'subscription/manage/:planId',
     renderMode: RenderMode.Server
   },
   {
@@ -170,6 +166,14 @@ export const serverRoutes: ServerRoute[] = [
   },
   {
     path: 'subscription/:planId',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'subscription/:planId/events',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'subscription/:planId/subscribers',
     renderMode: RenderMode.Server
   },
   {

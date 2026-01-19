@@ -1,214 +1,44 @@
 <ion-header mode="md">
   <ion-toolbar>
-    <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto" (click)="previousStep()">
+   <div class="p-6 max-w-[672px] mx-auto">
+    <div class="flex items-center gap-2 cursor-pointer" (click)="previousStep()">
       <div class="pi pi-arrow-left"></div>
       <div class="body-14M neutral-02 text-center w-full">Set Up Subscription</div>
     </div>
+    <div class="flex items-center justify-between mt-4">
+      <div class="heading-h2 neutral-01">{{ stepHeading() }}</div>
+      <!-- Steps -->
+      <div class="flex items-center gap-1">
+        @for (step of steps(); track step) {
+          <div
+            class="rounded-full transition-all duration-200"
+            [ngClass]="step === currentStep() ? 'w-8 h-2 bg-black' : step < currentStep() ? 'w-2 h-2 bg-black' : 'w-2 h-2 bg-gray-300'"
+          ></div>
+        }
+      </div>
+    </div>
+   </div>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" mode="md">
   <div class="min-h-full">
-    <div class="w-full p-6 max-w-[672px] mx-auto">
-      <div class="flex items-center justify-between mb-6">
-        <div class="heading-h2 neutral-01">{{ stepHeading() }}</div>
-        <!-- Steps -->
-        <div class="flex items-center gap-1">
-          @for (step of steps(); track step) {
-            <div
-              class="rounded-full transition-all duration-200"
-              [ngClass]="step === currentStep() ? 'w-8 h-2 bg-black' : step < currentStep() ? 'w-2 h-2 bg-black' : 'w-2 h-2 bg-gray-300'"
-            ></div>
-          }
-        </div>
-      </div>
+    <div class="w-full p-4 max-w-[672px] mx-auto">
+      
 
       <form [formGroup]="planForm()">
         <!-- Step 1: Plan Details -->
         @if (currentStep() === 1) {
-          <div class="flex flex-col gap-6">
-            <!-- Plan Title -->
-            <text-input controlName="name" label="Plan Title" placeholder="Select title" [required]="true" />
-
-            <!-- Monthly Price -->
-            <number-input
-              controlName="monthlyPrice"
-              label="Monthly Price"
-              placeholder="Enter monthly price"
-              class="w-full"
-              [allowDecimal]="true"
-              [iconName]="'pi-dollar'"
-            />
-
-            <!-- Plan Benefits -->
-            <div class="flex flex-col gap-3">
-              <div class="body-14M neutral-01">Plan Benefits</div>
-              <ion-reorder-group [disabled]="false" (ionItemReorder)="reorderBenefits($event)" class="flex flex-col gap-2">
-                @for (benefit of benefits(); track benefit.id; let index = $index) {
-                  <div class="flex items-center gap-3">
-                    <ion-reorder slot="start"></ion-reorder>
-                    <input
-                      pInputText
-                      type="text"
-                      [value]="benefit.text"
-                      [placeholder]="index === 0 ? 'e.g. Weekly announcements' : index === 1 ? 'e.g. Early RSVP' : 'Add benefit'"
-                      class="w-full h-[44px]"
-                      (input)="updateBenefit(index, $any($event.target).value)"
-                    />
-                    <i class="pi pi-times text-surface-700 cursor-pointer" (click)="removeBenefit(index)"></i>
-                  </div>
-                }
-              </ion-reorder-group>
-              <app-button label="Add Point" iconName="pi-plus" color="secondary" (click)="addBenefit()" />
-            </div>
-
-            <!-- Description -->
-            <div>
-              <text-area-input controlName="description" label="Description" placeholder="Enter description" [required]="false" />
-              <div class="flex justify-end pt-1">
-               @if (isAnnualSubscriptionEnabled()) {
-                <button 
-                type="button" 
-                class="flex items-center gap-1.5 brand-02 body-14M" 
-                [disabled]="isGeneratingDescription()"
-                (click)="handleGenerateClick()"
-              >
-                @if (isGeneratingDescription()) {
-                  <i class="pi pi-spinner pi-spin"></i>
-                } @else {
-                  <span>{{ isCustomize() ? 'Customize' : 'Generate' }}</span>
-                  <img src="assets/svg/generateIcon.svg" alt="Generate" class="w-5 h-5" />
-                }
-              </button>
-               }
-              </div>
-            </div>
-
-            <!-- Annual Subscription -->
-            @if (isAnnualSubscriptionEnabled()) {
-              <div class="flex flex-col gap-4 p-4 border border-gray-300 rounded-lg bg-white">
-                <div class="flex flex-col gap-2">
-                  <toggle-input controlName="annualSubscription" label="Annual Subscription" [initialValue]="false" />
-                  <p class="body-12R neutral-03 ml-0">Give discount for users that subscribe annually.</p>
-                  @if (getFieldValue('annualSubscription')) {
-                    <div class="flex flex-col gap-4 pt-4">
-                      <!-- Set a Discount -->
-                      <div class="flex flex-col gap-2">
-                        <div class="flex items-center justify-between">
-                          <label class="body-14M neutral-01">Set a Discount</label>
-                          <label class="body-14R neutral-01">Or Set Your Own</label>
-                        </div>
-                        <div class="flex gap-2 w-full">
-                          <chip
-                            [type]="'10'"
-                            [color]="getFieldValue('discountPercentage') === 10 ? 'lgold' : ''"
-                            (selectedType)="setDiscount(10)"
-                            class="flex-1"
-                          >
-                            <span class="body-14R">10%</span>
-                          </chip>
-                          <chip
-                            [type]="'15'"
-                            [color]="getFieldValue('discountPercentage') === 15 ? 'lgold' : ''"
-                            (selectedType)="setDiscount(15)"
-                            class="flex-1"
-                          >
-                            <span class="body-14R">15%</span>
-                          </chip>
-                          <chip
-                            [type]="'20'"
-                            [color]="getFieldValue('discountPercentage') === 20 ? 'lgold' : ''"
-                            (selectedType)="setDiscount(20)"
-                            class="flex-1"
-                          >
-                            <span class="body-14R">20%</span>
-                          </chip>
-                          <div class="relative flex items-center flex-1">
-                            <number-input
-                              controlName="discountPercentage"
-                              placeholder="50"
-                              [showLabel]="false"
-                              [required]="false"
-                              [max]="100"
-                              class="w-full"
-                            />
-                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none body-14R">%</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Annual Price Display -->
-                      <div class="flex items-center justify-between">
-                        <label class="body-14M neutral-01">Annual Price</label>
-                        <div class="text-2xl font-semibold">$ {{ annualPrice() | number: '1.2-2' }}</div>
-                      </div>
-
-                      <!-- Annual Banner Selection -->
-                      <div class="flex flex-col gap-3">
-                        <label class="body-14M neutral-01">Annual Banner</label>
-
-                        <div class="flex gap-4">
-                          @for (option of discountTypeOptions(); track option.type) {
-                            <div class="flex-1 flex flex-col gap-3">
-                              @if (isSponsorPlan()) {
-                                <div
-                                  class="relative rounded-xl p-[2px] transition cursor-pointer"
-                                  [style.background]="getBannerBorderStyle(option.type, discountType() === option.type)"
-                                >
-                                  <div
-                                    class="relative rounded-xl px-4 pt-8 pb-4 h-full"
-                                    [style.background-color]="discountType() === option.type ? bannerColors().background : '#FFFFFF'"
-                                  >
-                                    <!-- Badge -->
-                                    <div
-                                      class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-lg px-4 py-1 text-sm font-semibold text-white shadow whitespace-nowrap"
-                                      [style.background]="getBannerBadgeStyle()"
-                                    >
-                                      {{ option.badgeText }}
-                                    </div>
-
-                                    <!-- Content -->
-                                    <div class="text-center text-lg font-semibold text-gray-900">Annual Plan</div>
-                                  </div>
-                                </div>
-                              } @else {
-                                <div
-                                  class="relative rounded-xl border-2 px-4 pt-8 pb-4 transition cursor-pointer"
-                                  [style.border-color]="getBannerBorderStyle(option.type, discountType() === option.type)"
-                                  [style.background-color]="discountType() === option.type ? bannerColors().background : '#FFFFFF'"
-                                >
-                                  <!-- Badge -->
-                                  <div
-                                    class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-lg px-4 py-1 text-sm font-semibold text-white shadow whitespace-nowrap"
-                                    [style.background-color]="getBannerBadgeStyle()"
-                                  >
-                                    {{ option.badgeText }}
-                                  </div>
-
-                                  <!-- Content -->
-                                  <div class="text-center text-lg font-semibold text-gray-900">Annual Plan</div>
-                                </div>
-                              }
-
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                <p-radiobutton
-                                  [inputId]="option.inputId"
-                                  formControlName="discountType"
-                                  [value]="option.type"
-                                  name="discountDisplay"
-                                ></p-radiobutton>
-                                <span class="body-14R">{{ option.label }}</span>
-                              </label>
-                            </div>
-                          }
-                        </div>
-                      </div>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
+          <app-plan-details-form
+            [planForm]="planForm()"
+            [benefits]="benefits()"
+            [isSponsorPlan]="isSponsorPlan()"
+            [benefitErrors]="benefitErrors()"
+            (benefitAdded)="addBenefit()"
+            (benefitRemoved)="removeBenefit($event)"
+            (benefitUpdated)="updateBenefit($event.index, $event.text)"
+            (benefitsReordered)="reorderBenefits($event)"
+          />
         }
 
         <!-- Step 2: Include Events -->
@@ -219,14 +49,22 @@
                 <div class="body-14M neutral-03">Loading events...</div>
               </div>
             } @else if (groupedEventsKeys().length > 0) {
-              @for (group of groupedEventsKeys(); track group) {
-                <div class="flex flex-col gap-3">
-                  <div class="body-16M neutral-02">{{ group }}</div>
+             <div>
+               @for (group of groupedEventsKeys(); track group) {
+                <div class="flex flex-col gap-2">
+                  <div class="body-16M neutral-02 pt-3">{{ group }}</div>
                   @for (event of groupedEvents()[group]; track event?.id) {
                     <subscription-event-card [event]="event" [selected]="selectedEvents().includes(event.id)" (toggle)="toggleEventSelection($event)" />
                   }
                 </div>
               }
+              
+              @if (hasMore()) {
+                <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreEvents($event)">
+                  <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more events..." />
+                </ion-infinite-scroll>
+              }
+             </div>
             } @else {
               <div class="flex items-center justify-center py-8">
                 <div class="body-14M neutral-03 text-center">No events found. Create an event first to include it in your subscription plan.</div>

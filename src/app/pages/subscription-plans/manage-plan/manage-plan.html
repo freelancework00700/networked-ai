@@ -1,0 +1,71 @@
+<ion-header mode="md">
+  <ion-toolbar>
+    <div class="p-6 max-w-[672px] mx-auto">
+      <div class="flex items-center gap-2 cursor-pointer">
+        <div class="pi pi-arrow-left"  (click)="back()"></div>
+        <div class="body-14M neutral-02 text-center w-full">Manage Subscription Plan</div>
+      </div>
+      
+      <div class="mt-4">
+        <segment-button 
+          [items]="tabItems" 
+          [value]="tabValue()" 
+          (valueChange)="onTabChange($event)" 
+        />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" mode="md">
+  <div class="min-h-full">
+    <div class="w-full p-4 max-w-[672px] mx-auto">
+      @if (tabValue() === 'details') {
+        <!-- Details Tab - Edit Form -->
+        <app-plan-details-form
+          [planForm]="planForm()"
+          [benefits]="benefits()"
+          [isSponsorPlan]="isSponsor()"
+          (benefitAdded)="addBenefit()"
+          (benefitRemoved)="removeBenefit($event)"
+          (benefitUpdated)="updateBenefit($event.index, $event.text)"
+          (benefitsReordered)="reorderBenefits($event)"
+        />
+      } @else {
+        <!-- Analytics Tab -->
+        <app-plan-analytics 
+          [planId]="planId()"
+          [isSponsor]="isSponsor()"
+          [events]="planData()?.events || []"
+          [totalSubscribers]="planData()?.total_subscribers || 0"
+        />
+      }
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-6 max-w-[672px] mx-auto">
+      @if (tabValue() === 'details') {
+        <div class="flex items-center gap-2">
+          <app-button 
+            label="Cancel"
+            height="40px" 
+            color="secondary"
+            class="flex-1"
+            (click)="cancel()"
+          />
+          <app-button 
+            label="Save Changes"
+            height="40px" 
+            [isLoading]="isSaving()"
+            [customColor]="buttonColor()"
+            class="flex-1"
+            (click)="saveChanges()"
+          />
+        </div>
+      }
+    </div>
+  </ion-toolbar>
+</ion-footer>

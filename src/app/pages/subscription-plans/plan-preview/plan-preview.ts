@@ -28,7 +28,7 @@ export class PlanPreview implements OnDestroy, OnInit {
   planForm = input.required<FormGroup>();
   benefits = input.required<any[]>();
   selectedEvents = input.required<string[]>();
-  discountType = input.required<'percentage' | 'amount'>();
+  discountType = input.required<'percentage' | 'fixed'>();
   events = input.required<any[]>();
   monthlyPriceValue = input.required<number>();
   discountValue = input.required<number>();
@@ -43,7 +43,7 @@ export class PlanPreview implements OnDestroy, OnInit {
   selectedPlan = signal<'annual' | 'monthly'>('monthly');
 
   planControl = new FormControl<'annual' | 'monthly'>('monthly');
-
+  
   private readonly swiperConfig: SwiperOptions = {
     spaceBetween: 12,
     slidesPerView: 'auto',
@@ -205,19 +205,6 @@ export class PlanPreview implements OnDestroy, OnInit {
 
   getEventById(eventId: string): any | undefined {
     return this.events().find((e) => e.id === eventId);
-  }
-
-  convertToIEvent(event: any): any {
-    return {
-      date: event.date,
-      day: event.day,
-      views: '10',
-      title: event.title,
-      image: event.image || '',
-      location: event.location,
-      dayOfWeek: event.dayOfWeek,
-      organization: event.organization
-    };
   }
 
   toggleDescription(): void {

@@ -100,7 +100,7 @@ export class Settings implements OnInit {
     {
       label: 'My Subscriptions',
       icon: 'pi pi-crown',
-      route: '/subscription/list'
+      route: '/subscription'
     }
   ]);
 

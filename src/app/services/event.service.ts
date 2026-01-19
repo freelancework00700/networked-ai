@@ -15,8 +15,8 @@ import { IUser } from '@/interfaces/IUser';
 import { DatePipe } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { BaseApiService } from '@/services/base-api.service';
 import { ICity } from '@/components/card/city-card';
+import { BaseApiService } from '@/services/base-api.service';
 import { SegmentButtonItem } from '@/components/common/segment-button';
 
 @Injectable({ providedIn: 'root' })

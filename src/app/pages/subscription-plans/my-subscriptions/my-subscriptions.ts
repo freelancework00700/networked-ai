@@ -135,6 +135,8 @@ export class MySubscriptions implements OnInit {
       return;
     }
 
-    this.navCtrl.navigateForward(`/subscription/${planId}`);
+    this.navCtrl.navigateForward(`/subscription/${planId}`, {
+      state: { from: 'my-subscriptions' }
+    });
   }
 }
