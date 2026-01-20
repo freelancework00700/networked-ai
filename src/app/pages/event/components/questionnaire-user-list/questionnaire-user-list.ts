@@ -1,4 +1,5 @@
 import { Button } from '@/components/form/button';
+import { AuthService } from '@/services/auth.service';
 import { Component, effect, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { IonContent, IonToolbar, IonHeader, NavController } from '@ionic/angular/standalone';
 
@@ -11,6 +12,7 @@ import { IonContent, IonToolbar, IonHeader, NavController } from '@ionic/angular
 })
 export class QuestionnaireUserList {
   navCtrl = inject(NavController);
+  private authService = inject(AuthService);
 
   question = signal<any>(null);
   option = signal<any>(null);
@@ -117,6 +119,15 @@ export class QuestionnaireUserList {
   }
 
   messageUser(id: string) {
-    this.navCtrl.navigateForward(`/chat-room/${id}`);
+    const currentUserId = this.authService.currentUser()?.id;
+    
+    if (currentUserId && id) {
+      this.navCtrl.navigateForward('/chat-room', {
+        state: {
+          user_ids: [currentUserId, id],
+          is_personal: true
+        }
+      });
+    }
   }
 }

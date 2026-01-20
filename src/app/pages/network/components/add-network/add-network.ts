@@ -194,10 +194,6 @@ export class AddNetwork implements OnDestroy {
     }
   }
 
-  messageUser(id: string) {
-    this.navCtrl.navigateForward(['/chat-room', id]);
-  }
-
   private initSwiper(): void {
     new Swiper('.swiper-user-recommendation', {
       spaceBetween: 8,

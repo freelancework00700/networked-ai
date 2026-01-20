@@ -639,8 +639,17 @@ export class Event implements OnInit, OnDestroy {
 
   openEventChat(): void {
     const eventId = this.eventIdFromData();
-    if (eventId) {
-      this.navigationService.navigateForward(`/chat-room/${eventId}`);
+    const currentUserId = this.authService.currentUser()?.id;
+    const eventData = this.currentEventData();
+    
+    if (eventId && currentUserId) {
+      this.navigationService.navigateForward('/chat-room', false, {
+        event_id: eventId,
+        is_personal: false,
+        name: eventData?.title || null,
+        event_image: eventData?.image_url?.[0] || null,
+        user_ids: []
+      });
     }
   }
 

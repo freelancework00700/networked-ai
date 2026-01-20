@@ -49,11 +49,11 @@ export const appRoutes: Routes = [
     loadComponent: () => import('@/pages/messages/components/new-chat').then((m) => m.NewChat)
   },
   {
-    path: 'chat-room/:id',
+    path: 'chat-room',
     loadComponent: () => import('@/pages/messages/components/chat-room').then((m) => m.ChatRoom)
   },
   {
-    path: 'chat-info/:id',
+    path: 'chat-info',
     loadComponent: () => import('@/pages/messages/components/chat-info').then((m) => m.ChatInfo)
   },
   {

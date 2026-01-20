@@ -467,9 +467,16 @@ export class Profile implements OnDestroy {
   }
 
   messageUser(): void {
-    const userId = this.currentUser()?.id;
-    if (userId) {
-      this.navCtrl.navigateForward(['/chat-room', userId]);
+    const currentUserId = this.authService.currentUser()?.id;
+    const otherUserId = this.currentUser()?.id;
+    
+    if (currentUserId && otherUserId) {
+      this.navCtrl.navigateForward('/chat-room', {
+        state: {
+          user_ids: [currentUserId, otherUserId],
+          is_personal: true
+        }
+      });
     }
   }
 

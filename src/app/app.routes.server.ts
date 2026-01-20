@@ -28,11 +28,11 @@ export const serverRoutes: ServerRoute[] = [
   },
   // dynamic routes with params - must use server-side rendering
   {
-    path: 'chat-room/:id',
+    path: 'chat-room',
     renderMode: RenderMode.Server
   },
   {
-    path: 'chat-info/:id',
+    path: 'chat-info',
     renderMode: RenderMode.Server
   },
   {

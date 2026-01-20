@@ -20,6 +20,8 @@ export class BaseApiService {
       if (value !== undefined && value !== null && value !== '') {
         if (key === 'image_url' && (value instanceof File || typeof value === 'string')) {
           formData.append(key, value instanceof File ? value : value);
+        } else if (key === 'file' && value instanceof File) {
+          formData.append('file', value);
         } else if (value instanceof File) {
           formData.append(key, value);
         } else if (typeof value === 'object' && !(value instanceof Date)) {

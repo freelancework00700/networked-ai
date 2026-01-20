@@ -1,50 +1,169 @@
 import { Searchbar } from '@/components/common/searchbar';
-import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
-import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { AuthService } from '@/services/auth.service';
+import { NetworkService } from '@/services/network.service';
+import { IUser } from '@/interfaces/IUser';
+import { IonHeader, IonToolbar, IonContent, NavController, IonInfiniteScroll, IonInfiniteScrollContent, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/angular/standalone';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
+import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'new-chat',
   styleUrl: './new-chat.scss',
   templateUrl: './new-chat.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonContent, IonToolbar, IonHeader, Searchbar]
+  imports: [IonContent, IonToolbar, IonHeader, Searchbar, IonInfiniteScroll, IonInfiniteScrollContent, IonRefresher, IonRefresherContent, NgOptimizedImage]
 })
 export class NewChat {
   private navCtrl = inject(NavController);
-  networkSuggestions = [
-    { id: '1', name: 'Kathryn Murphy', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '2', name: 'Esther Howard', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '3', name: 'Arlene McCoy', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '4', name: 'Darlene Robertson', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '5', name: 'Ronald Richards', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '6', name: 'Albert Flores', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '7', name: 'Eleanor Pena', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '8', name: 'Savannah Nguyen', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' }
-  ];
+  private authService = inject(AuthService);
+  private networkService = inject(NetworkService);
+  private destroyRef = inject(DestroyRef);
+  private isInitialized = false;
 
   searchText = signal('');
-  selectedIds = signal<Set<string>>(new Set());
 
-  // Filtered list (computed)
-  filteredSuggestions = computed(() => {
-    const search = this.searchText().toLowerCase().trim();
-    if (!search) return this.networkSuggestions;
+  // auth
+  isLoggedIn = computed(() => !!this.authService.currentUser());
 
-    return this.networkSuggestions.filter((s) => s.name.toLowerCase().includes(search));
-  });
+  // pagination + data
+  users = signal<IUser[]>([]);
+  currentPage = signal<number>(1);
+  totalPages = signal<number>(0);
+  isLoading = signal<boolean>(false);
+  isLoadingMore = signal<boolean>(false);
 
-  toggleAdd(id: string) {
-    const current = new Set(this.selectedIds());
-    current.has(id) ? current.delete(id) : current.add(id);
-    this.selectedIds.set(current);
+  hasMore = computed(() => this.currentPage() < this.totalPages());
+
+  private searchSubject = new Subject<string>();
+
+  constructor() {
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((query) => from(this.resetAndLoad(query.trim() || undefined))),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
+
+    // Watch search changes (debounced)
+    effect(() => {
+      const query = this.searchText();
+      if (!this.isLoggedIn() || !this.isInitialized) return;
+      this.searchSubject.next(query);
+    });
+
+    // Initial load (and re-load on re-login)
+    effect(() => {
+      const userId = this.authService.currentUser()?.id;
+      if (!userId) {
+        // logged out
+        this.isInitialized = false;
+        this.users.set([]);
+        this.currentPage.set(1);
+        this.totalPages.set(0);
+        return;
+      }
+
+      // Only do immediate load when user becomes available
+      if (!this.isInitialized) {
+        this.isInitialized = true;
+        this.resetAndLoad(this.searchText().trim() || undefined);
+      }
+    });
   }
 
-  isSelected(id: string) {
-    return this.selectedIds().has(id);
+  onImageError(event: Event): void {
+    onImageError(event);
   }
 
-  goToChatRoom(id: string) {
-    this.navCtrl.navigateForward(`/chat-room/${id}`);
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
+  }
+
+  private async resetAndLoad(search?: string): Promise<void> {
+    // this.users.set([]);
+    this.currentPage.set(1);
+    this.totalPages.set(0);
+    await this.loadConnections(1, false, search);
+  }
+
+  async loadConnections(page: number = 1, append: boolean = false, search?: string): Promise<void> {
+    if (!this.isLoggedIn()) return;
+
+    try {
+      if (page === 1) this.isLoading.set(true);
+
+      const result = await this.networkService.getMyConnections({
+        page,
+        limit: 15,
+        search: search || undefined
+      });
+
+      const nextUsers = result.data || [];
+
+      if (append) {
+        this.users.update((current) => [...current, ...nextUsers]);
+      } else {
+        this.users.set(nextUsers);
+      }
+
+      this.currentPage.set(result.pagination?.currentPage || 1);
+      this.totalPages.set(result.pagination?.totalPages || 0);
+    } catch (error) {
+      console.error('Error loading connections:', error);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  loadMoreUsers = async (event: Event): Promise<void> => {
+    const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
+    const search = this.searchText().trim() || undefined;
+
+    if (this.isLoadingMore() || !this.hasMore()) {
+      infiniteScroll.complete();
+      return;
+    }
+
+    try {
+      this.isLoadingMore.set(true);
+      const nextPage = this.currentPage() + 1;
+      await this.loadConnections(nextPage, true, search);
+    } catch (error) {
+      console.error('Error loading more users:', error);
+    } finally {
+      this.isLoadingMore.set(false);
+      infiniteScroll.complete();
+    }
+  };
+
+  async onRefresh(event: RefresherCustomEvent): Promise<void> {
+    try {
+      this.searchText.set('');
+      await this.loadConnections(1, false);
+    } catch (error) {
+      console.error('Error refreshing connections:', error);
+    } finally {
+      event.target.complete();
+    }
+  }
+
+  goToChatRoom(user: IUser) {
+    const currentUserId = this.authService.currentUser()?.id;
+    if (!currentUserId) return;
+
+    const user_ids = [currentUserId, user.id];
+    
+    this.navCtrl.navigateForward('/chat-room', {
+      state: {
+        user_ids,
+        is_personal: true
+      }
+    });
   }
 
   goToCreateGroup() {
@@ -52,6 +171,26 @@ export class NewChat {
   }
 
   handleBack() {
-    this.navCtrl.navigateForward('/messages');
+    this.navCtrl.back();
+  }
+
+  getDiamondPath(user: IUser): string {
+    const points = user?.total_gamification_points || 0;
+
+    if (points >= 50000) {
+      return '/assets/svg/gamification/diamond-50k.svg';
+    } else if (points >= 40000) {
+      return '/assets/svg/gamification/diamond-40k.svg';
+    } else if (points >= 30000) {
+      return '/assets/svg/gamification/diamond-30k.svg';
+    } else if (points >= 20000) {
+      return '/assets/svg/gamification/diamond-20k.svg';
+    } else if (points >= 10000) {
+      return '/assets/svg/gamification/diamond-10k.svg';
+    } else if (points >= 5000) {
+      return '/assets/svg/gamification/diamond-5k.svg';
+    } else {
+      return '/assets/svg/gamification/diamond-1k.svg';
+    }
   }
 }

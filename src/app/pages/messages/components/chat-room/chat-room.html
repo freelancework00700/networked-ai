@@ -1,21 +1,38 @@
-<ion-header>
-  <ion-toolbar>
+<ion-header mode="md">
+  <ion-toolbar mode="md">
     <div class="relative p-6 max-w-[672px] mx-auto flex items-center">
       <i class="pi pi-arrow-left text-xl cursor-pointer z-10" (click)="handleBack()"></i>
 
       <div class="flex justify-center items-center gap-3 mx-auto" (click)="openChatInfo()">
-        <ion-avatar class="w-12 h-12 mb-1">
-          <img src="assets/images/profile.jpeg" />
-        </ion-avatar>
+        <!-- <ion-avatar class="w-12 h-12 mb-1"> -->
+          <div class="w-12 h-12 min-w-12 rounded-full overflow-hidden relative cursor-pointer">
+            @if (chatImage()) {
+            <img
+              fill
+              placeholder
+              class="rounded-full object-cover"
+              (error)="onImageError($event)"
+                [ngSrc]="getImageUrl(chatImage())"
+                [loaderParams]="{ thumbnail: chatImage() || '' }"
+            />
+            } @else {
+              <img
+                src="/assets/images/profile.jpeg"
+                class="rounded-full object-cover w-full h-full"
+                (error)="onImageError($event)"
+              />
+            }
+          </div>
+        <!-- </ion-avatar> -->
         <div class="body-16M neutral-01">{{ chatName() }}</div>
       </div>
 
-      <i class="pi pi-search"></i>
+      <!-- <i class="pi pi-search"></i> -->
     </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content #content [fullscreen]="true" mode="md">
   @if (isEvent()) {
     <div class="sticky top-0 z-50 bg-white cursor-pointer" (click)="navigateToNetwork()">
       <div class="w-full max-w-[672px] mx-auto p-4 pt-0">
@@ -30,72 +47,250 @@
       </div>
     </div>
   }
-  <div class="w-full max-w-[672px] mx-auto p-4 pt-0 flex flex-col gap-2">
-    @for (msg of messages(); track $index) {
-      @if (msg.sender === 'You') {
-        <div
-          class="flex flex-col items-end mb-2 relative transition-opacity"
-          [class.opacity-100]="editingIndex() === null || editingIndex() === $index"
-          [class.opacity-30]="editingIndex() !== null && editingIndex() !== $index"
-          [class.pointer-events-none]="editingIndex() !== null && editingIndex() !== $index"
-          (click)="onLongPress($index)"
-        >
+
+  <!-- Infinite Scroll for loading older messages (reverse pagination) -->
+  <ion-infinite-scroll position="top" threshold="120px" (ionInfinite)="loadMoreMessages($event)" [disabled]="!hasMoreMessages()">
+    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading older messages..." />
+  </ion-infinite-scroll>
+
+  @if (isLoadingRoom() || isLoading()) {
+    <div class="flex justify-center items-center py-8">
+      <ion-spinner></ion-spinner>
+    </div>
+  } @else {
+    <div class="w-full max-w-[672px] mx-auto p-4 pt-0 flex flex-col">
+      @for (msg of sortedMessages(); track msg.id) {
+        @if (isCurrentUserMessage(msg)) {
           <div
-            class="rounded-xl px-4 py-2 max-w-[80%] break-words"
-            [class.bg-primary]="!msg.deleted"
-            [class.bg-gray-200]="msg.deleted"
-            [class.text-gray-500]="msg.deleted"
+            class="flex flex-col items-end mb-2 relative transition-opacity"
+            [class.opacity-100]="editingIndex() === null || editingIndex() === msg.id"
+            [class.opacity-30]="editingIndex() !== null && editingIndex() !== msg.id"
+            [class.pointer-events-none]="editingIndex() !== null && editingIndex() !== msg.id"
+            (click)="onLongPress(msg.id)"
           >
-            {{ msg.text }}
-          </div>
-
-          <div class="text-xs text-gray-500 mt-1">
-            {{ msg.time }}
-          </div>
-
-          @if (selectedIndex() === $index && editingIndex() === null && !msg.deleted) {
-            <div class="absolute right-0 mt-1 bg-white shadow-lg rounded-xl px-3 py-2 flex gap-4 z-50">
-              <img src="assets/svg/editIcon.svg" class="w-5 h-5 cursor-pointer" (click)="editMessage($index)" />
-              <img src="assets/svg/deleteIcon.svg" class="w-5 h-5 cursor-pointer" (click)="deleteMessage($index)" />
+            <div
+              class="rounded-xl max-w-[80%] w-fit message-bubble overflow-hidden"
+              [class]="getMessageClasses(msg)"
+            >
+              @if (msg.is_deleted) {
+                <div class="px-4 py-2">
+                This message was deleted
+                </div>
+              } @else {
+                <!-- Media (Image or Video) -->
+                @if (msg.media_url) {
+                  <div class="relative">
+                    @if (msg.type === 'Image' || msg.type === 'image') {
+                      <div class="relative max-w-[300px] overflow-hidden cursor-pointer" [class.rounded-t-xl]="msg.message" [class.rounded-xl]="!msg.message" (click)="openImagePreview(msg.media_url)">
+                        <img
+                          [src]="getImageUrl(msg.media_url)"
+                          class="object-cover w-full h-auto max-h-[400px]"
+                          (error)="onImageError($event)"
+                          loading="lazy"
+                        />
+                      </div>
+                    }
+                    @if (msg.type === 'Video' || msg.type === 'video') {
+                      <div class="relative max-w-[300px] max-h-[400px] overflow-hidden" [class.rounded-t-xl]="msg.message" [class.rounded-xl]="!msg.message">
+                        <video 
+                          [src]="getImageUrl(msg.media_url)" 
+                          controls 
+                          class="w-full h-auto max-h-[400px] object-contain"
+                        ></video>
+                      </div>
+                    }
+                  </div>
+                }
+                <!-- Text (with or without media) -->
+                @if (msg.message) {
+                  <div class="px-4 py-2" [class.pt-2]="msg.media_url">
+                {{ msg.message }}
+                  </div>
+              }
+                @if (msg.is_edited && !msg.is_deleted) {
+                  <div class="px-4 pb-2 text-xs opacity-70">
+                    (edited)
+                  </div>
+                }
+              }
             </div>
-          }
-        </div>
-      } @else if (msg.sender !== 'You') {
-        <div
-          class="flex items-start gap-2 mb-2 transition-opacity"
-          [class.opacity-100]="editingIndex() === null"
-          [class.opacity-30]="editingIndex() !== null"
-          [class.pointer-events-none]="editingIndex() !== null"
-        >
-          <ion-avatar class="w-10 h-10 flex-shrink-0">
-            <img src="assets/images/profile.jpeg" />
-          </ion-avatar>
 
-          <div class="flex flex-col">
-            <div class="bg-gray-200 text-gray-900 rounded-xl px-4 py-2 max-w-[80%] break-words">
-              {{ msg.text }}
-            </div>
             <div class="text-xs text-gray-500 mt-1">
-              {{ msg.time }}
+              {{ formatTime(msg.created_at) }}
+            </div>
+
+            @if (selectedIndex() === msg.id && editingIndex() === null && !msg.is_deleted) {
+              <div class="absolute right-0 bottom-[-15px] bg-white shadow-lg rounded-xl px-3 py-2 flex gap-4 z-50" (click)="$event.stopPropagation()">
+                <img src="assets/svg/editIcon.svg" class="w-5 h-5 cursor-pointer" (click)="editMessage(msg.id)" />
+                <img src="assets/svg/deleteIcon.svg" class="w-5 h-5 cursor-pointer" (click)="deleteMessage(msg.id)" />
+              </div>
+            }
+          </div>
+        } @else {
+          <div
+            class="flex items-start gap-2 mb-2 transition-opacity"
+            [class.opacity-100]="editingIndex() === null"
+            [class.opacity-30]="editingIndex() !== null"
+            [class.pointer-events-none]="editingIndex() !== null"
+          >
+            <div class="w-10 h-10 min-w-10 rounded-full overflow-hidden relative cursor-pointer flex-shrink-0">
+              @if (msg.posted_by_user.thumbnail_url || msg.posted_by_user.image_url) {
+              <img
+                fill
+                placeholder
+                class="rounded-full object-cover"
+                (error)="onImageError($event)"
+                [ngSrc]="getImageUrl(msg.posted_by_user.thumbnail_url ?? msg.posted_by_user.image_url ?? null)"
+                [loaderParams]="{ thumbnail: msg.posted_by_user.thumbnail_url ?? msg.posted_by_user.image_url ?? '' }"
+              />
+              } @else {
+                <img
+                  src="/assets/images/profile.jpeg"
+                  class="rounded-full object-cover w-full h-full"
+                  (error)="onImageError($event)"
+                />
+              }
+            </div>
+
+            <div class="flex flex-col min-w-0 flex-1">
+              <div class="bg-gray-200 rounded-xl max-w-[80%] w-fit overflow-hidden" 
+                [class.text-gray-500]="msg.is_deleted"
+                [class.text-gray-900]="!msg.is_deleted"
+              >
+                @if (msg.is_deleted) {
+                  <div class="px-4 py-2">
+                  This message was deleted
+                  </div>
+                } @else {
+                  <!-- Media (Image or Video) -->
+                  @if (msg.media_url) {
+                    <div class="relative">
+                      @if (msg.type === 'Image' || msg.type === 'image') {
+                        <div class="relative max-w-[300px] overflow-hidden cursor-pointer" [class.rounded-t-xl]="msg.message" [class.rounded-xl]="!msg.message" (click)="openImagePreview(msg.media_url)">
+                          <img
+                            [src]="getImageUrl(msg.media_url)"
+                            class="object-cover w-full h-auto max-h-[400px]"
+                            (error)="onImageError($event)"
+                            loading="lazy"
+                          />
+                        </div>
+                      }
+                      @if (msg.type === 'Video' || msg.type === 'video') {
+                        <div class="relative max-w-[300px] max-h-[400px] overflow-hidden" [class.rounded-t-xl]="msg.message" [class.rounded-xl]="!msg.message">
+                          <video 
+                            [src]="getImageUrl(msg.media_url)" 
+                            controls 
+                            class="w-full h-auto max-h-[400px] object-contain"
+                          ></video>
+                        </div>
+                      }
+                    </div>
+                  }
+                  <!-- Text (with or without media) -->
+                  @if (msg.message) {
+                    <div class="px-4 py-2" [class.pt-2]="msg.media_url">
+                  {{ msg.message }}
+                    </div>
+                }
+                  @if (msg.is_edited && !msg.is_deleted) {
+                    <div class="px-4 pb-2 text-xs opacity-70">
+                      (edited)
+                    </div>
+                  }
+                }
+              </div>
+              <div class="text-xs text-gray-500 mt-1">
+                @if(isGroup()) { <span>{{ msg.posted_by_user.name || msg.posted_by_user.username }} · </span> } {{ formatTime(msg.created_at) }}
+              </div>
             </div>
           </div>
-        </div>
+        }
       }
-    }
-  </div>
+    </div>
+  }
 </ion-content>
 
-<ion-footer>
-  <ion-toolbar class="bg-white border-t border-gray-200">
-    <div class="flex items-center gap-2 p-4 max-w-[672px] mx-auto w-full">
+<ion-footer mode="md">
+  <ion-toolbar class="bg-white border-t border-gray-200" mode="md">
+    @if (editingIndex() !== null) {
+      <!-- Edit Message Input (matches Figma) -->
+      <div class="p-4 max-w-[672px] mx-auto w-full">
+        <div class="flex items-center gap-2 bg-gray-100 rounded-xl px-4 py-2">
+          <i class="pi pi-pencil text-gray-600"></i>
+          <ion-input
+            [value]="newMessage()"
+            (ionInput)="newMessage.set($event.detail.value || '')"
+            placeholder="Edit message..."
+            class="flex-1 border-0 bg-transparent"
+          ></ion-input>
+          <app-button (click)="sendMessage()" [iconName]="'pi-check'" iconPos="left" height="32px" width="32px" />
+        </div>
+      </div>
+    } @else {
+      <!-- Normal Message Input (matches Figma) -->
+      <div class="flex items-center gap-2 px-4 py-3 max-w-[672px] mx-auto w-full">
+        <!-- Message Input with Icons Inside -->
+        <div class="flex-1 relative">
       <ion-input
         [value]="newMessage()"
         (ionInput)="newMessage.set($event.detail.value || '')"
         placeholder="Message..."
-        class="flex-1 rounded-full border border-gray-300 px-4 py-2"
+            class="w-full rounded-full border border-gray-300 pl-10 pr-10 py-2.5"
       ></ion-input>
+          <!-- Attachment/Paperclip Icon Inside Input (left side) -->
+          <button 
+            type="button" 
+            class="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-600 hover:text-gray-800 transition-colors active:opacity-70 z-9999"
+            (click)="openFilePicker(); $event.stopPropagation()"
+          >
+            <ion-icon name="attach-outline" class="w-5 h-5"></ion-icon>
+          </button>
+          <!-- Emoji Icon Inside Input (right side) -->
+          <button 
+            type="button" 
+            class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-600 hover:text-gray-800 transition-colors active:opacity-70 z-9999"
+            (click)="openEmojiPicker(); $event.stopPropagation()"
+          >
+            <ion-icon name="happy-outline" class="w-5 h-5"></ion-icon>
+          </button>
+        </div>
 
-      <app-button (click)="sendMessage()" [iconName]="editingIndex() === null ? 'pi-send' : 'pi-check'" iconPos="left" height="40px" width="40px" />
+        <!-- Send Button (square, matches Figma) -->
+        <app-button 
+          (click)="sendMessage()" 
+          [iconName]="'pi-send'" 
+          iconPos="left" 
+          height="40px" 
+          width="40px"
+          [radius]="'8px'"
+        />
     </div>
+    }
   </ion-toolbar>
 </ion-footer>
+
+<!-- Hidden file input for media upload -->
+<input
+  #fileInput
+  type="file"
+  accept="image/jpeg,image/png,image/gif,video/mp4,video/webm,video/quicktime"
+  class="hidden"
+  (change)="onBrowseFiles($event)"
+/>
+
+<!-- Selected file preview (optional) -->
+@if (selectedFile()) {
+  <div class="fixed bottom-20 left-4 right-4 max-w-[672px] mx-auto bg-white border border-gray-300 rounded-lg p-3 flex items-center gap-3 shadow-lg">
+    <div class="flex-1">
+      <p class="text-sm font-medium text-gray-900">{{ selectedFile()?.name }}</p>
+      <p class="text-xs text-gray-500">{{ (selectedFile()?.size || 0) / 1024 | number:'1.0-0' }} KB</p>
+    </div>
+    <button 
+      type="button"
+      class="p-2 text-gray-600 hover:text-gray-800"
+      (click)="removeSelectedFile()"
+    >
+      <ion-icon name="close-outline" class="w-5 h-5"></ion-icon>
+    </button>
+  </div>
+}

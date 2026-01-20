@@ -4,12 +4,14 @@ import { environment } from '../../environments/environment';
 import { inject, Injectable, OnDestroy, signal, effect } from '@angular/core';
 import { ClientToServerEvents, ServerToClientEvents } from '@/interfaces/socket-events';
 import { FeedService } from '@/services/feed.service';
+import { MessagesService } from '@/services/messages.service';
 
 @Injectable({ providedIn: 'root' })
 export class SocketService implements OnDestroy {
   private currentUserId = '';
   private authService = inject(AuthService);
   private feedService = inject(FeedService);
+  private messagesService = inject(MessagesService);
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
   private isRegistered = signal<boolean>(false);
   private registrationCallbacks: (() => void)[] = [];
@@ -127,6 +129,21 @@ export class SocketService implements OnDestroy {
       const commentId = payload?.comment_id;
       if (feedId && commentId) {
         this.feedService.applyCommentDeleted(feedId, commentId);
+      }
+    });
+
+    // Room event handlers
+    this.socket.on('room:created', (payload) => {
+      console.log('Room created event received:', payload);
+      if (payload) {
+        this.messagesService.applyRoomCreated(payload);
+      }
+    });
+
+    this.socket.on('room:updated', (payload) => {
+      console.log('Room updated event received:', payload);
+      if (payload) {
+        this.messagesService.applyRoomUpdated(payload);
       }
     });
   }

@@ -37,7 +37,13 @@
 
         <div class="body-16M neutral-01">{{ groupName() }}</div>
         <div class="text-xs text-gray-500">Group · {{ members().length }} members</div>
-        <div class="text-xs text-gray-400">Created by you, {{ createdDate() }}</div>
+        <div class="text-xs text-gray-400">Created by 
+          @if (chatRoom()?.created_by_user?.id === authService.currentUser()?.id) {
+            <span>you</span>
+          } @else {
+            <span>{{ chatRoom()?.created_by_user?.name || chatRoom()?.created_by_user?.username }}</span>
+          }, {{ createdDate() }}
+        </div>
       </div>
 
       <div class="flex gap-3">
@@ -59,25 +65,35 @@
         <div class="body-14M neutral-01 mb-2">{{ members().length }} Members</div>
 
         @for (m of members(); track m.id) {
-          <div class="flex items-center gap-3 py-3 border-b border-gray-200">
-            <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" />
+          <div class="flex items-center gap-3 py-3 border-b border-gray-200" (click)="onUserClick(m)">
+            <div class="w-12 h-12 rounded-full overflow-hidden relative">
+              <img
+                fill
+                placeholder
+                class="rounded-full object-cover"
+                (error)="onImageError($event)"
+                [ngSrc]="getImageUrl(m?.thumbnail_url ?? '')"
+              />
+            </div>
 
             <div class="flex-1">
               <div class="flex items-center gap-2">
                 <span class="font-medium">
-                  {{ m.name }}
-                  @if (m.isYou) {
+                  {{ m.name || m.username }}
+                  @if (m.id === authService.currentUser()?.id) {
                     <span class="text-xs text-gray-400">(You)</span>
                   }
                 </span>
 
                 <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
-                  <img src="assets/svg/diamondYellow.svg" class="h-4" />
-                  <span class="text-xs font-semibold">{{ m.value }}</span>
+                  <img [src]="getDiamondPath(m)" class="h-4" />
+                  <span class="text-xs font-semibold">{{ m.total_gamification_points }}</span>
                 </div>
               </div>
 
-              <div class="text-xs text-gray-500">{{ m.jobTitle }}, {{ m.company }}</div>
+              @if (m.company_name) {
+                <div class="text-xs text-gray-500">{{ m.company_name }}</div>
+              }
             </div>
           </div>
         }

@@ -15,7 +15,7 @@
   </ion-header>
 }
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" [scrollEvents]="true">
   @if (isLoggedIn()) {
     <div class="w-full pt-0 max-w-[672px] mx-auto">
       <!-- Tabs -->
@@ -28,17 +28,27 @@
       </div>
 
       <!-- Messages List -->
-      @if (getFilteredMessages().length > 0) {
+      @if (isLoading() && getFilteredChatRooms().length === 0) {
+        <div class="flex justify-center items-center py-8">
+          <ion-spinner></ion-spinner>
+        </div>
+      } @else if (getFilteredChatRooms().length > 0) {
         <ion-list>
-          @for (msg of getFilteredMessages(); track msg.id) {
+          @for (room of getFilteredChatRooms(); track room.id) {
             <ion-item-sliding>
-              <ion-item (click)="goToChat(msg)">
+              <ion-item (click)="goToChat(room)">
                 <ion-avatar class="relative">
                   <!-- Main avatar image -->
-                  <img src="assets/images/profile.jpeg" />
+                  <img
+                    fill
+                    placeholder
+                    class="rounded-full object-cover"
+                    (error)="onImageError($event)"
+                    [ngSrc]="getImageUrl(getChatImage(room))"
+                  />
 
                   <!-- GROUP BADGE -->
-                  @if (msg.group) {
+                  @if (isGroupChat(room)) {
                     <div
                       class="absolute -bottom-1 -right-1 bg-[#0A9E57] !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
                     >
@@ -47,7 +57,7 @@
                   }
 
                   <!-- EVENT BADGE -->
-                  @else if (msg.event) {
+                  @else if (isEventChat(room)) {
                     <div
                       class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
                     >
@@ -57,20 +67,23 @@
                 </ion-avatar>
 
                 <ion-label class="pl-3">
-                  <div class="body-14M neutral-01 pb-1">{{ msg.sender }}</div>
-                  <div class="body-12M neutral-02">{{ msg.text }}</div>
+                  <div class="body-14M neutral-01 pb-1">{{ getChatName(room) }}</div>
+                  <div class="body-12M neutral-02">
+                    @if (room.lastMessage) {
+                      {{ room.lastMessage }}
+                    }
+                  </div>
                 </ion-label>
 
                 <div class="flex flex-col items-end justify-center gap-1 pr-2">
-                  <span class="text-xs text-gray-500 pb-1">{{ msg.time }}</span>
+                  <span class="text-xs text-gray-500 pb-1">
+                    {{ formatTime(room.lastMessageTime || room.updated_at) }}
+                  </span>
                   <div class="flex items-center gap-3">
-                    @if (msg.isMuted) {
-                      <img src="assets/svg/alertOffGrayIcon.svg" class="w-5 h-5" />
-                    }
-
-                    @if (msg.unreadCount) {
+                    <!-- TODO: Show mute icon when API provides mute status -->
+                    @if (getUnreadCount(room) > 0) {
                       <ion-badge class="h-6 w-6 rounded-full flex items-center justify-center neutral-02">
-                        {{ msg.unreadCount }}
+                        {{ getUnreadCount(room) }}
                       </ion-badge>
                     }
                   </div>
@@ -79,19 +92,16 @@
 
               <ion-item-options side="end" class="flex items-center gap-2 pr-2">
                 <!-- Mute Button -->
-                <ion-item-option slot="icon-only" (click)="muteChat(msg)" class="p-0 rounded bg-gray-200 w-10 h-10 flex items-center justify-center">
-                  @if (msg.isMuted) {
-                    <img src="assets/svg/alertBlackIcon.svg" class="w-5 h-5" />
-                  } @else {
-                    <img src="assets/svg/alertOffBlackIcon.svg" class="w-5 h-5" />
-                  }
+                <ion-item-option slot="icon-only" (click)="muteChat(room)" class="p-0 rounded bg-gray-200 w-10 h-10 flex items-center justify-center">
+                  <!-- TODO: Show muted icon when API provides mute status -->
+                  <img src="assets/svg/alertOffBlackIcon.svg" class="w-5 h-5" />
                 </ion-item-option>
 
                 <!-- Delete Button -->
                 <ion-item-option
                   color="danger"
                   slot="icon-only"
-                  (click)="deleteChat(msg)"
+                  (click)="deleteChat(room)"
                   class="p-0 rounded w-10 h-10 flex items-center justify-center"
                 >
                   <img src="assets/svg/deleteWhiteIcon.svg" class="w-5 h-5" />
@@ -100,6 +110,11 @@
             </ion-item-sliding>
           }
         </ion-list>
+
+        <!-- Infinite Scroll -->
+        <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreRooms($event)" [disabled]="!hasMoreRooms()">
+          <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more chats..." />
+        </ion-infinite-scroll>
       } @else {
         <div class="flex items-center justify-center h-full min-h-[400px]">
           <div class="flex flex-col items-center justify-center gap-3 text-center">

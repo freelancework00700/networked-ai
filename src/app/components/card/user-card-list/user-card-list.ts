@@ -106,9 +106,16 @@ export class UserCardList {
   }
 
   messageUser(): void {
-    const userId = this.user()?.id;
-    if (userId) {
-      this.navCtrl.navigateForward(['/chat-room', userId]);
+    const currentUserId = this.authService.currentUser()?.id;
+    const otherUserId = this.user()?.id;
+    
+    if (currentUserId && otherUserId) {
+      this.navCtrl.navigateForward('/chat-room', {
+        state: {
+          user_ids: [currentUserId, otherUserId],
+          is_personal: true
+        }
+      });
     }
   }
 
