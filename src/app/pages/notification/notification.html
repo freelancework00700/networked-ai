@@ -4,7 +4,7 @@
       <div class="pi pi-arrow-left" (click)="goBack()"></div>
       <div class="flex items-center justify-between w-full mt-4">
         <div class="heading-h2 neutral-01">Notifications</div>
-        @if (hasUnreadNotifications()) {
+        @if (unreadCount()) {
           <button type="button" class="body-14M neutral-01 underline cursor-pointer" (click)="markAllAsRead()">Mark all as read</button>
         }
       </div>
@@ -20,186 +20,121 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
+    <ion-refresher-content mode="md"></ion-refresher-content>
+  </ion-refresher>
+
   <div class="w-full pt-0 max-w-[672px] mx-auto p-6 flex flex-col gap-6">
-    @for (notification of filteredNotifications(); track notification.id) {
-      <div class="flex flex-col gap-3 cursor-pointer" [class]="getBackgroundClass(notification)" (click)="markAsRead(notification, $event)">
+    @for (notification of notifications(); track notification.id) {
+      <div class="flex flex-col gap-3 cursor-pointer" (click) = "handleNotificationClick(notification)">
         <div class="flex gap-3 items-start">
-          <!-- Icon/Avatar Section -->
-          <div class="relative flex-shrink-0">
-            @if (hasMultipleUsers(notification)) {
-              <div class="relative w-[44px] h-[44px]">
-                @if (notification.users && notification.users.length > 0) {
+
+          <!-- Network connection related notifications -->
+          @if (notification?.type === 'Network' && notification?.related_user) {
+              <div class="relative flex-shrink-0">
+                <div class="relative w-12 h-12 rounded-full overflow-hidden">
                   <img
-                    [src]="notification.users[0]?.avatar || 'assets/images/profile.jpeg'"
-                    [alt]="notification.users[0]?.name"
-                    class="w-10 h-10 rounded-full object-cover absolute left-0 top-0 z-[1]"
+                    fill
+                    placeholder
+                    (error)="onImageError($event)"
+                    class="rounded-full object-cover"
+                    [ngSrc]="getImageUrl(notification?.related_user?.thumbnail_url || '')"
                   />
-                  @if (notification.users.length > 1) {
-                    <img
-                      [src]="notification.users[1]?.avatar || 'assets/images/profile.jpeg'"
-                      [alt]="notification.users[1]?.name"
-                      class="w-10 h-10 rounded-full object-cover absolute left-2.5 top-2.5 z-[2]"
-                    />
-                  }
-                }
-                @if (!notification.isRead) {
-                  <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white z-[3]"></div>
-                }
-              </div>
-            } @else if (hasUserAvatar(notification)) {
-              <img
-                [src]="notification.user?.avatar || 'assets/images/profile.jpeg'"
-                [alt]="notification.user?.name"
-                class="w-12 h-12 rounded-full object-cover"
-              />
-              @if (!notification.isRead) {
-                <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
-              }
-              @if (hasCheckmarkIcon(notification)) {
-                <ion-icon src="assets/svg/checkmark-circle.svg" class="w-6 h-6 absolute -bottom-1 -right-1" />
-              }
-            } @else {
-              @if (getNotificationIcon(notification)) {
-                <div [class]="getNotificationIcon(notification)?.class || ''">
-                  @if (notification.type === 'new-event') {
-                    <i class="pi pi-crown text-white text-xl"></i>
-                  } @else {
-                    <ion-icon [src]="getNotificationIcon(notification)?.src" class="w-6 h-6" />
-                  }
                 </div>
-                @if (!notification.isRead) {
+  
+                @if (!notification.is_read) {
                   <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
                 }
-              }
-            }
-          </div>
-
-          <!-- Content Section -->
-          <div class="flex-1 flex flex-col" [class]="notification.type === 'event-live' ? 'gap-2' : 'gap-1'">
-            @if (hasReminderLabel(notification)) {
-              <div class="body-14M neutral-03 mb-1">Reminder:</div>
-            }
-            <div class="body-14R text-neutral-01" [innerHTML]="notification.message"></div>
-
-            @if (notification.commentText) {
-              <div class="body-14R italic text-neutral-03 mt-0.5">
-                @if (notification.type === 'comment-mention') {
-                  <span
-                    class="text-[#3b82f6] font-normal font-medium cursor-pointer"
-                    (click)="navigateToUserProfile(notification.mentionedUser || '', $event)"
-                    >&#64;{{ notification.mentionedUser }}</span
-                  >
-                  {{ notification.commentText.replace('@' + notification.mentionedUser, '') }}
-                } @else {
-                  {{ notification.commentText }}
+              </div>
+              <div class="flex-1 flex flex-col gap-1">
+                <!-- notification body -->
+                <div class="body-14R text-neutral-01" [innerHTML]="notification.body"></div>
+                <!-- time stamp -->
+                <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo }}</div>
+  
+                @if (notification.related_user && notification.related_user.connection_status === 'RequestReceived') {
+                  <div class="flex gap-3 mt-2" (click)="$event.stopPropagation()">
+                    <app-button height="40px" label="Accept" color="primary" (click)="acceptNetwork(notification.related_user.id)" />
+                    <app-button height="40px" label="Decline" color="secondary" variant="text" (click)="rejectNetwork(notification.related_user.id)" />
+                  </div>
                 }
               </div>
-            }
+          }
+          
+          <!-- Event related notifications -->
+          @else if(notification?.type === 'MyEvents' || notification?.type === 'Events') {
+            <div class="relative flex-shrink-0">
+              <div class="notification-icon">
+                  <ion-icon src="assets/svg/notification/rocket.svg" class="w-6 h-6" />
 
-            <div class="flex items-center gap-2">
-              <div class="body-12 text-neutral-03 mt-1">{{ notification.timestamp }}</div>
-              @if (hasReplyButton(notification)) {
-                @if (notification.type === 'comment-mention') {
-                  <div class="w-px h-3 bg-neutral-04"></div>
-                }
-                <button
-                  type="button"
-                  class="bg-transparent border-none cursor-pointer text-neutral-03 body-14R p-0 no-underline transition-opacity hover:opacity-70 hover:underline"
-                  (click)="handleNotificationAction(notification, 'reply')"
-                >
-                  Reply
-                </button>
-              }
+                  @if (!notification.is_read) {
+                    <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
+                  }
+              </div>
             </div>
 
-            <!-- Event Update: Original/Updated Cards -->
-            @if (notification.type === 'event-update') {
-              <div class="flex flex-col gap-3">
-                @if (notification.originalEvent) {
-                  <div class="flex-1 rounded-xl p-3 flex flex-col border border-surface-300">
-                    <div class="inline-block px-2 py-1 rounded-md text-xs font-semibold w-fit border border-surface-300 text-neutral-03">
-                      Original
-                    </div>
-                    <div class="flex flex-col gap-2 mt-2">
-                      <div class="flex items-center gap-2 text-neutral-03">
-                        <i class="pi pi-map-marker text-sm"></i>
-                        <span class="body-14R">{{ notification.originalEvent.location }}</span>
-                      </div>
-                      <div class="flex items-center gap-2 text-neutral-03">
-                        <i class="pi pi-calendar text-sm"></i>
-                        <span class="body-14R">{{ notification.originalEvent.date }}, {{ notification.originalEvent.time }}</span>
-                      </div>
-                    </div>
-                  </div>
-                }
-                @if (notification.updatedEvent) {
-                  <div class="flex-1 rounded-xl p-3 flex flex-col border border-surface-300">
-                    <div class="inline-block px-2 py-1 rounded-md text-xs font-semibold w-fit border border-primary-color text-primary">Updated</div>
-                    <div class="flex flex-col gap-2 mt-2">
-                      <div class="flex items-center gap-2 text-neutral-03">
-                        <i class="pi pi-map-marker text-sm"></i>
-                        <span class="body-14R">{{ notification.updatedEvent.location }}</span>
-                      </div>
-                      <div class="flex items-center gap-2 text-neutral-03">
-                        <i class="pi pi-calendar text-sm"></i>
-                        <span class="body-14R">{{ notification.updatedEvent.date }}, {{ notification.updatedEvent.time }}</span>
-                      </div>
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-
-            <!-- Event Card (for invitations, reminders, new events) -->
-            @if (hasEventCard(notification) && notification.event) {
-              <div
-                class="border border-surface-300 bg-neutral-07 rounded-xl p-3 cursor-pointer transition-colors hover:bg-neutral-06"
-                [class.mt-2]="notification.type === 'event-reminder'"
-                (click)="handleNotificationAction(notification, 'view-event')"
-              >
-                <div class="flex items-center justify-between mb-2">
-                  <div class="body-16SB text-neutral-01">{{ notification.event.name }}</div>
-                  <i class="pi pi-arrow-right text-neutral-03"></i>
-                </div>
-                <div class="flex flex-col gap-2">
-                  <div class="flex items-center gap-2 text-neutral-03">
-                    <i class="pi pi-map-marker text-sm"></i>
-                    <span class="body-14R">{{ notification.event.location }}</span>
-                  </div>
-                  <div class="flex items-center gap-2 text-neutral-03">
-                    <i class="pi pi-calendar text-sm"></i>
-                    <span class="body-14R">{{ notification.event.date }}, {{ notification.event.time }}</span>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- Action Buttons -->
-            @if (getActionButtons(notification)) {
-              <div class="flex gap-3 mt-2">
-                @for (button of getActionButtons(notification); track button.action) {
-                  <app-button
-                    [label]="button.label"
-                    height="40px"
-                    (click)="handleNotificationAction(notification, button.action)"
-                    [color]="button.color"
-                    [variant]="button.variant"
-                  />
-                }
-              </div>
-            }
-          </div>
-
-          <!-- Post Thumbnail (for post-like, multiple-likes) -->
-          @if (notification.postThumbnail && (notification.type === 'post-like' || notification.type === 'multiple-likes')) {
-            <div class="flex-shrink-0">
-              <img [src]="notification.postThumbnail" alt="Post thumbnail" class="w-12 h-12 rounded-lg object-cover cursor-pointer" />
+            <div class="flex-1 flex flex-col gap-1">
+              <!-- notification body -->
+              <div class="body-14R text-neutral-01" [innerHTML]="notification.body"></div>
+              <!-- time stamp -->
+              <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo }}</div>
             </div>
           }
+          
+          <!-- RSVP request related notifications -->
+          @else if(notification?.type === 'RsvpRequest') {
+            <div class="relative flex-shrink-0">
+              <div class="notification-icon">
+                  <!-- <ion-icon src="assets/svg/notification/rocket.svg" class="w-6 h-6" /> -->
+                  <div class="relative w-12 h-12 rounded-full overflow-hidden">
+                    <img
+                      fill
+                      placeholder
+                      (error)="onImageError($event)"
+                      class="rounded-full object-cover"
+                      [ngSrc]="getImageUrl(notification?.related_user?.thumbnail_url || '')"
+                    />
+                  </div>
 
-          <!-- Dismiss Button -->
-          @if (hasDismissButton(notification)) {
-            <div class="pi pi-times text-neutral-03 text-lg cursor-pointer" (click)="handleNotificationAction(notification, 'dismiss')"></div>
+                  @if (!notification.is_read) {
+                    <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
+                  }
+              </div>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-1">
+              <!-- notification body -->
+              <div class="body-14R text-neutral-01" [innerHTML]="notification.body"></div>
+              <!-- time stamp -->
+              <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo }}</div>
+
+
+              @if (notification.event && notification.event.rsvp_requests?.length && notification.event.rsvp_requests?.[0]?.status === 'Pending') {
+                <div class="flex gap-3 mt-2" (click)="$event.stopPropagation()">
+                  <app-button height="40px" label="Accept" color="primary" (click)="acceptRsvpRequest(notification)" />
+                  <app-button height="40px" label="Decline" color="secondary" variant="text" (click)="rejectRsvpRequest(notification)" />
+                </div>
+              }
+            </div>
+
+          }
+          
+          <!-- Other notifications -->
+          @else {
+            <div class="relative flex-shrink-0">
+              <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full object-cover"/>
+
+              @if (!notification.is_read) {
+                <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
+              }
+            </div>
+
+            <div class="flex-1 flex flex-col gap-1">
+              <!-- notification body -->
+              <div class="body-14R text-neutral-01" [innerHTML]="notification.body"></div>
+              <!-- time stamp -->
+              <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo }}</div>
+            </div>
           }
         </div>
       </div>
@@ -213,4 +148,10 @@
       />
     }
   </div>
+
+  @if (hasMore()) {
+    <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreNotifications($event)">
+      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more notifications..." />
+    </ion-infinite-scroll>
+  }
 </ion-content>

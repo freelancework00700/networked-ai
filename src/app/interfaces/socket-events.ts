@@ -1,5 +1,6 @@
 import { FeedPost, FeedComment } from './IFeed';
 import { ChatRoom, ChatMessage } from './IChat';
+import { INotification } from '@/interfaces/INotification';
 
 // Network Connection Update Payload
 export interface NetworkConnectionUpdate {
@@ -24,6 +25,9 @@ export type ServerToClientEvents = {
 
   // Network events
   'network:connection:update': (payload: NetworkConnectionUpdate) => void;
+
+  // Notification events
+  'notification:update': (payload: INotification) => void;
 
   // Room events
   'room:created': (payload: ChatRoom) => void;

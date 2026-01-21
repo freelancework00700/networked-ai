@@ -5,6 +5,7 @@ import { inject, Injectable, OnDestroy, signal, effect } from '@angular/core';
 import { ClientToServerEvents, ServerToClientEvents } from '@/interfaces/socket-events';
 import { FeedService } from '@/services/feed.service';
 import { MessagesService } from '@/services/messages.service';
+import { NotificationsService } from '@/services/notifications.service';
 
 @Injectable({ providedIn: 'root' })
 export class SocketService implements OnDestroy {
@@ -12,6 +13,8 @@ export class SocketService implements OnDestroy {
   private authService = inject(AuthService);
   private feedService = inject(FeedService);
   private messagesService = inject(MessagesService);
+  private notificationsService = inject(NotificationsService);
+  
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
   private isRegistered = signal<boolean>(false);
   private registrationCallbacks: (() => void)[] = [];
@@ -130,6 +133,14 @@ export class SocketService implements OnDestroy {
       if (feedId && commentId) {
         this.feedService.applyCommentDeleted(feedId, commentId);
       }
+    });
+
+    // Notification event handlers
+    this.socket.on('notification:update', (notification) => {
+      console.log('Notification update event received:', notification);
+      this.notificationsService.applyNotificationUpsert(notification);
+      // fetch updated unread count after notification update
+      this.notificationsService.fetchUnreadCount();
     });
 
     // Room event handlers
