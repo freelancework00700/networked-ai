@@ -1,51 +1,61 @@
-<ion-header>
+<ion-header mode="md">
   <ion-toolbar>
-    <div class="flex items-center justify-between px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
-      <i class="pi pi-arrow-left neutral-03" (click)="back()"></i>
+    <div class="flex items-center justify-between px-4 pt-2.5 max-w-[672px] mx-auto">
+      <i class="pi pi-arrow-left neutral-03 cursor-pointer" (click)="back()"></i>
+
       <div class="body-14M text-center w-full">Payment History</div>
-      <div
-        [class]="isDownloading() ? 'pi pi-spinner pi-spin' : 'pi pi-download'"
-        [class.disabled]="isDownloading()"
-        (click)="downloadHistory()"
-        class="neutral-03"
-      ></div>
+
+      <!-- <div class="neutral-03 cursor-pointer" [class]="isDownloading() ? 'pi pi-spinner pi-spin' : 'pi pi-download'"
+        [class.disabled]="isDownloading()" >
+      </div> -->
     </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content fullscreen mode="md">
   <div class="w-full max-w-[672px] mx-auto h-full">
+
     @if (hasTransactions()) {
-      <div class="p-5">
-        @for (group of groupedTransactions(); track group.dateKey) {
-          <div class="mb-6">
-            <!-- Date Header -->
-            <div class="body-14SB neutral-01 mb-3">{{ group.date | date:'d MMM yyyy' }}</div>
-            
-            <!-- Transactions List -->
-            <div class="flex flex-col gap-3">
-              @for (transaction of group.transactions; track transaction.id) {
-                <payment-transaction-item [transaction]="transaction" />
-              }
-            </div>
-          </div>
-        }
-      </div>
-    } @else {
-      <!-- Empty State -->
-      <div class="flex items-center justify-center h-full min-h-[400px]">
-        <div class="flex flex-col items-center justify-center gap-1 text-center px-5">
-          <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center mb-6">
-            <div class="icon-container">
-              <i class="pi pi-credit-card text-white text-3xl!"></i>
-            </div>
-          </div>
-          <div class="heading-h3 neutral-01 mb-2">No Payment History</div>
-          <div class="body-14M neutral-02">
-            You haven't made or received any payment.
-          </div>
+    <div class="p-5">
+
+      @for (group of groupedTransactions(); track group.dateKey) {
+      <!-- DATE HEADER -->
+      <div class="mb-6">
+        <div class="body-14SB neutral-01 mb-3">
+          {{ group.date | date:'d MMM yyyy' }}
+        </div>
+
+        <!-- TRANSACTIONS -->
+        <div class="flex flex-col gap-3">
+          @for (transaction of group.transactions; track transaction.id) {
+          <payment-transaction-item [transaction]="transaction" />
+          }
         </div>
       </div>
+      }
+      @if (hasMore()) {
+      <ion-infinite-scroll threshold="100px" (ionInfinite)="loadPaymentHistory($event)">
+        <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more events..." />
+      </ion-infinite-scroll>
+      }
+
+    </div>
+    } @else {
+
+    <!-- Empty State -->
+    <div class="flex items-center justify-center h-full min-h-[400px]">
+      <div class="flex flex-col items-center justify-center gap-1 text-center px-5">
+        <div class="bg-white rounded-2xl shadow-md p-3 flex items-center justify-center mb-6">
+          <div class="icon-container">
+            <i class="pi pi-credit-card text-white text-3xl!"></i>
+          </div>
+        </div>
+        <div class="heading-h3 neutral-01 mb-2">No Payment History</div>
+        <div class="body-14M neutral-02">
+          You haven't made or received any payment.
+        </div>
+      </div>
+    </div>
     }
   </div>
 </ion-content>

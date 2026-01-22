@@ -3,7 +3,8 @@
   <ion-toolbar>
     <div class="flex justify-between items-center px-4">
       <ion-icon src="/assets/svg/back-arrow.svg" class="h-[20px] w-[20px]" (click)="goBack()"></ion-icon>
-      <div class="flex items-center gap-4">
+      @if(event()){
+        <div class="flex items-center gap-4">
         <ion-icon src="/assets/svg/share.svg" class="h-[20px] w-[20px]" (click)="shareEvent()"></ion-icon>
         <div class="w-[20px] h-[20px] flex items-center justify-center cursor-pointer" (click)="likeEvent()">
           @if (isEventLiked()) {
@@ -14,6 +15,7 @@
         </div>
         <ion-icon src="/assets/svg/dots-vertical.svg" class="h-[20px] w-[20px]" (click)="menu.toggle($event)"></ion-icon>
       </div>
+      }
     </div>
     <p-menu #menu [popup]="true" [model]="eventMenuItems" appendTo="body"> </p-menu>
   </ion-toolbar>
@@ -131,6 +133,12 @@
         [onEventChatClick]="openEventChat.bind(this)"
       />
     </div>
+  } @else {
+    <app-empty-state
+      [title]="'No Events Found'"
+      [message]="''"
+      [showClearButton]="false"
+    />
   }
 </ion-content>
 <ion-footer class="ion-padding-horizontal">
@@ -138,7 +146,7 @@
     <ion-toolbar class="ion-no-padding" style="--background: transparent">
       <div class="pb-4 max-w-[672px] mx-auto">
         @if (!isEventCompleted()) {
-          @if (!eventDisplayData().isCurrentUserHost && !eventDisplayData().isCurrentUserAttendee && !eventDisplayData().isCurrentUserCoHost ) {
+          @if (!eventDisplayData().isCurrentUserHost && !eventDisplayData().isCurrentUserAttendee && !eventDisplayData().isCurrentUserCoHost) {
             @if (eventDisplayData().is_subscriber_exclusive && !eventDisplayData().has_subscribed) {
               <app-button label="Subscribe Now" icon="/assets/svg/crown-black.svg" height="40px" (click)="navigateToSubscriptionPlans()" />
             } @else if (eventDisplayData().isRsvpApprovalRequired) {
@@ -150,11 +158,7 @@
                   (click)="openRsvpModal()"
                 />
               } @else if (eventDisplayData().isCurrentUserRequestRejected) {
-                <app-button
-                  label="RSVP Request Rejected"
-                  height="40px"
-                  [disabled]="true"
-                />
+                <app-button label="RSVP Request Rejected" height="40px" [disabled]="true" />
               } @else {
                 <app-button
                   [label]="eventDisplayData().hasCurrentUserRsvpRequest ? 'Requested' : 'Send RSVP Request'"

@@ -80,7 +80,7 @@ export class EventService extends BaseApiService {
     }
   }
 
-  formatDateTime(startDateString: string, endDateString?: string): string {
+  formatDateTime(startDateString: any, endDateString?: any): string {
     if (!startDateString) return '';
     const startDate = new Date(startDateString);
     const dayOfWeek = this.datePipe.transform(startDate, 'EEE') || '';
@@ -1352,6 +1352,20 @@ export class EventService extends BaseApiService {
       return response;
     } catch (error) {
       console.error('Error deleting attendee:', error);
+      throw error;
+    }
+  }
+
+  async shareEvent(payload: {
+    event_id: string;
+    peer_ids?: string[];
+    send_entire_network?: boolean;
+  }): Promise<any> {
+    try {
+      const response = await this.post<any>('/chat-rooms/share', payload);
+      return response;
+    } catch (error) {
+      console.error('Error sharing feed:', error);
       throw error;
     }
   }

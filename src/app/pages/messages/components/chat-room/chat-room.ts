@@ -14,6 +14,8 @@ import { NavigationService } from '@/services/navigation.service';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
+import { ChatFeedCard } from "@/components/card/chat-feed-card";
+import { ChatEventCard } from "@/components/card/chat-event-card";
 
 @Component({
   selector: 'chat-room',
@@ -35,7 +37,9 @@ import { InputTextModule } from 'primeng/inputtext';
     CommonModule,
     InputTextModule,
     PickerComponent,
-    NgOptimizedImage
+    NgOptimizedImage,
+    ChatFeedCard,
+    ChatEventCard
   ]
 })
 export class ChatRoom implements OnInit, OnDestroy {

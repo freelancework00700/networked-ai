@@ -12,6 +12,7 @@ import { ModalService } from '@/services/modal.service';
 import { MenuItem as PrimeMenuItem } from 'primeng/api';
 import { ToasterService } from '@/services/toaster.service';
 import { EventDisplay } from '@/components/common/event-display';
+import { EmptyState } from "@/components/common/empty-state";
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
@@ -25,7 +26,7 @@ import { OnInit, inject, signal, computed, effect, Component, OnDestroy, ChangeD
   styleUrl: './event.scss',
   templateUrl: './event.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonIcon, IonFooter, IonHeader, IonContent, IonToolbar, IonSkeletonText, MenuModule, EventDisplay, NgOptimizedImage]
+  imports: [Button, IonIcon, IonFooter, IonHeader, IonContent, IonToolbar, IonSkeletonText, MenuModule, EventDisplay, NgOptimizedImage, EmptyState]
 })
 export class Event implements OnInit, OnDestroy {
   route = inject(ActivatedRoute);

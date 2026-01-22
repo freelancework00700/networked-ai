@@ -1,19 +1,22 @@
 <div class="py-[8px] px-0">
   <div class="flex items-center gap-3">
-    <!-- Icon -->
     <div class="transaction-icon" [class.transaction-icon-payout]="transaction().isPayout">
       <i class="pi pi-credit-card text-white text-xl!"></i>
     </div>
-
-    <!-- Transaction Details -->
+    <!-- LEFT -->
     <div class="flex-1">
-      <div class="body-14M neutral-01 mb-1">{{ transaction().eventName }}</div>
-      <div class="body-12 neutral-02">{{ transaction().date | date: 'MMM d, h:mma' }}</div>
+      <div class="body-14M neutral-01 mb-1">
+        {{ transaction()?.event?.title || 'Unknown event' }}
+      </div>
+
+      <div class="body-12 neutral-02">
+        {{ transaction().created_at | date:'MMM dd, hh:mm a' }}
+      </div>
     </div>
 
-    <!-- Amount -->
-    <div class="body-14SB neutral-01" [class.text-green-600]="transaction().isPayout" [class.neutral-01]="!transaction().isPayout">
-      {{ formatAmount() }}
-    </div>
+    <!-- RIGHT -->
+      <div class="body-14SB neutral-01"  [class.text-green-600]="transaction().isPayout" [class.neutral-01]="!transaction().isPayout">
+        ${{ transaction().amount }}
+      </div>
+
   </div>
-</div>

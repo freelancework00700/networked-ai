@@ -206,4 +206,21 @@ export class AuthService extends BaseApiService {
       console.error('Error refreshing current user on app load:', error);
     }
   }
+
+  async changePassword(
+    password: string,
+    new_password: string
+  ): Promise<any> {
+    try {
+      const response = await this.post<any>(
+        '/auth/reset-password',
+        { password, new_password }
+      );
+      return response;
+    } catch (error) {
+      console.error('Error changing password:', error);
+      throw error;
+    }
+  }
+
 }

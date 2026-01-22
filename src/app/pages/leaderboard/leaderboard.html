@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header mode="md">
   <ion-toolbar>
     <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
       <div class="pi pi-arrow-left" (click)="navCtrl.back()"></div>
@@ -8,7 +8,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" mode="md">
   <div class="min-h-full">
     <div class="w-full max-w-[672px] mx-auto px-4 pb-6">
       <div class="pt-4 pb-2">
@@ -119,7 +119,7 @@
     </div>
   </div>
 </ion-content>
-<ion-footer>
+<ion-footer mode="md">
   @if (userRank()) {
     <ion-toolbar>
       <div class="p-6 max-w-[672px] mx-auto flex items-center gap-3">

@@ -1,13 +1,13 @@
-<ion-header>
+<ion-header mode="md">
   <ion-toolbar>
     <div class="flex items-center p-6 max-w-[672px] mx-auto">
-      <i class="pi pi-arrow-left cursor-pointer neutral-03 !text-[20px]" (click)="navCtrl.back()"></i>
+      <i class="pi pi-arrow-left cursor-pointer neutral-03 !text-[20px]" (click)="navigationService.back()"></i>
       <div class="body-14M neutral-01 text-center w-full">Account Settings</div>
     </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" mode="md">
   <div class="w-full px-4 max-w-[672px] mx-auto py-4 flex flex-col justify-between h-full">
     @if (isLoading()) {
       <div class="flex justify-center items-center py-8">
@@ -20,7 +20,7 @@
                 <span class="body-14R neutral-03">Email</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="body-14R neutral-01">{{ email() || 'Not set' }}</span>
+                <span class="body-14R neutral-01">{{ currentUser()?.email || 'Not set' }}</span>
                 <i class="pi pi-pencil cursor-pointer neutral-04 !text-[16px]" (click)="onEditEmail()"></i>
               </div>
             </div>
@@ -32,7 +32,7 @@
                 <span class="body-14R neutral-03">Phone Number</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="body-14R neutral-01">{{ phoneNumber() || 'Not set' }}</span>
+                <span class="body-14R neutral-01">{{ currentUser()?.mobile || 'Not set' }}</span>
                 <i class="pi pi-pencil cursor-pointer neutral-04 !text-[16px]" (click)="onEditPhone()"></i>
               </div>
             </div>
@@ -44,7 +44,7 @@
                 <span class="body-14R neutral-03">Username</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="body-14R neutral-01">{{ username() || 'Not set' }}</span>
+                <span class="body-14R neutral-01">{{ currentUser()?.username || 'Not set' }}</span>
                 <i class="pi pi-pencil cursor-pointer neutral-04 !text-[16px]" (click)="onEditUsername()"></i>
               </div>
             </div>

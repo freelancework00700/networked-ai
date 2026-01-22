@@ -1,6 +1,8 @@
+import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
+import { NavigationService } from '@/services/navigation.service';
 import { ToasterService } from '@/services/toaster.service';
-import { signal, inject, Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { signal, inject, Component, ChangeDetectionStrategy, OnInit, computed } from '@angular/core';
 import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 
 @Component({
@@ -12,28 +14,46 @@ import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular
 })
 export class AccountSettings implements OnInit {
   // services
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   private modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
+  private authService = inject(AuthService);
 
   // signals
-  email = signal('user@email.com');
-  phoneNumber = signal('+1 009 882 9912');
-  username = signal('sandra_t');
+  currentUser = computed(() => this.authService.currentUser());
   isLoading = signal<boolean>(false);
 
-  ngOnInit(): void {}
+
+  ngOnInit(): void { }
 
   onEditEmail(): void {
-    this.navCtrl.navigateForward('/settings/change-account-info/email');
+    this.navigationService.navigateForward(
+      '/settings/change-account-info/email',
+      false,
+      {
+        email: this.currentUser()?.email
+      }
+    );
   }
 
   onEditPhone(): void {
-    this.navCtrl.navigateForward('/settings/change-account-info/phone');
+    this.navigationService.navigateForward(
+      '/settings/change-account-info/phone',
+      false,
+      {
+        phone: this.currentUser()?.mobile
+      }
+    );
   }
 
   onEditUsername(): void {
-    this.navCtrl.navigateForward('/settings/change-account-info/username');
+    this.navigationService.navigateForward(
+      '/settings/change-account-info/username',
+      false,
+      {
+        username: this.currentUser()?.username
+      }
+    );
   }
 
   async onDeleteAccount(): Promise<void> {

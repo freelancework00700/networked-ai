@@ -12,6 +12,7 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap, from, catchErro
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IUser } from '@/interfaces/IUser';
 import { getImageUrlOrDefault } from '@/utils/helper';
+import { EventService } from '@/services/event.service';
 
 @Component({
   selector: 'share-modal',
@@ -29,6 +30,7 @@ export class ShareModal implements OnInit {
   private modalCtrl = inject(ModalController);
   private destroyRef = inject(DestroyRef);
   private cd = inject(ChangeDetectorRef);
+  private eventService = inject(EventService);
 
   // inputs
   @Input() eventId: any;
@@ -233,50 +235,82 @@ export class ShareModal implements OnInit {
     return name;
   }
 
-  async sharePost() {
-    if (this.type !== 'Post' || !this.feedId) {
-      this.toasterService.showError('Invalid share request');
-      return;
-    }
-
+  async share(): Promise<void> {
     const sendEntireNetwork = this.sendEntireNetwork();
     const selectedIds = this.selectedUserIds();
-
+  
     if (!sendEntireNetwork && selectedIds.length === 0) {
-      this.toasterService.showError('Please select at least one user or enable "Send to Entire Network"');
+      this.toasterService.showError(
+        'Please select at least one user or enable "Send to Entire Network"'
+      );
       return;
     }
-
+  
     try {
       this.isSharing.set(true);
-      
-      const payload: {
-        feed_id: string;
-        peer_ids?: string[];
-        send_entire_network?: boolean;
-      } = {
-        feed_id: this.feedId
-      };
 
-      if (sendEntireNetwork) {
-        payload.send_entire_network = true;
-      } else {
-        payload.peer_ids = selectedIds;
+      if (this.type === 'Post') {
+        if (!this.feedId) {
+          this.toasterService.showError('Invalid post share request');
+          return;
+        }
+  
+        const payload: {
+          feed_id: string;
+          peer_ids?: string[];
+          send_entire_network?: boolean;
+        } = {
+          feed_id: this.feedId,
+        };
+        
+        sendEntireNetwork
+          ? (payload.send_entire_network = true)
+          : (payload.peer_ids = selectedIds);
+  
+        const response = await this.feedService.shareFeed(payload);
+  
+        this.toasterService.showSuccess(
+          response.message || 'Post shared successfully'
+        );
       }
-
-      const response = await this.feedService.shareFeed(payload);
-      
-      this.toasterService.showSuccess(response.message || 'Post shared successfully');
-      
+  
+      if (this.type === 'Event') {
+        if (!this.eventId) {
+          this.toasterService.showError('Invalid event share request');
+          return;
+        }
+  
+        const payload: {
+          event_id: string;
+          peer_ids?: string[];
+          type: "Event"
+          send_entire_network?: boolean;
+        } = {
+          event_id: this.eventId,
+          type: "Event",
+           send_entire_network:false,
+          peer_ids:selectedIds
+        };
+  
+        const response = await this.eventService.shareEvent(payload);
+  
+        this.toasterService.showSuccess(
+          response.message || 'Event shared successfully'
+        );
+      }
+  
       await this.modalCtrl.dismiss({ success: true });
+  
     } catch (error: any) {
-      console.error('Error sharing post:', error);
-      const errorMessage = error?.message || 'Failed to share post. Please try again.';
-      this.toasterService.showError(errorMessage);
+      console.error('Error sharing:', error);
+      this.toasterService.showError(
+        error?.message || 'Failed to share. Please try again.'
+      );
     } finally {
       this.isSharing.set(false);
     }
   }
+  
 
   async close() {
     await this.modalCtrl.dismiss();

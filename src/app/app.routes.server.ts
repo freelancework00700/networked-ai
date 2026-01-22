@@ -23,6 +23,18 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
+    path: 'terms',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'policy',
+    renderMode: RenderMode.Server
+  }, 
+  {
+    path: 'notification',
+    renderMode: RenderMode.Server
+  },
+  {
     path: 'not-found',
     renderMode: RenderMode.Prerender
   },

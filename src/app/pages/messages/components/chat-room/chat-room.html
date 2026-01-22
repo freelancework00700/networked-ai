@@ -102,6 +102,12 @@
                   </div>
                 }
                 <!-- Text (with or without media) -->
+
+                @if(msg.feed && msg.type === 'Post') {
+                <app-chat-feed-card [feed]="msg.feed"/>
+                }@else if (msg.event && msg.type === 'Event') {
+                <app-chat-event-card [event]="msg.event"/>
+                }
                 @if (msg.message) {
                   <div class="px-4 py-2" [class.pt-2]="msg.media_url">
                 {{ msg.message }}
@@ -121,7 +127,10 @@
 
             @if (selectedIndex() === msg.id && editingIndex() === null && !msg.is_deleted) {
               <div class="absolute right-0 bottom-[-15px] bg-white shadow-lg rounded-xl px-3 py-2 flex gap-4 z-50" (click)="$event.stopPropagation()">
-                <img src="assets/svg/editIcon.svg" class="w-5 h-5 cursor-pointer" (click)="editMessage(msg.id)" />
+                @if(msg.type != 'Event' && msg.type !='Post'){
+                  <img src="assets/svg/editIcon.svg" class="w-5 h-5 cursor-pointer" (click)="editMessage(msg.id)" />
+                }
+                  
                 <img src="assets/svg/deleteIcon.svg" class="w-5 h-5 cursor-pointer" (click)="deleteMessage(msg.id)" />
               </div>
             }

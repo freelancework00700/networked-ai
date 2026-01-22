@@ -1,13 +1,14 @@
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { StripeService } from '@/services/stripe.service';
 import { ToasterService } from '@/services/toaster.service';
 import { NavigationService } from '@/services/navigation.service';
+import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
 import { signal, inject, Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 import { SettingsProfileHeader } from '@/pages/settings/components/settings-profile-header';
 import { SettingListItem, SettingsListItem } from '@/pages/settings/components/settings-list-item';
-
 @Component({
   selector: 'settings',
   styleUrl: './settings.scss',
@@ -17,19 +18,15 @@ import { SettingListItem, SettingsListItem } from '@/pages/settings/components/s
 })
 export class Settings implements OnInit {
   // services
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   private authService = inject(AuthService);
   private modalService = inject(ModalService);
   private stripeService = inject(StripeService);
   private toasterService = inject(ToasterService);
-  private navigationService = inject(NavigationService);
 
   // signals
-  userName = signal<string>('Sandra Tanner');
-  userPoints = signal<number>(200);
-  userImageUrl = signal<string>('/assets/images/profile.jpeg');
-  appVersion = signal<string>('9.17.0');
-  buildVersion = signal<string>('12');
+  appVersion = signal<string>('1.2.05');
+  buildVersion = signal<string>('1');
 
   // settings sections
   accountItems = signal<SettingListItem[]>([
@@ -43,11 +40,11 @@ export class Settings implements OnInit {
       icon: 'pi pi-lock',
       route: '/settings/change-account-info/password'
     },
-    {
-      label: 'Payment',
-      icon: 'pi pi-credit-card',
-      route: '/settings/payment'
-    },
+    // {
+    //   label: 'Payment',
+    //   icon: 'pi pi-credit-card',
+    //   route: '/settings/payment'
+    // },
     {
       label: 'Payment History',
       icon: 'pi pi-history',
@@ -59,25 +56,25 @@ export class Settings implements OnInit {
     {
       label: 'Notifications',
       icon: 'pi pi-bell',
-      route: '/settings/notifications'
+      route: '/notification'
     },
     {
       label: 'Permissions',
       icon: 'pi pi-cog',
       route: '/settings/permissions'
     },
-    {
-      label: 'App Icon Appearance',
-      icon: 'pi pi-palette',
-      route: '/settings/app-icon'
-    }
+    // {
+    //   label: 'App Icon Appearance',
+    //   icon: 'pi pi-palette',
+    //   route: '/settings/app-icon'
+    // }
   ]);
 
   resourcesItems = signal<SettingListItem[]>([
     {
       label: 'Contact Support',
       icon: 'pi pi-comments',
-      route: '/settings/contact-support'
+      action: 'send-mail'
     },
     {
       label: 'Rate in App Store',
@@ -87,7 +84,7 @@ export class Settings implements OnInit {
     {
       label: 'Invite a Friend',
       icon: 'pi pi-user-plus',
-      action: 'invite-friend'
+      route: '/add-network'
     }
   ]);
 
@@ -117,12 +114,12 @@ export class Settings implements OnInit {
     },
     {
       label: 'Terms & Conditions',
-      route: '/settings/terms',
+      route: '/terms',
       showChevron: true
     },
     {
       label: 'Privacy Policy',
-      route: '/settings/privacy',
+      route: '/policy',
       showChevron: true
     }
   ]);
@@ -135,11 +132,11 @@ export class Settings implements OnInit {
     { title: 'About the App', items: this.aboutItems, useItemShowChevron: true }
   ]);
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   onItemClick(item: any): void {
     if (item.route) {
-      this.navCtrl.navigateForward(item.route);
+      this.navigationService.navigateForward(item.route);
     } else if (item.action) {
       this.handleAction(item.action);
     }
@@ -189,23 +186,15 @@ export class Settings implements OnInit {
   private async handleAction(action: string): Promise<void> {
     switch (action) {
       case 'rate-app':
-        this.toasterService.showSuccess('Rate app feature coming soon!');
-        break;
-      case 'invite-friend':
-        this.toasterService.showSuccess('Invite friend feature coming soon!');
+        await this.rateApp();
         break;
       case 'subscription-plans':
         await this.navigateToSubscriptionPlans();
         break;
+      case 'send-mail':
+        window.open("mailto:admin&#64;net-worked.ai", '_self');
+        break;
     }
-  }
-
-  onEditProfileClick(): void {
-    this.navCtrl.navigateForward('/profile/edit');
-  }
-
-  onQrCodeClick(): void {
-    this.toasterService.showSuccess('QR code feature coming soon!');
   }
 
   async onSignOut(): Promise<void> {
@@ -223,11 +212,31 @@ export class Settings implements OnInit {
 
       if (result && result.role === 'confirm') {
         await this.authService.signOut();
-        this.navCtrl.navigateRoot('/');
+        this.navigationService.navigateRoot('/');
       }
     } catch (error: any) {
       console.error('Sign out error:', error);
       this.toasterService.showError(error.message || 'Failed to sign out. Please try again.');
     }
   }
+
+  async rateApp() {
+    const platform = Capacitor.getPlatform();
+
+    let url = '';
+
+    if (platform === 'android') {
+      url = 'https://play.google.com/store/apps/details?id=app.networked.ai';
+    } else {
+      // Web fallback
+      url = 'https://play.google.com/store/apps/details?id=app.networked.ai';
+    }
+
+    await Browser.open({
+      url,
+      presentationStyle: 'popover'
+    });
+  }
+
+
 }

@@ -69,7 +69,7 @@ export class UserService extends BaseApiService {
 
   async getCurrentUser(force = false): Promise<IUser> {
     const currentUser = this.authService.currentUser();
-    
+
     // if no current user exists, throw error
     if (!currentUser?.id) {
       throw new Error('No active user account found.');
@@ -81,7 +81,7 @@ export class UserService extends BaseApiService {
         const user = await this.getUser(currentUser.id);
 
         // merge fetched user data with existing token to preserve authentication
-        const updatedUser = {...user, token: currentUser.token};
+        const updatedUser = { ...user, token: currentUser.token };
 
         // update localStorage and signals
         this.authService.setActiveAccount(updatedUser);
@@ -123,7 +123,7 @@ export class UserService extends BaseApiService {
 
     // convert user data to payload format and merge with new preferences
     const payload = this.generateUserPayload(currentUser);
-    
+
     // update with new preferences
     payload['vibe_ids'] = vibes;
     payload['hobby_ids'] = hobbies;
@@ -184,7 +184,7 @@ export class UserService extends BaseApiService {
   async searchUsers(value: string, page: number = 1, limit: number = 10): Promise<UserSearchResponse> {
     try {
       let params = new HttpParams();
-      
+
       if (value && value.trim()) {
         params = params.set('value', value.trim());
       }
@@ -249,6 +249,26 @@ export class UserService extends BaseApiService {
       await this.put('/users/fcm-token-location', payload);
     } catch (error) {
       console.error('Error updating FCM token and location:', error);
+    }
+  }
+
+  // search users
+  async paymentHistory(page: number = 1, limit: number = 20): Promise<any> {
+    try {
+      let params = new HttpParams();
+      if (page) {
+        params = params.set('page', page.toString());
+      }
+      if (limit) {
+        params = params.set('limit', limit.toString());
+      }
+
+      const response = await this.get<UserSearchApiResponse>('/transaction', { params });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error searching users:', error);
+      throw error;
     }
   }
 }

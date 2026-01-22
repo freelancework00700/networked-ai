@@ -75,7 +75,7 @@
   <ion-toolbar mode="md">
     <div class="p-4">
       @if (selectedUsers().length > 0 || sendEntireNetwork()) {
-        <app-button [label]="shareButtonLabel()" (click)="sharePost()" [isLoading]="isSharing()" [disabled]="isSharing()" iconName="pi-send" />
+        <app-button [label]="shareButtonLabel()" (click)="share()" [isLoading]="isSharing()" [disabled]="isSharing()" iconName="pi-send" />
       } @else {
         <!-- Actions -->
         <div class="flex justify-around border-t border-gray-200 pt-4">
