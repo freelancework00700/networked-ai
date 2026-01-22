@@ -2,8 +2,9 @@
   <ion-toolbar>
     <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 max-w-[672px] mx-auto">
       <div class="pi pi-arrow-left" (click)="navCtrl.back()"></div>
-      <div class="body-14M neutral-02 text-center w-full">Event Analytics</div>
-      <div [class]="isDownloading() ? 'pi pi-spinner pi-spin' : 'pi pi-download'" [class.disabled]="isDownloading()" (click)="downloadCSV()"></div>
+      <div class="body-14M neutral-02 text-center w-full">Host Dashboard</div>
+      <!-- <div [class]="isDownloading() ? 'pi pi-spinner pi-spin' : 'pi pi-download'" [class.disabled]="isDownloading()"
+        (click)="downloadCSV()"></div> -->
     </div>
   </ion-toolbar>
 </ion-header>
@@ -13,19 +14,27 @@
     <div class="w-full max-w-[672px] mx-auto">
       <div class="flex flex-col">
         <div class="h-[260px] relative">
-          <img class="w-full h-full object-cover" [src]="eventImage()" alt="Event image" />
-
+          <div class="w-full h-[361px] overflow-hidden">
+            <img
+              fill
+              placeholder
+              [alt]="eventData()?.title || 'Event image'"
+              class="object-cover"
+              (error)="onImageError($event)"
+              [ngSrc]="getImageUrl(eventData()?.thumbnail_url || '')"
+            />
+          </div>
           <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 flex flex-col justify-end">
             <div class="heading-h2 text-white">
-              {{ eventData().title }}
+              {{ eventData()?.title }}
             </div>
 
-            <div class="flex flex-col gap-2 text-white">
+            <div class="flex gap-4 text-white">
               <!-- DATE -->
               <div class="flex items-center gap-2">
                 <i class="pi pi-calendar"></i>
                 <div>
-                  {{ eventData().date }}
+                  {{ eventData()?.start_date | date: 'EEE M/d, h.mm a' }}
                 </div>
               </div>
 
@@ -33,7 +42,7 @@
               <div class="flex items-center gap-2">
                 <i class="pi pi-map-marker"></i>
                 <div>
-                  {{ eventData().location }}
+                  {{ eventData()?.address }}
                 </div>
               </div>
             </div>
@@ -44,20 +53,20 @@
           <div class="flex flex-col gap-2 flex-1">
             <ion-icon src="assets/svg/ticket/ticket.svg" class="w-6 h-6" />
             <div class="body-14M neutral-03">Tickets Sold</div>
-            <div class="body-16SB">{{ totalTicketsSold() }}</div>
+            <div class="body-16SB">{{ summary()?.total_sold }}</div>
           </div>
 
           <div class="flex flex-col gap-2 flex-1">
             <ion-icon src="assets/svg/ticket/dollar.svg" class="w-6 h-6" />
             <div class="body-14M neutral-03">Total Sales</div>
-            <div class="body-16SB">${{ penniesToDollars(totalSales()) }}</div>
+            <div class="body-16SB">${{ summary()?.total_sales }}</div>
           </div>
         </div>
         <div class="p-4">
-          <analytics-tickets [eventData]="eventData()" />
+          <analytics-tickets [eventData]="eventData()?.tickets" [summary]="summary()" />
         </div>
         <div class="p-4">
-          <analytics-promo-codes [promoCodes]="promoCodes()" />
+          <analytics-promo-codes [promoCodes]="promoCodes()" [eventId]="eventData()?.id" />
         </div>
       </div>
     </div>

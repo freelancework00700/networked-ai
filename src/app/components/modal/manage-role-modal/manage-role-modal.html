@@ -1,32 +1,87 @@
 <ion-header mode="md">
   <ion-toolbar mode="md">
     <div class="p-4 flex items-center justify-between">
-      <i class="pi pi-arrow-left" (click)="close()"></i>
-      <div class="heading-h3 neutral-01">Manage Roles</div>
+      <i class="pi pi-arrow-left" (click)="isAddMode() ? ChangeMode() : close()"></i>
+      <div class="heading-h3 neutral-01">{{ title() }}</div>
       <i class="pi pi-times" (click)="close()"></i>
     </div>
   </ion-toolbar>
 </ion-header>
 
-<div class="inner-content px-4 pb-4">
-  <form [formGroup]="form()">
-    <div formArrayName="users" class="flex flex-col gap-2">
-      @for (ctrl of usersFormArray.controls; track $index) {
-        <div [formGroupName]="$index" class="flex items-center justify-between">
+<ion-content mode="md">
+  <div class="p-4">
+    <div class="flex gap-2 items-center relative pb-4">
+      <searchbar class="w-full" (clear)="searchQuery.set('')" [searchQuery]="searchQuery()" placeholder="Search"
+        (searchChange)="isAddMode() ? searchUsers($event) : searchQuery.set($event)" />
+      @if (!isAddMode()) {
+      <p-button (click)="openPopover($event)" icon="pi pi-plus" iconPos="right" [style]="{ height: '44px' }"
+        [label]="'Add'"></p-button>
+      }
+    </div>
+
+    @if (isAddMode()) {
+    <div class="flex flex-col gap-2">
+      @if (isSearching()) {
+      <div class="flex items-center justify-center">
+        <div class="body-14R neutral-03">Searching...</div>
+      </div>
+      } @else {
+      @for (user of filteredUsers(); track $index) {
+      <div class="flex items-center gap-3 py-4 border-b border-gray-200"
+        [class.cursor-pointer]="!isAlreadyInGroup(user.id)" [class.cursor-not-allowed]="isAlreadyInGroup(user.id)"
+        [class.opacity-60]="isAlreadyInGroup(user.id)" (click)="toggleMember(user)">
+        <div class="relative w-12 h-12 rounded-full ">
+          <img fill placeholder class="rounded-full object-cover" (error)="onImageError($event)"
+            [ngSrc]="getImageUrl(user.thumbnail_url ?? '')" />
+
+          @if (isSelected(user.id)) {
+          <div
+            class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all">
+            <i class="pi pi-check !text-[10px]"></i>
+          </div>
+          }
+        </div>
+
+        <div class="flex-1">
           <div class="flex items-center gap-2">
-            <img [src]="ctrl.value.image || 'assets/images/profile.jpeg'" [alt]="ctrl.value.name" class="w-12 h-12 rounded-full object-cover" />
-            <div>{{ ctrl.value.name }}</div>
+            <span class="font-medium truncate">{{ user.name || user.username || user.email }}</span>
+
+            <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
+              <img [src]="getDiamondPath(user)" class="h-4" />
+              <span class="text-xs font-semibold">{{ user.total_gamification_points || 0 }}</span>
+            </div>
           </div>
 
-          <p-select
-            class="h-11"
-            optionLabel="name"
-            [options]="roles()"
-            optionValue="value"
-            formControlName="role"
-            placeholder="Select Role"
-            (onChange)="changeRole($index, $event.value)"
-          >
+          <div class="text-xs" [class.text-gray-500]="!isAlreadyInGroup(user.id)"
+            [class.text-gray-400]="isAlreadyInGroup(user.id)">
+            @if (user.company_name) {
+            {{ user.company_name }}
+            }
+          </div>
+        </div>
+      </div>
+      } @empty {
+      <div class="flex items-center justify-center">
+        <div class="body-14R neutral-03">No users found</div>
+      </div>
+      }
+      }
+    </div>
+    } @else {
+    <form [formGroup]="form()">
+      <div formArrayName="users" class="flex flex-col gap-2">
+        @for (ctrl of filteredParticipants(); track ctrl.value.id) {
+        <div [formGroupName]="$index" class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="relative w-12 h-12 rounded-full ">
+              <img fill placeholder class="rounded-full object-cover" (error)="onImageError($event)"
+                [ngSrc]="getImageUrl(ctrl.value.image ?? '')" />
+            </div>
+            <div>{{ ctrl.value.name || ctrl.value.username }}</div>
+          </div>
+
+          <p-select class="h-11" optionLabel="name" [options]="roles()" optionValue="value" formControlName="role"
+            placeholder="Select Role" (onChange)="changeRole($index, $event.value)">
             <ng-template pTemplate="item" let-option>
               <div class="flex items-center gap-2">
                 <div class="font-medium truncate">{{ option.name }}</div>
@@ -34,7 +89,24 @@
             </ng-template>
           </p-select>
         </div>
-      }
+        }@empty {
+        <div class="flex items-center justify-center">
+          <div class="body-14R neutral-03">No participants found</div>
+        </div>
+        }
+      </div>
+    </form>
+    }
+  </div>
+</ion-content>
+
+@if (isAddMode() && selectedMembers().length > 0) {
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4">
+      <app-button [label]="`Add and Save ( ${selectedMembers().length} ${selectedRole()})`" (click)="addAndSave()"
+        [disabled]="isLoading()" [isLoading]="isLoading()" />
     </div>
-  </form>
-</div>
+  </ion-toolbar>
+</ion-footer>
+}

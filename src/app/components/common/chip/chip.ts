@@ -9,7 +9,7 @@ import { Component, input, output, ChangeDetectionStrategy } from '@angular/core
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Chip {
-  height = input<string>('44px');
+  height = input<string>('35px');
   width = input<string>('auto');
   type = input<string>('percentage');
   selectedType = output<string>();

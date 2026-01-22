@@ -1,3 +1,4 @@
+import { EventAttendee } from './event';
 import { FeedPost, FeedComment } from './IFeed';
 import { ChatRoom, ChatMessage } from './IChat';
 import { INotification } from '@/interfaces/INotification';
@@ -39,6 +40,10 @@ export type ServerToClientEvents = {
   'message:updated': (payload: { message: ChatMessage }) => void;
   'message:deleted': (payload: { message_id: string; room_id: string; deleted_by?: string | null }) => void;
   'message:reaction': (payload: { message_id: string; room_id: string; reaction: any; user_id: string }) => void;
+
+  //attendee check-in
+  'attendee:check-in:update': (payload: EventAttendee) => void;
+
 };
 
 // Client to Server Events

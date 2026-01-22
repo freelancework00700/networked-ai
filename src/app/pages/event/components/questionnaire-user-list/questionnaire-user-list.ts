@@ -1,23 +1,34 @@
 import { Button } from '@/components/form/button';
 import { AuthService } from '@/services/auth.service';
-import { Component, effect, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { IonContent, IonToolbar, IonHeader, NavController } from '@ionic/angular/standalone';
+import { EventService } from '@/services/event.service';
+import { SocketService } from '@/services/socket.service';
+import { UserCardList } from '@/components/card/user-card-list';
+import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
+import { Component, effect, inject, signal, ChangeDetectionStrategy, computed } from '@angular/core';
+import { IonContent, IonToolbar, IonHeader, NavController, IonInfiniteScrollContent, IonInfiniteScroll } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'questionnaire-user-list',
   styleUrl: './questionnaire-user-list.scss',
   templateUrl: './questionnaire-user-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonHeader, IonToolbar, IonContent, Button]
+  imports: [IonInfiniteScroll, IonInfiniteScrollContent, IonHeader, IonToolbar, IonContent, UserCardList]
 })
 export class QuestionnaireUserList {
   navCtrl = inject(NavController);
+  eventService = inject(EventService);
   private authService = inject(AuthService);
+  private socketService = inject(SocketService);
 
   question = signal<any>(null);
   option = signal<any>(null);
+  users = signal<any[]>([]);
+  currentPage = signal<number>(1);
+  isLoading = signal<boolean>(false);
+  totalPages = signal<number>(0);
+  hasMore = computed(() => this.currentPage() < this.totalPages());
 
-  private navEffect = effect(() => {
+  private navEffect = effect(async () => {
     const state = history.state;
 
     if (state?.questionOption) {
@@ -26,92 +37,48 @@ export class QuestionnaireUserList {
     if (state?.option) {
       this.option.set(state.option);
     }
+
+    const response = await this.eventService.getEventQuestionOptionUsers(this.question()?.id, this.option()?.id);
+    this.users.set(response?.users);
   });
 
-  networkSuggestions = signal([
-    {
-      id: '1',
-      name: 'Kathryn Murphy',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true
-    },
-    {
-      id: '2',
-      name: 'Esther Howard',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting'
-    },
-    {
-      id: '3',
-      name: 'Arlene McCoy',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: false,
-      requested: true
-    },
-    {
-      id: '4',
-      name: 'Darlene Robertson',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true
-    },
-    {
-      id: '5',
-      name: 'Ronald Richards',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting'
-    },
-    {
-      id: '6',
-      name: 'Albert Flores',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true
-    },
-    {
-      id: '7',
-      name: 'Eleanor Pena',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: false,
-      requested: true
-    },
-    {
-      id: '8',
-      name: 'Savannah Nguyen',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting'
-    },
-    {
-      id: '9',
-      name: 'Guy Hawkins',
-      value: 200,
-      jobTitle: 'CTO',
-      company: 'Cortazzo Consulting',
-      networked: false
-    },
-    {
-      id: '10',
-      name: 'Cody Fisher',
-      value: 200,
-      jobTitle: 'CFO',
-      company: 'Cortazzo Consulting',
-      networked: true
+  ngOnInit() {
+    this.setupNetworkConnectionListener();
+  }
+
+  loadUsers = async (page: number, append = false) => {
+    if (this.isLoading()) return;
+
+    try {
+      this.isLoading.set(true);
+
+      const response = await this.eventService.getEventQuestionOptionUsers(this.question()?.id, this.option()?.id, page, 20);
+
+      this.totalPages.set(response?.pagination?.totalPages || 0);
+      this.currentPage.set(page);
+
+      this.users.update((current) => (append ? [...current, ...(response?.users || [])] : response?.users || []));
+    } catch (error) {
+      console.error('Error loading option users:', error);
+    } finally {
+      this.isLoading.set(false);
     }
-  ]);
+  };
+
+  loadMoreUsers = async (event: Event): Promise<void> => {
+    const infiniteScroll = event.target as HTMLIonInfiniteScrollElement;
+
+    if (!this.hasMore() || this.isLoading()) {
+      infiniteScroll.complete();
+      return;
+    }
+
+    await this.loadUsers(this.currentPage() + 1, true);
+    infiniteScroll.complete();
+  };
 
   addSuggestion(id: string) {
-    const user = this.networkSuggestions().find((item) => item.id === id);
+    const user = this.users().find((item) => item.id === id);
     if (!user) return;
 
     user.requested = true;
@@ -120,7 +87,7 @@ export class QuestionnaireUserList {
 
   messageUser(id: string) {
     const currentUserId = this.authService.currentUser()?.id;
-    
+
     if (currentUserId && id) {
       this.navCtrl.navigateForward('/chat-room', {
         state: {
@@ -129,5 +96,24 @@ export class QuestionnaireUserList {
         }
       });
     }
+  }
+
+  private setupNetworkConnectionListener(): void {
+    this.socketService.onAfterRegistration(() => {
+      this.socketService.on('network:connection:update', this.networkConnectionHandler);
+    });
+  }
+
+  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+    if (!payload || !payload.id) return;
+
+    const userId = payload.id;
+    const newStatus = payload.connection_status;
+
+    this.users.update((users) => users.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
+  };
+
+  ngOnDestroy(): void {
+    this.socketService.off('network:connection:update', this.networkConnectionHandler);
   }
 }

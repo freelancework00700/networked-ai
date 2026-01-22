@@ -2,7 +2,8 @@ import { Avatar } from 'primeng/avatar';
 import { IUser } from '@/interfaces/IUser';
 import { AvatarGroup } from 'primeng/avatargroup';
 import { getImageUrlOrDefault } from '@/utils/helper';
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { NavigationService } from '@/services/navigation.service';
+import { Component, input, ChangeDetectionStrategy, inject } from '@angular/core';
 
 @Component({
   selector: 'avatar-group',
@@ -17,6 +18,8 @@ export class AvatarGroupComponent {
   shape = input<'square' | 'circle'>('circle');
   maxVisible = input<number>(5);
   showOverflow = input<boolean>(true);
+
+  private navigationService = inject(NavigationService);
 
   getVisibleUsers(): IUser[] {
     const allUsers = this.users();
@@ -53,5 +56,12 @@ export class AvatarGroupComponent {
     const imageUrl = user?.image_url;
     const imageUrlString = typeof imageUrl === 'string' ? imageUrl : '';
     return getImageUrlOrDefault(thumbnailUrl || imageUrlString || '');
+  }
+
+  onUserClick(user: IUser): void {
+    const username = user?.username;
+    if (username) {
+      this.navigationService.navigateForward(`/${username}`);
+    }
   }
 }

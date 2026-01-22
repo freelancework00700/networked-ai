@@ -46,5 +46,7 @@
   </div>
 
   <!-- view ticket button -->
-  <!-- <app-button label="View Ticket" iconName="pi-ticket" height="40px" (click)="viewEvent()" /> -->
+  @if (hasTickets()) {
+    <app-button label="View Ticket" iconName="pi-ticket" height="40px" (click)="viewTickets($event)" />
+  }
 </div>

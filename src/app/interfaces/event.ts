@@ -48,9 +48,9 @@ export interface TicketFormData {
   price: number;
   quantity: number | null;
   description?: string;
-  sale_start_date?: string | null;
+  sales_start_date?: string | null;
   sale_start_time?: string | null;
-  sale_end_date?: string | null;
+  sales_end_date?: string | null;
   sale_end_time?: string | null;
   end_at_event_start: boolean;
   free_for_subscribers?: boolean;
@@ -73,9 +73,9 @@ export interface Ticket {
   price: number;
   quantity?: number | null;
   description?: string | null;
-  sale_start_date?: string | null;
+  sales_start_date?: string | null;
   sale_start_time?: string | null;
-  sale_end_date?: string | null;
+  sales_end_date?: string | null;
   sale_end_time?: string | null;
   end_at_event_start?: boolean;
   order?: number;
@@ -142,6 +142,7 @@ export interface EventDisplayData {
   dateItems: SegmentButtonItem[];
   rsvpButtonLabel: string;
   isCurrentUserHost: boolean;
+  isCurrentUserCoHost: boolean;
   isCurrentUserAttendee?: boolean;
   isRsvpApprovalRequired?: boolean;
   hasCurrentUserRsvpRequest?: boolean;
@@ -168,6 +169,7 @@ export interface IEvent {
   city?: string;
   state?: string;
   country?: string;
+  attendees?: EventAttendee[];
   participants?: Array<{
     role?: string;
     user?: {
@@ -241,6 +243,7 @@ export interface AnalyticsQuestion {
   visibility: 'public' | 'private';
   type: 'options' | 'scale';
   question: string;
+  question_type: QuestionType;
   options?: AnalyticsOption[];
   scaleData?: AnalyticsScale[];
 }
@@ -313,15 +316,48 @@ export interface EventData {
 
 // Event Attendee interface for RSVP
 export interface EventAttendee {
-  parent_user_id: string | null;
+  id?: string;
+  event_id?: string;
+  user_id?: string;
+  parent_user_id?: string | null;
   name?: string;
-  is_incognito: boolean;
-  rsvp_status: 'Yes' | 'Maybe';
+  is_incognito?: boolean;
+  rsvp_status?: 'Yes' | 'No' | 'Maybe' | string;
+  is_checked_in?: boolean;
   event_ticket_id?: string;
-  event_promo_code_id?: string;
-  platform_fee_amount?: number;
-  amount_paid?: number;
-  host_payout_amount?: number;
+  event_promo_code_id?: string | null;
+  platform_fee_amount?: string;
+  amount_paid?: string;
+  host_payout_amount?: string;
+  apple_wallet_pass_url?: string;
+
+  user?: {
+    id?: string;
+    name?: string;
+    email?: string;
+    mobile?: string;
+    username?: string;
+    image_url?: string;
+    thumbnail_url?: string;
+    total_gamification_points?: number;
+    total_gamification_points_weekly?: number;
+    company_name?: string;
+    connection_status?: 'Connected' | 'NotConnected' | string;
+  };
+
+  event_ticket?: {
+    id?: string;
+    name?: string;
+    price?: string | number;
+    available_quantity?: number;
+    quantity?: number;
+    description?: string;
+    ticket_type?: string;
+    sales_start_date?: string;
+    sales_end_date?: string;
+    end_at_event_start?: boolean;
+    order?: number;
+  };
 }
 
 // Event Attendees Payload interface

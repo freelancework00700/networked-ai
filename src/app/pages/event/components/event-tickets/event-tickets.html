@@ -43,7 +43,11 @@
 
 <!-- Subscription Section (Free for Plan Subscribers) -->
 @if ((tickets().length > 0 && !isEventCompletelyFree()) || isSubscriberExclusive()) {
-  <subscription-input [plans]="subscriptionPlans()" [onCreateSubscription]="navigateToSubscriptionPlans" [subscriberExclusiveMode]="isSubscriberExclusive()" />
+  <subscription-input
+    [plans]="subscriptionPlans()"
+    [onCreateSubscription]="navigateToSubscriptionPlans"
+    [subscriberExclusiveMode]="isSubscriberExclusive()"
+  />
 }
 
 <!-- Promo Code Section -->

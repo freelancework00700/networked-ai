@@ -547,10 +547,14 @@ export class EventDetails implements OnInit {
           category: category || undefined,
           location: location || undefined,
           address: address || undefined,
-          dates: date ? [{
-            start: zonedStartTime,
-            end: zonedEndTime
-          }] : undefined
+          dates: date
+            ? [
+                {
+                  start: zonedStartTime,
+                  end: zonedEndTime
+                }
+              ]
+            : undefined
         },
         zonedStartTime,
         zonedEndTime
@@ -563,9 +567,10 @@ export class EventDetails implements OnInit {
     } catch (error: any) {
       console.error('Error generating description:', error);
       this.toasterService.showError(error?.message || 'Failed to generate description. Please try again.');
-      
+
       // Set a fallback description on error
-      const fallbackDescription = '<p>This is a generated event description. You can customize this content to better match your event details and requirements.</p>';
+      const fallbackDescription =
+        '<p>This is a generated event description. You can customize this content to better match your event details and requirements.</p>';
       descriptionControl.setValue(fallbackDescription);
       descriptionControl.markAsTouched();
       this.updateDescriptionLength(fallbackDescription);

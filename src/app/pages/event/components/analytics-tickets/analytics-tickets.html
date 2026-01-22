@@ -1,20 +1,20 @@
-<div class="border border-surface-300 rounded-xl">
+<div class="border border-surface-300 rounded-xl bg-[#F0F0F0]">
   <div class="flex m-6">
     <div class="flex flex-col flex-1">
       <div class="body-14M neutral-03">Total Sales</div>
-      <div class="heading-h2">${{ penniesToDollars(totalSales) }}</div>
+      <div class="heading-h2">${{ summary()?.total_sales }}</div>
     </div>
     <div class="flex flex-col flex-1">
       <div class="body-14M neutral-03">Tickets Sold</div>
-      <div class="heading-h2">{{ totalTicketsSold }}</div>
+      <div class="heading-h2">{{ summary()?.total_sold }}</div>
     </div>
 
-    <ion-icon src="assets/svg/ticket/paid-ticket.svg" alt="Standard Ticket" />
+    <ion-icon src="assets/svg/ticket/paid-ticket.svg" alt="Standard Ticket" class="w-15 h-15" />
   </div>
 
   <div class="p-2 pt-0">
-    @for (ticket of eventData()?.tiers; track $index) {
-      <div class="tier-overview-card" [ngClass]="'ticket-type-' + (ticket?.ticket_type || 'standard-paid')">
+    @for (ticket of eventData(); track $index) {
+      <div class="tier-overview-card bg-white rounded-lg p-2" [ngClass]="getTicketTypeClass(ticket)">
         <div class="flex justify-between items-center gap-2">
           <div class="flex items-center gap-2">
             <ion-icon src="assets/svg/ticket/ticket.svg" class="stat-icon" class="w-6 h-6" />
@@ -25,57 +25,54 @@
 
         <div class="flex items-center gap-4 pt-2">
           <img [src]="getStatusChip(ticket)" />
-          <span class="body-14M neutral-03">{{ getSaleDateRange(ticket) }}</span>
+          <span class="body-14M neutral-03">{{ ticket.sales_start_date | date: 'dd-MMM' }} - {{ ticket.sales_end_date | date: 'dd-MMM' }}</span>
           @if (ticket.price) {
-            <span class="body-14M neutral-03 border-l border-surface-300 pl-4"> {{ ticket.price }}</span>
+            <span class="body-14M neutral-03 border-l border-surface-300 pl-4"> ${{ ticket.price }}</span>
           }
         </div>
 
         <div class="pt-4">
-          @if (getTicketCountsForTier(ticket); as stats) {
-            <div class="progress-bar">
-              <div class="progress-fill bg-primary" [style.width.%]="stats.percentageSold"></div>
-            </div>
-
-            <div class="flex justify-between">
-              @if (stats.sold > 0) {
-                <div class="flex items-center gap-2">
-                  <div class="items-center gap-2">
-                    <div class="flex items-center gap-2">
-                      <div class="bg-primary w-2 h-2 rounded-full"></div>
-                      <span class="body-16SB neutral-03">Sold</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <div class="bg-surface-300 w-2 h-2 rounded-full"></div>
-                      <span class="body-16SB neutral-03">Remaining</span>
-                    </div>
+          <div class="progress-bar">
+            <div class="progress-fill bg-primary" [style.width.%]="(ticket.total_sold / ticket.quantity) * 100"></div>
+          </div>
+          <div class="flex justify-between">
+            @if (ticket.total_sold > 0) {
+              <div class="flex items-center gap-2">
+                <div class="items-center gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="bg-primary w-2 h-2 rounded-full"></div>
+                    <span class="body-16SB neutral-03">Sold</span>
                   </div>
-
-                  <div class="items-center gap-2">
-                    <div>
-                      <span class="body-16SB neutral-01">{{ stats.sold }}</span>
-                      <span class="body-14SB neutral-03"> ({{ stats.percentageSold }}%) </span>
-                    </div>
-                    <span class="body-16SB neutral-01">{{ stats.remaining }}</span>
+                  <div class="flex items-center gap-2">
+                    <div class="bg-surface-300 w-2 h-2 rounded-full"></div>
+                    <span class="body-16SB neutral-03">Remaining</span>
                   </div>
                 </div>
-              } @else {
-                <div class="flex items-center gap-2">
-                  <div class="bullet remaining-bullet"></div>
-                  <div class="body-16M neutral-03">No data yet</div>
+
+                <div class="items-center gap-2">
+                  <div>
+                    <span class="body-16SB neutral-01">{{ ticket.total_sold }}</span>
+                    <span class="body-14SB neutral-03"> ({{ (ticket.total_sold / ticket.quantity) * 100 }}%) </span>
+                  </div>
+                  <span class="body-16SB neutral-01">{{ ticket.available_quantity }}</span>
                 </div>
-              }
-              <div class="body-16M neutral-03">
-                Total <span class="body-16SB neutral-01">{{ stats.total }}</span>
               </div>
-            </div>
-
-            @if (stats.sold > 0) {
-              <div class="flex items-center justify-between gap-2 bg-surface-200 p-3 rounded-lg mt-4" (click)="openUserList(ticket)">
-                <div class="body-16SB neutral-01">${{ penniesToDollars(stats.revenue) }}</div>
-                <i class="pi pi-chevron-right"></i>
+            } @else {
+              <div class="flex items-center gap-2">
+                <div class="bullet remaining-bullet"></div>
+                <div class="body-16M neutral-03">No data yet</div>
               </div>
             }
+            <div class="body-16M neutral-03">
+              Total <span class="body-16SB neutral-01">{{ ticket.quantity }}</span>
+            </div>
+          </div>
+
+          @if (ticket.total_sold > 0) {
+            <div class="flex items-center justify-between gap-2 bg-surface-200 p-3 rounded-lg mt-4" (click)="openUserList(ticket)">
+              <div class="body-16SB neutral-01">${{ ticket.total_sales }}</div>
+              <i class="pi pi-chevron-right"></i>
+            </div>
           }
         </div>
       </div>

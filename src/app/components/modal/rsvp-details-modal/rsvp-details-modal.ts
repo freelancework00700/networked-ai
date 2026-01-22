@@ -104,11 +104,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     });
   }
 
-  subtotal = computed(() => this.rsvpDataSignal()?.subtotal ?? 0);
-
   hostFees = computed(() => this.rsvpDataSignal()?.hostFees ?? 0);
-
-  subtotalAfterHostFees = computed(() => this.rsvpDataSignal()?.subtotalAfterHostFees ?? 0);
 
   platformFee = computed(() => this.rsvpDataSignal()?.platformFee ?? 0);
 
@@ -118,26 +114,26 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     if (rsvpData?.freeTicketDiscount !== undefined && rsvpData.freeTicketDiscount > 0) {
       return rsvpData.freeTicketDiscount;
     }
-    
+
     // Fallback: Calculate it ourselves if not provided
     // Check if subscription exists (subscriptionId is truthy and not empty)
     if (!this.subscriptionId || this.subscriptionId.trim() === '') return 0;
-    
+
     const tickets = rsvpData?.tickets || [];
     if (tickets.length === 0) return 0;
-    
+
     // Filter to get only paid tickets (price > 0) with selected quantity > 0
-    const paidTickets = tickets.filter(ticket => {
+    const paidTickets = tickets.filter((ticket) => {
       const quantity = ticket.selectedQuantity || 0;
       const price = ticket.price || 0;
       return price > 0 && quantity > 0;
     });
-    
+
     if (paidTickets.length === 0) return 0;
-    
+
     // Get the first paid ticket (matching rsvp-modal logic)
     const firstPaidTicket = paidTickets[0];
-    
+
     // Return the price of the first paid ticket as the discount (max 1 free ticket)
     // The discount is the price of 1 ticket, not the total
     return firstPaidTicket.price || 0;
@@ -145,19 +141,19 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
 
   freeTicketName = computed(() => {
     if (this.freeTicketDiscount() === 0) return '';
-    
+
     const tickets = this.rsvpDataSignal()?.tickets || [];
     if (tickets.length === 0) return '';
-    
+
     // Filter to get only paid tickets (price > 0) with selected quantity > 0
-    const paidTickets = tickets.filter(ticket => {
+    const paidTickets = tickets.filter((ticket) => {
       const quantity = ticket.selectedQuantity || 0;
       const price = ticket.price || 0;
       return price > 0 && quantity > 0;
     });
-    
+
     if (paidTickets.length === 0) return '';
-    
+
     // Get the first paid ticket name
     const firstPaidTicket = paidTickets[0];
     return firstPaidTicket.name || 'Free Ticket';
@@ -170,11 +166,11 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
 
   promoCodeTicketCount = computed(() => {
     const rsvpData = this.rsvpDataSignal();
-    
+
     if (rsvpData?.promoCodeTicketCount !== undefined && rsvpData.promoCodeTicketCount > 0) {
       return rsvpData.promoCodeTicketCount;
     }
-    
+
     const tickets = rsvpData?.tickets || [];
     if (tickets.length === 0) return 0;
 
@@ -187,21 +183,18 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
 
   promoCodeDisplayName = computed(() => {
     const rsvpData = this.rsvpDataSignal();
-    const promoCode = rsvpData?.promo_code || 
-                      rsvpData?.appliedPromoCode?.promoCode || 
-                      rsvpData?.appliedPromoCode?.promo_code || 
-                      '';
+    const promoCode = rsvpData?.promo_code || rsvpData?.appliedPromoCode?.promoCode || rsvpData?.appliedPromoCode?.promo_code || '';
     const ticketCount = this.promoCodeTicketCount();
-    
+
     if (!promoCode) return '';
-    
+
     return ticketCount > 0 ? `${promoCode} x${ticketCount}` : promoCode;
   });
 
   totalPrice = computed(() => {
     const baseTotal = this.rsvpDataSignal()?.total || 0;
     const perk = this.subscriberPerk();
-    
+
     return Math.max(0, baseTotal - perk);
   });
 
@@ -264,7 +257,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
       this.currentUser.set(user);
       this.populateFormsWithUserData();
     } catch (error) {
-      console.warn('No active user account found, forms will remain empty', error );
+      console.warn('No active user account found, forms will remain empty', error);
     }
 
     // Fetch payment intent if total price > 0
@@ -285,10 +278,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
       });
 
       if (response?.client_secret) {
-        
-        
         this.clientSecret.set(response.client_secret);
-        console.log('clientSecret',this.clientSecret());
         if (response.stripe_payment_intent_id) {
           this.stripePaymentIntentId.set(response.stripe_payment_intent_id);
         }
@@ -421,7 +411,6 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     if (event.paymentIntentId) {
       this.stripePaymentIntentId.set(event.paymentIntentId);
     }
-    console.log('Payment succeeded:', event);
   }
 
   onPaymentError(event: StripePaymentErrorEvent): void {

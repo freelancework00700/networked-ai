@@ -52,7 +52,7 @@ export class SubscriptionInput implements OnInit {
 
   selectedPlans = computed(() => {
     const selectedIds = this.selectedPlanIds();
-    return this.plans().filter(plan => selectedIds.includes(plan.product_id));
+    return this.plans().filter((plan) => selectedIds.includes(plan.product_id));
   });
 
   hasPlans = computed(() => this.plans().length > 0);
@@ -104,10 +104,7 @@ export class SubscriptionInput implements OnInit {
   }
 
   async openSubscriptionSelect(): Promise<void> {
-    const selectedPlanIds = await this.modalService.openSubscriptionPlansModal(
-      this.plans(),
-      this.selectedPlanIds()
-    );
+    const selectedPlanIds = await this.modalService.openSubscriptionPlansModal(this.plans(), this.selectedPlanIds());
 
     if (selectedPlanIds) {
       const subscriptionControl = this.parentFormGroup.get(this.subscriptionIdsControlName);
@@ -122,7 +119,7 @@ export class SubscriptionInput implements OnInit {
 
   removePlan(planId: string): void {
     const currentIds = this.selectedPlanIds();
-    const updatedIds = currentIds.filter(id => id !== planId);
+    const updatedIds = currentIds.filter((id) => id !== planId);
     const subscriptionControl = this.parentFormGroup.get(this.subscriptionIdsControlName);
     if (subscriptionControl) {
       subscriptionControl.setValue(updatedIds);

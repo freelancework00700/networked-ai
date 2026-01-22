@@ -87,13 +87,7 @@ export class EventUserList implements OnInit, OnDestroy {
     const userId = payload.id;
     const newStatus = payload.connection_status;
 
-    this.users.update((users) =>
-      users.map((user) =>
-        user.id === userId
-          ? { ...user, connection_status: newStatus }
-          : user
-      )
-    );
+    this.users.update((users) => users.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
   };
 
   ngOnDestroy(): void {

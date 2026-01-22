@@ -1,52 +1,69 @@
-<div class="border border-surface-300 rounded-lg p-4">
-  <div class="flex justify-between items-center">
+<div class="border border-surface-300 rounded-lg p-4 bg-[#F0F0F0]">
+  <div class="flex justify-between items-center mb-3">
     <div class="flex flex-col">
       <div>Promo Codes</div>
       <div class="neutral-03 font-extrabold heading-h3">
-        <span class="heading-h1 text-black">{{ getTotalUses() }}</span> Uses
+        <span class="heading-h1 text-black">{{ getTotalUses() }}</span
+        ><span class="text-[25px]"> Uses</span>
       </div>
     </div>
     <div class="section-icon">
-      <img src="assets/svg/ticket/free-ticket.svg" alt="Sale Ongoing" />
+      <ion-icon src="assets/svg/ticket/free-ticket.svg" alt="Sale Ongoing" class="w-15 h-15" />
     </div>
   </div>
 
-  @if (promoCodes().length > 0) {
-    <div class="flex flex-col gap-2">
-      @for (promo of promoCodes(); track promo.code) {
-        <!-- HEADER ROW -->
-        <div class="flex justify-between items-center py-2">
-          <div class="flex items-center gap-2">
-            <img src="assets/svg/ticket/promo-tag.svg" alt="Promo" class="w-6 h-6" />
-            <span class="body-16SB leading-none">
-              {{ promo?.code }}
-            </span>
+  @if (promoCodes() && promoCodes().length > 0) {
+    <div class="flex flex-col gap-4 mb-3">
+      @for (promo of promoCodes(); track promo.promo_code) {
+        <div class="bg-white rounded-lg p-2">
+          <!-- HEADER ROW -->
+          <div class="flex justify-between items-center py-2">
+            <div class="flex items-center gap-2">
+              <ion-icon src="assets/svg/ticket/promo-tag.svg" alt="Promo" class="w-6 h-6" />
+              <span class="body-16SB leading-none">
+                {{ promo?.promo_code }}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="body-16SB text-surface-700"> {{ promo?.total_uses }} uses </span>
+
+              <!-- Fixed-width icon container -->
+              <span class="w-4 h-4 flex items-center justify-center">
+                @if (promo?.total_uses > 0) {
+                  <i
+                    (click)="togglePromo(promo.promo_code)"
+                    class="pi text-surface-400 cursor-pointer transition-transform duration-200"
+                    [ngClass]="{
+                      'pi-chevron-down': !visiblePromoCodes[promo.promo_code],
+                      'pi-chevron-up': visiblePromoCodes[promo.promo_code]
+                    }"
+                  ></i>
+                }
+              </span>
+            </div>
           </div>
 
-          <div class="flex items-center gap-2">
-            <span class="body-16SB text-surface-700"> {{ promo?.uses }} uses </span>
-
-            <i
-              (click)="togglePromo(promo.code)"
-              class="pi text-surface-400 cursor-pointer transition-transform duration-200"
-              [ngClass]="{
-                'pi-chevron-down': !visiblePromoCodes[promo.code],
-                'pi-chevron-up': visiblePromoCodes[promo.code]
-              }"
-            ></i>
-          </div>
+          @if (promo?.users?.length && visiblePromoCodes[promo?.promo_code]) {
+            <div class="flex flex-col gap-2 my-3">
+              @for (user of promo?.users; track user.username) {
+                <div class="flex items-center gap-2" (click)="goToUser(user)">
+                  <div class="relative w-[40px] h-[40px] shrink-0 rounded-full overflow-hidden">
+                    <img
+                      fill
+                      placeholder
+                      [alt]="user.name || 'User image'"
+                      (error)="onImageError($event)"
+                      [ngSrc]="getImageUrl(!user.parent_user_id ? user.thumbnail_url : '')"
+                      class="object-cover"
+                    />
+                  </div>
+                  <span class="body-14R">{{ user.name }}</span>
+                </div>
+              }
+            </div>
+          }
         </div>
-
-        @if (promo?.users?.length && visiblePromoCodes[promo?.code]) {
-          <div class="flex flex-col gap-2">
-            @for (user of promo?.users; track user.username) {
-              <div class="flex items-center gap-2" (click)="goToUser(user.username)">
-                <img [src]="user.thumbnail" [alt]="user.name" class="w-10 h-10 rounded-full object-cover" />
-                <span class="body-14R">{{ user.name }}</span>
-              </div>
-            }
-          </div>
-        }
       }
     </div>
   } @else {
@@ -63,7 +80,7 @@
         <div class="body-14R">Drive more sign ups & reward your community with a custom promo code</div>
       </div>
 
-      <img src="assets/svg/rocket.svg" alt="rocketIcon" />
+      <ion-icon src="assets/svg/rocket.svg" alt="rocketIcon" class="w-15 h-15" />
     </div>
 
     <app-button label="Create a Promo Code" (click)="onCreatePromoCode()" />

@@ -1,5 +1,7 @@
 import { Login } from '@/pages/login';
+import { IUser } from '@/interfaces/IUser';
 import { Signup } from '@/pages/signup/signup';
+import { EventQr } from '@/pages/event/event-qr';
 import { inject, Injectable } from '@angular/core';
 import { SubscriptionPlan } from '@/interfaces/event';
 import { MenuItem } from '@/components/modal/menu-modal';
@@ -7,6 +9,7 @@ import { CreateEvent } from '@/pages/event/create-event';
 import { RsvpModal } from '@/components/modal/rsvp-modal';
 import { MenuModal } from '@/components/modal/menu-modal';
 import { TitleModal } from '@/components/modal/title-modal';
+import { TicketsModal } from '@/components/modal/tickets-modal';
 import { LoadingModal } from '@/components/modal/loading-modal';
 import { ConfirmModal } from '@/components/modal/confirm-modal';
 import { LocationModal } from '@/components/modal/location-modal';
@@ -31,6 +34,7 @@ import { RsvpConfirmModal } from '@/components/modal/rsvp-confirm-modal';
 import { ReportModal } from '@/components/modal/report-modal/report-modal';
 import { ImageGalleryModal } from '@/components/modal/image-gallery-modal';
 import { CitySelectionModal } from '@/components/modal/city-selection-modal';
+import { ShareProfileModal } from '@/components/modal/share-profile-modal';
 import { EventCategoryModal } from '@/components/modal/event-category-modal';
 import { DeleteAccountModal } from '@/components/modal/delete-account-modal';
 import { PasswordSavedModal } from '@/components/modal/password-saved-modal';
@@ -51,8 +55,6 @@ import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confi
 import { QuestionnairePreviewModal } from '@/components/modal/questionnaire-preview-modal';
 import { StripePaymentComponent } from '@/components/common/stripe-payment/stripe-payment';
 import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
-import { IUser } from '@/interfaces/IUser';
-import { ShareProfileModal } from '@/components/modal/share-profile-modal';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -620,19 +622,20 @@ export class ModalService {
     return data;
   }
 
-  async openManageRoleModal(users: any[], eventId: string): Promise<any | null> {
+  async openManageRoleModal(participants: any[], eventId: string): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: ManageRoleModal,
-      cssClass: 'auto-hight-modal',
-      componentProps: { users, eventId }
+      cssClass: 'modal-600px-height',
+      componentProps: { participants, eventId }
     });
+    
     await modal.present();
     const { data } = await modal.onWillDismiss();
-    return data;
+    return data ?? null;
   }
 
   async openGuestFilterModal(filter: any): Promise<any | null> {
@@ -798,7 +801,21 @@ export class ModalService {
       initialBreakpoint: 1,
       cssClass: 'modal-600px-height',
       component: RsvpModal,
-      componentProps: { tickets, eventTitle, questionnaire, promo_codes, subscriptionId, hostPaysFees, additionalFees, maxAttendeesPerUser, hostName, eventId, hasPlans, hasSubscribed, isSubscriberExclusive }
+      componentProps: {
+        tickets,
+        eventTitle,
+        questionnaire,
+        promo_codes,
+        subscriptionId,
+        hostPaysFees,
+        additionalFees,
+        maxAttendeesPerUser,
+        hostName,
+        eventId,
+        hasPlans,
+        hasSubscribed,
+        isSubscriberExclusive
+      }
     });
     await modal.present();
     const { data } = await modal.onDidDismiss();
@@ -823,13 +840,13 @@ export class ModalService {
       initialBreakpoint: 1,
       cssClass: 'modal-600px-height',
       component: QuestionnairePreviewModal,
-      componentProps: { 
-        questions, 
-        isPreviewMode, 
-        rsvpData, 
-        eventTitle, 
-        eventDate, 
-        eventLocation, 
+      componentProps: {
+        questions,
+        isPreviewMode,
+        rsvpData,
+        eventTitle,
+        eventDate,
+        eventLocation,
         subscriptionId,
         initialType,
         allQuestions
@@ -1021,11 +1038,11 @@ export class ModalService {
     await modal.present();
 
     const { data, role } = await modal.onWillDismiss();
-    
+
     if (role === 'success') {
       return { success: true, subscriptionId: data?.subscriptionId };
     }
-    
+
     return null;
   }
 
@@ -1038,6 +1055,40 @@ export class ModalService {
       component: TicketsListModal,
       cssClass: 'modal-600px-height',
       componentProps: { tickets }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    return data || null;
+  }
+
+  async openMyTicketsModal(eventData: any): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: TicketsModal,
+      cssClass: 'modal-80-percent-height',
+      componentProps: { eventData }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    return data || null;
+  }
+
+  async openEventQrModal(event: any): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: EventQr,
+      cssClass: 'modal-80-percent-height',
+      componentProps: { event }
     });
 
     await modal.present();

@@ -197,19 +197,13 @@
         </div>
       }
     </form>
-
   </div>
 </ion-content>
 
 <ion-footer mode="md">
   <ion-toolbar mode="md">
     <div class="p-4">
-      <app-button 
-        [label]="confirmButtonLabel()" 
-        [isLoading]="isLoadingPayment()"
-        [disabled]="isLoadingPayment()"
-        (click)="dismiss()" 
-      />
+      <app-button [label]="confirmButtonLabel()" [isLoading]="isLoadingPayment()" [disabled]="isLoadingPayment()" (click)="dismiss()" />
     </div>
   </ion-toolbar>
 </ion-footer>

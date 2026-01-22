@@ -541,7 +541,7 @@ export class CreateEvent implements OnInit, OnDestroy {
       this.navigateToStep(EVENT_STEPS.EVENT_TICKETS);
     } else if (this.currentStep() === EVENT_STEPS.EVENT_TICKETS) {
       const isSubscriberExclusive = this.getFieldValue<boolean>('is_subscriber_exclusive') ?? false;
-      
+
       if (isSubscriberExclusive) {
         // Validate that at least one plan is selected when subscriber exclusive is enabled
         const planIds = this.getFieldValue<string[]>('plan_ids') || [];
@@ -557,7 +557,7 @@ export class CreateEvent implements OnInit, OnDestroy {
           return;
         }
       }
-      
+
       this.navigateToStep(EVENT_STEPS.EVENT_SETTINGS);
     } else if (this.currentStep() === EVENT_STEPS.EVENT_SETTINGS) {
       this.navigateToStep(EVENT_STEPS.EVENT_PREVIEW);
@@ -775,13 +775,11 @@ export class CreateEvent implements OnInit, OnDestroy {
     // Add subscriber exclusive ticket if is_subscriber_exclusive is true
     let tickets = eventData.tickets || [];
     const isSubscriberExclusive = eventData.is_subscriber_exclusive || eventData.settings?.is_subscriber_exclusive || false;
-    
+
     if (isSubscriberExclusive) {
       // Check if subscriber exclusive ticket already exists
-      const existingSubscriberTicket = tickets.find(
-        (t: any) => t.name === 'Subscriber exclusive' && t.ticket_type === 'Free'
-      );
-      
+      const existingSubscriberTicket = tickets.find((t: any) => t.name === 'Subscriber exclusive' && t.ticket_type === 'Free');
+
       if (!existingSubscriberTicket) {
         const subscriberExclusiveTicket: any = {
           name: 'Subscriber exclusive',
@@ -789,8 +787,8 @@ export class CreateEvent implements OnInit, OnDestroy {
           price: 0,
           quantity: 999,
           description: 'This event is exclusively for subscribers. Join us for this special experience!',
-          sale_start_date: new Date().toISOString().split('T')[0],
-          sale_end_date: endDate,
+          sales_start_date: new Date().toISOString().split('T')[0],
+          sales_end_date: endDate,
           end_at_event_start: true,
           order: 1
         };

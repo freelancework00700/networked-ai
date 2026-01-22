@@ -18,8 +18,6 @@ export default [
   { path: 'all', component: AllEvents },
   { path: 'city', component: CityEvents },
   { path: 'edit/:id', component: CreateEvent },
-
-  { path: 'qr/:id', component: EventQr },
   { path: 'guests/:id', component: GuestList },
   { path: 'analytics/:id', component: EventAnalytics },
   { path: 'analytics/guests/:id', component: AnalyticsUserList },

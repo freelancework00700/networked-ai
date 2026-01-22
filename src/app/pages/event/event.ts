@@ -2,6 +2,7 @@ import { Subscription } from 'rxjs';
 import { MenuModule } from 'primeng/menu';
 import { IUser } from '@/interfaces/IUser';
 import { Device } from '@capacitor/device';
+import { Capacitor } from '@capacitor/core';
 import { ActivatedRoute } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { NgOptimizedImage } from '@angular/common';
@@ -14,6 +15,7 @@ import { EventDisplay } from '@/components/common/event-display';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { RsvpDetailsModal } from '@/components/modal/rsvp-details-modal';
 import { IonContent, IonFooter, IonToolbar, IonHeader, IonIcon, IonSkeletonText } from '@ionic/angular/standalone';
 import { OnInit, inject, signal, computed, effect, Component, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
@@ -39,6 +41,7 @@ export class Event implements OnInit, OnDestroy {
   timerInterval?: any;
 
   // SIGNALS
+  timerTrigger = signal(0);
   event = signal<any>(null);
   selectedDate = signal('');
   eventId = signal<string>('');
@@ -48,7 +51,7 @@ export class Event implements OnInit, OnDestroy {
   isSendingRsvpRequest = signal<boolean>(false);
   selectedChildEventId = signal<string | null>(null);
   childEventData = signal<Map<string, any>>(new Map());
-  timerTrigger = signal(0);
+  isNativePlatform = computed(() => Capacitor.isNativePlatform());
 
   eventIdFromData = computed(() => {
     // If a child event is selected, return its ID, otherwise return parent event ID
@@ -107,33 +110,77 @@ export class Event implements OnInit, OnDestroy {
   });
 
   menuItems = computed<MenuItem[]>(() => {
-    const baseItems: MenuItem[] = [
+    const isCompleted = this.isEventCompleted();
+    const displayData = this.eventDisplayData();
+  
+    const isHost = displayData.isCurrentUserHost;
+    const isCoHost = displayData.isCurrentUserCoHost;
+  
+    let baseItems: MenuItem[] = [
       { label: 'Edit', icon: 'assets/svg/manage-event/edit.svg', iconType: 'svg', action: 'editEvent' },
       { label: 'Analytics', icon: 'assets/svg/manage-event/analytics.svg', iconType: 'svg', action: 'viewEventAnalytics' },
       { label: 'Questionnaire Responses', icon: 'assets/svg/manage-event/questionnaire.svg', iconType: 'svg', action: 'viewQuestionnaireResponses' },
       { label: 'Manage Roles', icon: 'assets/svg/manage-event/settings.svg', iconType: 'svg', action: 'manageRoles' },
       { label: 'Guest List', icon: 'assets/svg/manage-event/users.svg', iconType: 'svg', action: 'viewGuestList' },
       { label: 'Event Page QR', icon: 'assets/svg/scanner.svg', iconType: 'svg', action: 'viewEventPageQr' },
-      // { label: 'Tap to pay', icon: 'assets/svg/manage-event/tap-to-pay.svg', iconType: 'svg', action: 'viewTapToPay' },
       { label: 'Share Event', icon: 'pi pi-upload', iconType: 'pi', action: 'shareEvent' },
       { label: 'Cancel Event', icon: 'assets/svg/manage-event/calendar-x.svg', iconType: 'svg', danger: true, action: 'cancelEvent' }
     ];
 
-    // Add RSVP Approval option only if approval is required
-    if (this.eventDisplayData().isRsvpApprovalRequired) {
+    if (isCoHost && !isHost) {
+      const allowedActions = [
+        'viewEventAnalytics',
+        // 'viewQuestionnaireResponses',
+        'viewGuestList',
+        'viewEventPageQr',
+        'shareEvent'
+      ];
+  
+      return baseItems.filter(item =>
+        allowedActions.includes(item.action || '')
+      );
+    }
+  
+    // Hide Edit & Manage Roles if event completed
+    if (isCompleted) {
+      baseItems = baseItems.filter(
+        item => !['editEvent', 'manageRoles'].includes(item.action || '')
+      );
+    }
+  
+    // RSVP Approval
+    if (displayData.isRsvpApprovalRequired) {
       const rsvpApprovalItem: MenuItem = {
         label: 'RSVP Approval',
         icon: 'pi pi-check-circle',
         iconType: 'pi',
         action: 'viewRsvpApproval'
       };
-      // Insert after Event Page QR
-      const qrIndex = baseItems.findIndex((item) => item.action === 'viewEventPageQr');
-      baseItems.splice(qrIndex + 1, 0, rsvpApprovalItem);
+  
+      const qrIndex = baseItems.findIndex(i => i.action === 'viewEventPageQr');
+      if (qrIndex !== -1) {
+        baseItems.splice(qrIndex + 1, 0, rsvpApprovalItem);
+      }
     }
-
+  
+    // Ticket Scanner (host + native)
+    if (isHost && this.isNativePlatform()) {
+      const scannerItem: MenuItem = {
+        label: 'Ticket Scanner',
+        icon: 'assets/svg/scanner.svg',
+        iconType: 'svg',
+        action: 'scanQRCode'
+      };
+  
+      const qrIndex = baseItems.findIndex(i => i.action === 'viewEventPageQr');
+      if (qrIndex !== -1) {
+        baseItems.splice(qrIndex + 1, 0, scannerItem);
+      }
+    }
+  
     return baseItems;
   });
+  
 
   networkSuggestions = [
     { id: '1', name: 'Kathryn Murphy', role: 'Staff' },
@@ -155,6 +202,15 @@ export class Event implements OnInit, OnDestroy {
   isShowTimer = computed(() => {
     const eventData = this.currentEventData();
     return eventData?.settings?.is_show_timer === true;
+  });
+
+  isEventCompleted = computed(() => {
+    const eventData = this.currentEventData();
+    const now = Date.now();
+    const eventStart = new Date(eventData.start_date).getTime();
+
+    // Event is completed if start date is in the past
+    return eventStart < now;
   });
 
   countdownTimer = computed(() => {
@@ -214,7 +270,7 @@ export class Event implements OnInit, OnDestroy {
   }
 
   isEventLiked = computed(() => {
-    const eventData = this.currentEventData();    
+    const eventData = this.currentEventData();
     return eventData?.is_like || false;
   });
 
@@ -239,6 +295,7 @@ export class Event implements OnInit, OnDestroy {
         dateItems: [],
         rsvpButtonLabel: 'RSVP Now for Free',
         isCurrentUserHost: false,
+        isCurrentUserCoHost: false,
         isCurrentUserAttendee: false,
         isRsvpApprovalRequired: false,
         hasCurrentUserRsvpRequest: false,
@@ -485,7 +542,7 @@ export class Event implements OnInit, OnDestroy {
 
     try {
       await this.eventService.sendRsvpRequest(eventId);
-      this.toasterService.showSuccess('RSVP request sent successfully');  
+      this.toasterService.showSuccess('RSVP request sent successfully');
       await this.loadEvent();
     } catch (error) {
       console.error('Error sending RSVP request:', error);
@@ -568,7 +625,7 @@ export class Event implements OnInit, OnDestroy {
           feedback.push({
             question_id: response.question_id,
             answer_option_id: undefined,
-            answer: answer
+            answer: String(answer)
           });
         }
       });
@@ -632,7 +689,8 @@ export class Event implements OnInit, OnDestroy {
       viewRsvpApproval: () => this.viewRsvpApproval(),
       viewTapToPay: () => this.viewTapToPay(),
       shareEvent: () => this.shareEvent(),
-      cancelEvent: () => this.cancelEvent()
+      cancelEvent: () => this.cancelEvent(),
+      scanQRCode: () => this.scanQRCode()
     };
     actions[result.role]?.();
   }
@@ -641,7 +699,7 @@ export class Event implements OnInit, OnDestroy {
     const eventId = this.eventIdFromData();
     const currentUserId = this.authService.currentUser()?.id;
     const eventData = this.currentEventData();
-    
+
     if (eventId && currentUserId) {
       this.navigationService.navigateForward('/chat-room', false, {
         event_id: eventId,
@@ -650,6 +708,13 @@ export class Event implements OnInit, OnDestroy {
         event_image: eventData?.image_url?.[0] || null,
         user_ids: []
       });
+    }
+  }
+
+  async openTicketsModal(): Promise<void> {
+    const currentEventData = this.currentEventData();
+    if (currentEventData) {
+      const result = await this.modalService.openMyTicketsModal(currentEventData);
     }
   }
 
@@ -677,7 +742,9 @@ export class Event implements OnInit, OnDestroy {
   async manageRoles() {
     const eventId = this.eventIdFromData();
     if (eventId) {
-      const result = await this.modalService.openManageRoleModal(this.networkSuggestions, eventId);
+      const participants = this.currentEventData()?.participants || [];
+      const result = await this.modalService.openManageRoleModal(participants, eventId);
+      this.loadEvent();
     }
   }
 
@@ -688,10 +755,10 @@ export class Event implements OnInit, OnDestroy {
     }
   }
 
-  viewEventPageQr() {
-    const eventId = this.eventIdFromData();
-    if (eventId) {
-      this.navigationService.navigateForward(`/event/qr/${eventId}`);
+  async viewEventPageQr() {
+    const currentEventData = this.currentEventData();
+    if (currentEventData) {
+      const result = await this.modalService.openEventQrModal(currentEventData);
     }
   }
 
@@ -702,7 +769,7 @@ export class Event implements OnInit, OnDestroy {
     this.navigationService.navigateForward(`/event/rsvp-approval/${eventId}`, true);
   }
 
-  viewTapToPay() {}
+  viewTapToPay() { }
 
   async shareEvent() {
     const eventId = this.eventIdFromData();
@@ -754,14 +821,14 @@ export class Event implements OnInit, OnDestroy {
       // Update child event data
       const childEventsMap = this.childEventData();
       const childEvent = childEventsMap.get(selectedChildId);
-      
+
       if (childEvent) {
         const updatedChildEvent = {
           ...childEvent,
           is_like: newIsLiked,
           total_likes: newIsLiked ? (childEvent.total_likes || 0) + 1 : Math.max((childEvent.total_likes || 0) - 1, 0)
         };
-        
+
         const updatedMap = new Map(childEventsMap);
         updatedMap.set(selectedChildId, updatedChildEvent);
         this.childEventData.set(updatedMap);
@@ -818,7 +885,7 @@ export class Event implements OnInit, OnDestroy {
   navigateToSubscriptionPlans(): void {
     const eventData = this.currentEventData();
     const planIds = eventData?.plan_ids;
-    
+
     if (planIds && planIds.length > 0) {
       const planId = planIds[0];
       this.navigationService.navigateForward(`/subscription/${planId}`);
@@ -838,5 +905,50 @@ export class Event implements OnInit, OnDestroy {
 
   onImageError(event: any): void {
     onImageError(event);
+  }
+
+  async scanQRCode(): Promise<void> {
+    try {
+      const result = await BarcodeScanner.scan();
+
+      if (result.barcodes && result.barcodes.length > 0) {
+        const barcode = result.barcodes[0];
+        const scannedValue = barcode.displayValue || barcode.rawValue || '';
+
+        if (scannedValue) {
+          await this.handleQRCodeScanned(scannedValue);
+        } else {
+          this.toasterService.showError('No QR code data found');
+        }
+      } else {
+        this.toasterService.showError('No QR code detected');
+      }
+    } catch (error: any) {
+      if (error.message && (error.message.includes('cancel') || error.message.includes('dismiss'))) {
+        // User cancelled, no need to show error
+        return;
+      }
+      console.error('Error scanning QR code:', error);
+      this.toasterService.showError('Failed to scan QR code');
+    }
+  }
+
+  private async handleQRCodeScanned(decodedText: string): Promise<void> {
+    try {
+      let payload = {
+        event_id: this.currentEventData().id,
+        attendee_id: decodedText,
+        is_checked_in: true
+      }
+      if (decodedText) {
+        await this.eventService.changeCheckInStatus(payload);
+        this.toasterService.showSuccess('Check in successfully');
+      } else {
+        this.toasterService.showError('Invalid QR code. Please scan a valid profile QR code.');
+      }
+    } catch (error) {
+      console.error('Error parsing QR code:', error);
+      this.toasterService.showError('Invalid QR code format.');
+    }
   }
 }

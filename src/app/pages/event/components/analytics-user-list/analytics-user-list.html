@@ -11,35 +11,38 @@
   <div class="min-h-full">
     <div class="w-full max-w-[672px] mx-auto p-6">
       <!-- Ticket Overview -->
-      <div class="tier-overview-card" [ngClass]="'ticket-type-' + (ticket()?.ticket_type || 'standard-paid')">
-        <div class="flex justify-between items-center gap-2">
-          <div class="flex items-center gap-2">
-            <ion-icon src="assets/svg/ticket/ticket.svg" class="w-6 h-6" />
-            <span class="body-16SB neutral-01">{{ ticket()?.name }}</span>
+      @if (ticket()) {
+        <div class="tier-overview-card" [ngClass]="getTicketTypeClass()">
+          <div class="flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+              <ion-icon src="assets/svg/ticket/ticket.svg" class="w-6 h-6" />
+              <span class="body-16SB neutral-01">{{ ticket()?.name }}</span>
+            </div>
+            <img [src]="getTicketTypeChip(ticket())" />
           </div>
-          <img [src]="getTicketTypeChip(ticket())" />
-        </div>
 
-        <div class="flex items-center gap-4 pt-2">
-          <img [src]="getStatusChip(ticket())" />
-          <span class="body-14M neutral-03">{{ getSaleDateRange(ticket()) }}</span>
-          @if (ticket()?.price) {
-            <span class="body-14M neutral-03 border-l border-surface-300 pl-4"> {{ ticket()?.price }}</span>
-          }
-        </div>
-
-        <div class="flex justify-between items-center gap-2 pt-4">
-          <div class="flex flex-col flex-1">
-            <div class="body-14M neutral-03">Tickets Sold</div>
-            <div class="heading-h2">{{ ticket()?.sold }}</div>
+          <div class="flex items-center gap-4 pt-2">
+            <img [src]="getStatusChip()" />
+            <span class="body-14M neutral-03"
+              >{{ ticket()?.sales_start_date | date: 'dd-MMM' }} - {{ ticket()?.sales_end_date | date: 'dd-MMM' }}</span
+            >
+            @if (ticket()?.price) {
+              <span class="body-14M neutral-03 border-l border-surface-300 pl-4"> {{ ticket()?.price }}</span>
+            }
           </div>
-          <div class="flex flex-col flex-1">
-            <div class="body-14M neutral-03">Sales Generated</div>
-            <div class="heading-h2">${{ penniesToDollars(ticket()?.revenue) }}</div>
+
+          <div class="flex justify-between items-center gap-2 pt-4">
+            <div class="flex flex-col flex-1">
+              <div class="body-14M neutral-03">Tickets Sold</div>
+              <div class="heading-h2">{{ ticket()?.total_sold }}</div>
+            </div>
+            <div class="flex flex-col flex-1">
+              <div class="body-14M neutral-03">Sales Generated</div>
+              <div class="heading-h2">${{ ticket()?.total_amount_paid }}</div>
+            </div>
           </div>
         </div>
-      </div>
-
+      }
       <!-- User List -->
       <div class="flex items-center justify-between pt-2">
         <searchbar
@@ -59,27 +62,48 @@
         />
       </div>
 
-      @for (s of filteredSuggestions(); track s.id) {
-        <div class="flex items-center gap-3 py-3 border-b border-gray-200">
-          <!-- Profile -->
-          <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" />
-          <!-- Details -->
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <span class="font-medium truncate">{{ s.name }}</span>
-
-              <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
-                <img src="assets/svg/diamondYellow.svg" class="h-4" />
-                <span class="text-xs font-semibold">{{ s.value }}</span>
-              </div>
+      <div>
+        @for (s of users(); track s.id) {
+          <div class="flex items-center gap-3 py-3 border-b border-gray-200" (click)="goToUser(s)">
+            <!-- Profile -->
+            <div class="relative w-[40px] h-[40px] shrink-0 rounded-full overflow-hidden">
+              <img
+                fill
+                placeholder
+                [alt]="s.name || 'User image'"
+                (error)="onImageError($event)"
+                [ngSrc]="getImageUrl(!s.parent_user_id ? s.thumbnail_url : '')"
+                class="object-cover"
+              />
             </div>
+            <!-- Details -->
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-medium truncate">{{ s.name }}</span>
+                @if (s.total_gamification_points) {
+                  <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
+                    <img [src]="getDiamondPath(s.total_gamification_points)" alt="diamond" class="h-4 w-auto ml-1.5" />
+                    <span class="text-xs font-semibold">{{ s.total_gamification_points }}</span>
+                  </div>
+                }
+              </div>
 
-            <div class="text-xs text-gray-500">{{ s.jobTitle }}, {{ s.company }}</div>
+              @if (s?.company_name) {
+                <p class="body-12 neutral-03 company-name">
+                  {{ s.company_name }}
+                </p>
+              }
+            </div>
           </div>
-        </div>
-      } @empty {
-        <app-empty-state title="No users found" message="" />
-      }
+        } @empty {
+          <app-empty-state title="No users found" message="" />
+        }
+        @if (hasMore()) {
+          <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreUsers($event)">
+            <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more users..." />
+          </ion-infinite-scroll>
+        }
+      </div>
     </div>
   </div>
 </ion-content>

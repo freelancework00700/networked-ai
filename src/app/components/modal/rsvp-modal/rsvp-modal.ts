@@ -66,7 +66,7 @@ export class RsvpModal implements OnInit, OnDestroy {
   ticketPricesByTier = signal<{ [key: string]: number }>({});
   actualPricesByTier = signal<{ [key: string]: number }>({});
   discountAmountsByTier = signal<{ [key: string]: number }>({});
-  
+
   // Track the first paid ticket ID that was selected (for free subscription benefit)
   firstSelectedPaidTicketId = signal<string | null>(null);
 
@@ -82,24 +82,24 @@ export class RsvpModal implements OnInit, OnDestroy {
   // Check if a ticket is eligible for free subscription benefit
   isTicketFreeForSubscriber = (ticket: TicketDisplay): boolean => {
     if (!this.hasSubscribed || ticket.price <= 0) return false;
-    
+
     const firstPaidTicketId = this.firstSelectedPaidTicketId();
-    
+
     // If we haven't tracked a first paid ticket yet, find it
     if (!firstPaidTicketId) {
-      const selectedPaidTickets = this.ticketsData().filter(t => {
+      const selectedPaidTickets = this.ticketsData().filter((t) => {
         const quantity = t.selectedQuantity ?? 0;
         return t.price > 0 && quantity > 0;
       });
-      
+
       if (selectedPaidTickets.length === 0) return false;
-      
+
       // Set the first paid ticket ID
       const firstSelectedPaidTicket = selectedPaidTickets[0];
       this.firstSelectedPaidTicketId.set(String(firstSelectedPaidTicket.id));
       return ticket.id === firstSelectedPaidTicket.id;
     }
-    
+
     // Always use the tracked first paid ticket ID
     return String(ticket.id) === firstPaidTicketId;
   };
@@ -143,7 +143,8 @@ export class RsvpModal implements OnInit, OnDestroy {
 
   subtotalPrice = computed(() => {
     const totalInCents = Object.values(this.ticketPricesByTier()).reduce((sum, tierPrice) => sum + tierPrice, 0);
-    return totalInCents / 100;
+    const discount = this.discountAmount();
+    return Math.max(0, totalInCents / 100 - discount);
   });
 
   hostFeesTotal = computed(() => {
@@ -244,38 +245,38 @@ export class RsvpModal implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Reset the first paid ticket tracking when modal opens
     this.firstSelectedPaidTicketId.set(null);
-    
+
     let ticketsToInitialize: TicketDisplay[] = [];
-    
+
     if (this.tickets && this.tickets.length > 0) {
       ticketsToInitialize = this.tickets.map((ticket: any) => {
-        const saleStartDate = ticket.sales_start_date || ticket.sale_start_date;
-        const saleEndDate = ticket.sales_end_date || ticket.sale_end_date;
+        const saleStartDate = ticket.sales_start_date;
+        const saleEndDate = ticket.sales_end_date;
         const availableQuantity = ticket.available_quantity;
 
         const transformedTicket: TicketDisplay = {
           ...ticket,
           available_quantity: availableQuantity,
           selectedQuantity: ticket.selectedQuantity ?? 0,
-          sale_start_date: saleStartDate,
-          sale_end_date: saleEndDate,
+          sales_start_date: saleStartDate,
+          sales_end_date: saleEndDate,
           status: 'available'
         };
         return transformedTicket;
       });
     }
-    
+
     this.ticketsData.set(ticketsToInitialize);
-    
+
     // If tickets are pre-selected, find the first paid ticket
-    const firstPaidTicket = ticketsToInitialize.find(t => {
+    const firstPaidTicket = ticketsToInitialize.find((t) => {
       const quantity = t.selectedQuantity ?? 0;
       return t.price > 0 && quantity > 0;
     });
     if (firstPaidTicket) {
       this.firstSelectedPaidTicketId.set(String(firstPaidTicket.id));
     }
-    
+
     this.startTimeUpdate();
   }
 
@@ -292,7 +293,7 @@ export class RsvpModal implements OnInit, OnDestroy {
 
     // Track if we've already applied the free ticket discount
     let freeTicketApplied = false;
-    
+
     const firstSelectedPaidTicketId = this.firstSelectedPaidTicketId();
 
     tickets.forEach((ticket) => {
@@ -375,8 +376,8 @@ export class RsvpModal implements OnInit, OnDestroy {
   getTicketStatus = (ticket: TicketDisplay): 'sale-ended' | 'available' | 'sold-out' | 'upcoming' => {
     this.currentTime();
     const now = this.currentTime();
-    const saleStartDate = ticket.sale_start_date;
-    const saleEndDate = ticket.sale_end_date;
+    const saleStartDate = ticket.sales_start_date;
+    const saleEndDate = ticket.sales_end_date;
     const availableQuantity = ticket.available_quantity;
 
     if (availableQuantity !== null && availableQuantity !== undefined && availableQuantity <= 0) {
@@ -402,7 +403,7 @@ export class RsvpModal implements OnInit, OnDestroy {
 
   getTicketCountdown = (ticket: TicketDisplay): string => {
     this.currentTime();
-    const saleStartDate = ticket.sale_start_date;
+    const saleStartDate = ticket.sales_start_date;
     if (!saleStartDate) return '';
 
     const now = this.currentTime();
@@ -520,16 +521,16 @@ export class RsvpModal implements OnInit, OnDestroy {
         selectedQuantity: newQuantity
       };
       this.ticketsData.set(updatedTickets);
-      
+
       // If the first paid ticket is removed completely (quantity = 0), move free benefit to next paid ticket
       const firstPaidTicketId = this.firstSelectedPaidTicketId();
       if (firstPaidTicketId && String(ticket.id) === firstPaidTicketId && newQuantity === 0) {
         // Find the next available paid ticket that is selected
-        const nextPaidTicket = updatedTickets.find(t => {
+        const nextPaidTicket = updatedTickets.find((t) => {
           const quantity = t.selectedQuantity ?? 0;
           return t.price > 0 && quantity > 0 && String(t.id) !== firstPaidTicketId;
         });
-        
+
         if (nextPaidTicket) {
           // Move the free benefit to the next paid ticket
           this.firstSelectedPaidTicketId.set(String(nextPaidTicket.id));
@@ -538,7 +539,7 @@ export class RsvpModal implements OnInit, OnDestroy {
           this.firstSelectedPaidTicketId.set(null);
         }
       }
-      
+
       this.removeAttendeeForTicket(String(ticket.id));
     }
   }
@@ -555,13 +556,13 @@ export class RsvpModal implements OnInit, OnDestroy {
         selectedQuantity: previousQuantity + 1
       };
       this.ticketsData.set(updatedTickets);
-      
+
       // Track the first paid ticket selected (ignore free tickets with price = 0)
       // Only set if this is the first time selecting this paid ticket (quantity was 0)
       if (ticket.price > 0 && previousQuantity === 0 && !this.firstSelectedPaidTicketId()) {
         this.firstSelectedPaidTicketId.set(String(ticket.id));
       }
-      
+
       this.addAttendeeForTicket(ticket);
     }
   }
@@ -925,7 +926,7 @@ export class RsvpModal implements OnInit, OnDestroy {
         const freeTicketCount = freeTicketCountByTicket[ticketId] || 0;
         const freeTicketsUsed = freeTicketUsedByTicket[ticketId] || 0;
         const isFreeTicketForSubscriber = freeTicketCount > 0 && freeTicketsUsed < freeTicketCount;
-        
+
         if (isFreeTicketForSubscriber) {
           freeTicketUsedByTicket[ticketId] = freeTicketsUsed + 1;
           return {
@@ -943,7 +944,7 @@ export class RsvpModal implements OnInit, OnDestroy {
 
         // Calculate per-ticket amounts, accounting for the free ticket
         const paidTicketCount = quantity - freeTicketCount;
-        
+
         const platformFeePerTicketInCents = paidTicketCount > 0 ? totalPlatformFeeInCents / paidTicketCount : 0;
         const ticketPricePerTicketInCents = paidTicketCount > 0 ? totalTicketPriceInCents / paidTicketCount : 0;
 
@@ -1082,7 +1083,7 @@ export class RsvpModal implements OnInit, OnDestroy {
       this.subscriptionId,
       this.hostPaysFees,
       this.additionalFees,
-      this.hostName,
+      this.hostName
     );
 
     if (!rsvpConfirmData) {

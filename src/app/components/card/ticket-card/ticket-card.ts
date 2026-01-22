@@ -111,7 +111,7 @@ export class TicketCard {
 
   saleStartDisplay = computed(() => {
     const ticket = this.ticket();
-    const combinedDateTime = this.combineDateAndTime(ticket.sale_start_date, ticket.sale_start_time);
+    const combinedDateTime = this.combineDateAndTime(ticket.sales_start_date, ticket.sale_start_time);
     if (combinedDateTime) {
       return `${this.formatDate(combinedDateTime)}, ${this.formatTime(combinedDateTime)}`;
     }
@@ -127,7 +127,7 @@ export class TicketCard {
         return `${this.formatEventDate(eventDate)}, ${this.formatEventTime(eventTime)}`;
       }
     } else {
-      const combinedDateTime = this.combineDateAndTime(ticket.sale_end_date, ticket.sale_end_time);
+      const combinedDateTime = this.combineDateAndTime(ticket.sales_end_date, ticket.sale_end_time);
       if (combinedDateTime) {
         return `${this.formatDate(combinedDateTime)}, ${this.formatTime(combinedDateTime)}`;
       }

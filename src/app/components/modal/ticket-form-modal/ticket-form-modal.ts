@@ -61,9 +61,9 @@ export class TicketFormModal implements OnInit {
     // Initialize date/time values for form controls
     let salesStartDateValue = '';
     let salesStartTimeValue = '';
-    if (this.initialData?.sale_start_date && this.initialData?.sale_start_time) {
+    if (this.initialData?.sales_start_date && this.initialData?.sale_start_time) {
       // Use separate date and time strings directly
-      salesStartDateValue = this.initialData.sale_start_date;
+      salesStartDateValue = this.initialData.sales_start_date;
       salesStartTimeValue = this.initialData.sale_start_time;
     } else {
       // Set default to current date and time
@@ -76,9 +76,9 @@ export class TicketFormModal implements OnInit {
 
     let salesEndDateValue = '';
     let salesEndTimeValue = '';
-    if (this.initialData?.sale_end_date && this.initialData?.sale_end_time) {
+    if (this.initialData?.sales_end_date && this.initialData?.sale_end_time) {
       // Use separate date and time strings directly
-      salesEndDateValue = this.initialData.sale_end_date;
+      salesEndDateValue = this.initialData.sales_end_date;
       salesEndTimeValue = this.initialData.sale_end_time;
     } else if (!endSaleOnEventStart && this.eventDate && this.eventEndTime) {
       // Set default to event end date and time if end_at_event_start is false
@@ -91,9 +91,9 @@ export class TicketFormModal implements OnInit {
       price: [isFree ? '0.00' : this.initialData?.price || '5.00', [Validators.required]],
       quantity: [this.initialData?.quantity || 500, [Validators.required]],
       description: [this.initialData?.description || ''],
-      sale_start_date: [salesStartDateValue, [Validators.required]],
+      sales_start_date: [salesStartDateValue, [Validators.required]],
       sale_start_time: [salesStartTimeValue, [Validators.required]],
-      sale_end_date: [salesEndDateValue],
+      sales_end_date: [salesEndDateValue],
       sale_end_time: [salesEndTimeValue],
       end_at_event_start: [endSaleOnEventStart],
       free_for_subscribers: [this.initialData?.free_for_subscribers ?? false]
@@ -107,8 +107,8 @@ export class TicketFormModal implements OnInit {
     form.get('end_at_event_start')?.valueChanges.subscribe((value) => {
       this.endSaleOnEventStart.set(value ?? true);
 
-      // Update validators for sale_end_date and sale_end_time based on checkbox value
-      const salesEndDateControl = form.get('sale_end_date');
+      // Update validators for sales_end_date and sale_end_time based on checkbox value
+      const salesEndDateControl = form.get('sales_end_date');
       const salesEndTimeControl = form.get('sale_end_time');
 
       if (value) {
@@ -240,7 +240,7 @@ export class TicketFormModal implements OnInit {
     this.modalService.close({ ...form.value, ticket_type: this.ticketType }, 'save');
   }
 
-  async openDateModal(type: 'sale_start_date' | 'sale_end_date' = 'sale_start_date'): Promise<void> {
+  async openDateModal(type: 'sales_start_date' | 'sales_end_date' = 'sales_start_date'): Promise<void> {
     const form = this.ticketForm();
     const currentDate = form.get(type)?.value || '';
 
@@ -249,8 +249,8 @@ export class TicketFormModal implements OnInit {
     const maxDate = this.eventDate || undefined;
 
     let minDate: string | undefined = todayStr;
-    if (type === 'sale_end_date') {
-      const salesStartDate = form.get('sale_start_date')?.value;
+    if (type === 'sales_end_date') {
+      const salesStartDate = form.get('sales_start_date')?.value;
       if (salesStartDate) {
         minDate = salesStartDate;
       }
@@ -258,10 +258,10 @@ export class TicketFormModal implements OnInit {
 
     const date = await this.modalService.openDateTimeModal('date', currentDate, minDate, maxDate);
     if (date) {
-      if (type === 'sale_start_date') {
-        form.patchValue({ sale_start_date: date });
+      if (type === 'sales_start_date') {
+        form.patchValue({ sales_start_date: date });
       } else {
-        form.patchValue({ sale_end_date: date });
+        form.patchValue({ sales_end_date: date });
       }
     }
   }

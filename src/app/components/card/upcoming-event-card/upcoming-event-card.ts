@@ -1,30 +1,35 @@
-import { IEvent } from '@/interfaces/event';
-import { NgOptimizedImage, DatePipe } from '@angular/common';
-import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { Button } from '@/components/form/button';
+import { AuthService } from '@/services/auth.service';
+import { ModalService } from '@/services/modal.service';
 import { EventService } from '@/services/event.service';
-import { input, Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
+import { EventAttendee, IEvent } from '@/interfaces/event';
+import { NgOptimizedImage, DatePipe } from '@angular/common';
 import { NavigationService } from '@/services/navigation.service';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { input, Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 
 @Component({
-  imports: [NgOptimizedImage, DatePipe],
+  imports: [NgOptimizedImage, DatePipe, Button],
   selector: 'upcoming-event-card',
   styleUrl: './upcoming-event-card.scss',
   templateUrl: './upcoming-event-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UpcomingEventCard {
+  private authService = inject(AuthService);
   private eventService = inject(EventService);
+  private modalService = inject(ModalService);
   private navigationService = inject(NavigationService);
 
   event = input.required<IEvent>();
 
   eventImage = computed(() => {
     const event = this.event();
-    const imageUrl = event?.thumbnail_url || 
-      (event?.medias && event.medias.length > 0 
-        ? (event.medias[0].media_url || event.medias[0].url) 
-        : '') ||
-      event?.image || '';
+    const imageUrl =
+      event?.thumbnail_url ||
+      (event?.medias && event.medias.length > 0 ? event.medias[0].media_url || event.medias[0].url : '') ||
+      event?.image ||
+      '';
     return getImageUrlOrDefault(imageUrl);
   });
 
@@ -40,6 +45,16 @@ export class UpcomingEventCard {
     const dayOfWeek = date.getDay();
     return dayOfWeek === 0 || dayOfWeek === 6;
   });
+
+  hasTickets = computed(() => {
+    const event = this.event();
+    return event?.attendees?.some((attendee: EventAttendee) => attendee.user_id === this.authService.currentUser()?.id) || false;
+  });
+
+  viewTickets(event: any) {
+    event?.stopPropagation();
+    this.modalService.openMyTicketsModal(this.event());
+  }
 
   viewEvent() {
     const eventSlug = this.event().slug;

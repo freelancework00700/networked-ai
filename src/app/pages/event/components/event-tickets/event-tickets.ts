@@ -215,9 +215,9 @@ export class EventTickets implements OnInit {
       price: data.ticket_type !== 'Free' ? data.price || 0 : 0,
       quantity: data.quantity || null,
       description: data.description || null,
-      sale_start_date: data.sale_start_date || null,
+      sales_start_date: data.sales_start_date || null,
       sale_start_time: data.sale_start_time || null,
-      sale_end_date: data.sale_end_date || null,
+      sales_end_date: data.sales_end_date || null,
       sale_end_time: data.sale_end_time || null,
       end_at_event_start: data.end_at_event_start
     };
@@ -279,9 +279,9 @@ export class EventTickets implements OnInit {
       price: ticket.price || 0,
       quantity: ticket.quantity || null, // Read from quantity
       description: (ticket as { description?: string }).description,
-      sale_start_date: ticket.sale_start_date || null,
+      sales_start_date: ticket.sales_start_date || null,
       sale_start_time: ticket.sale_start_time || null,
-      sale_end_date: ticket.sale_end_date || null,
+      sales_end_date: ticket.sales_end_date || null,
       sale_end_time: ticket.sale_end_time || null,
       end_at_event_start: ticket.end_at_event_start ?? true,
       ticket_type: ticket.ticket_type

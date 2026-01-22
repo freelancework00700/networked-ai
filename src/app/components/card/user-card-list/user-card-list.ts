@@ -37,8 +37,7 @@ export class UserCardList {
   // computed
   userImage = computed(() => {
     const user = this.user();
-    return getImageUrlOrDefault(
-      user?.thumbnail_url || user?.image_url || '');
+    return getImageUrlOrDefault(user?.thumbnail_url || user?.image_url || '');
   });
 
   diamondPath = computed(() => {
@@ -108,7 +107,7 @@ export class UserCardList {
   messageUser(): void {
     const currentUserId = this.authService.currentUser()?.id;
     const otherUserId = this.user()?.id;
-    
+
     if (currentUserId && otherUserId) {
       this.navCtrl.navigateForward('/chat-room', {
         state: {
@@ -152,7 +151,7 @@ export class UserCardList {
   async showWithdrawInvitationAlert(): Promise<void> {
     const user = this.user();
     const username = user?.username || user?.name || 'this user';
-    
+
     const result = await this.modalService.openConfirmModal({
       icon: 'assets/svg/alert-white.svg',
       title: 'Withdraw Invitation?',

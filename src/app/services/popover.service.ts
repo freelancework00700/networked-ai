@@ -2,6 +2,7 @@ import { inject, Injectable } from "@angular/core";
 import { PopoverController } from "@ionic/angular/standalone";
 import { ProfileOptionsPopover } from "@/components/popover/profile-options-popover";
 import { AccountSwitcherPopover } from "@/components/popover/account-switcher-popover";
+import { CommonPopover } from "@/components/popover/common-popover";
 
 @Injectable({ providedIn: 'root' })
 export class PopoverService {
@@ -30,6 +31,21 @@ export class PopoverService {
             event: event as MouseEvent,
             cssClass: 'common-popover-css',
             component: AccountSwitcherPopover
+        });
+
+        await popover.present();
+        await popover.onDidDismiss();
+    }
+
+    async openCommonPopover(event: Event, items: any[]): Promise<void> {
+        const popover = await this.popoverCtrl.create({
+            mode: 'md',
+            event: event as MouseEvent,
+            cssClass: 'common-popover-css',
+            component: CommonPopover,
+            componentProps: {
+                items: items
+            }
         });
 
         await popover.present();

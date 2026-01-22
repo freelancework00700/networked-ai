@@ -268,6 +268,7 @@ export class EventService extends BaseApiService {
       username: user.username,
       thumbnail_url: user.thumbnail_url || user.image_url,
       image_url: user.image_url || user.thumbnail_url,
+      total_gamification_points: user.total_gamification_points,
       connection_status: user.connection_status
     });
 
@@ -415,7 +416,7 @@ export class EventService extends BaseApiService {
       if (ticket.sales_start_date) {
         const startDateTime = parseDateTime(ticket.sales_start_date);
         if (startDateTime) {
-          transformedTicket.sale_start_date = startDateTime.date;
+          transformedTicket.sales_start_date = startDateTime.date;
           transformedTicket.sale_start_time = startDateTime.time;
         }
       }
@@ -423,7 +424,7 @@ export class EventService extends BaseApiService {
       if (!ticket.end_at_event_start && ticket.sales_end_date) {
         const endDateTime = parseDateTime(ticket.sales_end_date);
         if (endDateTime) {
-          transformedTicket.sale_end_date = endDateTime.date;
+          transformedTicket.sales_end_date = endDateTime.date;
           transformedTicket.sale_end_time = endDateTime.time;
         }
       }
@@ -615,7 +616,6 @@ export class EventService extends BaseApiService {
     const thumbnailMedia = allMedias.find((m: any) => m.order === 1) || allMedias[0];
     const thumbnailUrl = thumbnailMedia?.url || '';
 
-
     const location = options?.formattedLocation || this.formatLocation(eventData?.address, eventData?.city, eventData?.state, eventData?.country);
 
     let mapCenter: [number, number] | null = null;
@@ -649,6 +649,12 @@ export class EventService extends BaseApiService {
       return userId === currentUser?.id && role === 'host';
     });
 
+    const isCurrentUserCoHost = participants.some((p: any) => {
+      const userId = p.user_id || p.user?.id;
+      const role = (p.role || '').toLowerCase();
+      return userId === currentUser?.id && role === 'cohost';
+    });
+
     const isRepeatingEvent = options?.isRepeatingEvent ?? parentEvent?.settings?.is_repeating_event === true;
     const dateItems = options?.dateItems ?? (isRepeatingEvent ? this.createDateItems(parentEvent || eventData) : []);
 
@@ -676,6 +682,7 @@ export class EventService extends BaseApiService {
       dateItems,
       rsvpButtonLabel,
       isCurrentUserHost,
+      isCurrentUserCoHost,
       isRsvpApprovalRequired,
       tickets: eventData?.tickets || [],
       questionnaire: eventData?.questionnaire || eventData?.questions || [],
@@ -756,16 +763,16 @@ export class EventService extends BaseApiService {
         order: ticket.order ?? index + 1
       };
 
-      if (ticket.sale_start_date) {
+      if (ticket.sales_start_date) {
         const startTime = ticket.sale_start_time || '00:00';
-        formattedTicket.sales_start_date = this.combineDateAndTime(ticket.sale_start_date, startTime);
+        formattedTicket.sales_start_date = this.combineDateAndTime(ticket.sales_start_date, startTime);
       }
 
       if (ticket.end_at_event_start && eventDate && eventStartTime) {
         formattedTicket.sales_end_date = this.combineDateAndTime(eventDate, eventStartTime);
-      } else if (ticket.sale_end_date) {
+      } else if (ticket.sales_end_date) {
         const endTime = ticket.sale_end_time || '23:59';
-        formattedTicket.sales_end_date = this.combineDateAndTime(ticket.sale_end_date, endTime);
+        formattedTicket.sales_end_date = this.combineDateAndTime(ticket.sales_end_date, endTime);
       }
 
       return formattedTicket;
@@ -853,10 +860,10 @@ export class EventService extends BaseApiService {
 
   async getRecommendedEvents(
     params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    start_date?: string;
+      page?: number;
+      limit?: number;
+      search?: string;
+      start_date?: string;
       append?: boolean; // If true, append to existing events instead of replacing
     } = {}
   ): Promise<EventsResponse> {
@@ -895,32 +902,32 @@ export class EventService extends BaseApiService {
 
   async getEvents(
     params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    include_participant_events?: boolean;
-    order_by?: string;
-    order_direction?: 'ASC' | 'DESC';
-    is_my_events?: boolean;
-    is_included_me_event?: boolean;
-    city?: string;
-    state?: string;
-    latitude?: string;
-    longitude?: string;
-    radius?: number;
-    is_public?: boolean;
-    start_date?: string;
-    roles?: string;
-    user_id?: string;
-    is_liked?: boolean;
-    append?: boolean; // If true, append to existing events instead of replacing
-    is_upcoming_event?: boolean;
-    is_recommended?: boolean;
+      page?: number;
+      limit?: number;
+      search?: string;
+      include_participant_events?: boolean;
+      order_by?: string;
+      order_direction?: 'ASC' | 'DESC';
+      is_my_events?: boolean;
+      is_included_me_event?: boolean;
+      city?: string;
+      state?: string;
+      latitude?: string;
+      longitude?: string;
+      radius?: number;
+      is_public?: boolean;
+      start_date?: string;
+      roles?: string;
+      user_id?: string;
+      is_liked?: boolean;
+      append?: boolean; // If true, append to existing events instead of replacing
+      is_upcoming_event?: boolean;
+      is_recommended?: boolean;
     } = {}
   ): Promise<EventsResponse> {
     try {
       let httpParams = new HttpParams();
-      
+
       if (params.page) {
         httpParams = httpParams.set('page', params.page.toString());
       }
@@ -1115,17 +1122,19 @@ export class EventService extends BaseApiService {
     this.isLoadingCities.set(false);
   }
 
-  async getMyEvents(params: {
-    page?: number;
-    limit?: number;
-    roles?: string;
-    user_id?: string;
-    is_upcoming_event?: boolean;
-    append?: boolean; // If true, append to existing events instead of replacing
-  } = {}): Promise<EventsResponse> {
+  async getMyEvents(
+    params: {
+      page?: number;
+      limit?: number;
+      roles?: string;
+      user_id?: string;
+      is_upcoming_event?: boolean;
+      append?: boolean; // If true, append to existing events instead of replacing
+    } = {}
+  ): Promise<EventsResponse> {
     try {
       let httpParams = new HttpParams();
-      
+
       if (params.page) {
         httpParams = httpParams.set('page', params.page.toString());
       }
@@ -1141,10 +1150,10 @@ export class EventService extends BaseApiService {
       if (params.is_upcoming_event !== undefined) {
         httpParams = httpParams.set('is_upcoming_event', params.is_upcoming_event.toString());
       }
- 
+
       const response = await this.get<EventsResponse>('/events/user-events', { params: httpParams });
       const events = response?.data?.data || [];
- 
+
       // Store upcoming events if is_upcoming_event is true
       if (params.is_upcoming_event === true) {
         if (params.append) {
@@ -1153,20 +1162,196 @@ export class EventService extends BaseApiService {
           this.upcomingEvents.set(events);
         }
       }
- 
+
       return response;
     } catch (error) {
       console.error('Error fetching my events:', error);
       throw error;
     }
   }
- 
+
   async getTopCities(): Promise<ICity[]> {
     try {
       const response = await this.get<{ success: boolean; message: string; data: ICity[] }>('/events/top-cities');
       return response?.data || [];
     } catch (error) {
       console.error('Error fetching top cities:', error);
+      throw error;
+    }
+  }
+
+  async getEventAnalytics(eventId: string): Promise<any> {
+    try {
+      const response = await this.get<any>(`/events/analytics/${eventId}`);
+      return response?.data;
+    } catch (error) {
+      console.error('Error fetching event analytics:', error);
+      throw error;
+    }
+  }
+
+  async getEventTicketAnalytics(ticketId: string, page?: number, limit?: number, search?: string): Promise<any> {
+    try {
+      let httpParams = new HttpParams();
+
+      if (page && page > 0) {
+        httpParams = httpParams.set('page', page.toString());
+      }
+
+      if (limit && limit > 0) {
+        httpParams = httpParams.set('limit', limit.toString());
+      }
+
+      if (search && search.trim()) {
+        httpParams = httpParams.set('search', search.trim());
+      }
+
+      const response = await this.get<any>(`/events/ticket-analytics/${ticketId}`, { params: httpParams });
+
+      return response?.data;
+    } catch (error) {
+      console.error('Error fetching event ticket analytics:', error);
+      throw error;
+    }
+  }
+
+  async downloadEventTicketAnalyticsCSV(ticketId: string): Promise<any> {
+    try {
+      const response = await this.get<any>(`/events/ticket-analytics-csv/${ticketId}`, { responseType: 'text' });
+      return response;
+    } catch (error) {
+      console.error('Error downloading event ticket analytics CSV:', error);
+      throw error;
+    }
+  }
+
+  async getEventQuestionnaireResponses(
+    eventId: string,
+    eventPhase: 'PreEvent' | 'PostEvent',
+    search: string = '',
+    page: number = 1,
+    limit: number = 20
+  ): Promise<any> {
+    try {
+      let httpParams = new HttpParams();
+      if (page && page > 0) {
+        httpParams = httpParams.set('page', page.toString());
+      }
+
+      if (limit && limit > 0) {
+        httpParams = httpParams.set('limit', limit.toString());
+      }
+
+      if (search && search.trim()) {
+        httpParams = httpParams.set('search', search.trim());
+      }
+
+      if (eventPhase) {
+        httpParams = httpParams.set('event_phase', eventPhase);
+      }
+      const response = await this.get<any>(`/events/questions-attendees/${eventId}`, { params: httpParams });
+      return response?.data;
+    } catch (error) {
+      console.error('Error fetching event questionnaire responses:', error);
+      throw error;
+    }
+  }
+
+  async getEventQuestionnaireResponsesByUserId(userId: string, eventId: string, eventPhase: 'PreEvent' | 'PostEvent'): Promise<any> {
+    try {
+      let httpParams = new HttpParams();
+      if (userId) {
+        httpParams = httpParams.set('user_id', userId);
+      }
+      if (eventId) {
+        httpParams = httpParams.set('event_id', eventId);
+      }
+      if (eventPhase) {
+        httpParams = httpParams.set('event_phase', eventPhase);
+      }
+      const response = await this.get<any>(`/events/user-questions-answers`, { params: httpParams });
+      return response?.data;
+    } catch (error) {
+      console.error('Error fetching event questionnaire responses by user ID:', error);
+      throw error;
+    }
+  }
+
+  async getEventQuestionAnalysis(eventId: string, eventPhase: 'PreEvent' | 'PostEvent', page: number = 1, limit: number = 20): Promise<any> {
+    try {
+      let httpParams = new HttpParams();
+      if (eventId) {
+        httpParams = httpParams.set('event_id', eventId);
+      }
+      if (eventPhase) {
+        httpParams = httpParams.set('event_phase', eventPhase);
+      }
+      if (page && page > 0) {
+        httpParams = httpParams.set('page', page.toString());
+      }
+
+      if (limit && limit > 0) {
+        httpParams = httpParams.set('limit', limit.toString());
+      }
+      const response = await this.get<any>(`/events/question-analysis`, { params: httpParams });
+      return response?.data;
+    } catch (error) {
+      console.error('Error fetching event question analysis:', error);
+      throw error;
+    }
+  }
+
+  async getEventQuestionOptionUsers(questionId: string, optionValue: string, page: number = 1, limit: number = 20): Promise<any> {
+    try {
+      let httpParams = new HttpParams();
+      if (questionId) {
+        httpParams = httpParams.set('question_id', questionId);
+      }
+      if (optionValue) {
+        httpParams = httpParams.set('option_id', optionValue);
+      }
+      if (page && page > 0) {
+        httpParams = httpParams.set('page', page.toString());
+      }
+
+      if (limit && limit > 0) {
+        httpParams = httpParams.set('limit', limit.toString());
+      }
+      const response = await this.get<any>(`/events/question-option-users`, { params: httpParams });
+      return response?.data;
+    } catch (error) {
+      console.error('Error fetching event question option users:', error);
+      throw error;
+    }
+  }
+
+  async manageRoles(eventId: string, payload: any): Promise<any> {
+    try {
+      const response = await this.put<any>(`/events/participants/role/${eventId}`, payload);
+      return response?.data;
+    } catch (error) {
+      console.error('Error managing roles:', error);
+      throw error;
+    }
+  }
+
+  async changeCheckInStatus(payload:any){
+    try {
+      const response = await this.put<any>(`/event-attendees/check-in`,payload);
+      return response?.data;
+    } catch (error) {
+      console.error('Error check in:', error);
+      throw error;
+    }
+  }
+
+
+  async deleteAttendees(id: string): Promise<EventResponse> {
+    try {
+      const response = await this.delete<EventResponse>(`/event-attendees/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Error deleting attendee:', error);
       throw error;
     }
   }

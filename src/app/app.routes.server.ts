@@ -48,10 +48,6 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
-    path: 'event/qr/:id',
-    renderMode: RenderMode.Server
-  },
-  {
     path: 'event/guests/:id',
     renderMode: RenderMode.Server
   },

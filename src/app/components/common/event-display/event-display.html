@@ -47,18 +47,18 @@
               </span>
             }
           </div>
-            @if (eventData().has_plans && !eventData().is_subscriber_exclusive) {
-              <div class="inline-flex items-center px-2 py-1 body-10 gap-1.5 text-white rounded-full bg-[#2B5BDE]">
-                <ion-icon src="/assets/svg/crown-white.svg" class="text-[12px]"></ion-icon>
-                <span>Free for Subscribers</span>
-              </div>
-            }
-            @if (eventData().is_subscriber_exclusive) {
-              <div class="subscriber-chip inline-flex items-center px-2 py-1 gap-1.5 body-10 text-[#5c3c09f0]">
-                <ion-icon src="/assets/svg/crown-sponsor.svg" class="text-[12px]"></ion-icon>
-                <span>Subscribers Exclusive</span>
-              </div>
-            }
+          @if (eventData().has_plans && !eventData().is_subscriber_exclusive) {
+            <div class="inline-flex items-center px-2 py-1 body-10 gap-1.5 text-white rounded-full bg-[#2B5BDE]">
+              <ion-icon src="/assets/svg/crown-white.svg" class="text-[12px]"></ion-icon>
+              <span>Free for Subscribers</span>
+            </div>
+          }
+          @if (eventData().is_subscriber_exclusive) {
+            <div class="subscriber-chip inline-flex items-center px-2 py-1 gap-1.5 body-10 text-[#5c3c09f0]">
+              <ion-icon src="/assets/svg/crown-sponsor.svg" class="text-[12px]"></ion-icon>
+              <span>Subscribers Exclusive</span>
+            </div>
+          }
         </div>
         <!-- title & host -->
         <div class="body-16SB neutral-01 truncate">{{ eventData().title || 'Event Title' }}</div>
@@ -74,10 +74,10 @@
       <!-- Action Buttons -->
       @if (showActionButtons()) {
         <div class="flex gap-3">
-          @if (eventData().isCurrentUserHost || eventData().isCurrentUserAttendee) {
+          @if (eventData().isCurrentUserHost || eventData().isCurrentUserAttendee ||  eventData().isCurrentUserCoHost ) {
             <app-button label="Event Chat" icon="assets/svg/messageChatIcon.svg" (click)="onEventChatClick()?.()" class="flex-1" color="secondary" />
           }
-          @if (eventData().isCurrentUserHost) {
+          @if (eventData().isCurrentUserHost || eventData().isCurrentUserCoHost) {
             <app-button label="Manage" icon="assets/svg/manage-event/settings.svg" (click)="onManageEventClick()?.()" class="flex-1" />
           }
         </div>
@@ -97,7 +97,7 @@
         <!-- admission -->
         <div class="flex items-start gap-1.5">
           <div class="pi pi-ticket neutral-03 !text-[16px] mt-0.5 flex-shrink-0"></div>
-          <div 
+          <div
             class="flex items-center justify-between gap-4 w-full min-w-0"
             [class.cursor-pointer]="hasMultipleTickets()"
             (click)="handleAdmissionClick()"

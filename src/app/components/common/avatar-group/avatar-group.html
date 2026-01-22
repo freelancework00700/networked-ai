@@ -1,7 +1,7 @@
 <div class="flex">
   <p-avatar-group>
     @for (user of getVisibleUsers(); track trackByUser($index, user)) {
-      <p-avatar [image]="getUserImage(user)" [size]="size()" [shape]="shape()" />
+      <p-avatar [image]="getUserImage(user)" [size]="size()" [shape]="shape()" (click)="onUserClick(user)" />
     }
     @if (shouldShowOverflow()) {
       <p-avatar [label]="'+' + getRemainingCount()" [shape]="shape()" [size]="size()" class="!bg-neutral-02 !text-neutral-07" />

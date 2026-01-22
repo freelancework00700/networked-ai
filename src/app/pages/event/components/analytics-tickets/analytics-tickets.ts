@@ -1,6 +1,7 @@
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IonIcon } from '@ionic/angular/standalone';
+import { NavigationService } from '@/services/navigation.service';
 import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
@@ -12,43 +13,66 @@ import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core
 })
 export class AnalyticsTickets {
   router = inject(Router);
-
+  navigationService = inject(NavigationService);
   eventData: any = input.required();
-  totalTicketsSold = 233;
-  totalSales = 466098; // pennies
+  summary: any = input.required();
 
-  getTicketCountsForTier(ticket: any) {
-    const remaining = ticket.total - ticket.sold;
-    const percentageSold = ticket.total > 0 ? Math.round((ticket.sold / ticket.total) * 100) : 0;
-
-    return {
-      sold: ticket.sold,
-      remaining,
-      total: ticket.total,
-      percentageSold,
-      revenue: ticket.revenue
-    };
+  getTicketTypeClass(ticket: any) {
+    if (ticket.ticket_type === 'Early Bird') {
+      return 'ticket-type-early-bird';
+    } else if (ticket.ticket_type === 'Sponsor') {
+      return 'ticket-type-sponsor';
+    } else {
+      return 'ticket-type-standard-paid';
+    }
   }
-
   getSaleStatus(ticket: any) {
     return { type: ticket.status };
   }
 
+  getTicketStatus = (ticket: any): 'sale-ended' | 'sold-out' | 'upcoming' | 'ongoing' => {
+    const now = new Date();
+    const saleStartDate = ticket.sales_start_date;
+    const saleEndDate = ticket.sales_end_date;
+    const availableQuantity = ticket.remaining_quantity;
+
+    if (availableQuantity !== null && availableQuantity !== undefined && availableQuantity <= 0) {
+      return 'sold-out';
+    }
+
+    if (saleEndDate) {
+      const endDate = new Date(saleEndDate);
+      if (now > endDate) {
+        return 'sale-ended';
+      }
+    }
+
+    if (saleStartDate) {
+      const startDate = new Date(saleStartDate);
+      if (now < startDate) {
+        return 'upcoming';
+      }
+    }
+
+    return 'ongoing';
+  };
+
   getStatusChip(ticket: any) {
-    if (ticket.status === 'upcoming') {
+    const status = this.getTicketStatus(ticket);
+    if (status === 'upcoming') {
       return 'assets/svg/ticket/upcoming-chip.svg';
-    } else if (ticket.status === 'ongoing') {
+    } else if (status === 'ongoing') {
       return 'assets/svg/ticket/on-going-chip.svg';
-    } else if (ticket.status === 'ended') {
+    } else if (status === 'sale-ended') {
       return 'assets/svg/ticket/ended-chip.svg';
     }
-    return 'assets/svg/ticket/regular-chip.svg';
+    return 'assets/svg/ticket/sold-out.svg';
   }
 
   getTicketTypeChip(ticket: any) {
-    if (ticket.ticket_type === 'early-bird') {
+    if (ticket.ticket_type === 'Early Bird') {
       return 'assets/svg/ticket/early-bird-chip.svg';
-    } else if (ticket.ticket_type === 'sponsor') {
+    } else if (ticket.ticket_type === 'Sponsor') {
       return 'assets/svg/ticket/sponsor-chip.svg';
     } else {
       return 'assets/svg/ticket/regular-chip.svg';
@@ -60,14 +84,8 @@ export class AnalyticsTickets {
   }
 
   openUserList(ticket: any) {
-    this.router.navigate(['/event/analytics/guests', 1111], {
-      state: {
-        ticket
-      }
+    this.navigationService.navigateForward(`/event/analytics/guests/${ticket.id}`, false, {
+      ticket: ticket
     });
-  }
-
-  penniesToDollars(value: number): string {
-    return (value / 100).toFixed(2);
   }
 }

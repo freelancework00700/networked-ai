@@ -1,38 +1,52 @@
 import { MenuItem } from 'primeng/api';
-import { MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
-import { Button } from '@/components/form/button';
 import { ActivatedRoute } from '@angular/router';
 import { NgOptimizedImage } from '@angular/common';
+import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { EventService } from '@/services/event.service';
+import { SocketService } from '@/services/socket.service';
 import { Searchbar } from '@/components/common/searchbar';
+import { NetworkService } from '@/services/network.service';
+import { PopoverService } from '@/services/popover.service';
 import { ToasterService } from '@/services/toaster.service';
 import { EmptyState } from '@/components/common/empty-state';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
-import { NavController, IonIcon } from '@ionic/angular/standalone';
+import { NavigationService } from '@/services/navigation.service';
+import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
+import { NavController, IonIcon, IonSpinner } from '@ionic/angular/standalone';
 import { IonContent, IonToolbar, IonHeader } from '@ionic/angular/standalone';
 import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from '@angular/core';
+
 @Component({
   selector: 'guest-list',
   styleUrl: './guest-list.scss',
   templateUrl: './guest-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonHeader, IonToolbar, IonContent, Button, Searchbar, IonIcon, MenuModule, ButtonModule, EmptyState, NgOptimizedImage]
+  imports: [IonSpinner, IonHeader, IonToolbar, IonContent, Searchbar, IonIcon, ButtonModule, EmptyState, NgOptimizedImage]
 })
 export class GuestList implements OnInit {
+  private popoverService = inject(PopoverService);
+
   navCtrl = inject(NavController);
   modalService = inject(ModalService);
   route = inject(ActivatedRoute);
   eventService = inject(EventService);
+  authService = inject(AuthService);
   toasterService = inject(ToasterService);
-  
+  networkService = inject(NetworkService);
+  navigationService = inject(NavigationService);
+  private socketService = inject(SocketService);
+
+  selectedGuestId = signal<string>('');
+  selectedGuest = signal<any>('');
   searchQuery = signal('');
   isDownloading = signal<boolean>(false);
-  isLoading = signal<boolean>(true);
+  isLoading = signal<boolean>(false);
+  isChecking = signal<boolean>(false);
   eventId = signal<string | null>(null);
   eventData = signal<any>(null);
-  
+
   filter = signal<any>({
     attending: false,
     maybe: false,
@@ -50,43 +64,7 @@ export class GuestList implements OnInit {
   });
 
   attendees = signal<any[]>([]);
-  
-  guestList = computed(() => {
-    const event = this.eventData();
-    const tickets = event?.tickets || [];
-    
-    return this.attendees().map((attendee: any) => {
-      const name = attendee.parent_user_id ? attendee.name : (attendee.user?.name || attendee.name);
-      const imageUrl = attendee.parent_user_id ? undefined : (attendee.user?.thumbnail_url || attendee.user?.image_url);
-      
-      let ticketType = 'Standard';
-      if (attendee.event_ticket_id && tickets.length > 0) {
-        const ticket = tickets.find((t: any) => t.id === attendee.event_ticket_id);
-        ticketType = ticket?.name || ticket?.ticket_type || 'Standard';
-      }
-      
-      const amountPaid = parseFloat(attendee.amount_paid || '0');
-      const paymentStatus = amountPaid > 0 ? 'paid' : 'unpaid';
-      
-      const paymentMode = attendee.stripe_payment_intent_id ? 'in-app' : 'ots';
-      
-      const points = attendee.user?.total_gamification_points || 0;
-      
-      return {
-        id: attendee.id,
-        name: name,
-        value: points,
-        ticketType: ticketType,
-        paymentStatus: paymentStatus,
-        paymentMode: paymentMode,
-        checkedIn: attendee.is_checked_in || false,
-        imageUrl: imageUrl,
-        parent_user_id: attendee.parent_user_id,
-        user: attendee.user,
-        connection_status: attendee.user?.connection_status
-      };
-    });
-  });
+  menuItems: MenuItem[] = [];
 
   stats = computed(() => {
     const allAttendees = this.attendees();
@@ -94,7 +72,6 @@ export class GuestList implements OnInit {
     const attending = allAttendees.filter((a: any) => a.rsvp_status === 'Yes').length;
     const maybe = allAttendees.filter((a: any) => a.rsvp_status === 'Maybe').length;
     const notAttending = allAttendees.filter((a: any) => a.rsvp_status === 'No').length;
-    const checkedIn = allAttendees.filter((a: any) => a.is_checked_in === true).length;
 
     return [
       {
@@ -128,63 +105,118 @@ export class GuestList implements OnInit {
     return this.attendees().filter((a: any) => a.is_checked_in === true).length;
   });
 
-  items: MenuItem[] = [
-    {
-      label: 'Check-in Guest',
-      command: () => this.checkInGuest(),
-      iconPath: 'assets/svg/guest-list/check-in.svg'
-    },
-    {
-      label: 'Issue Refund',
-      command: () => this.issueRefund(),
-      iconPath: 'assets/svg/guest-list/refund-issue.svg'
-    },
-    {
-      label: 'Add as Network',
-      command: () => this.addAsNetwork(),
-      iconPath: 'assets/svg/guest-list/add-network.svg'
-    },
-    {
-      label: 'Send Message',
-      command: () => this.sendMessage(),
-      iconPath: 'assets/svg/guest-list/send-message.svg'
-    },
-    {
-      label: 'Uncheck-in',
-      command: () => this.uncheckIn(),
-      iconPath: 'assets/svg/guest-list/uncheck-in.svg'
-    },
-    {
+  getMenuItems(guest: any): MenuItem[] {
+    const items: MenuItem[] = [];
+    // Only show for guests without parent_user_id
+    if (guest?.parent_user_id == null) {
+      // Add as Network → only if not connected
+      if (guest.user?.connection_status === 'NotConnected') {
+        items.push({
+          label: 'Add as Network',
+          command: () => this.addAsNetwork(),
+          iconPath: 'assets/svg/guest-list/add-network.svg'
+        });
+      }
+
+      // Send Message → only if connected
+      if (guest.user?.connection_status === 'Connected') {
+        items.push({
+          label: 'Send Message',
+          command: () => this.sendMessage(),
+          iconPath: 'assets/svg/guest-list/send-message.svg'
+        });
+      }
+    }
+
+    // Uncheck-in → only if checked in
+    if (guest.is_checked_in) {
+      items.push({
+        label: 'Uncheck-in',
+        command: () => this.uncheckIn(),
+        iconPath: 'assets/svg/guest-list/uncheck-in.svg'
+      });
+    }
+
+    // Remove Guest → always available
+    items.push({
       label: 'Remove Guest',
       command: () => this.removeGuest(),
       iconPath: 'assets/svg/deleteIcon.svg'
-    }
-  ];
+    });
+
+    return items;
+  }
 
   issueRefund() {
     console.log('Refund');
   }
+
   checkInGuest() {
     console.log('Check-in Guest');
   }
-  addAsNetwork() {
-    console.log('Add Network');
+
+  openPopover(event: Event, user: any): void {
+    this.popoverService.openCommonPopover(event, this.getMenuItems(user));
+    this.selectedGuest.set(user);
+    this.selectedGuestId.set(user.id);
   }
+
+  async addAsNetwork(): Promise<void> {
+    this.closePopover();
+    this.isChecking.set(true);
+    const guestId = this.selectedGuest().user.id;
+    if (!guestId) return;
+
+    try {
+      await this.networkService.sendNetworkRequest(guestId);
+      this.toasterService.showSuccess('Network request sent successfully');
+    } catch (error) {
+      console.error('Error sending network request:', error);
+      this.toasterService.showError('Failed to send network request');
+    } finally {
+      this.isChecking.set(false);
+    }
+  }
+
   sendMessage() {
-    console.log('Message');
+    this.closePopover();
+
+    const guestId = this.selectedGuest().user.id;
+    if (!guestId) return;
+    const currentUserId = this.authService.currentUser()?.id;
+    if (currentUserId && guestId) {
+      this.navCtrl.navigateForward('/chat-room', {
+        state: {
+          user_ids: [currentUserId, guestId],
+          is_personal: true
+        }
+      });
+    }
   }
-  uncheckIn() {
-    console.log('Uncheck-in');
-  }
-  removeGuest() {
-    console.log('Remove Guest');
+
+  async removeGuest() {
+    this.closePopover();
+
+    this.isChecking.set(true);
+    const guestId = this.selectedGuestId();
+    if (!guestId) return;
+
+    try {
+      await this.eventService.deleteAttendees(guestId);
+      this.attendees.update((list) => list.filter((a) => a.id !== guestId));
+      this.toasterService.showSuccess('guest remove successfully.');
+    } catch (error) {
+      console.error(error);
+      this.toasterService.showError('Failed to remove guest.');
+    } finally {
+      this.isChecking.set(false);
+    }
   }
 
   filteredGuestList = computed(() => {
     const search = this.searchQuery().toLowerCase().trim();
-    const guests = this.guestList();
+    const guests = this.attendees();
     if (!search) return guests;
-
     return guests.filter((s) => s.name.toLowerCase().includes(search));
   });
 
@@ -194,6 +226,7 @@ export class GuestList implements OnInit {
       this.eventId.set(eventId);
       this.loadAttendees();
     }
+    this.setupNetworkConnectionListener();
   }
 
   async loadAttendees(): Promise<void> {
@@ -211,7 +244,7 @@ export class GuestList implements OnInit {
       }
     } catch (error) {
       console.error('Error loading attendees:', error);
-      this.toasterService.showError('Failed to load guest list');
+      this.toasterService.showError('Failed to load guest list.');
     } finally {
       this.isLoading.set(false);
     }
@@ -223,6 +256,24 @@ export class GuestList implements OnInit {
 
   onImageError(event: Event): void {
     onImageError(event);
+  }
+
+  getDiamondPath(points: number) {
+    if (points >= 50000) {
+      return '/assets/svg/gamification/diamond-50k.svg';
+    } else if (points >= 40000) {
+      return '/assets/svg/gamification/diamond-40k.svg';
+    } else if (points >= 30000) {
+      return '/assets/svg/gamification/diamond-30k.svg';
+    } else if (points >= 20000) {
+      return '/assets/svg/gamification/diamond-20k.svg';
+    } else if (points >= 10000) {
+      return '/assets/svg/gamification/diamond-10k.svg';
+    } else if (points >= 5000) {
+      return '/assets/svg/gamification/diamond-5k.svg';
+    } else {
+      return '/assets/svg/gamification/diamond-1k.svg';
+    }
   }
 
   back() {
@@ -239,5 +290,95 @@ export class GuestList implements OnInit {
   async openFilterModal() {
     const result = await this.modalService.openGuestFilterModal(this.filter());
     if (result) this.filter.set(result);
+  }
+
+  async checkIn(id: string) {
+    try {
+      this.selectedGuestId.set(id);
+      this.isChecking.set(true);
+      let payload = {
+        event_id: this.eventData().id,
+        attendee_id: id,
+        is_checked_in: true
+      }
+      await this.eventService.changeCheckInStatus(payload);
+      this.attendees.update((list) => list.map((a) => (a.id === id ? { ...a, is_checked_in: true } : a)));
+      this.toasterService.showSuccess('Check-in successfully');
+    } catch (error) {
+      console.error(error);
+      this.toasterService.showError('Failed to check in');
+    } finally {
+      this.isChecking.set(false);
+    }
+  }
+
+  async uncheckIn() {
+    this.closePopover();
+
+    this.isChecking.set(true);
+    const guestId = this.selectedGuestId();
+    if (!guestId) return;
+    try {
+      this.selectedGuestId.set(guestId);
+      this.isChecking.set(true);
+      let payload = {
+        event_id: this.eventData().id,
+        attendee_id: guestId,
+        is_checked_in: false
+      }
+      await this.eventService.changeCheckInStatus(payload);
+      this.attendees.update((list) => list.map((a) => (a.id === guestId ? { ...a, is_checked_in: false } : a)));
+      this.toasterService.showSuccess('Check-in successfully');
+    } catch (error) {
+      console.error(error);
+      this.toasterService.showError('Failed to check in');
+    } finally {
+      this.isChecking.set(false);
+    }
+  }
+
+  onCardClick(user: any) {
+    if (user?.parent_user_id) {
+      return;
+    }
+    const username = user?.user?.username;
+    if (username) {
+      this.navigationService.navigateForward(`/${username}`);
+    }
+  }
+
+  private setupNetworkConnectionListener(): void {
+    this.socketService.onAfterRegistration(() => {
+      this.socketService.on('network:connection:update', this.networkConnectionHandler);
+    });
+  }
+
+  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+    if (!payload?.id) return;
+
+    const userId = payload.id;
+    const newStatus = payload.connection_status;
+
+    this.attendees.update((users) =>
+      users.map((attendee) =>
+        attendee.user?.id === userId
+          ? {
+            ...attendee,
+            user: {
+              ...attendee.user,
+              connection_status: newStatus
+            }
+          }
+          : attendee
+      )
+    );
+  };
+
+  ngOnDestroy(): void {
+    this.socketService.off('network:connection:update', this.networkConnectionHandler);
+  }
+
+  closePopover(): void {
+    this.popoverService.close();
   }
 }

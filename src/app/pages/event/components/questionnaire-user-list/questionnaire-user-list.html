@@ -13,46 +13,22 @@
       </div>
       <div class="pt-1 flex justify-between items-center">
         <div class="heading-h2">
-          {{ option()?.label }}
+          {{ option()?.option }}
         </div>
         <div class="heading-h3 neutral-03">
-          {{ option()?.value }}
+          {{ option()?.selected_count }}
         </div>
       </div>
 
-      @for (suggestion of networkSuggestions(); track suggestion.id) {
-        <div class="flex items-center gap-3 py-3 border-b border-surface-200">
-          <!-- Avatar -->
-          <div class="w-12 h-12">
-            <img src="assets/images/profile.jpeg" class="w-full h-full rounded-full object-cover" />
-          </div>
-
-          <!-- Info -->
-          <div class="flex-1 flex flex-col gap-1">
-            <div class="flex items-center gap-2">
-              <div class="body-14SB neutral-01 truncate">
-                {{ suggestion.name }}
-              </div>
-
-              <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full h-[20px]">
-                <img src="assets/svg/diamondYellow.svg" class="h-4 ml-1.5" />
-                <span class="text-sm font-medium pr-2">
-                  {{ suggestion.value }}
-                </span>
-              </div>
-            </div>
-
-            <p class="body-12 neutral-03">{{ suggestion.jobTitle }}, {{ suggestion.company }}</p>
-          </div>
-
-          @if (suggestion.networked) {
-            <app-button width="72px" height="32px" color="secondary" label="Message" (click)="messageUser(suggestion.id)" />
-          } @else if (suggestion.requested) {
-            <app-button width="72px" height="32px" color="secondary" label="Pending" [disabled]="true" />
-          } @else {
-            <app-button width="60px" height="32px" label="Add" (click)="addSuggestion(suggestion.id)" />
-          }
+      @for (suggestion of users(); track suggestion.id) {
+        <div class="border-b border-gray-200">
+          <user-card-list [user]="suggestion" />
         </div>
+      }
+      @if (hasMore()) {
+        <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreUsers($event)">
+          <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more users..." />
+        </ion-infinite-scroll>
       }
     </div>
   </div>

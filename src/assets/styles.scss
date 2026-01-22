@@ -170,6 +170,10 @@ ion-footer {
 .tier-overview-card.ticket-type-standard-paid {
   border: 2px solid #dbdbdb;
 }
+
+.tier-overview-card.ticket-type {
+  border: 2px solid var(--brand-05);
+}
 .swiper-event-detail .swiper-pagination-bullet {
   background: var(--neutral-04) !important;
   opacity: 1 !important;

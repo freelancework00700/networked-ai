@@ -59,9 +59,12 @@ export class BaseApiService {
   }
 
   // GET request
-  protected async get<T>(url: string, options?: { params?: HttpParams }): Promise<T> {
+  protected async get<T>(url: string, options?: { params?: HttpParams, responseType?: 'json' | 'text' | 'blob' | 'arraybuffer' }): Promise<T> {
     try {
-      return await firstValueFrom(this.http.get<T>(url, options));
+      return await firstValueFrom(this.http.get<T>(url, {
+        ...(options || {}),
+        responseType: (options?.responseType ?? 'json') as any,
+      }));
     } catch (error) {
       return this.handleError(error);
     }
