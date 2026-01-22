@@ -112,9 +112,24 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   private applyRoom(room: ChatRoom): void {
     this.chatRoom.set(room);
     this.roomId.set(room.id);
-    this.groupName.set(room.name || 'Group');
-    this.tempGroupName.set(room.name || 'Group');
-    this.groupImage.set(room.profile_image || 'assets/images/profile.jpeg');
+    
+    if (room.event?.title) {
+      this.groupName.set(room.event.title);
+      this.tempGroupName.set(room.event.title);
+    } else {
+      this.groupName.set(room.name || 'Group');
+      this.tempGroupName.set(room.name || 'Group');
+    }
+    
+    // If event is available, prioritize event images
+    if (room.event?.thumbnail_url) {
+      this.groupImage.set(room.event.thumbnail_url);
+    } else if (room.event?.image_url) {
+      this.groupImage.set(room.event.image_url);
+    } else {
+      this.groupImage.set(room.profile_image || 'assets/images/profile.jpeg');
+    }
+    
     this.createdDate.set(new Date(room.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }));
     if (room.users && room.users.length) {
       this.members.set(room.users);

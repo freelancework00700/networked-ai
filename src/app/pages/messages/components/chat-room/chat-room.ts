@@ -1,15 +1,19 @@
 import { ActivatedRoute, Router } from '@angular/router';
 import { Button } from '@/components/form/button';
-import { ChangeDetectionStrategy, Component, effect, inject, signal, OnInit, computed, ViewChild, ElementRef, AfterViewChecked, viewChild, OnDestroy } from '@angular/core';
-import { IonFooter, IonHeader, IonContent, IonToolbar, IonInput, NavController, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, IonIcon } from '@ionic/angular/standalone';
+import { ChangeDetectionStrategy, Component, inject, signal, OnInit, computed, ElementRef, viewChild, OnDestroy } from '@angular/core';
+import { IonFooter, IonHeader, IonContent, IonToolbar, NavController, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, IonIcon } from '@ionic/angular/standalone';
 import { MessagesService } from '@/services/messages.service';
 import { AuthService } from '@/services/auth.service';
 import { SocketService } from '@/services/socket.service';
 import { ModalService } from '@/services/modal.service';
+import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { ChatMessage, ChatRoomUser } from '@/interfaces/IChat';
 import { CommonModule, NgOptimizedImage, DatePipe } from '@angular/common';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'chat-room',
@@ -17,7 +21,6 @@ import { NavigationService } from '@/services/navigation.service';
   templateUrl: './chat-room.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    IonInput,
     IonFooter,
     IonContent,
     IonHeader,
@@ -27,7 +30,11 @@ import { NavigationService } from '@/services/navigation.service';
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     IonIcon,
+    IconField,
+    InputIcon,
     CommonModule,
+    InputTextModule,
+    PickerComponent,
     NgOptimizedImage
   ]
 })
@@ -59,6 +66,7 @@ export class ChatRoom implements OnInit, OnDestroy {
   selectedIndex = signal<string | null>(null);
   editingIndex = signal<string | null>(null);
   selectedFile = signal<File | null>(null);
+  showEmojiPicker = signal<boolean>(false);
 
   messages = signal<ChatMessage[]>([]);
 
@@ -80,7 +88,9 @@ export class ChatRoom implements OnInit, OnDestroy {
 
   private updateChatRoomInfo(room: any): void {
     if (room) {
-      if (room.is_personal && room.users && room.users.length > 0) {
+      if (room.event?.title) {
+        this.chatName.set(room.event.title);
+      } else if (room.is_personal && room.users && room.users.length > 0) {
         const currentUserId = this.currentUser()?.id;
         const otherUser = room.users.find((user: any) => user.id !== currentUserId);
         this.otherUser.set(otherUser);
@@ -97,7 +107,13 @@ export class ChatRoom implements OnInit, OnDestroy {
     const room = this.chatRoom();
     if (!room) return null;
 
-    if (room.event_image) return room.event_image;
+    if (room.event?.thumbnail_url) {
+      return room.event.thumbnail_url;
+    }
+    if (room.event?.image_url) {
+      return room.event.image_url;
+    }
+
     if (room.profile_image) return room.profile_image;
 
     if (room.is_personal && this.otherUser()) {
@@ -524,13 +540,20 @@ export class ChatRoom implements OnInit, OnDestroy {
   }
 
   openEmojiPicker() {
-    const input = document.querySelector('ion-input') as any;
-    if (input) {
-      const nativeInput = input.querySelector('input');
-      if (nativeInput) {
-        nativeInput.focus();
-      }
+    this.showEmojiPicker.update(value => !value);
+  }
+
+  onEmojiSelect(event: any) {
+    const emoji = event.emoji?.native || '';
+    if (emoji) {
+      const currentMessage = this.newMessage();
+      this.newMessage.set(currentMessage + emoji);
     }
+  }
+
+  onMessageInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value || '';
+    this.newMessage.set(value);
   }
 
   removeSelectedFile() {

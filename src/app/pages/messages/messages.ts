@@ -188,6 +188,11 @@ export class Messages implements OnInit, OnDestroy {
    * Get chat display name (for personal chats, use other user's name)
    */
   getChatName(room: ChatRoom): string {
+    // If event is available, use event title
+    if (room.event?.title) {
+      return room.event.title;
+    }
+    
     if (room.name) {
       return room.name;
     }
@@ -206,8 +211,15 @@ export class Messages implements OnInit, OnDestroy {
    * Get chat avatar image URL
    */
   getChatImage(room: ChatRoom): string {
+    if (room.event?.thumbnail_url) {
+      return room.event.thumbnail_url;
+    }
+
+    if (room.event?.image_url) {
+      return room.event.image_url;
+    }
+    
     if (room.profile_image) return room.profile_image;
-    if (room.event_image) return room.event_image;
     
     // For personal chats, use other user's thumbnail
     if (room.is_personal && room.users && room.users.length > 0) {

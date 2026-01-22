@@ -210,6 +210,27 @@
   }
 </ion-content>
 
+<!-- emoji Picker -->
+@if (showEmojiPicker()) {
+  <div class="fixed bottom-20 left-0 right-0 z-50 max-w-[672px] mx-auto px-4" (click)="$event.stopPropagation()">
+    <emoji-mart
+      set="apple"
+      color="#f5bc61"
+      [autoFocus]="true"
+      [darkMode]="false"
+      [showPreview]="false"
+      [enableSearch]="true"
+      title="Pick your emoji…"
+      (emojiClick)="onEmojiSelect($event)"
+    />
+  </div>
+}
+
+<!-- overlay to close emoji picker when clicking outside -->
+@if (showEmojiPicker()) {
+  <div class="fixed inset-0 z-40" (click)="showEmojiPicker.set(false)"></div>
+}
+
 <ion-footer mode="md">
   <ion-toolbar class="bg-white border-t border-gray-200" mode="md">
     @if (editingIndex() !== null) {
@@ -217,12 +238,13 @@
       <div class="p-4 max-w-[672px] mx-auto w-full">
         <div class="flex items-center gap-2 bg-gray-100 rounded-xl px-4 py-2">
           <i class="pi pi-pencil text-gray-600"></i>
-          <ion-input
+          <input
+            pInputText
             [value]="newMessage()"
-            (ionInput)="newMessage.set($event.detail.value || '')"
             placeholder="Edit message..."
-            class="flex-1 border-0 bg-transparent"
-          ></ion-input>
+            (input)="onMessageInput($event)"
+            class="flex-1 border-0 bg-transparent h-[44px]"
+          />
           <app-button (click)="sendMessage()" [iconName]="'pi-check'" iconPos="left" height="32px" width="32px" />
         </div>
       </div>
@@ -231,40 +253,27 @@
       <div class="flex items-center gap-2 px-4 py-3 max-w-[672px] mx-auto w-full">
         <!-- Message Input with Icons Inside -->
         <div class="flex-1 relative">
-      <ion-input
-        [value]="newMessage()"
-        (ionInput)="newMessage.set($event.detail.value || '')"
-        placeholder="Message..."
-            class="w-full rounded-full border border-gray-300 pl-10 pr-10 py-2.5"
-      ></ion-input>
-          <!-- Attachment/Paperclip Icon Inside Input (left side) -->
-          <button 
-            type="button" 
-            class="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-600 hover:text-gray-800 transition-colors active:opacity-70 z-9999"
-            (click)="openFilePicker(); $event.stopPropagation()"
-          >
-            <ion-icon name="attach-outline" class="w-5 h-5"></ion-icon>
-          </button>
-          <!-- Emoji Icon Inside Input (right side) -->
-          <button 
-            type="button" 
-            class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-600 hover:text-gray-800 transition-colors active:opacity-70 z-9999"
-            (click)="openEmojiPicker(); $event.stopPropagation()"
-          >
-            <ion-icon name="happy-outline" class="w-5 h-5"></ion-icon>
-          </button>
+          <p-iconfield class="w-full">
+            <!-- Attachment/Paperclip Icon Inside Input (left side) -->
+            <p-inputicon class="pi pi-paperclip cursor-pointer text-gray-600 hover:text-gray-800" (click)="openFilePicker(); $event.stopPropagation()" />
+            
+            <!-- Input -->
+            <input
+              pInputText
+              [value]="newMessage()"
+              (input)="onMessageInput($event)"
+              placeholder="Message..."
+              class="w-full rounded-full border border-gray-300 h-[44px]"
+            />
+            
+            <!-- Emoji Icon Inside Input (right side) -->
+            <p-inputicon class="pi pi-face-smile cursor-pointer text-gray-600 hover:text-gray-800" (click)="openEmojiPicker(); $event.stopPropagation()" />
+          </p-iconfield>
         </div>
 
         <!-- Send Button (square, matches Figma) -->
-        <app-button 
-          (click)="sendMessage()" 
-          [iconName]="'pi-send'" 
-          iconPos="left" 
-          height="40px" 
-          width="40px"
-          [radius]="'8px'"
-        />
-    </div>
+        <app-button width="40px" height="40px" iconPos="left" [radius]="'8px'" (click)="sendMessage()" [iconName]="'pi-send'" />
+      </div>
     }
   </ion-toolbar>
 </ion-footer>

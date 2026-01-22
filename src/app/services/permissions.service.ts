@@ -1,9 +1,10 @@
-import { Injectable, inject } from '@angular/core';
-import { Capacitor } from '@capacitor/core';
 import { Camera } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
+import { ToasterService } from './toaster.service';
+import { isPlatformBrowser } from '@angular/common';
 import { Geolocation } from '@capacitor/geolocation';
 import { Contacts } from '@capacitor-community/contacts';
-import { ToasterService } from './toaster.service';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { NativeSettings, AndroidSettings, IOSSettings } from 'capacitor-native-settings';
 
 export type PermissionStatus = 'granted' | 'denied' | 'prompt' | 'prompt-with-rationale' | 'limited';
@@ -16,6 +17,7 @@ export interface PermissionResult {
 
 @Injectable({ providedIn: 'root' })
 export class PermissionsService {
+  private platformId = inject(PLATFORM_ID);
   private toasterService = inject(ToasterService);
 
   isNativePlatform(): boolean {
@@ -184,7 +186,8 @@ export class PermissionsService {
     const defaultOptions = { maximumAge: 0, timeout: 10000, enableHighAccuracy: false };
 
     if (!this.isNativePlatform()) {
-      // Web platform
+      if (!isPlatformBrowser(this.platformId)) return null;
+
       try {
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, defaultOptions);

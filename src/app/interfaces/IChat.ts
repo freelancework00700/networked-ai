@@ -13,6 +13,19 @@ export interface ChatRoomUser {
   total_gamification_points_weekly: number;
 }
 
+export interface ChatRoomEvent {
+  id: string;
+  title: string;
+  slug: string;
+  address: string;
+  end_date: string;
+  image_url: string;
+  start_date: string;
+  is_public: boolean;
+  description: string;
+  thumbnail_url: string;
+}
+
 export interface ChatRoom {
   id: string;
   user_ids: string[];
@@ -36,6 +49,7 @@ export interface ChatRoom {
   lastMessage?: string | null;
   lastMessageTime?: string | null;
   created_by_user?: ChatRoomUser;
+  event?: ChatRoomEvent;
 }
 
 export interface ChatRoomsPagination {
