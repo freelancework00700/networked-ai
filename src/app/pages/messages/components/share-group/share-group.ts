@@ -1,3 +1,4 @@
+import { QrCodeComponent } from 'ng-qrcode';
 import { Button } from '@/components/form/button';
 import { IonIcon } from '@ionic/angular/standalone';
 import { ModalService } from '@/services/modal.service';
@@ -6,7 +7,7 @@ import { Input, signal, inject, Inject, DOCUMENT, Component } from '@angular/cor
 
 @Component({
   selector: 'share-group',
-  imports: [IonIcon, Button],
+  imports: [IonIcon, Button, QrCodeComponent],
   styleUrl: './share-group.scss',
   templateUrl: './share-group.html'
 })

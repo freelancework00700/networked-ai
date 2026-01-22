@@ -14,11 +14,9 @@
   </div>
 
   <!-- QR CODE -->
-  <div class="flex justify-center my-6">
-    <div
-      class="p-[1px] rounded-xl bg-[linear-gradient(153.43deg,#9E8F76_7.68%,#7A6A50_24.01%,#F6D9AB_42.02%,#9D7F4E_58.77%,#C9A770_79.3%,#796A52_91.44%)]"
-    >
-      <img [src]="group()?.qrCodeUrl" class="w-40 h-40" />
+  <div class="flex justify-center mb-4">
+    <div class="bg-white rounded-2xl p-2 m-2 border gradient-border">
+      <qr-code [value]="group()?.inviteLink" [size]="128" errorCorrectionLevel="M"></qr-code>
     </div>
   </div>
 

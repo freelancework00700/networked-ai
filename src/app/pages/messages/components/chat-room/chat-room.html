@@ -195,6 +195,11 @@
                       }
                     </div>
                   }
+                  @if(msg.feed && msg.type === 'Post') {
+                <app-chat-feed-card [feed]="msg.feed"/>
+                }@else if (msg.event && msg.type === 'Event') {
+                <app-chat-event-card [event]="msg.event"/>
+                }
                   <!-- Text (with or without media) -->
                   @if (msg.message) {
                     <div class="px-4 py-2" [class.pt-2]="msg.media_url">

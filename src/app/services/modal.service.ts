@@ -55,6 +55,7 @@ import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confi
 import { QuestionnairePreviewModal } from '@/components/modal/questionnaire-preview-modal';
 import { StripePaymentComponent } from '@/components/common/stripe-payment/stripe-payment';
 import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
+import { ChatRoom } from '@/interfaces/IChat';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -570,7 +571,7 @@ export class ModalService {
     return shareGroupData;
   }
 
-  async openGroupInvitationModal(groupId: string): Promise<any | null> {
+  async openGroupInvitationModal(room: ChatRoom | null): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -578,7 +579,8 @@ export class ModalService {
       initialBreakpoint: 1,
       component: GroupInvitation,
       backdropDismiss: false,
-      cssClass: 'auto-hight-modal'
+      cssClass: 'auto-hight-modal',
+      componentProps: { room }
     });
 
     await modal.present();
@@ -632,7 +634,7 @@ export class ModalService {
       cssClass: 'modal-600px-height',
       componentProps: { participants, eventId }
     });
-    
+
     await modal.present();
     const { data } = await modal.onWillDismiss();
     return data ?? null;
@@ -948,7 +950,7 @@ export class ModalService {
       componentProps: {
         isRsvpModal: true,
         onLoginSuccess: () => {
-          modal.dismiss();
+          modal.dismiss({ success: true });
           this.close();
         }
       }
@@ -1096,5 +1098,4 @@ export class ModalService {
     const { data } = await modal.onWillDismiss();
     return data || null;
   }
-
 }

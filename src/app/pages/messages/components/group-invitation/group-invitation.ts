@@ -1,9 +1,16 @@
+import { ChatRoom } from '../chat-room';
 import { Button } from '@/components/form/button';
+import { NgOptimizedImage } from '@angular/common';
+import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { NavController } from '@ionic/angular/standalone';
-import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/core';
+import { MessagesService } from '@/services/messages.service';
+import { NavigationService } from '@/services/navigation.service';
+import { Component, signal, inject, ChangeDetectionStrategy, input, Input, computed } from '@angular/core';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+
 @Component({
-  imports: [Button],
+  imports: [Button, NgOptimizedImage],
   selector: 'group-invitation',
   styleUrl: './group-invitation.scss',
   templateUrl: './group-invitation.html',
@@ -12,34 +19,59 @@ import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/cor
 export class GroupInvitation {
   private navCtrl = inject(NavController);
   private modalService = inject(ModalService);
-  group = signal({
-    id: 'grp_001',
-    name: 'Sports Group',
-    image: 'assets/images/profile.jpeg',
-    membersCount: 12,
-    membersPreview: ['assets/images/profile.jpeg', 'assets/images/profile.jpeg', 'assets/images/profile.jpeg'],
-    previewText: {
-      first: 'Ricky T.',
-      second: 'Kensley J.',
-      others: 9
-    }
+  private authService = inject(AuthService);
+  private messagesService = inject(MessagesService);
+  private navigationService = inject(NavigationService);
+
+  @Input() room!: ChatRoom;
+  group = computed(() => {
+    const room: any = this.room;
+    if (!room) return null;
+
+    const users = room.users ?? [];
+
+    return {
+      id: room.id,
+      name: room.name,
+      image: room.profile_image || room.event_image || '/assets/group-placeholder.png',
+
+      membersCount: users.length,
+
+      // first 5 thumbnails
+      membersPreview: users.slice(0, 5).map((u: any) => u.thumbnail_url || '/assets/profile.jpeg'),
+
+      previewText: {
+        first: users[0]?.name || '',
+        second: users[1]?.name || '',
+        others: Math.max(users.length - 2, 0)
+      }
+    };
   });
 
   isJoining = signal(false);
 
   close() {
     this.modalService.close();
-    this.navCtrl.navigateForward('/messages');
+    this.navigationService.navigateForward('/messages', true);
   }
 
-  async joinGroup() {
-    if (this.isJoining()) return;
+  async joinRoom(): Promise<void> {
+    const userId = this.authService.currentUser()?.id;
+    const roomId = this.group()?.id;
 
-    this.isJoining.set(true);
+    if (userId && roomId) {
+      this.isJoining.set(true);
+      await this.messagesService.joinRoom(roomId, [userId]);
+      this.isJoining.set(false);
+      this.close();
+    }
+  }
 
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+  onImageError(event: Event): void {
+    onImageError(event);
+  }
 
-    this.isJoining.set(false);
-    this.modalService.close();
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl, 'assets/images/profile.jpeg');
   }
 }

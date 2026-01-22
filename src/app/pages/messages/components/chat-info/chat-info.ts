@@ -5,13 +5,14 @@ import { MessagesService } from '@/services/messages.service';
 import { ChatRoom, ChatRoomUser } from '@/interfaces/IChat';
 import { MenuItem } from '@/components/modal/menu-modal';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy, computed } from '@angular/core';
 import { IonToggle, IonContent, IonHeader, IonToolbar, IonFooter, NavController, ViewWillEnter } from '@ionic/angular/standalone';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NgOptimizedImage } from '@angular/common';
 import { AuthService } from '@/services/auth.service';
 import { NavigationService } from '@/services/navigation.service';
 import { SocketService } from '@/services/socket.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'chat-info',
@@ -49,20 +50,17 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
     { label: 'Leave Group', icon: 'pi pi-sign-out text-6', iconType: 'pi', danger: true, action: 'leaveGroup' }
   ];
 
+  isLoggedIn = computed(() => !!this.authService.currentUser());
 
-  async ngOnInit() {
+  async initializePage(): Promise<void> {
     const routePath = this.router.url;
+    const groupId = this.route.snapshot.paramMap.get('id');
 
-    const navigation = this.router.currentNavigation();
-    const state: any = navigation?.extras?.state || {};
-    const stateRoom = state?.chatRoom as ChatRoom | undefined;
-    const stateRoomId = state?.roomId as string | undefined;
+    if (!this.isLoggedIn()) return;
 
-    if (stateRoom) this.applyRoom(stateRoom);
-
-    const groupId = stateRoomId;
     if (groupId) {
       this.roomId.set(groupId);
+
       if (!this.chatRoom()) {
         const room = await this.messagesService.getChatRoomById(groupId);
         this.applyRoom(room);
@@ -70,8 +68,28 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
     }
 
     if (groupId && routePath.includes('group-invitation')) {
-      await this.modalService.openGroupInvitationModal(groupId);
+      await this.modalService.openGroupInvitationModal(this.chatRoom());
     }
+  }
+  async ngOnInit() {
+    const navigation = this.router.currentNavigation();
+    const state: any = navigation?.extras?.state || {};
+    const stateRoom = state?.chatRoom as ChatRoom | undefined;
+
+    if (stateRoom) {
+      this.applyRoom(stateRoom);
+    }
+
+    if (!this.isLoggedIn()) {
+      const result = await this.modalService.openLoginModal();
+
+      if (result?.success) {
+        await this.initializePage();
+      }
+      return;
+    }
+
+    await this.initializePage();
   }
 
   private setupRoomUpdateListener(): void {
@@ -112,7 +130,7 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   private applyRoom(room: ChatRoom): void {
     this.chatRoom.set(room);
     this.roomId.set(room.id);
-    
+
     if (room.event?.title) {
       this.groupName.set(room.event.title);
       this.tempGroupName.set(room.event.title);
@@ -120,7 +138,7 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
       this.groupName.set(room.name || 'Group');
       this.tempGroupName.set(room.name || 'Group');
     }
-    
+
     // If event is available, prioritize event images
     if (room.event?.thumbnail_url) {
       this.groupImage.set(room.event.thumbnail_url);
@@ -129,7 +147,7 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
     } else {
       this.groupImage.set(room.profile_image || 'assets/images/profile.jpeg');
     }
-    
+
     this.createdDate.set(new Date(room.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }));
     if (room.users && room.users.length) {
       this.members.set(room.users);
@@ -175,7 +193,6 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   }
 
   handleBack() {
-
     const navigation = this.router.currentNavigation();
     const state: any = navigation?.extras?.state;
 
@@ -212,8 +229,7 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
     await this.modalService.openShareGroupModal({
       name: this.groupName() || '',
       membersCount: this.members().length,
-      inviteLink: 'networked-ai.com/username_here',
-      qrCodeUrl: 'assets/svg/QR.svg',
+      inviteLink: `${environment.frontendUrl}/group-invitation/${this.roomId()}`,
       image: this.groupImage() || ''
     });
   }
