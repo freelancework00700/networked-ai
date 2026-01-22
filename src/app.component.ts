@@ -60,7 +60,7 @@ export class AppComponent {
     try {
       const location = await this.permissionsService.getCurrentLocation();
       if (location) {
-        await this.userService.updateFcmTokenAndLocation('', location.latitude, location.longitude);
+        await this.userService.updateFcmTokenAndLocation(null, location.latitude, location.longitude);
       } else {
         console.log('Location not available');
       }

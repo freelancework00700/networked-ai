@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header mode="md">
   <ion-toolbar>
     <div class="flex items-center justify-between px-4 py-2 max-w-[672px] mx-auto">
       <i class="pi pi-arrow-left cursor-pointer" (click)="isEditingName() ? cancelEditGroupName() : handleBack()"></i>
@@ -16,7 +16,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" mode="md">
   <div class="w-full max-w-[672px] mx-auto p-4 flex flex-col gap-6">
     @if (isEditingName()) {
       <input pInputText autofocus class="h-[44px]" [value]="tempGroupName()" (input)="onGroupNameInput($event)" placeholder="Enter group name" />
@@ -29,7 +29,15 @@
           (click)="fileInput.click()"
         >
           @if (groupImage()) {
-            <img [src]="groupImage()!" alt="Group" class="w-full h-full rounded-full object-cover" />
+            <div class="relative w-full h-full rounded-full overflow-hidden">
+              <img 
+              fill 
+              placeholder
+              (error)="onImageError($event)"
+              class="rounded-full object-cover"
+              [ngSrc]="getImageUrl(groupImage() || '')"
+            />
+            </div>
           } @else {
             <i class="pi pi-camera text-xl text-white"></i>
           }
@@ -106,7 +114,7 @@
     }
   </div>
 </ion-content>
-<ion-footer>
+<ion-footer mode="md">
   <ion-toolbar class="bg-white border-t border-gray-200">
     <div class="p-4 max-w-[672px] mx-auto">
       @if (isEditingName()) {

@@ -231,14 +231,14 @@ export class UserService extends BaseApiService {
   }
 
   // Update FCM token and location
-  async updateFcmTokenAndLocation(fcmToken: string, latitude?: string, longitude?: string): Promise<void> {
+  async updateFcmTokenAndLocation(fcmToken: string | null, latitude?: string, longitude?: string): Promise<void> {
     try {
       const payload: {
-        fcm_token: string;
         latitude?: string;
         longitude?: string;
+        fcm_token: string | null;
       } = {
-        fcm_token: fcmToken
+        fcm_token: fcmToken || null
       };
 
       if (latitude && longitude) {

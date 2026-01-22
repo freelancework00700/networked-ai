@@ -39,13 +39,15 @@
               <ion-item (click)="goToChat(room)">
                 <ion-avatar class="relative">
                   <!-- Main avatar image -->
-                  <img
-                    fill
-                    placeholder
-                    class="rounded-full object-cover"
-                    (error)="onImageError($event)"
-                    [ngSrc]="getImageUrl(getChatImage(room))"
-                  />
+                  <div class="relative w-full h-full rounded-full overflow-hidden">
+                    <img
+                      fill
+                      placeholder
+                      class="rounded-full object-cover"
+                      (error)="onImageError($event)"
+                      [ngSrc]="getImageUrl(getChatImage(room))"
+                    />
+                  </div>
 
                   <!-- GROUP BADGE -->
                   @if (isGroupChat(room)) {

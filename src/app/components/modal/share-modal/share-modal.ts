@@ -1,4 +1,5 @@
 import { Checkbox } from 'primeng/checkbox';
+import { NgOptimizedImage } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { Searchbar } from '@/components/common/searchbar';
@@ -11,7 +12,7 @@ import { Input, inject, signal, computed, Component, ChangeDetectionStrategy, On
 import { Subject, debounceTime, distinctUntilChanged, switchMap, from, catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IUser } from '@/interfaces/IUser';
-import { getImageUrlOrDefault } from '@/utils/helper';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { EventService } from '@/services/event.service';
 
 @Component({
@@ -19,7 +20,7 @@ import { EventService } from '@/services/event.service';
   styleUrl: './share-modal.scss',
   templateUrl: './share-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonIcon, Checkbox, IonFooter, Searchbar, IonHeader, IonToolbar, ReactiveFormsModule, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner]
+  imports: [Button, IonIcon, Checkbox, IonFooter, Searchbar, IonHeader, IonToolbar, ReactiveFormsModule, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner, NgOptimizedImage]
 })
 export class ShareModal implements OnInit {
   // services
@@ -221,8 +222,12 @@ export class ShareModal implements OnInit {
     }
   }
 
+  onImageError(event: Event): void {
+    onImageError(event);
+  }
+
   getImageUrl(user: IUser): string {
-    return getImageUrlOrDefault(user.thumbnail_url);
+    return getImageUrlOrDefault(user.thumbnail_url || '', 'assets/images/profile.jpeg');
   }
 
   getUserDisplayName(user: IUser): string {
