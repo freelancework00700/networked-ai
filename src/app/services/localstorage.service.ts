@@ -3,7 +3,8 @@ import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 
 export enum KEYS {
   USERS = 'users',
-  ONBOARDED = 'onboarded'
+  ONBOARDED = 'onboarded',
+  FCM_TOKEN = 'fcm_token'
 }
 
 @Injectable({ providedIn: 'root' })

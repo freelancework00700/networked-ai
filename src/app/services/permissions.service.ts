@@ -175,6 +175,45 @@ export class PermissionsService {
     }
   }
 
+  /**
+   * Gets the current location for both web and native platforms
+   * @param options - Optional geolocation options (timeout, enableHighAccuracy, etc.)
+   * @returns Promise with latitude and longitude, or null if unavailable
+   */
+  async getCurrentLocation(): Promise<{ latitude: string; longitude: string } | null> {
+    const defaultOptions = { maximumAge: 0, timeout: 10000, enableHighAccuracy: false };
+
+    if (!this.isNativePlatform()) {
+      // Web platform
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, defaultOptions);
+        });
+
+        return {
+          latitude: position.coords.latitude.toString(),
+          longitude: position.coords.longitude.toString()
+        };
+      } catch (error: any) {
+        console.error('Error getting location on web:', error);
+        return null;
+      }
+    }
+
+    // Native platform
+    try {
+      const position = await Geolocation.getCurrentPosition(defaultOptions);
+
+      return {
+        latitude: position.coords.latitude.toString(),
+        longitude: position.coords.longitude.toString()
+      };
+    } catch (error: any) {
+      console.error('Error getting location on native:', error);
+      return null;
+    }
+  }
+
   async requestContactsPermission(): Promise<PermissionResult> {
     if (!this.isNativePlatform()) {
       return { granted: false, status: 'denied' };

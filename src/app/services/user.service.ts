@@ -229,4 +229,26 @@ export class UserService extends BaseApiService {
       throw error;
     }
   }
+
+  // Update FCM token and location
+  async updateFcmTokenAndLocation(fcmToken: string, latitude?: string, longitude?: string): Promise<void> {
+    try {
+      const payload: {
+        fcm_token: string;
+        latitude?: string;
+        longitude?: string;
+      } = {
+        fcm_token: fcmToken
+      };
+
+      if (latitude && longitude) {
+        payload.latitude = latitude;
+        payload.longitude = longitude;
+      }
+
+      await this.put('/users/fcm-token-location', payload);
+    } catch (error) {
+      console.error('Error updating FCM token and location:', error);
+    }
+  }
 }
