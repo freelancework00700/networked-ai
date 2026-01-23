@@ -95,7 +95,7 @@
         </div>
       </div>
     } @else {
-      <div class="swiper swiper-city">
+      <div class="swiper swiper-city" #swiperEl >
         <div class="swiper-wrapper">
           @for (city of cityCards(); track city.city) {
             <div class="swiper-slide" (click)="onCityClick(city)">
@@ -146,7 +146,7 @@
       </div>
 
       <div>
-        <div class="swiper swiper-event-recommendation">
+        <div class="swiper swiper-event-recommendation" #swiperEventRecommendation>
           <div class="swiper-wrapper">
             @for (event of recommendedEvents(); track event.id || event.title) {
               <div class="swiper-slide">
@@ -273,7 +273,7 @@
       </div>
 
       <div>
-        <div class="swiper swiper-public-event">
+        <div class="swiper swiper-public-event" #swiperPublicEvents>
           <div class="swiper-wrapper">
             @for (event of publicEvents(); track event.id || event.title) {
               <div class="swiper-slide">

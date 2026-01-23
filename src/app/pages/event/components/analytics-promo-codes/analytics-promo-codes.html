@@ -70,19 +70,18 @@
     <div class="flex justify-center items-center h-full py-4">
       <div class="body-14R neutral-02">No promo codes have been created yet.</div>
     </div>
+    <div class="bg-black text-white rounded-lg p-4">
+      <div class="flex gap-3 pb-4 justify-between">
+        <div>
+          <div class="body-16SB">Boost RSVPs with Promo Codes!</div>
+          <div class="body-14R">Drive more sign ups & reward your community with a custom promo code</div>
+        </div>
+  
+        <ion-icon src="assets/svg/rocket.svg" alt="rocketIcon" class="w-15 h-15" />
+      </div>
+  
+      <app-button label="Create a Promo Code" (click)="onCreatePromoCode()" />
+    </div>
   }
 
-  <!-- Create Promo Code Card -->
-  <div class="bg-black text-white rounded-lg p-4">
-    <div class="flex gap-3 pb-4 justify-between">
-      <div>
-        <div class="body-16SB">Boost RSVPs with Promo Codes!</div>
-        <div class="body-14R">Drive more sign ups & reward your community with a custom promo code</div>
-      </div>
-
-      <ion-icon src="assets/svg/rocket.svg" alt="rocketIcon" class="w-15 h-15" />
-    </div>
-
-    <app-button label="Create a Promo Code" (click)="onCreatePromoCode()" />
-  </div>
 </div>

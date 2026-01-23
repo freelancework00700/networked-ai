@@ -13,7 +13,8 @@ import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
 import { UserRecommendations } from '@/components/common/user-recommendations';
 import { IonSkeletonText } from '@ionic/angular/standalone';
-import { signal, computed, Component, afterEveryRender, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect } from '@angular/core';
+import { signal, computed, Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, ViewChild, ElementRef, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 interface FeedPost {
   id: string;
@@ -43,6 +44,47 @@ interface NetworkSuggestion {
   imports: [CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard, UserRecommendations, IonSkeletonText]
 })
 export class HomeEvent implements OnInit, OnDestroy {
+  swiper?: Swiper;
+  citySwiper?: Swiper;
+  eventSwiper?: Swiper;
+  recommendationSwiper?: Swiper;
+  private platformId = inject(PLATFORM_ID);
+  
+  @ViewChild('swiperEl')
+  set citySwiperEl(el: ElementRef<HTMLDivElement>) {
+    if (!el || !isPlatformBrowser(this.platformId) || this.citySwiper) return;
+  
+    this.citySwiper = new Swiper(el.nativeElement, {
+      ...this.swiperConfigs['cities'],
+      observer: true,
+      observeParents: true,
+    });
+  }
+  
+  @ViewChild('swiperPublicEvents')
+  set eventSwiperEl(el: ElementRef<HTMLDivElement>) {
+    if (!el || !isPlatformBrowser(this.platformId) || this.eventSwiper) return;
+  
+    this.eventSwiper = new Swiper(el.nativeElement, {
+      ...this.swiperConfigs['events'],
+      observer: true,
+      observeParents: true,
+    });
+  }
+  
+  @ViewChild('swiperEventRecommendation')
+  set recommendationSwiperEl(el: ElementRef<HTMLDivElement>) {
+    if (!el || !isPlatformBrowser(this.platformId) || this.recommendationSwiper)
+      return;
+  
+    this.recommendationSwiper = new Swiper(el.nativeElement, {
+      ...this.swiperConfigs['events'],
+      observer: true,
+      observeParents: true,
+    });
+  }
+  
+  
   navigationService = inject(NavigationService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -102,8 +144,6 @@ export class HomeEvent implements OnInit, OnDestroy {
   isUpcomingMode = computed(() => this.filter() === 'upcoming');
 
   constructor() {
-    afterEveryRender(() => this.initSwipers());
-
     effect(() => {
       const currentUser = this.currentUser();
       const currentUserId = currentUser?.id || null;
@@ -274,6 +314,7 @@ export class HomeEvent implements OnInit, OnDestroy {
 
   async refresh(): Promise<void> {
     try {
+      this.destroySwipers(); 
       this.eventService.resetAllEvents();
       this.loadAllEvents(true);
       if (this.isLoggedIn()) {
@@ -284,7 +325,17 @@ export class HomeEvent implements OnInit, OnDestroy {
       console.error('Error refreshing events:', error);
     }
   }
-
+  
+  private destroySwipers(): void {
+    this.citySwiper?.destroy(true, true);
+    this.eventSwiper?.destroy(true, true);
+    this.recommendationSwiper?.destroy(true, true);
+  
+    this.citySwiper = undefined;
+    this.eventSwiper = undefined;
+    this.recommendationSwiper = undefined;
+  }
+  
   private async loadTopCities(reset: boolean = false): Promise<void> {
     if (!reset && this.eventService.cityCards().length > 0) return;
 
@@ -333,14 +384,4 @@ export class HomeEvent implements OnInit, OnDestroy {
     events: { spaceBetween: 8, slidesPerView: 1.5, allowTouchMove: true, slidesOffsetBefore: 16, slidesOffsetAfter: 16 },
     people: { spaceBetween: 8, slidesPerView: 2.2, allowTouchMove: true, slidesOffsetBefore: 16, slidesOffsetAfter: 16 }
   };
-
-  private initSwipers(): void {
-    this.initializeSwiper('.swiper-city', this.swiperConfigs['cities']);
-    this.initializeSwiper('.swiper-public-event', this.swiperConfigs['events']);
-    this.initializeSwiper('.swiper-event-recommendation', this.swiperConfigs['events']);
-  }
-
-  private initializeSwiper(selector: string, config: SwiperOptions): Swiper | undefined {
-    return new Swiper(selector, config);
-  }
 }

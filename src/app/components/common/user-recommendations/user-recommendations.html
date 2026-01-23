@@ -7,7 +7,7 @@
     </div>
 
     <div class="mt-3">
-      <div class="swiper swiper-user-recommendation">
+      <div class="swiper swiper-user-recommendation" #swiperEl>
         <div class="swiper-wrapper">
           @for (person of peopleCards(); track person.id) {
             <div class="swiper-slide">
