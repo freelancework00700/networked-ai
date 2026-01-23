@@ -200,6 +200,7 @@ export class HomeEvent implements OnInit, OnDestroy {
   }
 
   private async loadEventsIfNeeded(): Promise<void> {
+    this.destroySwipers(); 
     const hasRecommendedEvents = this.eventService.recommendedEvents().length > 0;
     const hasPublicEvents = this.eventService.publicEvents().length > 0;
     const hasUpcomingEvents = this.eventService.upcomingEvents().length > 0;
@@ -230,6 +231,7 @@ export class HomeEvent implements OnInit, OnDestroy {
   }
 
   private async handleAccountChangeAndLogin(): Promise<void> {
+    this.destroySwipers(); 
     this.eventService.resetAllEvents();
     this.eventService.cityCards.set([]);
     await this.loadAllEvents(true);
@@ -337,6 +339,8 @@ export class HomeEvent implements OnInit, OnDestroy {
   }
   
   private async loadTopCities(reset: boolean = false): Promise<void> {
+    this.destroySwipers(); 
+
     if (!reset && this.eventService.cityCards().length > 0) return;
 
     try {
