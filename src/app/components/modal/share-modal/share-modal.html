@@ -1,6 +1,6 @@
 <ion-header mode="md">
   <ion-toolbar mode="md">
-    <div class="p-4">
+    <div class="px-4 py-6">
       <!-- search your network -->
       <searchbar
         (clear)="searchQuery.set('')"
@@ -74,30 +74,13 @@
 
 <ion-footer mode="md">
   <ion-toolbar mode="md">
-    <div class="p-4">
+    <div class="border-t border-gray-200 w-full overflow-x-auto">
       @if (selectedUsers().length > 0 || sendEntireNetwork()) {
-        <app-button [label]="shareButtonLabel()" (click)="share()" [isLoading]="isSharing()" [disabled]="isSharing()" iconName="pi-send" />
-      } @else {
-        <!-- Actions -->
-        <div class="flex justify-around border-t border-gray-200 pt-4">
-          @for (action of actions; track action.label) {
-            <div class="flex flex-col items-center gap-1 text-[11px] text-gray-600">
-              <div class="flex items-center justify-center h-6 w-6">
-                @if (action.type === 'i') {
-                  <div [class]="action.icon + ' !text-[16px] text-black'"></div>
-                } @else if (action.type === 'ion') {
-                  <ion-icon [name]="action.icon" class="h-6 w-6"></ion-icon>
-                } @else if (action.type === 'svg') {
-                  <ion-icon [src]="action.icon" class="h-5 w-5" />
-                }
-              </div>
-
-              <span class="text-center leading-tight">
-                {{ action.label }}
-              </span>
-            </div>
-          }
+        <div class="p-4">
+          <app-button [label]="shareButtonLabel()" (click)="share()" [isLoading]="isSharing()" [disabled]="isSharing()" iconName="pi-send" />
         </div>
+      } @else {
+        <common-share-footer />
       }
     </div>
   </ion-toolbar>

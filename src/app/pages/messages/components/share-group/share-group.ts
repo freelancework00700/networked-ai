@@ -3,15 +3,16 @@ import { QrCodeComponent } from 'ng-qrcode';
 import { Share } from '@capacitor/share';
 import * as htmlToImage from 'html-to-image';
 import { Button } from '@/components/form/button';
-import { IonIcon } from '@ionic/angular/standalone';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { IonFooter, IonToolbar } from '@ionic/angular/standalone';
+import { CommonShareFooter } from '@/components/common/common-share-footer';
 import { Input, signal, inject, Inject, DOCUMENT, Component, ElementRef, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'share-group',
-  imports: [IonIcon, Button, QrCodeComponent],
+  imports: [Button, IonFooter, IonToolbar, QrCodeComponent, CommonShareFooter],
   styleUrl: './share-group.scss',
   templateUrl: './share-group.html'
 })

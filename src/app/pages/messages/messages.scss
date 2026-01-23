@@ -73,12 +73,3 @@ ion-item {
     background-color: var(--neutral-07);
   }
 }
-
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}

@@ -8,7 +8,6 @@ import { NetworkService } from '@/services/network.service';
 import { FeedService } from '@/services/feed.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import {
-  IonIcon,
   IonHeader,
   IonFooter,
   IonToolbar,
@@ -24,6 +23,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IUser } from '@/interfaces/IUser';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { EventService } from '@/services/event.service';
+import { CommonShareFooter } from '@/components/common/common-share-footer';
 
 @Component({
   selector: 'share-modal',
@@ -32,7 +32,7 @@ import { EventService } from '@/services/event.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     Button,
-    IonIcon,
+    CommonShareFooter,
     Checkbox,
     IonFooter,
     Searchbar,
@@ -73,14 +73,6 @@ export class ShareModal implements OnInit {
   currentPage = signal<number>(1);
   totalPages = signal<number>(0);
   sendEntireNetwork = signal<boolean>(false);
-
-  actions = [
-    { icon: 'assets/svg/linkBlackIcon.svg', label: 'Copy Link', type: 'svg' },
-    { icon: 'assets/svg/users.svg', label: 'Contact', type: 'svg' },
-    { icon: 'pi pi-upload ', label: 'Share to', type: 'i' },
-    { icon: 'assets/svg/chatIcon.svg', label: 'Chat', type: 'svg' },
-    { icon: 'assets/svg/messengerIcon.svg', label: 'Messenger', type: 'svg' }
-  ];
 
   private searchSubject = new Subject<string>();
 

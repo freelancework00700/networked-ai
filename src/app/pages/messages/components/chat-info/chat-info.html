@@ -105,7 +105,7 @@
   </div>
 </ion-content>
 <ion-footer mode="md">
-  <ion-toolbar class="bg-white border-t border-gray-200">
+  <ion-toolbar>
     <div class="p-4 max-w-[672px] mx-auto">
       @if (isEditingName()) {
         <app-button label="Save" class="w-full" [disabled]="!tempGroupName().trim()" (click)="saveGroupName()" />

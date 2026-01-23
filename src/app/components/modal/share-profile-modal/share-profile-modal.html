@@ -85,46 +85,9 @@
   <ion-toolbar mode="md">
     <div class="w-full px-4 py-4 max-w-[672px] mx-auto">
       <!-- Download Button -->
-      <div class="">
-        <app-button
-          color="primary"
-          label="Download"
-          iconName="pi-download"
-          (click)="downloadProfile()"
-          [isLoading]="isDownloading()"
-          class="w-full"
-        />
-      </div>
-
-      <!-- Share Options -->
-      <div class="share-options-container">
-        <div class="share-options-scroll">
-          <button type="button" class="share-option-item" (click)="onContact()">
-            <div class="share-option-icon">
-              <ion-icon name="person-add-outline" class="text-[24px] neutral-03"></ion-icon>
-            </div>
-            <span class="body-12R neutral-03">Contact</span>
-          </button>
-          <button type="button" class="share-option-item" (click)="onShareTo()">
-            <div class="share-option-icon">
-              <ion-icon name="share-outline" class="text-[24px] neutral-03"></ion-icon>
-            </div>
-            <span class="body-12R neutral-03">Share to</span>
-          </button>
-          <button type="button" class="share-option-item" (click)="onChat()">
-            <div class="share-option-icon">
-              <ion-icon name="chatbubble-outline" class="text-[24px] neutral-03"></ion-icon>
-            </div>
-            <span class="body-12R neutral-03">Chat</span>
-          </button>
-          <button type="button" class="share-option-item" (click)="onStory()">
-            <div class="share-option-icon">
-              <ion-icon name="logo-instagram" class="text-[24px] neutral-03"></ion-icon>
-            </div>
-            <span class="body-12R neutral-03">Threads</span>
-          </button>
-        </div>
-      </div>
+      <app-button class="w-full" color="primary" label="Download" iconName="pi-download" (click)="downloadProfile()" [isLoading]="isDownloading()" />
     </div>
+
+    <common-share-footer />
   </ion-toolbar>
 </ion-footer>

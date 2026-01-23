@@ -209,3 +209,12 @@ ion-footer {
 .pt-safe {
   padding-top: env(safe-area-inset-top) !important;
 }
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

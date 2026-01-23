@@ -12,13 +12,14 @@ import { Component, inject, ChangeDetectionStrategy, signal, computed, Input, Vi
 import { IUser } from '@/interfaces/IUser';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { environment } from 'src/environments/environment';
+import { CommonShareFooter } from '@/components/common/common-share-footer';
 
 @Component({
   selector: 'share-profile-modal',
   styleUrl: './share-profile-modal.scss',
   templateUrl: './share-profile-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonToolbar, IonFooter, Button, IonIcon, NgOptimizedImage, QrCodeComponent]
+  imports: [IonToolbar, IonFooter, Button, IonIcon, NgOptimizedImage, QrCodeComponent, CommonShareFooter]
 })
 export class ShareProfileModal {
   @ViewChild('downloadableSection', { static: false, read: ElementRef }) downloadableSection?: ElementRef<HTMLDivElement>;
@@ -123,68 +124,6 @@ export class ShareProfileModal {
     } finally {
       this.isDownloading.set(false);
     }
-  }
-
-  onContact(): void {
-    const user = this.user;
-    if (!user?.mobile) {
-      this.toasterService.showError('Phone number not available');
-      return;
-    }
-
-    const link = this.profileLink();
-    window.open(`sms://&body=${encodeURIComponent(link)}`, '_blank');
-  }
-
-  async onShareTo(): Promise<void> {
-    if (Capacitor.getPlatform() === 'web') {
-      // For web, use Web Share API if available
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: this.user?.username || 'Profile',
-            text: this.profileLink()
-          });
-          return;
-        } catch (error: any) {
-          if (error.name !== 'AbortError') {
-            console.error('Error sharing:', error);
-          }
-          return;
-        }
-      }
-      this.toasterService.showError('Share to is only available on mobile devices');
-      return;
-    }
-
-    const link = this.profileLink();
-    if (!link) {
-      this.toasterService.showError('Profile link not available');
-      return;
-    }
-
-    try {
-      await Share.share({
-        title: this.user?.username || 'Profile',
-        text: link
-      });
-    } catch (error) {
-      console.error('Error sharing:', error);
-    }
-  }
-
-  onChat(): void {
-    // TODO: Implement chat functionality
-    console.log('Chat clicked');
-  }
-
-  onStory(): void {
-    const link = this.profileLink();
-    if (!link) return;
-
-    const text = encodeURIComponent(link);
-    const threadsUrl = `https://threads.net/intent/post?text=${text}`;
-    window.open(threadsUrl, '_blank');
   }
 
   async close(): Promise<void> {

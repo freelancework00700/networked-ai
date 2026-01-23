@@ -1,8 +1,8 @@
 <ion-header mode="md">
   <ion-toolbar>
     <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 max-w-[672px] mx-auto">
-      <div class="pi pi-arrow-left" (click)="navCtrl.back()"></div>
-      <div class="body-14M neutral-02 text-center w-full">Host Dashboard</div>
+      <div class="pi pi-arrow-left text-white" (click)="navCtrl.back()"></div>
+      <div class="body-14M text-white text-center w-full">Host Dashboard</div>
       <!-- <div [class]="isDownloading() ? 'pi pi-spinner pi-spin' : 'pi pi-download'" [class.disabled]="isDownloading()"
         (click)="downloadCSV()"></div> -->
     </div>
@@ -12,7 +12,7 @@
 <ion-content [fullscreen]="true" mode="md">
   <div class="min-h-full">
     <div class="w-full max-w-[672px] mx-auto">
-      <div class="flex flex-col">
+      <div class="flex flex-col -mt-[56px]">
         <div class="h-[260px] relative">
           <div class="w-full h-[361px] overflow-hidden">
             <img
@@ -24,49 +24,58 @@
               [ngSrc]="getImageUrl(eventData()?.thumbnail_url || '')"
             />
           </div>
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 flex flex-col justify-end">
-            <div class="heading-h2 text-white">
-              {{ eventData()?.title }}
-            </div>
-
-            <div class="flex gap-4 text-white">
-              <!-- DATE -->
-              <div class="flex items-center gap-2">
-                <i class="pi pi-calendar"></i>
-                <div>
-                  {{ eventData()?.start_date | date: 'EEE M/d, h.mm a' }}
-                </div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent">
+            <div class="p-4 flex flex-col justify-end h-full pb-20 gap-y-2">
+              <div class="heading-h2 text-white">
+                {{ eventData()?.title }}
               </div>
 
-              <!-- LOCATION -->
-              <div class="flex items-center gap-2">
-                <i class="pi pi-map-marker"></i>
-                <div>
-                  {{ eventData()?.address }}
+              <div class="flex gap-4 text-white">
+                <!-- DATE -->
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-calendar"></i>
+                  <div class="truncate">
+                    {{ eventData()?.start_date | date: 'EEE M/d, h.mm a' }}
+                  </div>
+                </div>
+
+                <!-- LOCATION -->
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-map-marker"></i>
+                  <div class="truncate w-[160px]">
+                    {{ eventData()?.address }}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        <div class="-mt-[56px] relative">
+          <div class="ion-padding-horizontal">
+            <div class="flex gap-2">
+              <div
+                class="flex flex-col gap-2 flex-1 bg-neutral-07 border border-[#DBDBDB] shadow-[2px_16px_19px_0px_rgba(0,0,0,0.09)] rounded-lg p-3"
+              >
+                <ion-icon src="assets/svg/ticket/ticket.svg" class="w-6 h-6" />
+                <div class="body-14M neutral-03">Tickets Sold</div>
+                <div class="body-16SB">{{ summary()?.total_sold }}</div>
+              </div>
 
-        <div class="flex m-6">
-          <div class="flex flex-col gap-2 flex-1">
-            <ion-icon src="assets/svg/ticket/ticket.svg" class="w-6 h-6" />
-            <div class="body-14M neutral-03">Tickets Sold</div>
-            <div class="body-16SB">{{ summary()?.total_sold }}</div>
+              <div
+                class="flex flex-col gap-2 flex-1 bg-neutral-07 border border-[#DBDBDB] shadow-[2px_16px_19px_0px_rgba(0,0,0,0.09)] rounded-lg p-3"
+              >
+                <ion-icon src="assets/svg/ticket/dollar.svg" class="w-6 h-6" />
+                <div class="body-14M neutral-03">Total Sales</div>
+                <div class="body-16SB">${{ summary()?.total_sales }}</div>
+              </div>
+            </div>
           </div>
-
-          <div class="flex flex-col gap-2 flex-1">
-            <ion-icon src="assets/svg/ticket/dollar.svg" class="w-6 h-6" />
-            <div class="body-14M neutral-03">Total Sales</div>
-            <div class="body-16SB">${{ summary()?.total_sales }}</div>
+          <div class="p-4">
+            <analytics-tickets [eventData]="eventData()?.tickets" [summary]="summary()" />
           </div>
-        </div>
-        <div class="p-4">
-          <analytics-tickets [eventData]="eventData()?.tickets" [summary]="summary()" />
-        </div>
-        <div class="p-4">
-          <analytics-promo-codes [promoCodes]="promoCodes()" [eventId]="eventData()?.id" />
+          <div class="p-4">
+            <analytics-promo-codes [promoCodes]="promoCodes()" [eventId]="eventData()?.id" />
+          </div>
         </div>
       </div>
     </div>
