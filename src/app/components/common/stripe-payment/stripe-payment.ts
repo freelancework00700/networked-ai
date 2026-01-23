@@ -17,7 +17,7 @@ export class StripePaymentComponent {
   @ViewChild(StripePaymentElementComponent)
   paymentElement!: StripePaymentElementComponent;
 
-  stripe = injectStripe(environment.stripeKey);
+  stripe = injectStripe(environment.stripePublishableKey);
   modalCtrl = inject(ModalController);
 
   // Inputs

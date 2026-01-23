@@ -21,7 +21,7 @@ const setEnv = () => {
     tenorApiKey: '${process.env['TENOR_API_KEY']}',
     maptilerApiKey: '${process.env['MAPTILER_API_KEY']}',
     unsplashApiKey: '${process.env['UNSPLASH_API_KEY']}',
-    stripeKey: '${process.env['STRIPE_KEY']}',
+    stripePublishableKey: '${process.env['STRIPE_PUBLISHABLE_KEY']}',
     firebaseConfig: {
       appId: '${process.env['FIREBASE_APP_ID']}',
       apiKey: '${process.env['FIREBASE_API_KEY']}',
