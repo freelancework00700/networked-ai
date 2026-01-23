@@ -39,6 +39,11 @@ export class FeedService extends BaseApiService {
     this.myFeedsHasMore.set(true);
   }
 
+  removePostFromFeed(postId: string) {
+    this.publicFeeds.update(list => list.filter(p => p.id !== postId));
+    this.networkedFeeds.update(list => list.filter(p => p.id !== postId));
+  }
+
   async getMyFeeds(params: {
     page?: number;
     limit?: number;

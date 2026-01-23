@@ -1,9 +1,13 @@
+import { Capacitor } from '@capacitor/core';
 import { QrCodeComponent } from 'ng-qrcode';
+import { Share } from '@capacitor/share';
+import * as htmlToImage from 'html-to-image';
 import { Button } from '@/components/form/button';
 import { IonIcon } from '@ionic/angular/standalone';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
-import { Input, signal, inject, Inject, DOCUMENT, Component } from '@angular/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Input, signal, inject, Inject, DOCUMENT, Component, ElementRef, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'share-group',
@@ -12,6 +16,8 @@ import { Input, signal, inject, Inject, DOCUMENT, Component } from '@angular/cor
   templateUrl: './share-group.html'
 })
 export class ShareGroup {
+  @ViewChild('downloadableSection', { static: false, read: ElementRef }) downloadableSection?: ElementRef<HTMLDivElement>;
+
   @Input() data: any;
   private modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
@@ -32,31 +38,58 @@ export class ShareGroup {
     this.toasterService.showSuccess('Link copied to clipboard');
   }
 
+  private sanitizeFileName(fileName: string): string {
+    return fileName.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+  }
+
   async downloadQr() {
-    const qrUrl = this.group()?.qrCodeUrl;
-    if (!qrUrl) return;
+    const element = this.downloadableSection?.nativeElement;
+    if (!element) {
+      return;
+    }
+
+    this.isDownloading.set(true);
 
     try {
-      this.isDownloading.set(true);
+      const dataUrl = await htmlToImage.toPng(element, {
+        cacheBust: true,
+        skipFonts: true
+      });
 
-      // Fetch image as blob
-      const response = await fetch(qrUrl);
-      const blob = await response.blob();
+      const username = this.group()?.name || 'group';
+      const sanitizedUsername = this.sanitizeFileName(username);
+      const fileName = `${sanitizedUsername}-${Date.now()}.png`;
 
-      // Create downloadable link
-      const url = window.URL.createObjectURL(blob);
-      const a = this.document.createElement('a');
+      // WEB
+      if (Capacitor.getPlatform() === 'web') {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = fileName;
+        link.click();
+        return;
+      }
 
-      a.href = url;
-      a.download = `${this.group()?.name || 'qr-code'}.png`;
-      this.document.body.appendChild(a);
-      a.click();
+      // MOBILE (Android / iOS)
+      const base64Data = dataUrl.split(',')[1];
 
-      // Cleanup
-      this.document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      const savedFile = await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Documents
+      });
+
+      // iOS → Share sheet
+      if (Capacitor.getPlatform() === 'ios') {
+        await Share.share({
+          title: 'Download Profile',
+          url: savedFile.uri
+        });
+      } else {
+        // Android → Show success message
+        this.toasterService.showSuccess('Profile saved successfully!');
+      }
     } catch (err) {
-      console.error('QR download failed', err);
+      console.error('Profile download failed', err);
     } finally {
       this.isDownloading.set(false);
     }

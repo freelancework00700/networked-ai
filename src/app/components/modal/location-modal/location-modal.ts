@@ -2,11 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
+import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { environment } from 'src/environments/environment';
 import { IonHeader, IonToolbar, IonContent, ModalController } from '@ionic/angular/standalone';
 import { of, Subject, catchError, switchMap, debounceTime, distinctUntilChanged } from 'rxjs';
-import { Input, inject, OnInit, signal, Component, ChangeDetectionStrategy } from '@angular/core';
+import { Input, inject, OnInit, signal, computed, Component, ChangeDetectionStrategy } from '@angular/core';
 
 interface LocationResult {
   city?: string;
@@ -64,6 +65,7 @@ export class LocationModal implements OnInit {
   // services
   private modalCtrl = inject(ModalController);
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
   private modalService = inject(ModalService);
   private searchSubject = new Subject<string>();
 
@@ -75,6 +77,17 @@ export class LocationModal implements OnInit {
   // default coordinates: 33.7501° N, 84.3885° W (Atlanta, GA)
   private readonly DEFAULT_LAT = 33.7501;
   private readonly DEFAULT_LNG = -84.3885;
+
+  // computed coordinates from current user or defaults
+  private readonly currentLat = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.latitude ?? this.DEFAULT_LAT;
+  });
+
+  private readonly currentLng = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.longitude ?? this.DEFAULT_LNG;
+  });
 
   ngOnInit(): void {
     // set search query
@@ -121,7 +134,7 @@ export class LocationModal implements OnInit {
         params: {
           limit: '10',
           key: environment.maptilerApiKey,
-          proximity: `${this.DEFAULT_LNG},${this.DEFAULT_LAT}` // Bias results towards default location
+          proximity: `${this.currentLng()},${this.currentLat()}` // Bias results towards user location or default
         }
       })
       .pipe(
@@ -158,8 +171,8 @@ export class LocationModal implements OnInit {
             // use place_name_en or place_name as the address
             const address = feature.place_name_en || feature.place_name || feature.text_en || feature.text || '';
 
-            // calculate distance from default location
-            const distance = this.calculateDistance(this.DEFAULT_LAT, this.DEFAULT_LNG, latitude, longitude);
+            // calculate distance from user location or default
+            const distance = this.calculateDistance(this.currentLat(), this.currentLng(), latitude, longitude);
 
             return { city, state, address, country, distance, latitude, longitude };
           });

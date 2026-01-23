@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header mode="md">
   <ion-toolbar>
     <div class="relative p-4 max-w-[672px] mx-auto flex items-center">
       <i class="pi pi-arrow-left text-xl cursor-pointer z-10" (click)="handleBack()"></i>
@@ -7,7 +7,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" mode="md">
   <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
     <ion-refresher-content mode="md"></ion-refresher-content>
   </ion-refresher>

@@ -63,13 +63,6 @@ export class AllEvents implements OnInit, OnDestroy {
 
     this.setupSearchDebounce();
     this.loadEvents(true);
-    
-    this.queryParamsSubscription = this.route.queryParams.subscribe(() => {
-      this.currentPage.set(1);
-      this.allEvents.set([]);
-      this.totalPages.set(0);
-      this.loadEvents(true);
-    });
   }
 
   // Helper methods

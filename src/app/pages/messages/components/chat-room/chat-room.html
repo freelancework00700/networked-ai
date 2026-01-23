@@ -6,22 +6,13 @@
       <div class="flex justify-center items-center gap-3 mx-auto" (click)="openChatInfo()">
         <!-- <ion-avatar class="w-12 h-12 mb-1"> -->
           <div class="w-12 h-12 min-w-12 rounded-full overflow-hidden relative cursor-pointer">
-            @if (chatImage()) {
             <img
               fill
               placeholder
               class="rounded-full object-cover"
               (error)="onImageError($event)"
                 [ngSrc]="getImageUrl(chatImage())"
-                [loaderParams]="{ thumbnail: chatImage() || '' }"
             />
-            } @else {
-              <img
-                src="/assets/images/profile.jpeg"
-                class="rounded-full object-cover w-full h-full"
-                (error)="onImageError($event)"
-              />
-            }
           </div>
         <!-- </ion-avatar> -->
         <div class="body-16M neutral-01">{{ chatName() }}</div>

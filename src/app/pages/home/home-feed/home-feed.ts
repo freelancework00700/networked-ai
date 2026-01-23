@@ -45,6 +45,7 @@ export class HomeFeed implements OnDestroy {
     return feeds || [];
   });
 
+
   // Computed pagination state based on current filter
   hasMore = computed(() => {
     const filter = this.feedFilter();

@@ -11,9 +11,25 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
 import { DatePipe, NgOptimizedImage, isPlatformBrowser } from '@angular/common';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
-import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output, signal, ViewChild, computed, PLATFORM_ID } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+  ViewChild,
+  computed,
+  PLATFORM_ID,
+  Input,
+  effect,
+} from '@angular/core';
 import { FeedPost } from '@/interfaces/IFeed';
 import { Router } from '@angular/router';
+import { NetworkService } from '@/services/network.service';
+import { SocketService } from '@/services/socket.service';
+import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 
 @Component({
   imports: [Button, NgOptimizedImage],
@@ -23,9 +39,11 @@ import { Router } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PostCard {
-  @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
+  postRemoved = output<string>();
 
+  @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
   post = input.required<FeedPost>();
+  postPreview = signal<FeedPost | null>(null);
 
   navCtrl = inject(NavController);
   sanitizer = inject(DomSanitizer);
@@ -35,8 +53,11 @@ export class PostCard {
   feedService = inject(FeedService);
   navigationService = inject(NavigationService);
   router = inject(Router);
+  private socketService = inject(SocketService);
+
   private platformId = inject(PLATFORM_ID);
-  
+  private networkService = inject(NetworkService);
+
   private datePipe = new DatePipe('en-US');
 
   onMore = output<void>();
@@ -44,30 +65,67 @@ export class PostCard {
   swiper?: Swiper;
 
   currentSlide = signal(0);
-  
+  isLoading = signal(false);
+
   // Computed property to check if post belongs to current user
   isCurrentUserPost = computed(() => {
     const currentUser = this.authService.currentUser();
     const postUserId = this.post().user_id;
     return currentUser?.id === postUserId;
   });
-  
+
   // Menu items for current user's posts (Edit/Delete only)
   currentUserMenuItems: MenuItem[] = [
     { label: 'Edit', icon: 'assets/svg/editIconBlack.svg', iconType: 'svg', action: 'edit' },
     { label: 'Delete', icon: 'assets/svg/deleteIcon.svg', iconType: 'svg', danger: true, action: 'delete' }
   ];
-  
-  // Menu items for other users' posts
-  otherUserMenuItems: MenuItem[] = [
-    { label: 'Not Interested', icon: 'pi pi-eye-slash', iconType: 'pi', action: 'notInterested' },
-    { label: 'Add to network', icon: 'assets/svg/addUserIcon.svg', iconType: 'svg', action: 'addToNetwork' },
-    { label: 'Mute', icon: 'assets/svg/alertOffBlackIcon.svg', iconType: 'svg', action: 'mute' },
-    { label: 'Unmute', icon: 'assets/svg/alertBlackIcon.svg', iconType: 'svg', action: 'unmute' },
-    { label: 'Block', icon: 'pi pi-ban', iconType: 'pi', action: 'block' },
-    { label: 'Report post', icon: 'assets/svg/social-feed/report.svg', iconType: 'svg', action: 'report' },
-    { label: 'Unfollow', icon: 'assets/svg/social-feed/user-minus.svg', iconType: 'svg', action: 'unfollow' }
-  ];
+
+  getOtherUserMenuItems(): MenuItem[] {
+    const items: MenuItem[] = [];
+
+    items.push({
+      label: 'Not Interested',
+      icon: 'pi pi-eye-slash',
+      iconType: 'pi',
+      action: 'notInterested'
+    });
+
+    if (this.postPreview()?.user?.connection_status === 'NotConnected') {
+      items.push({
+        label: 'Add to network',
+        icon: 'assets/svg/addUserIcon.svg',
+        iconType: 'svg',
+        action: 'addToNetwork'
+      });
+    }
+
+    items.push({
+      label: 'Block',
+      icon: 'pi pi-ban',
+      iconType: 'pi',
+      action: 'block'
+    });
+
+    items.push({
+      label: 'Report post',
+      icon: 'assets/svg/social-feed/report.svg',
+      iconType: 'svg',
+      action: 'report'
+    });
+
+    console.log('connectionStatus', this.postPreview()?.user?.connection_status);
+
+    if (this.postPreview()?.user?.connection_status === 'Connected') {
+      items.push({
+        label: 'Unfollow',
+        icon: 'assets/svg/social-feed/user-minus.svg',
+        iconType: 'svg',
+        action: 'unfollow'
+      });
+    }
+
+    return items;
+  }
 
   // Computed properties for API data
   sortedMedias = computed(() => {
@@ -86,10 +144,16 @@ export class PostCard {
     return dateStr ? new Date(dateStr).getTime() : undefined;
   });
 
+  constructor() {
+    effect(() => {
+      this.postPreview.set(this.post());
+    });
+    this.setupNetworkConnectionListener();
+  }
   ngAfterViewChecked() {
     // Only initialize Swiper in browser environment (not during SSR)
     if (!isPlatformBrowser(this.platformId)) return;
-    
+
     if (this.swiper) return;
     if (!this.swiperEl?.nativeElement) return;
     if (!this.sortedMedias().length) return;
@@ -132,7 +196,7 @@ export class PostCard {
     const diffInMilliseconds = now - displayTimestamp;
 
     if (diffInMilliseconds < 1000) return 'now';
-    
+
     const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     const diffInHours = Math.floor(diffInMinutes / 60);
@@ -153,10 +217,8 @@ export class PostCard {
 
   async openMenu() {
     // Show different menu items based on whether it's the current user's post
-    const menuItems = this.isCurrentUserPost() 
-      ? this.currentUserMenuItems 
-      : this.otherUserMenuItems;
-    
+    const menuItems = this.isCurrentUserPost() ? this.currentUserMenuItems : this.getOtherUserMenuItems();
+
     const result = await this.modalService.openMenuModal(menuItems);
     if (!result) return;
 
@@ -165,9 +227,7 @@ export class PostCard {
       delete: () => this.deletePost(),
       report: () => this.reportPost(),
       block: () => this.blockUser(),
-      unfollow: () => this.unfollowPost(),
-      unmute: () => this.unmutePost(),
-      mute: () => this.mutePost(),
+      unfollow: () => this.showRemoveConnectionAlert(),
       notInterested: () => this.notInterestedPost(),
       addToNetwork: () => this.addToNetwork()
     };
@@ -176,14 +236,54 @@ export class PostCard {
   }
 
   editPost() {
-    this.navCtrl.navigateForward(`/new-post`, { 
-      state: { postId: this.post().id, post: this.post() } 
+    this.navCtrl.navigateForward(`/new-post`, {
+      state: { postId: this.post().id, post: this.post() }
     });
   }
-  
-  addToNetwork() {
+
+  async addToNetwork() {
     // TODO: Implement add to network functionality
-    console.log('Add to network:', this.post().user_id);
+    this.isLoading.set(true);
+    const id = this.post().user_id;
+    if (!id) return;
+
+    try {
+      await this.networkService.sendNetworkRequest(id);
+      this.toasterService.showSuccess('Network request sent successfully');
+    } catch (error) {
+      console.error('Error sending network request:', error);
+      this.toasterService.showError('Failed to send network request');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async showRemoveConnectionAlert(): Promise<void> {
+    const id = this.post().user_id;
+    if (!id) return;
+    const user = this.post().user;
+    const username = user?.username || user?.name || 'this user';
+
+    const result = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/alert-white.svg',
+      title: 'Remove Network?',
+      description: `Are you sure you want to remove ${username} from your network list? The user won't be notified.`,
+      confirmButtonLabel: 'Remove',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      iconBgColor: '#C73838',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        try {
+          await this.networkService.removeNetworkConnection(id);
+          this.toasterService.showSuccess('Network connection removed');
+        } catch (error) {
+          console.error('Error removing network connection:', error);
+          this.toasterService.showError('Failed to remove network connection');
+          throw error;
+        }
+      }
+    });
   }
 
   async deletePost() {
@@ -200,7 +300,7 @@ export class PostCard {
         const postId = this.post().id;
         const response = await this.feedService.deletePost(postId!);
         this.toasterService.showSuccess(response.message);
-        
+
         const currentRoute = this.router.url;
         const isOnCommentsPage = currentRoute.includes('/comments/');
         const isCurrentUserPost = this.isCurrentUserPost();
@@ -213,6 +313,40 @@ export class PostCard {
 
     if (result && result.role === 'error') {
       this.toasterService.showError('Failed to delete post. Please try again.');
+    }
+  }
+
+  private removePostFromUI(): void {
+    const currentRoute = this.router.url;
+    const isOnCommentsPage = currentRoute.includes('/comments/');
+
+    // Navigate back if on comments page
+    if (isOnCommentsPage) {
+      this.navigationService.back();
+    }
+
+    // Emit post id to parent
+    this.feedService.removePostFromFeed(this.post().id!);
+  }
+
+  async notInterestedPost() {
+    const result = await this.modalService.openConfirmModal({
+      iconName: 'pi pi-eye-slash',
+      iconBgColor: '#6B7280',
+      title: 'Not Interested',
+      description: 'We will show you fewer posts like this.',
+      confirmButtonLabel: 'Confirm',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'primary',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        const postId = this.post().id!;
+        this.removePostFromUI();
+      }
+    });
+
+    if (result?.role === 'error') {
+      this.toasterService.showError('Something went wrong. Please try again.');
     }
   }
 
@@ -237,6 +371,7 @@ export class PostCard {
         description: 'We use these reports to show you less of this kind of content in the future.',
         confirmButtonLabel: 'Done'
       });
+      this.removePostFromUI();
     } catch (error) {
       console.error('Error reporting post:', error);
       this.toasterService.showError('Failed to report post. Please try again.');
@@ -249,28 +384,13 @@ export class PostCard {
 
     const result = await this.modalService.openBlockModal(currentPost.user);
     if (!result) return;
-  }
-
-  unfollowPost() {
-    console.log('unfollow');
-  }
-
-  unmutePost() {
-    console.log('unmute');
-  }
-
-  mutePost() {
-    console.log('mute');
-  }
-
-  notInterestedPost() {
-    console.log('not interested');
+    this.removePostFromUI(); 
   }
 
   async sharePost() {
     const postId = this.post().id;
     if (!postId) return;
-    
+
     await this.modalService.openShareModal(postId, 'Post', postId);
   }
 
@@ -344,4 +464,28 @@ export class PostCard {
     event.stopPropagation();
     this.navigateToEvent(slug);
   }
+
+  private setupNetworkConnectionListener(): void {
+    this.socketService.onAfterRegistration(() => {
+      this.socketService.on('network:connection:update', this.networkConnectionHandler);
+    });
+  }
+
+  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+    if (!payload?.id) return;
+
+    const current = this.postPreview();
+    if (!current?.user) return;
+
+    // Update only if this post belongs to the same user
+    if (current.user.id !== payload.id) return;
+
+    this.postPreview.set({
+      ...current,
+      user: {
+        ...current.user,
+        connection_status: payload.connection_status
+      }
+    });
+  };
 }

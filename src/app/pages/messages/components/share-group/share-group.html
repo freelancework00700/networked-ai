@@ -14,7 +14,7 @@
   </div>
 
   <!-- QR CODE -->
-  <div class="flex justify-center mb-4">
+  <div class="flex justify-center mb-4" #downloadableSection>
     <div class="bg-white rounded-2xl p-2 m-2 border gradient-border">
       <qr-code [value]="group()?.inviteLink" [size]="128" errorCorrectionLevel="M"></qr-code>
     </div>
