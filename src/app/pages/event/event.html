@@ -1,5 +1,4 @@
-<ion-header [translucent]="true" mode="ios">
-  <div class="header-top-view-event"></div>
+<ion-header mode="md" [translucent]="true">
   <ion-toolbar>
     <div class="flex justify-between items-center px-4">
       <ion-icon src="/assets/svg/back-arrow.svg" class="h-[20px] w-[20px]" (click)="goBack()"></ion-icon>
@@ -20,6 +19,7 @@
     <p-menu #menu [popup]="true" [model]="eventMenuItems" appendTo="body"> </p-menu>
   </ion-toolbar>
 </ion-header>
+
 <ion-content [fullscreen]="true" mode="md">
   @if (isLoading()) {
     <!-- Loading State - Skeleton -->
@@ -72,7 +72,7 @@
   } @else if (event()) {
     <!-- Event Content -->
     <div class="w-full max-w-[672px] mx-auto bg-neutral-0">
-      <div class="-mt-[44px] image-container">
+      <div class="-mt-[56px] image-container">
         <div class="bg-blur-image relative w-full h-full">
           <img
             fill

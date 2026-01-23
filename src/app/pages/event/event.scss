@@ -1,32 +1,13 @@
-.header-top-view-event {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  padding-top: env(safe-area-inset-top);
-  z-index: 98;
+ion-header {
   background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.5) 0%,
-    rgba(0, 0, 0, 0.3) 30%,
-    rgba(0, 0, 0, 0.02) 80%,
-    transparent 100%
-  ) !important;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
+    to bottom,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.35) 35%,
+    rgba(0, 0, 0, 0.1) 75%,
+    rgba(0, 0, 0, 0) 100%
+  );
 
-.plt-ios .header-top-view-event,
-.plt-iphone .header-top-view-event {
-  height: 100px;
-}
-ion-toolbar {
-  --border-width: 0;
-  --border-color: transparent;
-  --box-shadow: none;
-  position: relative;
-  z-index: 99;
+  --ion-background-color: transparent;
 }
 
 .event-map {
