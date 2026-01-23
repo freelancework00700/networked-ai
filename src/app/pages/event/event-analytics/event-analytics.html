@@ -1,6 +1,6 @@
 <ion-header mode="md" [translucent]="true">
-  <ion-toolbar>
-    <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 max-w-[672px] mx-auto">
+  <ion-toolbar class="!pt-0">
+    <div class="flex items-center gap-2 px-4 pt-safe">
       <div class="pi pi-arrow-left text-white" (click)="navCtrl.back()"></div>
       <div class="body-14M text-white text-center w-full">Host Dashboard</div>
       <!-- <div [class]="isDownloading() ? 'pi pi-spinner pi-spin' : 'pi pi-download'" [class.disabled]="isDownloading()"
@@ -12,7 +12,7 @@
 <ion-content [fullscreen]="true" mode="md">
   <div class="min-h-full">
     <div class="w-full max-w-[672px] mx-auto">
-      <div class="flex flex-col -mt-[56px]">
+      <div class="flex flex-col -mt-[65px]">
         <div class="h-[260px] relative">
           <div class="w-full h-[361px] overflow-hidden">
             <img
@@ -50,7 +50,7 @@
             </div>
           </div>
         </div>
-        <div class="-mt-[56px] relative">
+        <div class="-mt-[50px] relative">
           <div class="ion-padding-horizontal">
             <div class="flex gap-2">
               <div

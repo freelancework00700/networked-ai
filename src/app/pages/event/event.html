@@ -1,6 +1,6 @@
 <ion-header mode="md" [translucent]="true">
-  <ion-toolbar>
-    <div class="flex justify-between items-center px-4">
+  <ion-toolbar class="!pt-0">
+    <div class="flex justify-between items-center px-4 pt-safe">
       <ion-icon src="/assets/svg/back-arrow.svg" class="h-[20px] w-[20px]" (click)="goBack()"></ion-icon>
       @if (event()) {
         <div class="flex items-center gap-4">
@@ -72,7 +72,7 @@
   } @else if (event()) {
     <!-- Event Content -->
     <div class="w-full max-w-[672px] mx-auto bg-neutral-0">
-      <div class="-mt-[56px] image-container">
+      <div class="-mt-[65px] image-container">
         <div class="bg-blur-image relative w-full h-full">
           <img
             fill
