@@ -73,12 +73,7 @@
           >
             @for (photo of selectedPhotos(); track photo.id) {
               <div class="relative flex-shrink-0 w-[48px] h-[48px]">
-                <img 
-                  fill 
-                  (error)="onImageError($event)" 
-                  class="rounded-[4px] object-cover" 
-                  [ngSrc]="getImageUrl(photo.urls.thumb)" 
-                />
+                <img fill (error)="onImageError($event)" class="rounded-[4px] object-cover" [ngSrc]="getImageUrl(photo.urls.thumb)" />
 
                 <div
                   (click)="removeSelectedPhoto(photo)"

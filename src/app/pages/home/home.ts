@@ -19,7 +19,19 @@ type Tab = 'events' | 'feed';
   styleUrl: './home.scss',
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HomeFeed, IonHeader, HomeEvent, IonToolbar, IonContent, SegmentButton, ProfileHeaderToolbar, IonRefresher, IonRefresherContent, NgOptimizedImage, ScrollHandlerDirective]
+  imports: [
+    HomeFeed,
+    IonHeader,
+    HomeEvent,
+    IonToolbar,
+    IonContent,
+    SegmentButton,
+    ProfileHeaderToolbar,
+    IonRefresher,
+    IonRefresherContent,
+    NgOptimizedImage,
+    ScrollHandlerDirective
+  ]
 })
 export class Home implements OnDestroy, ViewWillEnter {
   // services
@@ -27,16 +39,15 @@ export class Home implements OnDestroy, ViewWillEnter {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  
+
   homeFeedRefSignal = viewChild<HomeFeed>('homeFeedRef');
   homeEventRefSignal = viewChild<HomeEvent>('homeEventRef');
-  
 
   // signals
   tab = signal<Tab>('events');
   isLoggedIn = computed(() => !!this.authService.currentUser());
   currentUser = this.authService.currentUser;
-  
+
   // subscriptions
   private queryParamsSubscription?: Subscription;
 
@@ -57,7 +68,7 @@ export class Home implements OnDestroy, ViewWillEnter {
   ionViewWillEnter(): void {
     const params = this.route.snapshot.queryParamMap;
     const tabParam = params.get('tab');
-    
+
     if (tabParam === 'events' || tabParam === 'feed') {
       this.tab.set(tabParam as Tab);
     } else {
@@ -74,13 +85,13 @@ export class Home implements OnDestroy, ViewWillEnter {
     const newTab = value as Tab;
     this.tab.set(newTab);
     const queryParams: any = { tab: newTab };
-    
+
     if (newTab === 'events') {
       queryParams.feedFilter = null;
     } else if (newTab === 'feed') {
       queryParams.eventFilter = null;
     }
-    
+
     // Update URL with query param
     this.router.navigate([], {
       relativeTo: this.route,
@@ -88,11 +99,11 @@ export class Home implements OnDestroy, ViewWillEnter {
       queryParamsHandling: 'merge'
     });
   }
-  
+
   async onRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       const currentTab = this.tab();
-      
+
       if (currentTab === 'events') {
         const homeEvent = this.homeEventRefSignal();
         if (homeEvent) {

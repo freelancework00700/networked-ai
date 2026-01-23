@@ -1,31 +1,29 @@
 <ion-header mode="md">
   <ion-toolbar>
-   <div class="p-6 max-w-[672px] mx-auto">
-    <div class="flex items-center gap-2 cursor-pointer" (click)="previousStep()">
-      <div class="pi pi-arrow-left"></div>
-      <div class="body-14M neutral-02 text-center w-full">Set Up Subscription</div>
-    </div>
-    <div class="flex items-center justify-between mt-4">
-      <div class="heading-h2 neutral-01">{{ stepHeading() }}</div>
-      <!-- Steps -->
-      <div class="flex items-center gap-1">
-        @for (step of steps(); track step) {
-          <div
-            class="rounded-full transition-all duration-200"
-            [ngClass]="step === currentStep() ? 'w-8 h-2 bg-black' : step < currentStep() ? 'w-2 h-2 bg-black' : 'w-2 h-2 bg-gray-300'"
-          ></div>
-        }
+    <div class="p-6 max-w-[672px] mx-auto">
+      <div class="flex items-center gap-2 cursor-pointer" (click)="previousStep()">
+        <div class="pi pi-arrow-left"></div>
+        <div class="body-14M neutral-02 text-center w-full">Set Up Subscription</div>
+      </div>
+      <div class="flex items-center justify-between mt-4">
+        <div class="heading-h2 neutral-01">{{ stepHeading() }}</div>
+        <!-- Steps -->
+        <div class="flex items-center gap-1">
+          @for (step of steps(); track step) {
+            <div
+              class="rounded-full transition-all duration-200"
+              [ngClass]="step === currentStep() ? 'w-8 h-2 bg-black' : step < currentStep() ? 'w-2 h-2 bg-black' : 'w-2 h-2 bg-gray-300'"
+            ></div>
+          }
+        </div>
       </div>
     </div>
-   </div>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" mode="md">
   <div class="min-h-full">
     <div class="w-full p-4 max-w-[672px] mx-auto">
-      
-
       <form [formGroup]="planForm()">
         <!-- Step 1: Plan Details -->
         @if (currentStep() === 1) {
@@ -49,22 +47,26 @@
                 <div class="body-14M neutral-03">Loading events...</div>
               </div>
             } @else if (groupedEventsKeys().length > 0) {
-             <div>
-               @for (group of groupedEventsKeys(); track group) {
-                <div class="flex flex-col gap-2">
-                  <div class="body-16M neutral-02 pt-3">{{ group }}</div>
-                  @for (event of groupedEvents()[group]; track event?.id) {
-                    <subscription-event-card [event]="event" [selected]="selectedEvents().includes(event.id)" (toggle)="toggleEventSelection($event)" />
-                  }
-                </div>
-              }
-              
-              @if (hasMore()) {
-                <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreEvents($event)">
-                  <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more events..." />
-                </ion-infinite-scroll>
-              }
-             </div>
+              <div>
+                @for (group of groupedEventsKeys(); track group) {
+                  <div class="flex flex-col gap-2">
+                    <div class="body-16M neutral-02 pt-3">{{ group }}</div>
+                    @for (event of groupedEvents()[group]; track event?.id) {
+                      <subscription-event-card
+                        [event]="event"
+                        [selected]="selectedEvents().includes(event.id)"
+                        (toggle)="toggleEventSelection($event)"
+                      />
+                    }
+                  </div>
+                }
+
+                @if (hasMore()) {
+                  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreEvents($event)">
+                    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more events..." />
+                  </ion-infinite-scroll>
+                }
+              </div>
             } @else {
               <div class="flex items-center justify-center py-8">
                 <div class="body-14M neutral-03 text-center">No events found. Create an event first to include it in your subscription plan.</div>

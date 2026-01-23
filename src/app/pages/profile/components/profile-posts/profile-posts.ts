@@ -85,7 +85,7 @@ export class ProfilePosts {
       if (reset) {
         this.posts.set(response.posts);
       } else {
-        this.posts.update(p => [...p, ...response.posts]);
+        this.posts.update((p) => [...p, ...response.posts]);
       }
 
       this.currentPage.set(response.page);

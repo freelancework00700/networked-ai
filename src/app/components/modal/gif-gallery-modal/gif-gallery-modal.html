@@ -73,12 +73,7 @@
           >
             @for (gif of selectedGifs(); track gif.id) {
               <div class="relative flex-shrink-0 w-[48px] h-[48px]">
-                <img 
-                  fill 
-                  (error)="onImageError($event)" 
-                  class="rounded-[4px] object-cover" 
-                  [ngSrc]="getImageUrl(getTinyGifUrl(gif))" 
-                />
+                <img fill (error)="onImageError($event)" class="rounded-[4px] object-cover" [ngSrc]="getImageUrl(getTinyGifUrl(gif))" />
 
                 <div
                   (click)="removeSelectedGif(gif)"

@@ -1,11 +1,4 @@
-import {
-  Component,
-  inject,
-  signal,
-  computed,
-  OnInit,
-  ChangeDetectionStrategy,
-} from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { UserService } from 'src/app/services/user.service';
 import { PaymentTransactionItem } from './components/payment-transaction-item';
@@ -25,19 +18,9 @@ export interface PaymentTransaction {
   templateUrl: './payment-history.html',
   styleUrl: './payment-history.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    DatePipe,
-    IonHeader,
-    IonToolbar,
-    IonContent,
-    CommonModule,
-    IonInfiniteScroll,
-    PaymentTransactionItem,
-    IonInfiniteScrollContent,
-  ]
+  imports: [DatePipe, IonHeader, IonToolbar, IonContent, CommonModule, IonInfiniteScroll, PaymentTransactionItem, IonInfiniteScrollContent]
 })
 export class PaymentHistory implements OnInit {
-
   private navCtrl = inject(NavController);
   private userService = inject(UserService);
 
@@ -54,10 +37,7 @@ export class PaymentHistory implements OnInit {
     this.loadPaymentHistory();
   }
 
-  async loadPaymentHistory(
-    event?: CustomEvent
-  ): Promise<void> {
-
+  async loadPaymentHistory(event?: CustomEvent): Promise<void> {
     if (this.isLoading() || !this.hasMore()) {
       event?.target && (event.target as HTMLIonInfiniteScrollElement).complete();
       return;
@@ -66,24 +46,17 @@ export class PaymentHistory implements OnInit {
     try {
       this.isLoading.set(true);
 
-      const response = await this.userService.paymentHistory(
-        this.page,
-        this.limit
-      );
+      const response = await this.userService.paymentHistory(this.page, this.limit);
 
       const newTransactions = response?.data ?? [];
 
-      this.transactions.update(prev => [
-        ...prev,
-        ...newTransactions
-      ]);
+      this.transactions.update((prev) => [...prev, ...newTransactions]);
 
       if (newTransactions.length < this.limit) {
         this.hasMore.set(false);
       } else {
         this.page++;
       }
-
     } catch (error) {
       console.error('Error loading payment history', error);
     } finally {
@@ -97,7 +70,7 @@ export class PaymentHistory implements OnInit {
 
     const groups = new Map<string, any[]>();
 
-    transactions.forEach(tx => {
+    transactions.forEach((tx) => {
       const dateKey = this.formatDateKey(tx.created_at);
 
       if (!groups.has(dateKey)) {
@@ -134,4 +107,3 @@ export class PaymentHistory implements OnInit {
     this.navCtrl.back();
   }
 }
-

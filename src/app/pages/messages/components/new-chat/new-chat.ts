@@ -2,7 +2,17 @@ import { Searchbar } from '@/components/common/searchbar';
 import { AuthService } from '@/services/auth.service';
 import { NetworkService } from '@/services/network.service';
 import { IUser } from '@/interfaces/IUser';
-import { IonHeader, IonToolbar, IonContent, NavController, IonInfiniteScroll, IonInfiniteScrollContent, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/angular/standalone';
+import {
+  IonHeader,
+  IonToolbar,
+  IonContent,
+  NavController,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonRefresher,
+  IonRefresherContent,
+  RefresherCustomEvent
+} from '@ionic/angular/standalone';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
@@ -14,7 +24,17 @@ import { NgOptimizedImage } from '@angular/common';
   styleUrl: './new-chat.scss',
   templateUrl: './new-chat.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonContent, IonToolbar, IonHeader, Searchbar, IonInfiniteScroll, IonInfiniteScrollContent, IonRefresher, IonRefresherContent, NgOptimizedImage]
+  imports: [
+    IonContent,
+    IonToolbar,
+    IonHeader,
+    Searchbar,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
+    IonRefresher,
+    IonRefresherContent,
+    NgOptimizedImage
+  ]
 })
 export class NewChat {
   private navCtrl = inject(NavController);
@@ -157,7 +177,7 @@ export class NewChat {
     if (!currentUserId) return;
 
     const user_ids = [currentUserId, user.id];
-    
+
     this.navCtrl.navigateForward('/chat-room', {
       state: {
         user_ids,

@@ -25,7 +25,19 @@ import { Capacitor } from '@capacitor/core';
   styleUrl: './add-network.scss',
   templateUrl: './add-network.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Searchbar, IonHeader, IonToolbar, IonContent, UserCardList, SearchEmptyState, UserNetworkRequestCard, IonInfiniteScroll, IonInfiniteScrollContent, UserRecommendations]
+  imports: [
+    Button,
+    Searchbar,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    UserCardList,
+    SearchEmptyState,
+    UserNetworkRequestCard,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
+    UserRecommendations
+  ]
 })
 export class AddNetwork implements OnDestroy {
   // services
@@ -63,7 +75,6 @@ export class AddNetwork implements OnDestroy {
 
   isNativePlatform = computed(() => Capacitor.isNativePlatform());
 
-
   constructor() {
     afterEveryRender(() => this.initSwiper());
 
@@ -80,7 +91,7 @@ export class AddNetwork implements OnDestroy {
         distinctUntilChanged(),
         switchMap((query) => {
           const trimmedQuery = query.trim();
-          
+
           if (!trimmedQuery) {
             // Clear search results when query is empty
             this.searchResults.set([]);
@@ -92,11 +103,11 @@ export class AddNetwork implements OnDestroy {
 
           // Set searching state
           this.isSearching.set(true);
-          
+
           // Reset pagination for new search
           this.currentPage.set(1);
           this.totalPages.set(0);
-          
+
           return from(this.userService.searchUsers(trimmedQuery, 1, 15)).pipe(
             map((result) => {
               this.searchResults.set(result.users);
@@ -114,7 +125,8 @@ export class AddNetwork implements OnDestroy {
           );
         }),
         takeUntilDestroyed(this.destroyRef)
-      ).subscribe();
+      )
+      .subscribe();
 
     // Watch searchQuery changes and emit to subject
     effect(() => {
@@ -125,23 +137,22 @@ export class AddNetwork implements OnDestroy {
   async loadMoreSearchResults(event: Event): Promise<void> {
     const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
     const search = this.searchQuery().trim();
-    
+
     if (this.isLoadingMore() || !this.hasMore() || !search) {
       infiniteScroll.complete();
       return;
     }
-    
+
     try {
       this.isLoadingMore.set(true);
-      
+
       const nextPage = this.currentPage() + 1;
       const result = await this.userService.searchUsers(search, nextPage, 15);
-      
+
       // Append new results to existing ones
-      this.searchResults.update(current => [...current, ...result.users]);
+      this.searchResults.update((current) => [...current, ...result.users]);
       this.currentPage.set(result.pagination.currentPage);
       this.totalPages.set(result.pagination.totalPages);
-      
     } catch (error) {
       console.error('Error loading more search results:', error);
     } finally {
@@ -161,7 +172,7 @@ export class AddNetwork implements OnDestroy {
       if (result.barcodes && result.barcodes.length > 0) {
         const barcode = result.barcodes[0];
         const scannedValue = barcode.displayValue || barcode.rawValue || '';
-        
+
         if (scannedValue) {
           await this.handleQRCodeScanned(scannedValue);
         } else {
@@ -217,7 +228,6 @@ export class AddNetwork implements OnDestroy {
     }
   }
 
-
   async acceptNetwork(userId: string): Promise<void> {
     try {
       await this.networkService.acceptNetworkRequest(userId);
@@ -246,7 +256,6 @@ export class AddNetwork implements OnDestroy {
     this.showAll.update((v) => !v);
   }
 
-
   private setupNetworkConnectionListener(): void {
     // Set up listener after socket is registered, or immediately if already registered
     this.socketService.onAfterRegistration(() => {
@@ -262,23 +271,10 @@ export class AddNetwork implements OnDestroy {
     const newStatus = payload.connection_status;
 
     // Update search results if the user is in the search results
-    this.searchResults.update((results) =>
-      results.map((user) =>
-        user.id === userId
-          ? { ...user, connection_status: newStatus }
-          : user
-      )
-    );
+    this.searchResults.update((results) => results.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
 
     // Update network requests if the user is in the requests list
-    this.networkRequests.update((requests) =>
-      requests.map((user) =>
-        user.id === userId
-          ? { ...user, connection_status: newStatus }
-          : user
-      )
-    );
-
+    this.networkRequests.update((requests) => requests.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
   };
 
   ngOnDestroy(): void {

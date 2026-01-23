@@ -35,10 +35,7 @@ export class PlanSubscribers implements OnInit, OnDestroy {
     const search = this.searchQuery().toLowerCase().trim();
     if (!search) return this.users();
 
-    return this.users().filter((user) => 
-      user.name?.toLowerCase().includes(search) ||
-      user.username?.toLowerCase().includes(search)
-    );
+    return this.users().filter((user) => user.name?.toLowerCase().includes(search) || user.username?.toLowerCase().includes(search));
   });
 
   ngOnInit(): void {
@@ -56,14 +53,12 @@ export class PlanSubscribers implements OnInit, OnDestroy {
     try {
       const response = await this.subscriptionService.getPlanSubscribers(planId, 1, 100);
       const subscriptions = response?.data?.data || [];
-      
+
       // Extract user data from subscription objects
-      const users = subscriptions
-        .filter((subscription: any) => subscription?.user)
-        .map((subscription: any) => subscription.user);
-      
+      const users = subscriptions.filter((subscription: any) => subscription?.user).map((subscription: any) => subscription.user);
+
       this.users.set(users);
-      
+
       // Get plan name if available
       if (response?.data?.plan_name) {
         this.planName.set(response.data.plan_name);
@@ -87,13 +82,7 @@ export class PlanSubscribers implements OnInit, OnDestroy {
     const userId = payload.id;
     const newStatus = payload.connection_status;
 
-    this.users.update((users) =>
-      users.map((user) =>
-        user.id === userId
-          ? { ...user, connection_status: newStatus }
-          : user
-      )
-    );
+    this.users.update((users) => users.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
   };
 
   ngOnDestroy(): void {

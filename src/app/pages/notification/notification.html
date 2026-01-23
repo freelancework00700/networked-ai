@@ -26,12 +26,65 @@
 
   <div class="w-full pt-0 max-w-[672px] mx-auto p-6 flex flex-col gap-6">
     @for (notification of notifications(); track notification.id) {
-      <div class="flex flex-col gap-3 cursor-pointer" (click) = "handleNotificationClick(notification)">
+      <div class="flex flex-col gap-3 cursor-pointer" (click)="handleNotificationClick(notification)">
         <div class="flex gap-3 items-start">
-
           <!-- Network connection related notifications -->
           @if (notification?.type === 'Network' && notification?.related_user) {
-              <div class="relative flex-shrink-0">
+            <div class="relative flex-shrink-0">
+              <div class="relative w-12 h-12 rounded-full overflow-hidden">
+                <img
+                  fill
+                  placeholder
+                  (error)="onImageError($event)"
+                  class="rounded-full object-cover"
+                  [ngSrc]="getImageUrl(notification?.related_user?.thumbnail_url || '')"
+                />
+              </div>
+
+              @if (!notification.is_read) {
+                <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
+              }
+            </div>
+            <div class="flex-1 flex flex-col gap-1">
+              <!-- notification body -->
+              <div class="body-14R text-neutral-01" [innerHTML]="notification.body"></div>
+              <!-- time stamp -->
+              <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo }}</div>
+
+              @if (notification.related_user && notification.related_user.connection_status === 'RequestReceived') {
+                <div class="flex gap-3 mt-2" (click)="$event.stopPropagation()">
+                  <app-button height="40px" label="Accept" color="primary" (click)="acceptNetwork(notification.related_user.id)" />
+                  <app-button height="40px" label="Decline" color="secondary" variant="text" (click)="rejectNetwork(notification.related_user.id)" />
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Event related notifications -->
+          @else if (notification?.type === 'MyEvents' || notification?.type === 'Events') {
+            <div class="relative flex-shrink-0">
+              <div class="notification-icon">
+                <ion-icon src="assets/svg/notification/rocket.svg" class="w-6 h-6" />
+
+                @if (!notification.is_read) {
+                  <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
+                }
+              </div>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-1">
+              <!-- notification body -->
+              <div class="body-14R text-neutral-01" [innerHTML]="notification.body"></div>
+              <!-- time stamp -->
+              <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo }}</div>
+            </div>
+          }
+
+          <!-- RSVP request related notifications -->
+          @else if (notification?.type === 'RsvpRequest') {
+            <div class="relative flex-shrink-0">
+              <div class="notification-icon">
+                <!-- <ion-icon src="assets/svg/notification/rocket.svg" class="w-6 h-6" /> -->
                 <div class="relative w-12 h-12 rounded-full overflow-hidden">
                   <img
                     fill
@@ -41,36 +94,11 @@
                     [ngSrc]="getImageUrl(notification?.related_user?.thumbnail_url || '')"
                   />
                 </div>
-  
+
                 @if (!notification.is_read) {
                   <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
                 }
               </div>
-              <div class="flex-1 flex flex-col gap-1">
-                <!-- notification body -->
-                <div class="body-14R text-neutral-01" [innerHTML]="notification.body"></div>
-                <!-- time stamp -->
-                <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo }}</div>
-  
-                @if (notification.related_user && notification.related_user.connection_status === 'RequestReceived') {
-                  <div class="flex gap-3 mt-2" (click)="$event.stopPropagation()">
-                    <app-button height="40px" label="Accept" color="primary" (click)="acceptNetwork(notification.related_user.id)" />
-                    <app-button height="40px" label="Decline" color="secondary" variant="text" (click)="rejectNetwork(notification.related_user.id)" />
-                  </div>
-                }
-              </div>
-          }
-          
-          <!-- Event related notifications -->
-          @else if(notification?.type === 'MyEvents' || notification?.type === 'Events') {
-            <div class="relative flex-shrink-0">
-              <div class="notification-icon">
-                  <ion-icon src="assets/svg/notification/rocket.svg" class="w-6 h-6" />
-
-                  @if (!notification.is_read) {
-                    <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
-                  }
-              </div>
             </div>
 
             <div class="flex-1 flex flex-col gap-1">
@@ -78,36 +106,6 @@
               <div class="body-14R text-neutral-01" [innerHTML]="notification.body"></div>
               <!-- time stamp -->
               <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo }}</div>
-            </div>
-          }
-          
-          <!-- RSVP request related notifications -->
-          @else if(notification?.type === 'RsvpRequest') {
-            <div class="relative flex-shrink-0">
-              <div class="notification-icon">
-                  <!-- <ion-icon src="assets/svg/notification/rocket.svg" class="w-6 h-6" /> -->
-                  <div class="relative w-12 h-12 rounded-full overflow-hidden">
-                    <img
-                      fill
-                      placeholder
-                      (error)="onImageError($event)"
-                      class="rounded-full object-cover"
-                      [ngSrc]="getImageUrl(notification?.related_user?.thumbnail_url || '')"
-                    />
-                  </div>
-
-                  @if (!notification.is_read) {
-                    <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
-                  }
-              </div>
-            </div>
-
-            <div class="flex-1 flex flex-col gap-1">
-              <!-- notification body -->
-              <div class="body-14R text-neutral-01" [innerHTML]="notification.body"></div>
-              <!-- time stamp -->
-              <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo }}</div>
-
 
               @if (notification.event && notification.event.rsvp_requests?.length && notification.event.rsvp_requests?.[0]?.status === 'Pending') {
                 <div class="flex gap-3 mt-2" (click)="$event.stopPropagation()">
@@ -116,13 +114,12 @@
                 </div>
               }
             </div>
-
           }
-          
+
           <!-- Other notifications -->
           @else {
             <div class="relative flex-shrink-0">
-              <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full object-cover"/>
+              <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full object-cover" />
 
               @if (!notification.is_read) {
                 <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>

@@ -11,10 +11,7 @@
 
       <!-- checkbox for sending to entire network -->
       <div class="flex items-center gap-2 pt-2">
-        <p-checkbox 
-          [binary]="true" 
-          [formControl]="selectAllNetworkCtrl()"
-        />
+        <p-checkbox [binary]="true" [formControl]="selectAllNetworkCtrl()" />
         <div class="body-14R">Send to Entire Network</div>
       </div>
     </div>
@@ -37,7 +34,7 @@
               <div class="relative cursor-pointer" (click)="toggleUser(user)">
                 <div class="relative h-16 w-16 rounded-full overflow-hidden">
                   <img
-                    fill 
+                    fill
                     placeholder
                     [ngSrc]="getImageUrl(user)"
                     (error)="onImageError($event)"

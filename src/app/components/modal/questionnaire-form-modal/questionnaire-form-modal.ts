@@ -51,7 +51,9 @@ export class QuestionnaireFormModal {
           type: [q.question_type || q.type, Validators.required],
           required: [isRequired],
           visibility: [visibility],
-          options: this.fb.array(q.options ? q.options.map((opt: any) => this.fb.control(typeof opt === 'object' && opt.option ? opt.option : opt)) : []),
+          options: this.fb.array(
+            q.options ? q.options.map((opt: any) => this.fb.control(typeof opt === 'object' && opt.option ? opt.option : opt)) : []
+          ),
           min: [q.min || null],
           max: [q.max || null],
           rating_scale: [q.rating_scale || null]

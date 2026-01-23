@@ -43,12 +43,11 @@ export type ServerToClientEvents = {
 
   //attendee check-in
   'attendee:check-in:update': (payload: EventAttendee) => void;
-
 };
 
 // Client to Server Events
 export type ClientToServerEvents = {
-  'register': (userId: string) => void;
-  'joinRoom': (payload: { userId: string; roomId: string }) => void;
-  'leaveRoom': (payload: { userId: string; roomId: string }) => void;
+  register: (userId: string) => void;
+  joinRoom: (payload: { userId: string; roomId: string }) => void;
+  leaveRoom: (payload: { userId: string; roomId: string }) => void;
 };

@@ -45,7 +45,6 @@ export class ProfilePreferences implements OnInit, OnDestroy {
   // subscriptions
   private queryParamsSubscription?: Subscription;
 
-
   // variables
   readonly steps = [
     {

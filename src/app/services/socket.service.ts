@@ -14,7 +14,7 @@ export class SocketService implements OnDestroy {
   private feedService = inject(FeedService);
   private messagesService = inject(MessagesService);
   private notificationsService = inject(NotificationsService);
-  
+
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
   private isRegistered = signal<boolean>(false);
   private registrationCallbacks: (() => void)[] = [];
@@ -32,7 +32,7 @@ export class SocketService implements OnDestroy {
     // Disconnect current socket if user changed
     if (this.currentUserId !== newUserId) {
       this.currentUserId = newUserId;
-      
+
       // Reconnect if new user is logged in (force reconnection)
       if (newUserId) {
         this.connect(true);
@@ -82,7 +82,7 @@ export class SocketService implements OnDestroy {
       console.log('Socket registration successful:', data);
       this.isRegistered.set(true);
       // Execute all pending callbacks
-      this.registrationCallbacks.forEach(callback => callback());
+      this.registrationCallbacks.forEach((callback) => callback());
       this.registrationCallbacks = [];
     });
 
@@ -166,18 +166,12 @@ export class SocketService implements OnDestroy {
     this.socket = null;
   }
 
-  emit<E extends keyof ClientToServerEvents>(
-    eventName: E,
-    ...args: Parameters<NonNullable<ClientToServerEvents[E]>>
-  ): void {
+  emit<E extends keyof ClientToServerEvents>(eventName: E, ...args: Parameters<NonNullable<ClientToServerEvents[E]>>): void {
     if (!this.socket) return;
     this.socket.emit(eventName, ...(args as any));
   }
 
-  on<E extends keyof ServerToClientEvents>(
-    eventName: E,
-    handler: ServerToClientEvents[E]
-  ): void {
+  on<E extends keyof ServerToClientEvents>(eventName: E, handler: ServerToClientEvents[E]): void {
     if (!this.socket) return;
     this.socket.on(eventName, handler as any);
   }
@@ -198,10 +192,7 @@ export class SocketService implements OnDestroy {
     }
   }
 
-  off<E extends keyof ServerToClientEvents>(
-    eventName: E,
-    handler?: ServerToClientEvents[E]
-  ): void {
+  off<E extends keyof ServerToClientEvents>(eventName: E, handler?: ServerToClientEvents[E]): void {
     if (!this.socket) return;
     if (handler) {
       this.socket.off(eventName as any, handler as any);
@@ -214,4 +205,3 @@ export class SocketService implements OnDestroy {
     this.disconnect();
   }
 }
-

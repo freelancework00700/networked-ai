@@ -124,7 +124,7 @@ export class EmailInput implements OnInit {
     if (this.parentFormGroup.get(this.controlName())) {
       this.parentFormGroup.removeControl(this.controlName());
     }
-    
+
     this.parentFormGroup.addControl(
       this.controlName(),
       this.fb.control('', {

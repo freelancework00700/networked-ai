@@ -9,7 +9,7 @@ describe('UserSubscriptionPlans', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [UserSubscriptionPlans],
-      imports: [IonicModule.forRoot()],
+      imports: [IonicModule.forRoot()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(UserSubscriptionPlans);

@@ -11,7 +11,7 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NotificationsService } from '@/services/notifications.service';
 import { IonContent, IonHeader, IonIcon, IonToolbar, NavController } from '@ionic/angular/standalone';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { IonRefresher, IonInfiniteScroll, IonRefresherContent, RefresherCustomEvent, IonInfiniteScrollContent} from '@ionic/angular/standalone';
+import { IonRefresher, IonInfiniteScroll, IonRefresherContent, RefresherCustomEvent, IonInfiniteScrollContent } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'notification',
@@ -40,12 +40,12 @@ export class Notification {
   private networkService = inject(NetworkService);
   private toasterService = inject(ToasterService);
   private notificationsService = inject(NotificationsService);
-  
+
   // signals
   isLoadingMore = signal(false);
   notifications = this.notificationsService.notifications;
   notificationFilter = signal<NotificationType>(NotificationType.ALL);
-  
+
   // computed
   isLoading = computed(() => this.notificationsService.isLoading());
   pagination = computed(() => this.notificationsService.pagination());
@@ -68,7 +68,7 @@ export class Notification {
       const limit = untracked(() => this.pagination().limit);
       this.notificationsService.resetAndLoad(this.notificationFilter(), limit);
     });
-    
+
     // fetch unread count on component initialization
     this.notificationsService.fetchUnreadCount();
   }
@@ -131,7 +131,7 @@ export class Notification {
       this.toasterService.showError('Failed to accept network request');
     }
   }
-  
+
   async rejectNetwork(userId: string): Promise<void> {
     try {
       await this.networkService.rejectNetworkRequest(userId);
@@ -143,10 +143,9 @@ export class Notification {
 
   async acceptRsvpRequest(notification: INotification): Promise<void> {
     try {
-
       const eventId = notification.event?.id;
       const requestId = notification.event?.rsvp_requests?.[0]?.id;
-      if(!eventId || !requestId) return;
+      if (!eventId || !requestId) return;
 
       await this.eventService.approveOrRejectRsvpRequest(eventId, requestId, 'Approved');
     } catch (error) {
@@ -157,10 +156,9 @@ export class Notification {
 
   async rejectRsvpRequest(notification: INotification): Promise<void> {
     try {
-
       const eventId = notification.event?.id;
       const requestId = notification.event?.rsvp_requests?.[0]?.id;
-      if(!eventId || !requestId) return;
+      if (!eventId || !requestId) return;
 
       await this.eventService.approveOrRejectRsvpRequest(eventId, requestId, 'Rejected');
     } catch (error) {
@@ -172,11 +170,11 @@ export class Notification {
   async handleNotificationClick(notification: INotification): Promise<void> {
     this.notificationsService.markNotificationRead(notification.id);
 
-    if(notification.type === NotificationType.NETWORK) {
+    if (notification.type === NotificationType.NETWORK) {
       this.navCtrl.navigateForward(`/${notification.related_user?.username}`);
     } else if (notification.type === NotificationType.MY_EVENTS || notification.type === NotificationType.EVENTS) {
       this.navCtrl.navigateForward(`/event/${notification.event?.slug}`);
-    } else if(notification.type === NotificationType.RSVP_REQUEST) {
+    } else if (notification.type === NotificationType.RSVP_REQUEST) {
       this.navCtrl.navigateForward(`/${notification.related_user?.username}`);
     }
   }

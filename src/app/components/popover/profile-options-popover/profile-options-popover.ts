@@ -14,7 +14,7 @@ export class ProfileOptionsPopover {
   // inputs
   @Input() isViewingOtherProfile: boolean = false;
   @Input() user?: IUser;
-  
+
   // services
   private popoverCtrl = inject(PopoverController);
   private navigationService = inject(NavigationService);

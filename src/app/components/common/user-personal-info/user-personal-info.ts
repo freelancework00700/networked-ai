@@ -45,12 +45,12 @@ export class UserPersonalInfo {
     this.usernameInput?.shouldValidate.set(true);
 
     const isValid = await validateFields(this.formGroup(), this.validationFields);
-    
+
     // Disable async validation after validation
     this.emailInput?.shouldValidate.set(false);
     this.mobileInput?.shouldValidate.set(false);
     this.usernameInput?.shouldValidate.set(false);
-    
+
     return isValid;
   }
 

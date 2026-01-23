@@ -6,7 +6,6 @@ import { INotification, INotificationPagination, INotificationsResponse } from '
 
 @Injectable({ providedIn: 'root' })
 export class NotificationsService extends BaseApiService {
-
   currentPage = signal<number>(1);
   unreadCount = signal<number>(0);
   isLoading = signal<boolean>(false);
@@ -16,9 +15,8 @@ export class NotificationsService extends BaseApiService {
     limit: 10,
     totalPages: 1,
     totalCount: 0,
-    currentPage: 1,
+    currentPage: 1
   });
-
 
   applyNotificationUpsert(notification: INotification): void {
     this.notifications.update((current) => {
@@ -41,11 +39,13 @@ export class NotificationsService extends BaseApiService {
     });
   }
 
-  async getNotifications(params: {
-    page?: number;
-    limit?: number;
-    type?: string;
-  } = {}): Promise<{ notifications: INotification[]; pagination: INotificationPagination }> {
+  async getNotifications(
+    params: {
+      page?: number;
+      limit?: number;
+      type?: string;
+    } = {}
+  ): Promise<{ notifications: INotification[]; pagination: INotificationPagination }> {
     try {
       const page = params.page ?? 1;
       const limit = params.limit ?? 10;
@@ -74,12 +74,14 @@ export class NotificationsService extends BaseApiService {
     }
   }
 
-  async loadNotifications(params: {
-    page?: number;
-    limit?: number;
-    type?: NotificationType;
-    append?: boolean;
-  } = {}): Promise<{ notifications: INotification[]; pagination: INotificationPagination }> {
+  async loadNotifications(
+    params: {
+      page?: number;
+      limit?: number;
+      type?: NotificationType;
+      append?: boolean;
+    } = {}
+  ): Promise<{ notifications: INotification[]; pagination: INotificationPagination }> {
     try {
       this.isLoading.set(true);
 
@@ -121,9 +123,7 @@ export class NotificationsService extends BaseApiService {
   async markNotificationRead(notificationId: string): Promise<void> {
     try {
       await this.put(`/notifications/${notificationId}/read`, {});
-      this.notifications.update((notifications) =>
-        notifications.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
-      );
+      this.notifications.update((notifications) => notifications.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n)));
       await this.fetchUnreadCount();
     } catch (error) {
       console.error('Error marking notification read:', error);
@@ -144,7 +144,7 @@ export class NotificationsService extends BaseApiService {
 
   async fetchUnreadCount(): Promise<void> {
     try {
-      const response = await this.get<{data: {count: number}}>('/notifications/unread-count');
+      const response = await this.get<{ data: { count: number } }>('/notifications/unread-count');
       this.unreadCount.set(response?.data?.count || 0);
     } catch (error) {
       console.error('Error fetching unread count:', error);

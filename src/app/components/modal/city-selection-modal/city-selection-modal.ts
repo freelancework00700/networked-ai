@@ -38,7 +38,7 @@ export class CitySelectionModal implements OnInit {
     try {
       this.isLoading.set(true);
       const cities = await this.eventService.getTopCities();
-      const mappedCities: City[] = cities.map(city => ({
+      const mappedCities: City[] = cities.map((city) => ({
         name: city.city || '',
         state: city.state,
         isCurrentLocation: false
@@ -70,7 +70,7 @@ export class CitySelectionModal implements OnInit {
     if (!selected || (!selected.city && !selected.state)) {
       return (city: City | 'all') => city === 'all';
     }
-    
+
     return (city: City | 'all') => {
       if (city === 'all') return false;
       return city.name === selected.city && city.state === selected.state;

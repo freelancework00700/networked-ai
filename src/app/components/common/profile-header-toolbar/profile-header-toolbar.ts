@@ -31,7 +31,6 @@ export class ProfileHeaderToolbar {
     this.navigationService.navigateForward('/notification');
     this.popoverService.close();
   }
-  
 
   async openAccountSwitcherPopover(event: Event): Promise<void> {
     this.isPopoverOpen.set(true);
@@ -39,7 +38,6 @@ export class ProfileHeaderToolbar {
     this.isPopoverOpen.set(false);
     this.popoverService.close();
   }
-
 
   async openProfileOptionsPopover(event: Event): Promise<void> {
     await this.popoverService.openProfileOptionsPopover(event);

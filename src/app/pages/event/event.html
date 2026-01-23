@@ -3,18 +3,18 @@
   <ion-toolbar>
     <div class="flex justify-between items-center px-4">
       <ion-icon src="/assets/svg/back-arrow.svg" class="h-[20px] w-[20px]" (click)="goBack()"></ion-icon>
-      @if(event()){
+      @if (event()) {
         <div class="flex items-center gap-4">
-        <ion-icon src="/assets/svg/share.svg" class="h-[20px] w-[20px]" (click)="shareEvent()"></ion-icon>
-        <div class="w-[20px] h-[20px] flex items-center justify-center cursor-pointer" (click)="likeEvent()">
-          @if (isEventLiked()) {
-            <div class="pi pi-heart-fill !text-[19px] accent-red"></div>
-          } @else {
-            <ion-icon src="/assets/svg/like.svg" class="h-[20px] w-[20px]"></ion-icon>
-          }
+          <ion-icon src="/assets/svg/share.svg" class="h-[20px] w-[20px]" (click)="shareEvent()"></ion-icon>
+          <div class="w-[20px] h-[20px] flex items-center justify-center cursor-pointer" (click)="likeEvent()">
+            @if (isEventLiked()) {
+              <div class="pi pi-heart-fill !text-[19px] accent-red"></div>
+            } @else {
+              <ion-icon src="/assets/svg/like.svg" class="h-[20px] w-[20px]"></ion-icon>
+            }
+          </div>
+          <ion-icon src="/assets/svg/dots-vertical.svg" class="h-[20px] w-[20px]" (click)="menu.toggle($event)"></ion-icon>
         </div>
-        <ion-icon src="/assets/svg/dots-vertical.svg" class="h-[20px] w-[20px]" (click)="menu.toggle($event)"></ion-icon>
-      </div>
       }
     </div>
     <p-menu #menu [popup]="true" [model]="eventMenuItems" appendTo="body"> </p-menu>
@@ -134,11 +134,7 @@
       />
     </div>
   } @else {
-    <app-empty-state
-      [title]="'No Events Found'"
-      [message]="''"
-      [showClearButton]="false"
-    />
+    <app-empty-state [title]="'No Events Found'" [message]="''" [showClearButton]="false" />
   }
 </ion-content>
 <ion-footer class="ion-padding-horizontal">

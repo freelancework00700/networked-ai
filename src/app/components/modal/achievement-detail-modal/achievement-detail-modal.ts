@@ -19,11 +19,11 @@ export class AchievementDetailModal {
   @Input() categoryKey: string | null = null;
 
   categoryDisplayNames: Record<string, string> = {
-    'total_events_attended': 'Events Attended',
-    'total_events_hosted': 'Events Hosted',
-    'total_networks': 'Networks',
-    'total_messages_sent': 'Messages',
-    'total_qr_codes_scanned': 'QR Scans'
+    total_events_attended: 'Events Attended',
+    total_events_hosted: 'Events Hosted',
+    total_networks: 'Networks',
+    total_messages_sent: 'Messages',
+    total_qr_codes_scanned: 'QR Scans'
   };
 
   badgeImageUrl = computed(() => {
@@ -40,12 +40,12 @@ export class AchievementDetailModal {
   description = computed(() => {
     const badge = this.achievement;
     const categoryKey = this.categoryKey;
-    
+
     if (!badge || !categoryKey) return '';
     if (badge.is_locked) return 'Locked';
-    
+
     const eventCount = badge.event_count;
-    
+
     // Generate description based on category
     switch (categoryKey) {
       case 'total_events_attended':

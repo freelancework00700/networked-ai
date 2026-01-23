@@ -34,7 +34,7 @@ export type SubscriptionCardMode = 'plan' | 'subscription' | 'select';
 export class SubscriptionCard {
   data = input.required<ISubscription>();
   mode = input<SubscriptionCardMode>('plan');
-  
+
   // For select mode
   checkboxControl = input<FormControl<boolean> | null>(null);
   isSelected = input<boolean>(false);
@@ -46,7 +46,7 @@ export class SubscriptionCard {
 
   // Output for subscription mode
   click = output<ISubscription>();
-  
+
   // Output for select mode
   selectionChange = output<boolean>();
 
@@ -66,11 +66,11 @@ export class SubscriptionCard {
   onClick(): void {
     this.click.emit(this.data());
   }
-  
+
   onCheckboxChange(value: boolean): void {
     this.selectionChange.emit(value);
   }
-  
+
   toggleCheckbox(value?: boolean): void {
     const control = this.checkboxControl();
     if (control) {
@@ -88,7 +88,7 @@ export class SubscriptionCard {
   isPlanMode(): boolean {
     return this.mode() === 'plan';
   }
-  
+
   isSelectMode(): boolean {
     return this.mode() === 'select';
   }

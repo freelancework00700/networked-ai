@@ -225,7 +225,7 @@ export class Profile implements OnDestroy {
     effect(() => {
       const currentUserId = this.authService.currentUser()?.id;
       if (currentUserId) this.handleProfileLoad();
-    })
+    });
 
     effect(() => {
       const user = this.currentUser()?.id;
@@ -241,7 +241,7 @@ export class Profile implements OnDestroy {
 
   private handleProfileLoad() {
     this.isLoading.set(true);
-  
+
     const username = this.username();
     if (username) {
       this.loadUserByUsername(username);
@@ -269,7 +269,7 @@ export class Profile implements OnDestroy {
   ngOnDestroy(): void {
     this.socketService.off('network:connection:update', this.networkConnectionHandler);
   }
-  
+
   ionViewDidLeave() {
     this.routeParamSubscription?.unsubscribe();
   }
@@ -306,12 +306,12 @@ export class Profile implements OnDestroy {
 
   private getActiveSwiper(): Swiper | null {
     if (!this.swiper) return null;
-  
+
     // if swiper is an array, use the last one
     if (Array.isArray(this.swiper)) {
       return this.swiper[this.swiper.length - 1] ?? null;
     }
-  
+
     return this.swiper;
   }
 
@@ -469,7 +469,7 @@ export class Profile implements OnDestroy {
   messageUser(): void {
     const currentUserId = this.authService.currentUser()?.id;
     const otherUserId = this.currentUser()?.id;
-    
+
     if (currentUserId && otherUserId) {
       this.navCtrl.navigateForward('/chat-room', {
         state: {

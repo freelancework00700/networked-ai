@@ -27,7 +27,7 @@ export class ProfileAchievement implements OnInit {
     if (this.isStandalonePage()) {
       const navigation = this.router.currentNavigation();
       const state = navigation?.extras?.state || history.state;
-      
+
       if (state?.user) {
         this.navigationUser.set(state.user);
       }

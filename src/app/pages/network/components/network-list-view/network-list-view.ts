@@ -1,4 +1,17 @@
-import { input, output, Component, inject, signal, computed, effect, DestroyRef, ChangeDetectionStrategy, afterNextRender, afterEveryRender, OnDestroy } from '@angular/core';
+import {
+  input,
+  output,
+  Component,
+  inject,
+  signal,
+  computed,
+  effect,
+  DestroyRef,
+  ChangeDetectionStrategy,
+  afterNextRender,
+  afterEveryRender,
+  OnDestroy
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IonInfiniteScroll, IonInfiniteScrollContent, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/angular/standalone';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, from } from 'rxjs';
@@ -47,8 +60,8 @@ export class NetworkListView implements OnDestroy {
     effect(() => {
       const userId = this.userId();
       if (userId) {
-      this.users.set([]);
-      this.currentPage.set(1);
+        this.users.set([]);
+        this.currentPage.set(1);
         this.totalPages.set(0);
         this.loadConnections(1, false);
       }
@@ -59,7 +72,7 @@ export class NetworkListView implements OnDestroy {
       const lat = this.latitude();
       const lng = this.longitude();
       const rad = this.radius();
-      
+
       // Only reload if we have location data
       if (lat && lng) {
         this.users.set([]);
@@ -110,13 +123,7 @@ export class NetworkListView implements OnDestroy {
     const userId = payload.id;
     const newStatus = payload.connection_status;
 
-    this.users.update((users) =>
-      users.map((user) =>
-        user.id === userId
-          ? { ...user, connection_status: newStatus }
-          : user
-      )
-    );
+    this.users.update((users) => users.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
   };
 
   ngOnDestroy(): void {
@@ -138,7 +145,7 @@ export class NetworkListView implements OnDestroy {
         search: search || undefined,
         latitude: lat || undefined,
         longitude: lng || undefined,
-        radius: (lat && lng) ? rad : undefined,
+        radius: lat && lng ? rad : undefined,
         userId: userId || undefined
       });
 

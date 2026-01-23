@@ -29,7 +29,7 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'policy',
     renderMode: RenderMode.Server
-  }, 
+  },
   {
     path: 'notification',
     renderMode: RenderMode.Server

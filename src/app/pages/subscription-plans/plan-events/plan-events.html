@@ -7,7 +7,7 @@
           {{ headerTitle() }}
         </div>
       </div>
-      
+
       <div class="mt-4">
         <div class="body-12 neutral-03">{{ headerDescription() }}</div>
         <div class="heading-h2 neutral-01">{{ planName() }}</div>
@@ -21,11 +21,7 @@
     <div class="w-full p-4 max-w-[672px] mx-auto">
       @if (showTabs()) {
         <div class="mb-4">
-          <segment-button 
-            [items]="tabItems" 
-            [value]="tabValue()" 
-            (valueChange)="onTabChange($event)" 
-          />
+          <segment-button [items]="tabItems" [value]="tabValue()" (valueChange)="onTabChange($event)" />
         </div>
       }
 
@@ -49,11 +45,7 @@
                 @if (showDeleteIcon() && !isEventCompleted(event)) {
                   <div class="flex items-center gap-3 w-full min-w-0">
                     <div class="flex-1 min-w-0">
-                      <subscription-event-card 
-                        [event]="event" 
-                        [selected]="false"
-                        [showCheckbox]="false"
-                      />
+                      <subscription-event-card [event]="event" [selected]="false" [showCheckbox]="false" />
                     </div>
                     <div class="flex-shrink-0 cursor-pointer p-2" (click)="removeEvent(event.id)">
                       <ion-icon src="assets/svg/deleteIcon.svg" class="w-5 h-5 text-red-600"></ion-icon>
@@ -61,8 +53,8 @@
                   </div>
                 } @else {
                   <div class="w-full min-w-0">
-                    <subscription-event-card 
-                      [event]="event" 
+                    <subscription-event-card
+                      [event]="event"
                       [selected]="isEventSelected(event.id)"
                       [showCheckbox]="showCheckbox()"
                       (toggle)="toggleEventSelection(event.id)"
@@ -72,7 +64,7 @@
               }
             </div>
           }
-          
+
           @if (viewMode() === 'add' && hasMore()) {
             <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreEvents($event)">
               <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more events..." />
@@ -83,16 +75,16 @@
 
       <!-- Empty States -->
       @if (viewMode() === 'included' && showIncludedEmptyState()) {
-        <app-empty-state 
-          [title]="'No Events Included'" 
+        <app-empty-state
+          [title]="'No Events Included'"
           [message]="'No events have been added to this subscription plan yet.'"
           [showClearButton]="false"
         />
       }
 
       @if (viewMode() === 'add' && showAvailableEmptyState()) {
-        <app-empty-state 
-          [title]="'No Events Available'" 
+        <app-empty-state
+          [title]="'No Events Available'"
           [message]="'No events available to add to this subscription plan.'"
           [showClearButton]="false"
         />
@@ -105,24 +97,24 @@
   <ion-toolbar mode="md">
     <div class="p-6 max-w-[672px] mx-auto">
       @if (footerButtonConfig().type === 'single') {
-        <app-button 
+        <app-button
           [label]="footerButtonConfig().label || ''"
-          height="40px" 
+          height="40px"
           [customColor]="footerButtonConfig().color"
           (click)="footerButtonConfig().action?.()"
         />
       } @else {
         <div class="flex items-center gap-2">
-          <app-button 
+          <app-button
             [label]="footerButtonConfig().cancelLabel || ''"
-            height="40px" 
+            height="40px"
             color="secondary"
             class="flex-1"
             (click)="footerButtonConfig().onCancel?.()"
           />
-          <app-button 
+          <app-button
             [label]="footerButtonConfig().confirmLabel || ''"
-            height="40px" 
+            height="40px"
             [customColor]="footerButtonConfig().color"
             class="flex-1"
             [disabled]="footerButtonConfig().disabled || false"

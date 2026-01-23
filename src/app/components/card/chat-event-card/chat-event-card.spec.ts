@@ -9,8 +9,7 @@ describe('ChatEventCard', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ChatEventCard]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ChatEventCard);
     component = fixture.componentInstance;

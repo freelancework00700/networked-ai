@@ -20,4 +20,3 @@ describe('AccountSettings', () => {
     expect(component).toBeTruthy();
   });
 });
-

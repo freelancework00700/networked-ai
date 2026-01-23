@@ -7,13 +7,7 @@
       class="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg"
     >
       <div class="relative w-10 h-10 rounded-full overflow-hidden">
-        <img 
-          fill 
-          placeholder
-          (error)="onImageError($event)"
-          class="rounded-full object-cover"
-          [ngSrc]="getImageUrl(account.thumbnail_url)" 
-        />
+        <img fill placeholder (error)="onImageError($event)" class="rounded-full object-cover" [ngSrc]="getImageUrl(account.thumbnail_url)" />
       </div>
       <span class="body-14M neutral-01">{{ account.name || account.username }}</span>
     </div>

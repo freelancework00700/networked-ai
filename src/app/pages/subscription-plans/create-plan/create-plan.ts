@@ -332,7 +332,6 @@ export class CreatePlan implements OnInit {
     return grouped;
   });
 
-
   private transformEventToSubscriptionEvent(event: IEvent): Event {
     if (!event.start_date) {
       return {
@@ -377,12 +376,10 @@ export class CreatePlan implements OnInit {
     };
   }
 
-
   private getOrganization(event: IEvent): string {
     const hostParticipant = event.participants?.find((p) => p.role === 'Host');
     return hostParticipant?.user?.name || 'Networked AI';
   }
-
 
   private async fetchEvents(page: number): Promise<any> {
     const currentUser = this.authService.currentUser();
@@ -677,7 +674,7 @@ export class CreatePlan implements OnInit {
       if (this.planId) {
         response = await this.subscriptionService.updatePlan(this.planId, payload);
         this.toasterService.showSuccess(response?.message || 'Plan updated successfully');
-      } else {    
+      } else {
         response = await this.subscriptionService.createPlan(payload);
         this.toasterService.showSuccess(response?.message || 'Plan created successfully');
       }

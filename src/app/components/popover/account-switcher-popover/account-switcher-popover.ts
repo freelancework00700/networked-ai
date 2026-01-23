@@ -45,7 +45,7 @@ export class AccountSwitcherPopover {
       cancelButtonLabel: 'Cancel',
       confirmButtonColor: 'danger',
       confirmButtonLabel: 'Sign Out',
-    description: 'Are you sure you want to sign out?'
+      description: 'Are you sure you want to sign out?'
     });
 
     if (result && result.role === 'confirm') {

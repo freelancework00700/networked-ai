@@ -300,7 +300,7 @@ export class GuestList implements OnInit {
         event_id: this.eventData().id,
         attendee_id: id,
         is_checked_in: true
-      }
+      };
       await this.eventService.changeCheckInStatus(payload);
       this.attendees.update((list) => list.map((a) => (a.id === id ? { ...a, is_checked_in: true } : a)));
       this.toasterService.showSuccess('Check-in successfully');
@@ -325,7 +325,7 @@ export class GuestList implements OnInit {
         event_id: this.eventData().id,
         attendee_id: guestId,
         is_checked_in: false
-      }
+      };
       await this.eventService.changeCheckInStatus(payload);
       this.attendees.update((list) => list.map((a) => (a.id === guestId ? { ...a, is_checked_in: false } : a)));
       this.toasterService.showSuccess('Check-in successfully');
@@ -363,12 +363,12 @@ export class GuestList implements OnInit {
       users.map((attendee) =>
         attendee.user?.id === userId
           ? {
-            ...attendee,
-            user: {
-              ...attendee.user,
-              connection_status: newStatus
+              ...attendee,
+              user: {
+                ...attendee.user,
+                connection_status: newStatus
+              }
             }
-          }
           : attendee
       )
     );

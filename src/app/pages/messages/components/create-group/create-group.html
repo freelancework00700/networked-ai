@@ -7,7 +7,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" mode="md"> 
+<ion-content [fullscreen]="true" mode="md">
   <div class="w-full max-w-[672px] mx-auto p-4 flex flex-col gap-2">
     @if (isGroupDetails()) {
       <!-- Group Details Picture + Name Input -->
@@ -35,13 +35,7 @@
           <div class="flex items-center gap-3 py-3 border-b border-gray-200">
             <!-- Profile -->
             <div class="w-12 h-12 rounded-full overflow-hidden relative">
-              <img
-                fill
-                placeholder
-                class="rounded-full object-cover"
-                (error)="onImageError($event)"
-                [ngSrc]="getImageUrl(m?.thumbnail_url ?? '')"
-              />
+              <img fill placeholder class="rounded-full object-cover" (error)="onImageError($event)" [ngSrc]="getImageUrl(m?.thumbnail_url ?? '')" />
             </div>
 
             <!-- Details -->
@@ -140,7 +134,13 @@
             <div class="body-14M neutral-01">Your Network</div>
 
             @for (s of users(); track s.id) {
-              <div class="flex items-center gap-3 py-4 border-b border-gray-200" [class.cursor-pointer]="!isAlreadyInGroup(s.id)" [class.cursor-not-allowed]="isAlreadyInGroup(s.id)" [class.opacity-60]="isAlreadyInGroup(s.id)" (click)="toggleMember(s)">
+              <div
+                class="flex items-center gap-3 py-4 border-b border-gray-200"
+                [class.cursor-pointer]="!isAlreadyInGroup(s.id)"
+                [class.cursor-not-allowed]="isAlreadyInGroup(s.id)"
+                [class.opacity-60]="isAlreadyInGroup(s.id)"
+                (click)="toggleMember(s)"
+              >
                 <div class="relative w-12 h-12 rounded-full overflow-hidden">
                   <img
                     fill

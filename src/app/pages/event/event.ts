@@ -12,7 +12,7 @@ import { ModalService } from '@/services/modal.service';
 import { MenuItem as PrimeMenuItem } from 'primeng/api';
 import { ToasterService } from '@/services/toaster.service';
 import { EventDisplay } from '@/components/common/event-display';
-import { EmptyState } from "@/components/common/empty-state";
+import { EmptyState } from '@/components/common/empty-state';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
@@ -113,10 +113,10 @@ export class Event implements OnInit, OnDestroy {
   menuItems = computed<MenuItem[]>(() => {
     const isCompleted = this.isEventCompleted();
     const displayData = this.eventDisplayData();
-  
+
     const isHost = displayData.isCurrentUserHost;
     const isCoHost = displayData.isCurrentUserCoHost;
-  
+
     let baseItems: MenuItem[] = [
       { label: 'Edit', icon: 'assets/svg/manage-event/edit.svg', iconType: 'svg', action: 'editEvent' },
       { label: 'Analytics', icon: 'assets/svg/manage-event/analytics.svg', iconType: 'svg', action: 'viewEventAnalytics' },
@@ -136,19 +136,15 @@ export class Event implements OnInit, OnDestroy {
         'viewEventPageQr',
         'shareEvent'
       ];
-  
-      return baseItems.filter(item =>
-        allowedActions.includes(item.action || '')
-      );
+
+      return baseItems.filter((item) => allowedActions.includes(item.action || ''));
     }
-  
+
     // Hide Edit & Manage Roles if event completed
     if (isCompleted) {
-      baseItems = baseItems.filter(
-        item => !['editEvent', 'manageRoles'].includes(item.action || '')
-      );
+      baseItems = baseItems.filter((item) => !['editEvent', 'manageRoles'].includes(item.action || ''));
     }
-  
+
     // RSVP Approval
     if (displayData.isRsvpApprovalRequired) {
       const rsvpApprovalItem: MenuItem = {
@@ -157,13 +153,13 @@ export class Event implements OnInit, OnDestroy {
         iconType: 'pi',
         action: 'viewRsvpApproval'
       };
-  
-      const qrIndex = baseItems.findIndex(i => i.action === 'viewEventPageQr');
+
+      const qrIndex = baseItems.findIndex((i) => i.action === 'viewEventPageQr');
       if (qrIndex !== -1) {
         baseItems.splice(qrIndex + 1, 0, rsvpApprovalItem);
       }
     }
-  
+
     // Ticket Scanner (host + native)
     if (isHost && this.isNativePlatform()) {
       const scannerItem: MenuItem = {
@@ -172,16 +168,15 @@ export class Event implements OnInit, OnDestroy {
         iconType: 'svg',
         action: 'scanQRCode'
       };
-  
-      const qrIndex = baseItems.findIndex(i => i.action === 'viewEventPageQr');
+
+      const qrIndex = baseItems.findIndex((i) => i.action === 'viewEventPageQr');
       if (qrIndex !== -1) {
         baseItems.splice(qrIndex + 1, 0, scannerItem);
       }
     }
-  
+
     return baseItems;
   });
-  
 
   networkSuggestions = [
     { id: '1', name: 'Kathryn Murphy', role: 'Staff' },
@@ -770,7 +765,7 @@ export class Event implements OnInit, OnDestroy {
     this.navigationService.navigateForward(`/event/rsvp-approval/${eventId}`, true);
   }
 
-  viewTapToPay() { }
+  viewTapToPay() {}
 
   async shareEvent() {
     const eventId = this.eventIdFromData();
@@ -940,7 +935,7 @@ export class Event implements OnInit, OnDestroy {
         event_id: this.currentEventData().id,
         attendee_id: decodedText,
         is_checked_in: true
-      }
+      };
       if (decodedText) {
         await this.eventService.changeCheckInStatus(payload);
         this.toasterService.showSuccess('Check in successfully');

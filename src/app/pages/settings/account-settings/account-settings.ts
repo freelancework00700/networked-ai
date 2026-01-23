@@ -23,37 +23,24 @@ export class AccountSettings implements OnInit {
   currentUser = computed(() => this.authService.currentUser());
   isLoading = signal<boolean>(false);
 
-
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
   onEditEmail(): void {
-    this.navigationService.navigateForward(
-      '/settings/change-account-info/email',
-      false,
-      {
-        email: this.currentUser()?.email
-      }
-    );
+    this.navigationService.navigateForward('/settings/change-account-info/email', false, {
+      email: this.currentUser()?.email
+    });
   }
 
   onEditPhone(): void {
-    this.navigationService.navigateForward(
-      '/settings/change-account-info/phone',
-      false,
-      {
-        phone: this.currentUser()?.mobile
-      }
-    );
+    this.navigationService.navigateForward('/settings/change-account-info/phone', false, {
+      phone: this.currentUser()?.mobile
+    });
   }
 
   onEditUsername(): void {
-    this.navigationService.navigateForward(
-      '/settings/change-account-info/username',
-      false,
-      {
-        username: this.currentUser()?.username
-      }
-    );
+    this.navigationService.navigateForward('/settings/change-account-info/username', false, {
+      username: this.currentUser()?.username
+    });
   }
 
   async onDeleteAccount(): Promise<void> {

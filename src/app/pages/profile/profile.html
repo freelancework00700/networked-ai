@@ -115,7 +115,10 @@
                   <div class="heading-h3 neutral-01">{{ eventsCount() }}</div>
                   <div class="body-12 neutral-03">Events</div>
                 </div>
-                <div class="flex flex-col items-center w-full cursor-pointer" (click)="currentUser()?.total_events_attended > 0 && navigateToAttendedEvents()">
+                <div
+                  class="flex flex-col items-center w-full cursor-pointer"
+                  (click)="currentUser()?.total_events_attended > 0 && navigateToAttendedEvents()"
+                >
                   <div class="heading-h3 neutral-01">{{ currentUser()?.total_events_attended || 0 }}</div>
                   <div class="body-12 neutral-03">Attended</div>
                 </div>
@@ -234,7 +237,7 @@
               </div>
               <!-- Bottom Row: Set Up Subscription -->
               <app-button
-                [label]="!hasSubscriptionPlan() ? 'Set Up Subscription': 'My Subscription Plans'"
+                [label]="!hasSubscriptionPlan() ? 'Set Up Subscription' : 'My Subscription Plans'"
                 icon="/assets/svg/crown-white.svg"
                 customColor="#2B5BDE"
                 (click)="navigateToSubscriptionPlans()"

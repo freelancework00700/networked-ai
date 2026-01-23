@@ -74,7 +74,7 @@
       <!-- Action Buttons -->
       @if (showActionButtons()) {
         <div class="flex gap-3">
-          @if (eventData().isCurrentUserHost || eventData().isCurrentUserAttendee ||  eventData().isCurrentUserCoHost ) {
+          @if (eventData().isCurrentUserHost || eventData().isCurrentUserAttendee || eventData().isCurrentUserCoHost) {
             <app-button label="Event Chat" icon="assets/svg/messageChatIcon.svg" (click)="onEventChatClick()?.()" class="flex-1" color="secondary" />
           }
           @if (eventData().isCurrentUserHost || eventData().isCurrentUserCoHost) {

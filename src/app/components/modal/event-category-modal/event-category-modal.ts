@@ -29,19 +29,20 @@ export class EventCategoryModal implements OnInit {
 
   ngOnInit(): void {
     if (this.categories && this.categories.length > 0) {
-      const formattedOptions: CategoryOption[] = this.categories.map((cat) => ({
-        value: cat.id || cat.value || '',
-        label: cat.name || '',
-        icon: cat.icon || ''
-      })).filter(opt => opt.value && opt.label);
-      
+      const formattedOptions: CategoryOption[] = this.categories
+        .map((cat) => ({
+          value: cat.id || cat.value || '',
+          label: cat.name || '',
+          icon: cat.icon || ''
+        }))
+        .filter((opt) => opt.value && opt.label);
+
       if (formattedOptions.length > 0) {
         this.options.set(formattedOptions);
       }
     }
     this.selectedValue.set(this.value || '');
   }
-
 
   async dismiss() {
     await this.modalService.close(this.value);

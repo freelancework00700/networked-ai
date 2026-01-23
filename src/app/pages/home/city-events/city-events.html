@@ -1,16 +1,24 @@
 <ion-header mode="md">
   <ion-toolbar mode="md" [style.--background]="'transparent'">
     <div class="relative w-full h-[210px] max-w-[672px] mx-auto">
-      <div class="absolute inset-0 bg-cover bg-center events-bg max-h-[170px] h-[170px]"
-        [style.background-image]="'url(' + (selectedCity().thumbnail_url || selectedCity().image_url || 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80') + ')'">
-      </div>
+      <div
+        class="absolute inset-0 bg-cover bg-center events-bg max-h-[170px] h-[170px]"
+        [style.background-image]="
+          'url(' +
+          (selectedCity().thumbnail_url ||
+            selectedCity().image_url ||
+            'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80') +
+          ')'
+        "
+      ></div>
 
       <div class="absolute inset-0 bg-black/40 max-h-[170px] h-[170px]"></div>
 
       <div class="relative z-10 flex flex-col h-full px-6 py-6">
         <div
           class="w-12 h-12 rounded-full flex items-center justify-center bg-black/35 backdrop-blur-md border border-white/15 cursor-pointer min-h-12"
-          (click)="goBack()">
+          (click)="goBack()"
+        >
           <i class="pi pi-arrow-left text-white text-[20px]"></i>
         </div>
 
@@ -28,8 +36,13 @@
           </div>
         </div>
 
-        <searchbar class="header-searchbar pt-[32px]" [searchQuery]="searchQuery()" [placeholder]="'Search events'"
-          (searchChange)="onSearchChange($event)" (clear)="onSearchClear()" />
+        <searchbar
+          class="header-searchbar pt-[32px]"
+          [searchQuery]="searchQuery()"
+          [placeholder]="'Search events'"
+          (searchChange)="onSearchChange($event)"
+          (clear)="onSearchClear()"
+        />
       </div>
     </div>
   </ion-toolbar>
@@ -40,34 +53,34 @@
     <div class="w-full max-w-[672px] mx-auto pt-0 p-6">
       <div class="flex flex-col gap-4">
         @if (isLoadingEvents()) {
-        <!-- Skeleton loaders -->
-        @for (i of [1, 2, 3, 4, 5]; track i) {
-        <div class="rounded-xl overflow-hidden">
-          <ion-skeleton-text animated class="w-full h-48 rounded-t-xl"></ion-skeleton-text>
-          <div class="p-4 flex flex-col gap-2">
-            <ion-skeleton-text animated class="w-3/4 h-5 rounded"></ion-skeleton-text>
-            <ion-skeleton-text animated class="w-1/2 h-4 rounded"></ion-skeleton-text>
-            <ion-skeleton-text animated class="w-2/3 h-4 rounded"></ion-skeleton-text>
-            <div class="flex items-center gap-2 mt-2">
-              <ion-skeleton-text animated class="w-16 h-4 rounded"></ion-skeleton-text>
-              <ion-skeleton-text animated class="w-20 h-4 rounded"></ion-skeleton-text>
+          <!-- Skeleton loaders -->
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <div class="rounded-xl overflow-hidden">
+              <ion-skeleton-text animated class="w-full h-48 rounded-t-xl"></ion-skeleton-text>
+              <div class="p-4 flex flex-col gap-2">
+                <ion-skeleton-text animated class="w-3/4 h-5 rounded"></ion-skeleton-text>
+                <ion-skeleton-text animated class="w-1/2 h-4 rounded"></ion-skeleton-text>
+                <ion-skeleton-text animated class="w-2/3 h-4 rounded"></ion-skeleton-text>
+                <div class="flex items-center gap-2 mt-2">
+                  <ion-skeleton-text animated class="w-16 h-4 rounded"></ion-skeleton-text>
+                  <ion-skeleton-text animated class="w-20 h-4 rounded"></ion-skeleton-text>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        }
+          }
         } @else if (allEvents().length === 0) {
-        <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
+          <app-empty-state [showClearButton]="!!searchQuery()" (clear)="onSearchClear()" />
         } @else {
-        @for (event of allEvents(); track event.id || event.title || $index) {
-        <event-card [event]="event" />
-        }
+          @for (event of allEvents(); track event.id || event.title || $index) {
+            <event-card [event]="event" />
+          }
         }
       </div>
 
       @if (hasMore()) {
-      <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreEvents($event)">
-        <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more events..." />
-      </ion-infinite-scroll>
+        <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreEvents($event)">
+          <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more events..." />
+        </ion-infinite-scroll>
       }
     </div>
   </div>

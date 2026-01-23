@@ -22,7 +22,7 @@ export class ReportModal implements OnInit {
 
   @Input() type: 'Post' | 'Event' | 'Comment' | 'User' = 'Post';
   @Input() user?: IUser;
-  
+
   // signals
   form = signal<FormGroup>(
     this.fb.group({

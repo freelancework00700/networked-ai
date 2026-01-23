@@ -1,4 +1,4 @@
-import { IEvent } from "./event";
+import { IEvent } from './event';
 
 export interface FeedMedia {
   id?: string;

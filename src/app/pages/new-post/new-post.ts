@@ -14,18 +14,7 @@ import { Mentions } from '@/components/common/mentions';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import {
-  Component,
-  inject,
-  signal,
-  viewChild,
-  ElementRef,
-  ViewChild,
-  ChangeDetectorRef,
-  computed,
-  DestroyRef,
-  OnInit
-} from '@angular/core';
+import { Component, inject, signal, viewChild, ElementRef, ViewChild, ChangeDetectorRef, computed, DestroyRef, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonToolbar, IonHeader, IonContent, NavController, IonFooter, IonIcon } from '@ionic/angular/standalone';
 import { FeedPost, FeedMention } from '@/interfaces/IFeed';
@@ -97,7 +86,7 @@ export class NewPost implements OnInit {
     const hasContent = this.textContent()?.trim().length > 0;
     const hasMedia = this.mediaItems().length > 0;
     const hasEvent = this.eventsCount() > 0;
-    
+
     // Post is disabled if none of the three conditions are met
     return !(hasContent || hasMedia || hasEvent);
   });
@@ -117,7 +106,6 @@ export class NewPost implements OnInit {
       events: this.fb.array([])
     })
   );
-
 
   ngOnInit() {
     const navigationState: any = this.router.currentNavigation()?.extras?.state;

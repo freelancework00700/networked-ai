@@ -1,6 +1,6 @@
 import Swiper from 'swiper';
 import { DatePipe } from '@angular/common';
-import { QrCodeComponent } from "ng-qrcode";
+import { QrCodeComponent } from 'ng-qrcode';
 import { Browser } from '@capacitor/browser';
 import { NavController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
@@ -59,11 +59,9 @@ export class TicketsModal {
     const end = this.event()?.end_date;
     if (!start || !end) return '';
 
-    const startTime =
-      this.datePipe.transform(start, 'h:mm a') || '';
+    const startTime = this.datePipe.transform(start, 'h:mm a') || '';
 
-    const endTime =
-      this.datePipe.transform(end, 'h:mm a') || '';
+    const endTime = this.datePipe.transform(end, 'h:mm a') || '';
 
     return `${startTime} to ${endTime}`;
   });
@@ -110,22 +108,20 @@ export class TicketsModal {
     const mailtoUrl = `mailto:${email}?subject=${subject}&body=${body}`;
 
     window.open(mailtoUrl, '_self');
-
   }
 
   async addToWallet() {
     await Browser.open({
       url: this.userTickets()[this.activeIndex()].apple_wallet_pass_url,
-      toolbarColor: "#dedede",
-      presentationStyle: "popover",
-      windowName: "_self",
+      toolbarColor: '#dedede',
+      presentationStyle: 'popover',
+      windowName: '_self'
     });
   }
 
   close() {
     this.modalCtrl.dismiss();
   }
-
 
   ngAfterViewInit() {
     if (this.userTickets().length > 1) {
@@ -136,8 +132,8 @@ export class TicketsModal {
         on: {
           slideChange: (swiper) => {
             this.activeIndex.set(swiper.activeIndex);
-          },
-        },
+          }
+        }
       });
     }
   }
@@ -154,9 +150,7 @@ export class TicketsModal {
 
     this.event.set({
       ...currentEvent,
-      attendees: currentEvent.attendees?.map((a: any) =>
-        a.id === attendee.id ? { ...a, ...attendee } : a
-      )
+      attendees: currentEvent.attendees?.map((a: any) => (a.id === attendee.id ? { ...a, ...attendee } : a))
     });
   };
 

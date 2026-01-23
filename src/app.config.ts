@@ -71,6 +71,6 @@ export const appConfig: ApplicationConfig = {
     { provide: IMAGE_LOADER, useValue: imageLoaderAndPlaceholder },
     provideHttpClient(withFetch(), withInterceptors([apiInterceptor])),
     providePrimeNG({ theme: { preset: CustomPreset, options: { darkModeSelector: '.app-dark' } } }),
-    provideNgxStripe() 
+    provideNgxStripe()
   ]
 };

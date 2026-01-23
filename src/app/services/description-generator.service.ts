@@ -57,10 +57,10 @@ export class DescriptionGeneratorService {
 
       // Build the prompt similar to Firebase function
       const { event, zonedStartTime, zonedEndTime } = data;
-      
+
       // Build prompt parts, excluding 'TBD' values
       const promptParts: string[] = [];
-      
+
       if (event.title && event.title !== 'TBD') {
         promptParts.push(`title=${event.title}`);
       }
@@ -115,7 +115,7 @@ export class DescriptionGeneratorService {
       throw new Error('No description generated from AI');
     } catch (error: any) {
       console.error('Error generating event description:', error);
-      
+
       if (error?.error?.error?.message) {
         throw new Error(error.error.error.message);
       }
@@ -135,7 +135,7 @@ export class DescriptionGeneratorService {
 
       // Build ticket-specific prompt
       const promptParts: string[] = [];
-      
+
       if (ticketName && ticketName !== 'TBD') {
         promptParts.push(`ticketName=${ticketName}`);
       }
@@ -191,7 +191,7 @@ export class DescriptionGeneratorService {
       throw new Error('No description generated from AI');
     } catch (error: any) {
       console.error('Error generating ticket description:', error);
-      
+
       if (error?.error?.error?.message) {
         throw new Error(error.error.error.message);
       }
@@ -217,7 +217,7 @@ export class DescriptionGeneratorService {
 
       // Build prompt parts
       const promptParts: string[] = [];
-      
+
       if (name && name !== 'TBD') {
         promptParts.push(`planName=${name}`);
       }
@@ -231,13 +231,13 @@ export class DescriptionGeneratorService {
         promptParts.push(`planType=${isSponsor ? 'Sponsor' : 'Event'} subscription`);
       }
       if (planBenefits && planBenefits.length > 0) {
-        const benefitsList = planBenefits.filter(b => b && b.trim() !== '').join(', ');
+        const benefitsList = planBenefits.filter((b) => b && b.trim() !== '').join(', ');
         if (benefitsList) {
           promptParts.push(`benefits=${benefitsList}`);
         }
       }
 
-      const prompt = `Generate a compelling and engaging description for a subscription plan${name ? ` named "${name}"` : ''}${monthlyPrice && monthlyPrice !== '0' ? ` priced at $${monthlyPrice}/month` : ''}${annualPrice && annualPrice !== '0' ? ` (or $${annualPrice}/year with discount)` : ''}${isSponsor ? ' (Sponsor plan)' : ' (Event plan)'}. ${planBenefits && planBenefits.length > 0 ? `The plan includes benefits like: ${planBenefits.filter(b => b && b.trim() !== '').join(', ')}. ` : ''}Make it concise (3-4 paragraphs), highlight the value proposition, and include 2-3 relevant emoji's. Focus on why subscribers should join and what they'll gain.`;
+      const prompt = `Generate a compelling and engaging description for a subscription plan${name ? ` named "${name}"` : ''}${monthlyPrice && monthlyPrice !== '0' ? ` priced at $${monthlyPrice}/month` : ''}${annualPrice && annualPrice !== '0' ? ` (or $${annualPrice}/year with discount)` : ''}${isSponsor ? ' (Sponsor plan)' : ' (Event plan)'}. ${planBenefits && planBenefits.length > 0 ? `The plan includes benefits like: ${planBenefits.filter((b) => b && b.trim() !== '').join(', ')}. ` : ''}Make it concise (3-4 paragraphs), highlight the value proposition, and include 2-3 relevant emoji's. Focus on why subscribers should join and what they'll gain.`;
 
       const headers = new HttpHeaders({
         'Content-Type': 'application/json',
@@ -272,7 +272,7 @@ export class DescriptionGeneratorService {
       throw new Error('No description generated from AI');
     } catch (error: any) {
       console.error('Error generating subscription plan description:', error);
-      
+
       if (error?.error?.error?.message) {
         throw new Error(error.error.error.message);
       }

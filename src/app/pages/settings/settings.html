@@ -10,7 +10,7 @@
 <ion-content [fullscreen]="true" mode="md">
   <div class="w-full px-4 max-w-[672px] mx-auto py-4">
     <!-- Profile Header -->
-    <settings-profile-header/>
+    <settings-profile-header />
 
     <!-- Settings Sections -->
     @for (section of sections(); track section.title) {
@@ -18,10 +18,10 @@
         <h2 class="body-12 neutral-03 mb-3 px-1">{{ section.title }}</h2>
         <div class="bg-neutral-07 px-4 border border-neutral-300 rounded-3xl">
           @for (item of section.items(); track item.label) {
-            <settings-list-item 
-              [item]="item" 
+            <settings-list-item
+              [item]="item"
               [showChevron]="section.useItemShowChevron ? (item.showChevron ?? true) : true"
-              (itemClick)="onItemClick($event)" 
+              (itemClick)="onItemClick($event)"
             />
             @if (!$last) {
               <div class="h-px bg-neutral-05"></div>
@@ -33,11 +33,7 @@
 
     <!-- Sign Out Button -->
     <div class="mb-6">
-      <button
-        type="button"
-        class="w-full flex items-center justify-center gap-2 py-3 !text-red-700 cursor-pointer text-red"
-        (click)="onSignOut()"
-      >
+      <button type="button" class="w-full flex items-center justify-center gap-2 py-3 !text-red-700 cursor-pointer text-red" (click)="onSignOut()">
         <i class="pi pi-sign-out !text-[17px] mr-1"></i>
         <span>Sign Out</span>
       </button>

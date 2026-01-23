@@ -16,7 +16,20 @@ import { Input, OnInit, inject, signal, computed, Component, ChangeDetectionStra
   styleUrl: './ticket-form-modal.scss',
   templateUrl: './ticket-form-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonSpinner, ReactiveFormsModule, Button, TextInput, NumberInput, TextAreaInput, IonHeader, IonToolbar, IonContent, IonFooter, IonSpinner, CheckboxModule]
+  imports: [
+    IonSpinner,
+    ReactiveFormsModule,
+    Button,
+    TextInput,
+    NumberInput,
+    TextAreaInput,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    IonFooter,
+    IonSpinner,
+    CheckboxModule
+  ]
 })
 export class TicketFormModal implements OnInit {
   // services
@@ -194,7 +207,7 @@ export class TicketFormModal implements OnInit {
     } catch (error: any) {
       console.error('Error generating ticket description:', error);
       this.toasterService.showError(error?.message || 'Failed to generate description. Please try again.');
-      
+
       // Set a fallback description on error
       const fallbackDescription = 'This is a generated ticket description. You can customize this content to better match your ticket details.';
       descriptionControl.setValue(fallbackDescription);

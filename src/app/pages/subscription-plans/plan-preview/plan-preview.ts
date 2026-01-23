@@ -1,14 +1,4 @@
-import {
-  input,
-  output,
-  OnInit,
-  signal,
-  computed,
-  OnDestroy,
-  Component,
-  ChangeDetectionStrategy,
-  afterEveryRender
-} from '@angular/core';
+import { input, output, OnInit, signal, computed, OnDestroy, Component, ChangeDetectionStrategy, afterEveryRender } from '@angular/core';
 import { Swiper } from 'swiper';
 import { SwiperOptions } from 'swiper/types';
 import { CommonModule } from '@angular/common';
@@ -43,7 +33,7 @@ export class PlanPreview implements OnDestroy, OnInit {
   selectedPlan = signal<'annual' | 'monthly'>('monthly');
 
   planControl = new FormControl<'annual' | 'monthly'>('monthly');
-  
+
   private readonly swiperConfig: SwiperOptions = {
     spaceBetween: 12,
     slidesPerView: 'auto',
@@ -160,7 +150,7 @@ export class PlanPreview implements OnDestroy, OnInit {
         this.planSelected.emit(value);
       }
     });
-    
+
     // Emit initial selection after view is initialized to sync with parent
     setTimeout(() => {
       this.planSelected.emit(this.selectedPlan());

@@ -97,13 +97,13 @@ export class Signup implements OnInit, OnDestroy {
   private async sendVerificationCode() {
     if (this.activeTab() === 'email') {
       this.emailInput()?.shouldValidate.set(true);
-      
+
       // validate email and password
       if (!(await validateFields(this.signupForm(), ['email', 'password']))) {
         this.emailInput()?.shouldValidate.set(false);
         return;
       }
-      
+
       this.emailInput()?.shouldValidate.set(false);
 
       const { email, password } = this.signupForm().value;
@@ -114,7 +114,7 @@ export class Signup implements OnInit, OnDestroy {
       try {
         this.isLoading.set(true);
         await this.authService.sendOtp({ email });
-        
+
         // store email and password for later registration
         this.email.set(email);
         this.otpSent.set(true);
@@ -142,7 +142,7 @@ export class Signup implements OnInit, OnDestroy {
       try {
         this.isLoading.set(true);
         await this.authService.sendOtp({ mobile });
-        
+
         // store phone number for later registration
         this.otpSent.set(true);
         this.phoneNumber.set(mobile);
@@ -176,7 +176,7 @@ export class Signup implements OnInit, OnDestroy {
           this.toasterService.showError('Invalid OTP for email.');
           return;
         }
-        
+
         // register with email and password
         const { password } = this.signupForm().value;
         await this.authService.register({ email: this.email(), password: password! });
@@ -188,7 +188,7 @@ export class Signup implements OnInit, OnDestroy {
           this.toasterService.showError('Invalid OTP for mobile.');
           return;
         }
-        
+
         // register with mobile
         await this.authService.register({ mobile: this.phoneNumber() });
       }
@@ -223,13 +223,13 @@ export class Signup implements OnInit, OnDestroy {
   async resendOtp() {
     try {
       this.isLoading.set(true);
-      
+
       if (this.activeTab() === 'email') {
         await this.authService.sendOtp({ email: this.email() });
       } else {
         await this.authService.sendOtp({ mobile: this.phoneNumber() });
       }
-      
+
       this.toasterService.showSuccess('Verification code resent successfully.');
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to resend verification code.');

@@ -17,13 +17,7 @@
   }
 
   <div class="relative h-22 w-22 flex-shrink-0">
-    <img
-      fill
-      placeholder
-      class="rounded-xl object-cover"
-      [ngSrc]="eventImage()"
-      [alt]="event()?.title || 'event image'"
-    />
+    <img fill placeholder class="rounded-xl object-cover" [ngSrc]="eventImage()" [alt]="event()?.title || 'event image'" />
   </div>
 
   <div class="flex flex-col gap-2">
@@ -42,7 +36,7 @@
       @if (eventDate()) {
         <div class="flex items-center gap-2 body-12 neutral-02">
           <i class="pi pi-calendar !text-[14px]"></i>
-          <span>{{ event()?.start_date | date:'EEE MMM d' }}</span>
+          <span>{{ event()?.start_date | date: 'EEE MMM d' }}</span>
         </div>
       }
     </div>

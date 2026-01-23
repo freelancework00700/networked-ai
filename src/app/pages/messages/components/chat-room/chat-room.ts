@@ -1,7 +1,17 @@
 import { ActivatedRoute, Router } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { ChangeDetectionStrategy, Component, inject, signal, OnInit, computed, ElementRef, viewChild, OnDestroy } from '@angular/core';
-import { IonFooter, IonHeader, IonContent, IonToolbar, NavController, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, IonIcon } from '@ionic/angular/standalone';
+import {
+  IonFooter,
+  IonHeader,
+  IonContent,
+  IonToolbar,
+  NavController,
+  IonSpinner,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonIcon
+} from '@ionic/angular/standalone';
 import { MessagesService } from '@/services/messages.service';
 import { AuthService } from '@/services/auth.service';
 import { SocketService } from '@/services/socket.service';
@@ -14,8 +24,8 @@ import { NavigationService } from '@/services/navigation.service';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
-import { ChatFeedCard } from "@/components/card/chat-feed-card";
-import { ChatEventCard } from "@/components/card/chat-event-card";
+import { ChatFeedCard } from '@/components/card/chat-feed-card';
+import { ChatEventCard } from '@/components/card/chat-event-card';
 
 @Component({
   selector: 'chat-room',
@@ -279,11 +289,11 @@ export class ChatRoom implements OnInit, OnDestroy {
       // Only add message if it belongs to current room
       if (newMessage.chat_room_id === currentRoomId) {
         // Check if message already exists (avoid duplicates)
-        const existingMessage = this.messages().find(msg => msg.id === newMessage.id);
+        const existingMessage = this.messages().find((msg) => msg.id === newMessage.id);
 
         if (!existingMessage) {
           // Append new message to the array (it will be sorted by computed property)
-          this.messages.update(current => [...current, newMessage]);
+          this.messages.update((current) => [...current, newMessage]);
 
           // Scroll to bottom when new message arrives
           this.scrollToBottom();
@@ -297,11 +307,7 @@ export class ChatRoom implements OnInit, OnDestroy {
 
       // Only update message if it belongs to current room
       if (updatedMessage.chat_room_id === currentRoomId) {
-        this.messages.update(current =>
-          current.map(msg =>
-            msg.id === updatedMessage.id ? updatedMessage : msg
-          )
-        );
+        this.messages.update((current) => current.map((msg) => (msg.id === updatedMessage.id ? updatedMessage : msg)));
       }
     };
 
@@ -309,12 +315,8 @@ export class ChatRoom implements OnInit, OnDestroy {
     this.messageDeletedHandler = (payload: { message_id: string }) => {
       // Only handle if it belongs to current room
       if (payload.message_id) {
-        this.messages.update(current =>
-          current.map(msg =>
-            msg.id === payload.message_id
-              ? { ...msg, is_deleted: true, message: 'This message was deleted' }
-              : msg
-          )
+        this.messages.update((current) =>
+          current.map((msg) => (msg.id === payload.message_id ? { ...msg, is_deleted: true, message: 'This message was deleted' } : msg))
         );
       }
     };
@@ -369,7 +371,7 @@ export class ChatRoom implements OnInit, OnDestroy {
         this.scrollToBottom();
       } else {
         // Prepend older messages at the beginning
-        this.messages.update(current => [...result.messages, ...current]);
+        this.messages.update((current) => [...result.messages, ...current]);
       }
 
       this.currentPage.set(result.pagination.currentPage);
@@ -397,7 +399,6 @@ export class ChatRoom implements OnInit, OnDestroy {
     if (!content) return;
 
     try {
-
       const scrollEl = await content.getScrollElement();
       const previousHeight = scrollEl?.scrollHeight || 0;
 
@@ -408,7 +409,6 @@ export class ChatRoom implements OnInit, OnDestroy {
         scrollEl.scrollTop += newHeight - previousHeight;
         infiniteScroll.complete();
       });
-
     } catch (error) {
       console.error('Error loading more messages:', error);
     } finally {
@@ -544,7 +544,7 @@ export class ChatRoom implements OnInit, OnDestroy {
   }
 
   openEmojiPicker() {
-    this.showEmojiPicker.update(value => !value);
+    this.showEmojiPicker.update((value) => !value);
   }
 
   onEmojiSelect(event: any) {
@@ -565,7 +565,7 @@ export class ChatRoom implements OnInit, OnDestroy {
   }
 
   editMessage(messageId: string) {
-    const message = this.messages().find(m => m.id === messageId);
+    const message = this.messages().find((m) => m.id === messageId);
     if (message) {
       this.editingIndex.set(messageId);
       this.newMessage.set(message.message);

@@ -13,7 +13,7 @@
     (input)="onInput($event)"
     [attr.inputmode]="'numeric'"
     [formControlName]="controlName()"
-    [invalid]="!!getErrorMessage  && isSubmitted() && required()"
+    [invalid]="!!getErrorMessage && isSubmitted() && required()"
     [class.ng-invalid]="!!getErrorMessage && isSubmitted() && required()"
   />
 

@@ -6,7 +6,6 @@ import { LocalStorageService, KEYS } from './localstorage.service';
 
 @Injectable({ providedIn: 'root' })
 export class PushNotificationService {
-
   // services
   private userService = inject(UserService);
   private navigationService = inject(NavigationService);
@@ -29,7 +28,7 @@ export class PushNotificationService {
     });
 
     // Method called when tapping on a notification
-    PushNotifications.addListener('pushNotificationActionPerformed', () => this.navigationService.navigateForward("/notification"));
+    PushNotifications.addListener('pushNotificationActionPerformed', () => this.navigationService.navigateForward('/notification'));
   }
 
   async updateFcmTokenInDatabase(): Promise<void> {

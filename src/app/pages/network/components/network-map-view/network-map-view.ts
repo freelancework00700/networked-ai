@@ -110,17 +110,17 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   private async loadUsers(radius: number, latitude?: string, longitude?: string): Promise<void> {
     try {
       this.isLoading.set(true);
-      
+
       const params: { radius: number; latitude?: string; longitude?: string } = { radius, latitude, longitude };
-      
+
       const users = await this.networkService.getNetworksWithinRadius(params);
       this.users.set(users);
-      
+
       // Update markers immediately if map is ready
       if (this.map) {
         this.addOrUpdateMarkers(users);
       }
-      
+
       // Update map center and radius circle if we have location and users
       if (latitude && longitude && users.length > 0 && this.map) {
         const latNum = parseFloat(latitude);
@@ -154,7 +154,7 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   private getMapCenter(): MapCenter {
     const lat = this.latitude();
     const lng = this.longitude();
-    
+
     if (lat && lng) {
       const latNum = parseFloat(lat);
       const lngNum = parseFloat(lng);
@@ -162,7 +162,7 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
         return [lngNum, latNum];
       }
     }
-    
+
     const firstUser = this.users()[0];
     if (firstUser?.longitude && firstUser?.latitude) {
       const lngNum = typeof firstUser.longitude === 'string' ? parseFloat(firstUser.longitude) : firstUser.longitude;
@@ -171,7 +171,7 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
         return [lngNum, latNum];
       }
     }
-    
+
     return this.DEFAULT_CENTER;
   }
 
@@ -236,13 +236,9 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
     this.markers = [];
 
     users.forEach((user) => {
-      const longitude = user.longitude 
-        ? (typeof user.longitude === 'string' ? parseFloat(user.longitude) : user.longitude)
-        : null;
-      const latitude = user.latitude 
-        ? (typeof user.latitude === 'string' ? parseFloat(user.latitude) : user.latitude)
-        : null;
-      
+      const longitude = user.longitude ? (typeof user.longitude === 'string' ? parseFloat(user.longitude) : user.longitude) : null;
+      const latitude = user.latitude ? (typeof user.latitude === 'string' ? parseFloat(user.latitude) : user.latitude) : null;
+
       if (!longitude || !latitude || isNaN(longitude) || isNaN(latitude)) return;
 
       const markerElement = this.createMarkerElement(user);

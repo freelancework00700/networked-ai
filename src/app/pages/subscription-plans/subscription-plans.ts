@@ -41,15 +41,11 @@ export class SubscriptionPlans implements OnInit, ViewWillEnter {
 
   // computed
   eventPlans = computed(() => {
-    return this.transformPlansToISubscription(
-      this.allPlans().filter(plan => !plan.is_sponsor)
-    );
+    return this.transformPlansToISubscription(this.allPlans().filter((plan) => !plan.is_sponsor));
   });
 
   sponsorPlans = computed(() => {
-    return this.transformPlansToISubscription(
-      this.allPlans().filter(plan => plan.is_sponsor)
-    );
+    return this.transformPlansToISubscription(this.allPlans().filter((plan) => plan.is_sponsor));
   });
 
   currentPlans = computed(() => {
@@ -57,11 +53,11 @@ export class SubscriptionPlans implements OnInit, ViewWillEnter {
   });
 
   hasPlans = computed(() => this.currentPlans().length > 0);
-  
+
   hasAnyPlans = computed(() => this.allPlans().length > 0);
 
   hasEventPlans = computed(() => this.eventPlans().length > 0);
-  
+
   hasSponsorPlans = computed(() => this.sponsorPlans().length > 0);
 
   // Check if we should show segment-specific empty state
@@ -81,7 +77,7 @@ export class SubscriptionPlans implements OnInit, ViewWillEnter {
    * Transform SubscriptionPlan to ISubscription format
    */
   private transformPlansToISubscription(plans: SubscriptionPlan[]): ISubscription[] {
-    return plans.map(plan => ({
+    return plans.map((plan) => ({
       id: plan.product_id,
       name: plan.name,
       subscribers: plan.subscribers || 0,

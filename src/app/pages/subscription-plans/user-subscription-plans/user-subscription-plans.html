@@ -80,7 +80,7 @@
           [monthlyPriceValue]="monthlyPriceValue()"
           [discountValue]="discountValue()"
           [planType]="planType()"
-          [subscriptionCardData]="(isFromMySubscriptions() && hasActiveSubscription()) ? subscriptionCardData() : null"
+          [subscriptionCardData]="isFromMySubscriptions() && hasActiveSubscription() ? subscriptionCardData() : null"
           (planSelected)="onPlanSelected($event)"
         />
       </div>
@@ -100,7 +100,7 @@
           (click)="onUnsubscribe(currentSubscriptionId()!)"
           [disabled]="isLoading() || isSubscriptionCanceled()"
         >
-            <span>Unsubscribe</span>
+          <span>Unsubscribe</span>
         </button>
         @if (isSubscriptionCanceled()) {
           <div class="mt-3 text-center">

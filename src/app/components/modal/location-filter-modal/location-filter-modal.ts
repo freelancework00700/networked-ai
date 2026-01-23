@@ -28,9 +28,11 @@ export class LocationFilterModal {
   distance = signal(20);
   selectedLatitude = signal<string>('');
   selectedLongitude = signal<string>('');
-  form = signal<FormGroup>(this.fb.group({
-    location: ['']
-  }));
+  form = signal<FormGroup>(
+    this.fb.group({
+      location: ['']
+    })
+  );
 
   _initialValues: LocationFilterValues = {};
 

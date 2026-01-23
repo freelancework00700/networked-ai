@@ -24,10 +24,15 @@ export class Leaderboard implements OnInit {
   private userService = inject(UserService);
   private toasterService = inject(ToasterService);
   private navigationService = inject(NavigationService);
-  
+
   tab = signal<Tab>('this-week');
   isLoading = signal<boolean>(false);
-  leaderboardData = signal<{ weekly: LeaderboardUser[]; alltime: LeaderboardUser[]; currentUserWeekly: LeaderboardUser | null; currentUserAlltime: LeaderboardUser | null } | null>(null);
+  leaderboardData = signal<{
+    weekly: LeaderboardUser[];
+    alltime: LeaderboardUser[];
+    currentUserWeekly: LeaderboardUser | null;
+    currentUserAlltime: LeaderboardUser | null;
+  } | null>(null);
 
   tabItems: SegmentButtonItem[] = [
     {

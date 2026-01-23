@@ -27,9 +27,9 @@
         <div class="pi pi-clock neutral-03 !text-[13px]"></div>
         <span class="body-12 neutral-03">
           @if (event().start_date) {
-            {{ event().start_date | date:'h:mm a' }}
+            {{ event().start_date | date: 'h:mm a' }}
             @if (event().end_date) {
-              - {{ event().end_date | date:'h:mm a' }}
+              - {{ event().end_date | date: 'h:mm a' }}
             }
           }
         </span>
@@ -39,8 +39,8 @@
     <!-- day of week and day -->
     <div class="flex flex-col items-center justify-center w-[64px] bg-neutral-06 rounded-[8px] p-2">
       @if (event().start_date) {
-        <div [class]="isWeekend() ? 'body-12 text-red-600' : 'body-12 neutral-03'">{{ event().start_date | date:'EEE' }}</div>
-        <div [class]="isWeekend() ? 'heading-h1 text-red-600' : 'heading-h1 neutral-01'">{{ event().start_date | date:'d' }}</div>
+        <div [class]="isWeekend() ? 'body-12 text-red-600' : 'body-12 neutral-03'">{{ event().start_date | date: 'EEE' }}</div>
+        <div [class]="isWeekend() ? 'heading-h1 text-red-600' : 'heading-h1 neutral-01'">{{ event().start_date | date: 'd' }}</div>
       }
     </div>
   </div>

@@ -2,14 +2,7 @@
   <div class="flex flex-col items-center gap-2">
     <!-- image -->
     <div class="w-20 h-20 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
-      <img 
-        [ngSrc]="userImage()"
-        [alt]="userName()"
-        fill
-        placeholder
-        (error)="onImageError($event)"
-        class="object-cover rounded-full" 
-      />
+      <img [ngSrc]="userImage()" [alt]="userName()" fill placeholder (error)="onImageError($event)" class="object-cover rounded-full" />
     </div>
 
     <!-- name and location -->
@@ -26,10 +19,10 @@
 
     <!-- add button -->
     <div class="w-full">
-      <app-button 
-        label="Add" 
-        iconName="pi-plus" 
-        iconPos="right" 
+      <app-button
+        label="Add"
+        iconName="pi-plus"
+        iconPos="right"
         height="40px"
         [disabled]="isAdding()"
         [isLoading]="isAdding()"

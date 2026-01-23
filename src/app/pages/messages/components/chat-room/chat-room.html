@@ -5,15 +5,9 @@
 
       <div class="flex justify-center items-center gap-3 mx-auto" (click)="openChatInfo()">
         <!-- <ion-avatar class="w-12 h-12 mb-1"> -->
-          <div class="w-12 h-12 min-w-12 rounded-full overflow-hidden relative cursor-pointer">
-            <img
-              fill
-              placeholder
-              class="rounded-full object-cover"
-              (error)="onImageError($event)"
-                [ngSrc]="getImageUrl(chatImage())"
-            />
-          </div>
+        <div class="w-12 h-12 min-w-12 rounded-full overflow-hidden relative cursor-pointer">
+          <img fill placeholder class="rounded-full object-cover" (error)="onImageError($event)" [ngSrc]="getImageUrl(chatImage())" />
+        </div>
         <!-- </ion-avatar> -->
         <div class="body-16M neutral-01">{{ chatName() }}</div>
       </div>
@@ -59,20 +53,20 @@
             [class.pointer-events-none]="editingIndex() !== null && editingIndex() !== msg.id"
             (click)="onLongPress(msg.id)"
           >
-            <div
-              class="rounded-xl max-w-[80%] w-fit message-bubble overflow-hidden"
-              [class]="getMessageClasses(msg)"
-            >
+            <div class="rounded-xl max-w-[80%] w-fit message-bubble overflow-hidden" [class]="getMessageClasses(msg)">
               @if (msg.is_deleted) {
-                <div class="px-4 py-2">
-                This message was deleted
-                </div>
+                <div class="px-4 py-2">This message was deleted</div>
               } @else {
                 <!-- Media (Image or Video) -->
                 @if (msg.media_url) {
                   <div class="relative">
                     @if (msg.type === 'Image' || msg.type === 'image') {
-                      <div class="relative max-w-[300px] overflow-hidden cursor-pointer" [class.rounded-t-xl]="msg.message" [class.rounded-xl]="!msg.message" (click)="openImagePreview(msg.media_url)">
+                      <div
+                        class="relative max-w-[300px] overflow-hidden cursor-pointer"
+                        [class.rounded-t-xl]="msg.message"
+                        [class.rounded-xl]="!msg.message"
+                        (click)="openImagePreview(msg.media_url)"
+                      >
                         <img
                           [src]="getImageUrl(msg.media_url)"
                           class="object-cover w-full h-auto max-h-[400px]"
@@ -82,32 +76,30 @@
                       </div>
                     }
                     @if (msg.type === 'Video' || msg.type === 'video') {
-                      <div class="relative max-w-[300px] max-h-[400px] overflow-hidden" [class.rounded-t-xl]="msg.message" [class.rounded-xl]="!msg.message">
-                        <video 
-                          [src]="getImageUrl(msg.media_url)" 
-                          controls 
-                          class="w-full h-auto max-h-[400px] object-contain"
-                        ></video>
+                      <div
+                        class="relative max-w-[300px] max-h-[400px] overflow-hidden"
+                        [class.rounded-t-xl]="msg.message"
+                        [class.rounded-xl]="!msg.message"
+                      >
+                        <video [src]="getImageUrl(msg.media_url)" controls class="w-full h-auto max-h-[400px] object-contain"></video>
                       </div>
                     }
                   </div>
                 }
                 <!-- Text (with or without media) -->
 
-                @if(msg.feed && msg.type === 'Post') {
-                <app-chat-feed-card [feed]="msg.feed"/>
-                }@else if (msg.event && msg.type === 'Event') {
-                <app-chat-event-card [event]="msg.event"/>
+                @if (msg.feed && msg.type === 'Post') {
+                  <app-chat-feed-card [feed]="msg.feed" />
+                } @else if (msg.event && msg.type === 'Event') {
+                  <app-chat-event-card [event]="msg.event" />
                 }
                 @if (msg.message) {
                   <div class="px-4 py-2" [class.pt-2]="msg.media_url">
-                {{ msg.message }}
+                    {{ msg.message }}
                   </div>
-              }
+                }
                 @if (msg.is_edited && !msg.is_deleted) {
-                  <div class="px-4 pb-2 text-xs opacity-70">
-                    (edited)
-                  </div>
+                  <div class="px-4 pb-2 text-xs opacity-70">(edited)</div>
                 }
               }
             </div>
@@ -118,10 +110,10 @@
 
             @if (selectedIndex() === msg.id && editingIndex() === null && !msg.is_deleted) {
               <div class="absolute right-0 bottom-[-15px] bg-white shadow-lg rounded-xl px-3 py-2 flex gap-4 z-50" (click)="$event.stopPropagation()">
-                @if(msg.type != 'Event' && msg.type !='Post'){
+                @if (msg.type != 'Event' && msg.type != 'Post') {
                   <img src="assets/svg/editIcon.svg" class="w-5 h-5 cursor-pointer" (click)="editMessage(msg.id)" />
                 }
-                  
+
                 <img src="assets/svg/deleteIcon.svg" class="w-5 h-5 cursor-pointer" (click)="deleteMessage(msg.id)" />
               </div>
             }
@@ -135,38 +127,38 @@
           >
             <div class="w-10 h-10 min-w-10 rounded-full overflow-hidden relative cursor-pointer flex-shrink-0">
               @if (msg.posted_by_user.thumbnail_url || msg.posted_by_user.image_url) {
-              <img
-                fill
-                placeholder
-                class="rounded-full object-cover"
-                (error)="onImageError($event)"
-                [ngSrc]="getImageUrl(msg.posted_by_user.thumbnail_url ?? msg.posted_by_user.image_url ?? null)"
-                [loaderParams]="{ thumbnail: msg.posted_by_user.thumbnail_url ?? msg.posted_by_user.image_url ?? '' }"
-              />
-              } @else {
                 <img
-                  src="/assets/images/profile.jpeg"
-                  class="rounded-full object-cover w-full h-full"
+                  fill
+                  placeholder
+                  class="rounded-full object-cover"
                   (error)="onImageError($event)"
+                  [ngSrc]="getImageUrl(msg.posted_by_user.thumbnail_url ?? msg.posted_by_user.image_url ?? null)"
+                  [loaderParams]="{ thumbnail: msg.posted_by_user.thumbnail_url ?? msg.posted_by_user.image_url ?? '' }"
                 />
+              } @else {
+                <img src="/assets/images/profile.jpeg" class="rounded-full object-cover w-full h-full" (error)="onImageError($event)" />
               }
             </div>
 
             <div class="flex flex-col min-w-0 flex-1">
-              <div class="bg-gray-200 rounded-xl max-w-[80%] w-fit overflow-hidden" 
+              <div
+                class="bg-gray-200 rounded-xl max-w-[80%] w-fit overflow-hidden"
                 [class.text-gray-500]="msg.is_deleted"
                 [class.text-gray-900]="!msg.is_deleted"
               >
                 @if (msg.is_deleted) {
-                  <div class="px-4 py-2">
-                  This message was deleted
-                  </div>
+                  <div class="px-4 py-2">This message was deleted</div>
                 } @else {
                   <!-- Media (Image or Video) -->
                   @if (msg.media_url) {
                     <div class="relative">
                       @if (msg.type === 'Image' || msg.type === 'image') {
-                        <div class="relative max-w-[300px] overflow-hidden cursor-pointer" [class.rounded-t-xl]="msg.message" [class.rounded-xl]="!msg.message" (click)="openImagePreview(msg.media_url)">
+                        <div
+                          class="relative max-w-[300px] overflow-hidden cursor-pointer"
+                          [class.rounded-t-xl]="msg.message"
+                          [class.rounded-xl]="!msg.message"
+                          (click)="openImagePreview(msg.media_url)"
+                        >
                           <img
                             [src]="getImageUrl(msg.media_url)"
                             class="object-cover w-full h-auto max-h-[400px]"
@@ -176,36 +168,37 @@
                         </div>
                       }
                       @if (msg.type === 'Video' || msg.type === 'video') {
-                        <div class="relative max-w-[300px] max-h-[400px] overflow-hidden" [class.rounded-t-xl]="msg.message" [class.rounded-xl]="!msg.message">
-                          <video 
-                            [src]="getImageUrl(msg.media_url)" 
-                            controls 
-                            class="w-full h-auto max-h-[400px] object-contain"
-                          ></video>
+                        <div
+                          class="relative max-w-[300px] max-h-[400px] overflow-hidden"
+                          [class.rounded-t-xl]="msg.message"
+                          [class.rounded-xl]="!msg.message"
+                        >
+                          <video [src]="getImageUrl(msg.media_url)" controls class="w-full h-auto max-h-[400px] object-contain"></video>
                         </div>
                       }
                     </div>
                   }
-                  @if(msg.feed && msg.type === 'Post') {
-                <app-chat-feed-card [feed]="msg.feed"/>
-                }@else if (msg.event && msg.type === 'Event') {
-                <app-chat-event-card [event]="msg.event"/>
-                }
+                  @if (msg.feed && msg.type === 'Post') {
+                    <app-chat-feed-card [feed]="msg.feed" />
+                  } @else if (msg.event && msg.type === 'Event') {
+                    <app-chat-event-card [event]="msg.event" />
+                  }
                   <!-- Text (with or without media) -->
                   @if (msg.message) {
                     <div class="px-4 py-2" [class.pt-2]="msg.media_url">
-                  {{ msg.message }}
+                      {{ msg.message }}
                     </div>
-                }
+                  }
                   @if (msg.is_edited && !msg.is_deleted) {
-                    <div class="px-4 pb-2 text-xs opacity-70">
-                      (edited)
-                    </div>
+                    <div class="px-4 pb-2 text-xs opacity-70">(edited)</div>
                   }
                 }
               </div>
               <div class="text-xs text-gray-500 mt-1">
-                @if(isGroup()) { <span>{{ msg.posted_by_user.name || msg.posted_by_user.username }} · </span> } {{ formatTime(msg.created_at) }}
+                @if (isGroup()) {
+                  <span>{{ msg.posted_by_user.name || msg.posted_by_user.username }} · </span>
+                }
+                {{ formatTime(msg.created_at) }}
               </div>
             </div>
           </div>
@@ -260,8 +253,11 @@
         <div class="flex-1 relative">
           <p-iconfield class="w-full">
             <!-- Attachment/Paperclip Icon Inside Input (left side) -->
-            <p-inputicon class="pi pi-paperclip cursor-pointer text-gray-600 hover:text-gray-800" (click)="openFilePicker(); $event.stopPropagation()" />
-            
+            <p-inputicon
+              class="pi pi-paperclip cursor-pointer text-gray-600 hover:text-gray-800"
+              (click)="openFilePicker(); $event.stopPropagation()"
+            />
+
             <!-- Input -->
             <input
               pInputText
@@ -270,9 +266,12 @@
               placeholder="Message..."
               class="w-full rounded-full border border-gray-300 h-[44px]"
             />
-            
+
             <!-- Emoji Icon Inside Input (right side) -->
-            <p-inputicon class="pi pi-face-smile cursor-pointer text-gray-600 hover:text-gray-800" (click)="openEmojiPicker(); $event.stopPropagation()" />
+            <p-inputicon
+              class="pi pi-face-smile cursor-pointer text-gray-600 hover:text-gray-800"
+              (click)="openEmojiPicker(); $event.stopPropagation()"
+            />
           </p-iconfield>
         </div>
 
@@ -297,13 +296,9 @@
   <div class="fixed bottom-20 left-4 right-4 max-w-[672px] mx-auto bg-white border border-gray-300 rounded-lg p-3 flex items-center gap-3 shadow-lg">
     <div class="flex-1">
       <p class="text-sm font-medium text-gray-900">{{ selectedFile()?.name }}</p>
-      <p class="text-xs text-gray-500">{{ (selectedFile()?.size || 0) / 1024 | number:'1.0-0' }} KB</p>
+      <p class="text-xs text-gray-500">{{ (selectedFile()?.size || 0) / 1024 | number: '1.0-0' }} KB</p>
     </div>
-    <button 
-      type="button"
-      class="p-2 text-gray-600 hover:text-gray-800"
-      (click)="removeSelectedFile()"
-    >
+    <button type="button" class="p-2 text-gray-600 hover:text-gray-800" (click)="removeSelectedFile()">
       <ion-icon name="close-outline" class="w-5 h-5"></ion-icon>
     </button>
   </div>

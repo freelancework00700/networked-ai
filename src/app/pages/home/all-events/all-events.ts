@@ -19,7 +19,20 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-all-events',
-  imports: [CommonModule, IonHeader, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, IonSkeletonText, EventCard, UpcomingEventCard, Searchbar, Button, EmptyState],
+  imports: [
+    CommonModule,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
+    IonSkeletonText,
+    EventCard,
+    UpcomingEventCard,
+    Searchbar,
+    Button,
+    EmptyState
+  ],
   templateUrl: './all-events.html',
   styleUrl: './all-events.scss'
 })
@@ -227,7 +240,7 @@ export class AllEvents implements OnInit, OnDestroy {
   }
 
   filteredEvents = computed(() => this.allEvents());
-  
+
   // Check if we should use upcoming event card
   isUpcomingFilter = computed(() => {
     const { eventFilter } = this.getQueryParams();
@@ -239,13 +252,13 @@ export class AllEvents implements OnInit, OnDestroy {
     const { eventFilter, userId } = this.getQueryParams();
     const user = this.userFromState();
     const currentUser = this.authService.currentUser();
-    
+
     // Check if viewing current user's events
     const isCurrentUser = currentUser && userId && currentUser.id === userId;
-    
+
     // Get user name for display
     const userName = user?.name || user?.username || '';
-    
+
     if (eventFilter === 'upcoming') {
       return 'My Upcoming Events';
     } else if (eventFilter === 'recommended') {
@@ -259,7 +272,7 @@ export class AllEvents implements OnInit, OnDestroy {
     } else if (eventFilter === 'attended') {
       return isCurrentUser ? 'My Attended Events' : userName ? `${userName}'s Attended Events` : 'Browse Events';
     }
-    
+
     return 'Browse Events';
   });
 
@@ -268,7 +281,7 @@ export class AllEvents implements OnInit, OnDestroy {
     const hasLocation = !!(this.latitude() && this.longitude());
     const hasDate = !!this.selectedDate();
     const hasCustomDistance = this.selectedDistance() !== 20;
-    
+
     return hasLocation || hasDate || hasCustomDistance;
   });
 

@@ -11,7 +11,16 @@ import { SubscriptionService } from '@/services/subscription.service';
 import { SubscriptionEventCard } from '@/components/card/subscription-event-card';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, IonIcon, NavController, IonInfiniteScroll, IonInfiniteScrollContent, IonFooter } from '@ionic/angular/standalone';
+import {
+  IonHeader,
+  IonToolbar,
+  IonContent,
+  IonIcon,
+  NavController,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonFooter
+} from '@ionic/angular/standalone';
 
 interface Event {
   id: string;
@@ -31,7 +40,8 @@ interface Event {
   templateUrl: './plan-events.html',
   styleUrl: './plan-events.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonFooter, 
+  imports: [
+    IonFooter,
     Button,
     IonIcon,
     IonHeader,
@@ -47,8 +57,9 @@ interface Event {
   providers: [DatePipe]
 })
 export class PlanEvents implements OnInit, OnDestroy {
-  SPONSOR_GRADIENT = 'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
-  
+  SPONSOR_GRADIENT =
+    'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
+
   private route = inject(ActivatedRoute);
   private navCtrl = inject(NavController);
   private eventService = inject(EventService);
@@ -63,18 +74,18 @@ export class PlanEvents implements OnInit, OnDestroy {
   planName = signal<string>('');
 
   viewMode = signal<'included' | 'add'>('included');
-  
+
   tabValue = signal<'upcoming' | 'completed'>('upcoming');
 
   includedEvents = signal<Event[]>([]);
   availableEvents = signal<Event[]>([]);
   selectedEventIds = signal<string[]>([]);
-  
+
   isLoading = signal<boolean>(false);
   isLoadingEvents = signal<boolean>(false);
   isLoadingMore = signal<boolean>(false);
   isAddingEvents = signal<boolean>(false);
-  
+
   currentPage = signal<number>(1);
   totalPages = signal<number>(0);
   pageLimit = 20;
@@ -95,10 +106,9 @@ export class PlanEvents implements OnInit, OnDestroy {
     const tab = this.tabValue();
     const now = new Date();
 
-
     return events.filter((event) => {
       const eventDateTime = event.startDate || (event.date ? new Date(event.date) : null);
-      
+
       if (!eventDateTime || isNaN(eventDateTime.getTime())) return false;
 
       if (tab === 'upcoming') {
@@ -120,7 +130,7 @@ export class PlanEvents implements OnInit, OnDestroy {
 
     return events.filter((event) => {
       const eventDateTime = event.startDate || (event.date ? new Date(event.date) : null);
-      
+
       if (!eventDateTime || isNaN(eventDateTime.getTime())) return false;
 
       if (tab === 'upcoming') {
@@ -195,15 +205,11 @@ export class PlanEvents implements OnInit, OnDestroy {
   });
 
   currentGroupedEvents = computed(() => {
-    return this.viewMode() === 'included' 
-      ? this.groupedIncludedEvents() 
-      : this.groupedAvailableEvents();
+    return this.viewMode() === 'included' ? this.groupedIncludedEvents() : this.groupedAvailableEvents();
   });
 
   currentGroupedEventsKeys = computed(() => {
-    return this.viewMode() === 'included' 
-      ? this.groupedIncludedEventsKeys() 
-      : this.groupedAvailableEventsKeys();
+    return this.viewMode() === 'included' ? this.groupedIncludedEventsKeys() : this.groupedAvailableEventsKeys();
   });
 
   showDeleteIcon = computed(() => {
@@ -236,9 +242,7 @@ export class PlanEvents implements OnInit, OnDestroy {
       return {
         type: 'dual' as const,
         cancelLabel: 'Cancel',
-        confirmLabel: selectedCount > 0 
-          ? `Add ${selectedCount} Event${selectedCount > 1 ? 's' : ''}` 
-          : 'Add Event',
+        confirmLabel: selectedCount > 0 ? `Add ${selectedCount} Event${selectedCount > 1 ? 's' : ''}` : 'Add Event',
         color: this.buttonColor(),
         disabled: selectedCount === 0 || this.isAddingEvents(),
         isLoading: this.isAddingEvents(),
@@ -254,13 +258,13 @@ export class PlanEvents implements OnInit, OnDestroy {
       if (!eventDateTime || isNaN(eventDateTime.getTime())) return false;
       return eventDateTime.getTime() > new Date().getTime();
     });
-    
+
     const completedEvents = this.includedEvents().filter((event) => {
       const eventDateTime = event.startDate || (event.date ? new Date(event.date) : null);
       if (!eventDateTime || isNaN(eventDateTime.getTime())) return false;
       return eventDateTime.getTime() < new Date().getTime();
     });
-    
+
     return upcomingEvents.length > 0 || completedEvents.length > 0;
   });
 
@@ -286,15 +290,13 @@ export class PlanEvents implements OnInit, OnDestroy {
       if (planData) {
         this.planData.set(planData);
         this.planName.set(planData.name || '');
-        
+
         console.log('planData', planData);
-        
+
         // Load included events - check if events are already in planData or use event_ids
         if (planData.events && planData.events.length > 0) {
           // Events are already included in the response
-          const transformedEvents = planData.events.map((event: IEvent) => 
-            this.transformEventToSubscriptionEvent(event)
-          );
+          const transformedEvents = planData.events.map((event: IEvent) => this.transformEventToSubscriptionEvent(event));
           this.includedEvents.set(transformedEvents);
         } else if (planData.event_ids && planData.event_ids.length > 0) {
           // Need to fetch events by IDs
@@ -320,11 +322,11 @@ export class PlanEvents implements OnInit, OnDestroy {
 
     try {
       this.isLoadingEvents.set(true);
-      
+
       // Fetch events by getting all user's events and filtering by IDs
       const currentUser = this.authService.currentUser();
       const userId = currentUser?.id;
-      
+
       if (!userId) {
         this.includedEvents.set([]);
         return;
@@ -340,13 +342,9 @@ export class PlanEvents implements OnInit, OnDestroy {
       });
 
       const allEvents = response?.data?.data || [];
-      const includedEventsData = allEvents.filter((event: IEvent) => 
-        event.id && eventIds.includes(event.id)
-      );
+      const includedEventsData = allEvents.filter((event: IEvent) => event.id && eventIds.includes(event.id));
 
-      const transformedEvents = includedEventsData.map((event: IEvent) => 
-        this.transformEventToSubscriptionEvent(event)
-      );
+      const transformedEvents = includedEventsData.map((event: IEvent) => this.transformEventToSubscriptionEvent(event));
 
       this.includedEvents.set(transformedEvents);
     } catch (error) {
@@ -360,7 +358,7 @@ export class PlanEvents implements OnInit, OnDestroy {
   private async fetchAvailableEvents(page: number): Promise<any> {
     const currentUser = this.authService.currentUser();
     const userId = currentUser?.id;
-    
+
     if (!userId) {
       return { data: { data: [], pagination: {} } };
     }
@@ -388,13 +386,9 @@ export class PlanEvents implements OnInit, OnDestroy {
     const currentPageNum = pagination.currentPage || page;
 
     const includedEventIds = this.planData()?.event_ids || [];
-    const filteredEvents = events.filter((event: IEvent) => 
-      !includedEventIds.includes(event.id || '')
-    );
+    const filteredEvents = events.filter((event: IEvent) => !includedEventIds.includes(event.id || ''));
 
-    const transformedEvents = filteredEvents.map((event: IEvent) => 
-      this.transformEventToSubscriptionEvent(event)
-    );
+    const transformedEvents = filteredEvents.map((event: IEvent) => this.transformEventToSubscriptionEvent(event));
 
     if (reset) {
       this.availableEvents.set(transformedEvents);
@@ -471,9 +465,9 @@ export class PlanEvents implements OnInit, OnDestroy {
   }
 
   toggleEventSelection(eventId: string): void {
-    this.selectedEventIds.update(ids => {
+    this.selectedEventIds.update((ids) => {
       if (ids.includes(eventId)) {
-        return ids.filter(id => id !== eventId);
+        return ids.filter((id) => id !== eventId);
       } else {
         return [...ids, eventId];
       }
@@ -488,7 +482,7 @@ export class PlanEvents implements OnInit, OnDestroy {
     const planData = this.planData();
     if (!planData) return;
 
-    const event = this.includedEvents().find(e => e.id === eventId);
+    const event = this.includedEvents().find((e) => e.id === eventId);
     const eventTitle = event?.title || 'this event';
 
     const result = await this.modalService.openConfirmModal({
@@ -515,10 +509,7 @@ export class PlanEvents implements OnInit, OnDestroy {
               };
               if (price.interval === 'year') {
                 const discountPercentage = price.discount_percentage;
-                priceObj.discount_percentage = 
-                  discountPercentage !== null && discountPercentage !== undefined 
-                    ? Number(discountPercentage) 
-                    : null;
+                priceObj.discount_percentage = discountPercentage !== null && discountPercentage !== undefined ? Number(discountPercentage) : null;
                 priceObj.banner_display_type = price.banner_display_type ?? null;
               }
               return priceObj;
@@ -570,10 +561,7 @@ export class PlanEvents implements OnInit, OnDestroy {
           };
           if (price.interval === 'year') {
             const discountPercentage = price.discount_percentage;
-            priceObj.discount_percentage = 
-              discountPercentage !== null && discountPercentage !== undefined 
-                ? Number(discountPercentage) 
-                : null;
+            priceObj.discount_percentage = discountPercentage !== null && discountPercentage !== undefined ? Number(discountPercentage) : null;
             priceObj.banner_display_type = price.banner_display_type ?? null;
           }
           return priceObj;
@@ -584,16 +572,14 @@ export class PlanEvents implements OnInit, OnDestroy {
       };
 
       await this.subscriptionService.updatePlan(planData.id, payload);
-      
+
       const isSponsorValue = planData.is_sponsor ?? false;
       const color = !isSponsorValue ? '#2B5BDE' : '';
       const iconBgColor = isSponsorValue ? this.SPONSOR_GRADIENT : color;
-      const icon = isSponsorValue 
-        ? 'assets/svg/subscription/calendar-check-sponsor.svg' 
-        : 'assets/svg/subscription/calendar-check-white.svg';
+      const icon = isSponsorValue ? 'assets/svg/subscription/calendar-check-sponsor.svg' : 'assets/svg/subscription/calendar-check-white.svg';
       const eventCount = selectedIds.length;
       const eventText = eventCount === 1 ? 'event' : 'events';
-      
+
       await this.modalService.openConfirmModal({
         title: `${eventCount} ${eventCount === 1 ? 'Event' : 'Events'} Added`,
         description: `You've successfully added ${eventCount} ${eventText} as part of ${planData.name} subscription plan.`,
@@ -605,7 +591,7 @@ export class PlanEvents implements OnInit, OnDestroy {
         customColor: color,
         iconPosition: 'center'
       });
-      
+
       this.viewMode.set('included');
       this.selectedEventIds.set([]);
       await this.loadPlanData();
@@ -658,7 +644,7 @@ export class PlanEvents implements OnInit, OnDestroy {
       const dateA = this.parseMonthYear(a);
       const dateB = this.parseMonthYear(b);
       if (!dateA || !dateB) return 0;
-        return dateB.getTime() - dateA.getTime();
+      return dateB.getTime() - dateA.getTime();
     });
   }
 
@@ -686,7 +672,7 @@ export class PlanEvents implements OnInit, OnDestroy {
         address: event.address || '',
         time: '',
         organization: this.getOrganization(event),
-        image_url: event.image_url || '',
+        image_url: event.image_url || ''
       };
     }
 
@@ -710,7 +696,7 @@ export class PlanEvents implements OnInit, OnDestroy {
       date: dateStr,
       dayOfWeek,
       day,
-        address: event.address || '',
+      address: event.address || '',
       time: timeStr,
       organization: this.getOrganization(event),
       image_url: event.image_url || '',
@@ -722,5 +708,4 @@ export class PlanEvents implements OnInit, OnDestroy {
     const hostParticipant = event.participants?.find((p: any) => p.role === 'Host');
     return hostParticipant?.user?.name || 'Networked AI';
   }
-
 }

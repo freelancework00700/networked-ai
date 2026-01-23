@@ -10,7 +10,16 @@ import { EmptyState } from '@/components/common/empty-state';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Component, inject, signal, ChangeDetectionStrategy, OnInit, OnDestroy, ViewChild, ElementRef, computed } from '@angular/core';
-import { IonToolbar, IonHeader, IonContent, NavController, IonFooter, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
+import {
+  IonToolbar,
+  IonHeader,
+  IonContent,
+  NavController,
+  IonFooter,
+  IonSpinner,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent
+} from '@ionic/angular/standalone';
 import { NgOptimizedImage } from '@angular/common';
 import { CommentResponse, FeedComment } from '@/interfaces/IFeed';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -190,13 +199,11 @@ export class PostComments implements OnInit, OnDestroy {
         return {
           ...comment,
           isRepliesOpen: false,
-          replies: comment.replies?.map(reply => ({ ...reply, isRepliesOpen: false }))
+          replies: comment.replies?.map((reply) => ({ ...reply, isRepliesOpen: false }))
         };
       };
 
-      const topLevelComments = result.comments
-        .filter(comment => !comment.parent_comment_id)
-        .map(comment => addRepliesOpen(comment));
+      const topLevelComments = result.comments.filter((comment) => !comment.parent_comment_id).map((comment) => addRepliesOpen(comment));
 
       // Get current comments from FeedService
       const currentComments = this.feedService.getCommentsSignal(feedId);
@@ -218,7 +225,7 @@ export class PostComments implements OnInit, OnDestroy {
   async loadMoreComments(event: Event): Promise<void> {
     const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
     const postId = this.post()?.id;
-    
+
     if (!postId || !this.hasMoreComments()) {
       infiniteScroll.complete();
       return;
@@ -257,7 +264,7 @@ export class PostComments implements OnInit, OnDestroy {
       const responseMessage = (deleteResponse as CommentResponse).message;
 
       if (!isReply) {
-        this.totalComments.update(count => Math.max(count - 1, 0));
+        this.totalComments.update((count) => Math.max(count - 1, 0));
       }
 
       // Show success message from API response
@@ -355,7 +362,7 @@ export class PostComments implements OnInit, OnDestroy {
       await this.feedService.createComment(payload);
 
       if (!replyTo) {
-        this.totalComments.update(count => count + 1);
+        this.totalComments.update((count) => count + 1);
       }
 
       // Clear form
@@ -403,7 +410,8 @@ export class PostComments implements OnInit, OnDestroy {
     const mentionRegex = /@([\w.]+)/g;
     let modifiedText = text.replace(
       mentionRegex,
-      (match, username) => `<a href="#" class="mention-link brand-03" data-username="${username}" style="font-weight:500; text-decoration:none; cursor:pointer;">${match}</a>`
+      (match, username) =>
+        `<a href="#" class="mention-link brand-03" data-username="${username}" style="font-weight:500; text-decoration:none; cursor:pointer;">${match}</a>`
     );
 
     // handle URLs (avoid replacing URLs that are already in href attributes)

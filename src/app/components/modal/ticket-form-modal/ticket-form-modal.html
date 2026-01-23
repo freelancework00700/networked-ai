@@ -39,7 +39,12 @@
       <div>
         <text-area-input controlName="description" label="Description" placeholder="Enter description" [required]="false" />
         <div class="flex justify-end pt-1">
-          <button type="button" class="flex items-center gap-1.5 brand-02 body-14M" (click)="handleGenerateClick()" [disabled]="isGeneratingDescription()">
+          <button
+            type="button"
+            class="flex items-center gap-1.5 brand-02 body-14M"
+            (click)="handleGenerateClick()"
+            [disabled]="isGeneratingDescription()"
+          >
             @if (isGeneratingDescription()) {
               <ion-spinner name="crescent" class="w-5 h-5"></ion-spinner>
             } @else {

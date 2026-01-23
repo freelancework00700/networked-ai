@@ -16,7 +16,7 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const navigationService = inject(NavigationService);
 
   // URLs that should skip token addition (e.g., login)
-  const skipUrls = ['auth/login', 'https://api.maptiler.com', 'users/check', "https://api.openai.com"];
+  const skipUrls = ['auth/login', 'https://api.maptiler.com', 'users/check', 'https://api.openai.com'];
   const shouldSkip = skipUrls.some((url) => req.url.includes(url));
 
   // check if URL is relative (starts with /) and not absolute (starts with http:// or https://)
@@ -61,7 +61,7 @@ const handleInvalidToken = async (
 ): Promise<void> => {
   if (error.error?.errorCode === 'TOKEN_EXPIRED' && !isLogoutModalOpen) {
     isLogoutModalOpen = true;
-    
+
     // Check if already on login page to avoid showing modal unnecessarily
     const isOnLoginPage = router.url.includes('/login');
 
@@ -76,7 +76,7 @@ const handleInvalidToken = async (
           cancelButtonLabel: 'Cancel',
           confirmButtonColor: 'primary',
           confirmButtonLabel: 'Sign In',
-          description: 'Your session has expired. Please sign in again to continue.',
+          description: 'Your session has expired. Please sign in again to continue.'
         });
 
         if (result && result.role === 'confirm') {
@@ -87,7 +87,7 @@ const handleInvalidToken = async (
         console.error('Error handling invalid token:', err);
       } finally {
         // Reset flag after a delay to allow modal to close
-        setTimeout(() => isLogoutModalOpen = false, 500);
+        setTimeout(() => (isLogoutModalOpen = false), 500);
       }
     } else {
       // If already on login page, just sign out silently

@@ -36,12 +36,13 @@
                 [placeholder]="'Start writing here...'"
                 wrap="hard"
               ></textarea>
-              <mentions 
+              <mentions
                 [textareaRef]="textareaRef"
                 [control]="textCtrl"
                 [overlayOrigin]="textareaOrigin"
                 [position]="'below'"
-                (userSelected)="onMentionSelected($event)" />
+                (userSelected)="onMentionSelected($event)"
+              />
             </div>
           </div>
         </div>
@@ -165,7 +166,14 @@
         <ion-icon [src]="'/assets/svg/social-feed/calendar-plus.svg'" (click)="openEventModal()" class="w-5 h-5" />
       </div>
 
-      <app-button [label]="'Post'" [disabled]="isPostDisabled() || postLoading()" [isLoading]="postLoading()" (click)="handleCreatePost()" width="100px" height="35px" />
+      <app-button
+        [label]="'Post'"
+        [disabled]="isPostDisabled() || postLoading()"
+        [isLoading]="postLoading()"
+        (click)="handleCreatePost()"
+        width="100px"
+        height="35px"
+      />
     </div>
     <input
       #fileInput

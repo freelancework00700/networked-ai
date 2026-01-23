@@ -57,7 +57,7 @@ export class ProfileFormService {
 
   // validate the form
   async validate(userPersonalInfo: UserPersonalInfo | undefined): Promise<boolean> {
-    return await userPersonalInfo?.validate() ?? false;
+    return (await userPersonalInfo?.validate()) ?? false;
   }
 
   // check if email or mobile changed and verify before submitting
@@ -83,10 +83,7 @@ export class ProfileFormService {
       }
 
       // open verification code modal (it verifies internally and returns true/false)
-      const verified = await this.modalService.openOtpModal(
-        emailChanged ? newEmail! : '',
-        mobileChanged ? newMobile! : ''
-      );
+      const verified = await this.modalService.openOtpModal(emailChanged ? newEmail! : '', mobileChanged ? newMobile! : '');
 
       return verified;
     } catch (error) {
@@ -100,7 +97,7 @@ export class ProfileFormService {
   async handleSubmit(userPersonalInfo: UserPersonalInfo | undefined): Promise<void> {
     const formValue = this.profileForm().getRawValue() as Partial<IAuthUser>;
     const mobile = userPersonalInfo?.getPhoneNumber();
-    
+
     // check if image_url is a File and upload it
     if (formValue.image_url instanceof File) {
       try {

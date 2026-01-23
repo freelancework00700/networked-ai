@@ -9,8 +9,7 @@ describe('ChatFeedCard', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ChatFeedCard]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ChatFeedCard);
     component = fixture.componentInstance;

@@ -5,7 +5,6 @@ import { BaseApiService } from '@/services/base-api.service';
 export class MediaService extends BaseApiService {
   // upload media files
   async uploadMedia(context: 'Profile' | 'Event' | 'Post' | 'Other', files: File[]): Promise<any> {
-
     if (!files || files.length === 0) {
       throw new Error('At least one file is required for media upload.');
     }

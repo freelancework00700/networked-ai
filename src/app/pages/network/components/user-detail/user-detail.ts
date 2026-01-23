@@ -26,7 +26,7 @@ export class UserDetail {
 
   getAchievementDiamondPath(): string {
     const points = this.user?.total_gamification_points || 0;
-    
+
     if (points >= 50000) {
       return '/assets/svg/gamification/diamond-50k.svg';
     } else if (points >= 40000) {

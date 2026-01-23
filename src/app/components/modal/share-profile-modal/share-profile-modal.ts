@@ -8,16 +8,7 @@ import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import * as htmlToImage from 'html-to-image';
 import { QrCodeComponent } from 'ng-qrcode';
-import { 
-  Component, 
-  inject, 
-  ChangeDetectionStrategy, 
-  signal, 
-  computed,
-  Input,
-  ViewChild,
-  ElementRef
-} from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, Input, ViewChild, ElementRef } from '@angular/core';
 import { IUser } from '@/interfaces/IUser';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { environment } from 'src/environments/environment';
@@ -31,43 +22,43 @@ import { environment } from 'src/environments/environment';
 })
 export class ShareProfileModal {
   @ViewChild('downloadableSection', { static: false, read: ElementRef }) downloadableSection?: ElementRef<HTMLDivElement>;
-  
+
   private modalCtrl = inject(ModalController);
   private toasterService = inject(ToasterService);
-  
+
   @Input() user?: IUser;
-  
+
   isDownloading = signal(false);
-  
+
   profileImage = computed(() => {
     const user = this.user;
     return user?.thumbnail_url;
   });
-  
+
   location = computed(() => {
     const user = this.user;
     if (!user?.address) return '';
-    const parts = user.address.split(',').map(s => s.trim());
+    const parts = user.address.split(',').map((s) => s.trim());
     if (parts.length >= 2) {
       return `${parts[0]}, ${parts[1]}`;
     }
     return user.address;
   });
-  
+
   profileLink = computed(() => {
     const user = this.user;
     if (!user?.username) return '';
     const frontendUrl = environment.frontendUrl;
     return `${frontendUrl}/${user.username}`;
   });
-  
+
   async copyLink(): Promise<void> {
     const link = this.profileLink();
     if (!link) {
       this.toasterService.showError('Profile link not available');
       return;
     }
-    
+
     try {
       await navigator.clipboard.writeText(link);
       this.toasterService.showSuccess('Link copied to clipboard');
@@ -76,7 +67,7 @@ export class ShareProfileModal {
       this.toasterService.showError('Failed to copy link');
     }
   }
-  
+
   private sanitizeFileName(fileName: string): string {
     return fileName.replace(/[^a-z0-9]/gi, '-').toLowerCase();
   }
@@ -133,18 +124,18 @@ export class ShareProfileModal {
       this.isDownloading.set(false);
     }
   }
-  
+
   onContact(): void {
     const user = this.user;
     if (!user?.mobile) {
       this.toasterService.showError('Phone number not available');
       return;
     }
-    
+
     const link = this.profileLink();
     window.open(`sms://&body=${encodeURIComponent(link)}`, '_blank');
   }
-  
+
   async onShareTo(): Promise<void> {
     if (Capacitor.getPlatform() === 'web') {
       // For web, use Web Share API if available
@@ -165,13 +156,13 @@ export class ShareProfileModal {
       this.toasterService.showError('Share to is only available on mobile devices');
       return;
     }
-    
+
     const link = this.profileLink();
     if (!link) {
       this.toasterService.showError('Profile link not available');
       return;
     }
-    
+
     try {
       await Share.share({
         title: this.user?.username || 'Profile',
@@ -181,31 +172,30 @@ export class ShareProfileModal {
       console.error('Error sharing:', error);
     }
   }
-  
+
   onChat(): void {
     // TODO: Implement chat functionality
     console.log('Chat clicked');
   }
-  
+
   onStory(): void {
     const link = this.profileLink();
     if (!link) return;
-    
+
     const text = encodeURIComponent(link);
     const threadsUrl = `https://threads.net/intent/post?text=${text}`;
     window.open(threadsUrl, '_blank');
   }
-  
+
   async close(): Promise<void> {
     await this.modalCtrl.dismiss();
   }
-  
+
   onImageError(event: Event): void {
     onImageError(event);
   }
-  
+
   getImageUrl(url: string | undefined | null): string {
     return getImageUrlOrDefault(url || '');
   }
 }
-

@@ -12,7 +12,7 @@ export class UnsubscribeConfirmModal {
   @Input() planName: string = '';
   @Input() endDate: string = '';
   @Input() onConfirm?: () => Promise<void>;
-  
+
   modalctrl = inject(ModalController);
   isLoading = signal(false);
 

@@ -10,13 +10,13 @@
       </div>
 
       <div class="body-12 neutral-02">
-        {{ transaction().created_at | date:'MMM dd, hh:mm a' }}
+        {{ transaction().created_at | date: 'MMM dd, hh:mm a' }}
       </div>
     </div>
 
     <!-- RIGHT -->
-      <div class="body-14SB neutral-01"  [class.text-green-600]="transaction().isPayout" [class.neutral-01]="!transaction().isPayout">
-        ${{ transaction().amount }}
-      </div>
-
+    <div class="body-14SB neutral-01" [class.text-green-600]="transaction().isPayout" [class.neutral-01]="!transaction().isPayout">
+      ${{ transaction().amount }}
+    </div>
   </div>
+</div>

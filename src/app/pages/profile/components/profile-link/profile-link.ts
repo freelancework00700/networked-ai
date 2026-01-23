@@ -31,22 +31,22 @@ export class ProfileLink {
 
   private extractUsername(value: string, type: string): string {
     if (!value || value.trim() === '') return '';
-    
+
     const trimmedValue = value.trim();
-    
+
     // If not a URL, return as is (already just username)
     if (!trimmedValue.startsWith('http://') && !trimmedValue.startsWith('https://')) {
-      return type === 'website' ? trimmedValue : (trimmedValue.startsWith('@') ? trimmedValue : `@${trimmedValue}`);
+      return type === 'website' ? trimmedValue : trimmedValue.startsWith('@') ? trimmedValue : `@${trimmedValue}`;
     }
-    
+
     try {
       const url = new URL(trimmedValue);
       const pathname = url.pathname.replace(/^\/+|\/+$/g, '');
-      
+
       if (type === 'website') {
         return trimmedValue.replace(/^https?:\/\//, '');
       }
-      
+
       if (type === 'linkedin') {
         const username = pathname.replace(/^in\/+/, '');
         return username.startsWith('@') ? username : `@${username}`;
@@ -55,7 +55,7 @@ export class ProfileLink {
       const username = pathname || trimmedValue;
       return username.startsWith('@') ? username : `@${username}`;
     } catch {
-      return type === 'website' ? trimmedValue : (trimmedValue.startsWith('@') ? trimmedValue : `@${trimmedValue}`);
+      return type === 'website' ? trimmedValue : trimmedValue.startsWith('@') ? trimmedValue : `@${trimmedValue}`;
     }
   }
 
@@ -82,12 +82,12 @@ export class ProfileLink {
           const trimmedValue = value.trim();
           const displayValue = this.extractUsername(trimmedValue, config.type);
           if (displayValue) {
-          links.push({
-            type: config.type,
-            icon: config.icon,
+            links.push({
+              type: config.type,
+              icon: config.icon,
               value: displayValue,
               href: trimmedValue
-          });
+            });
           }
         }
       }

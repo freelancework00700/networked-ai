@@ -42,14 +42,14 @@ export class ProfileHostedEvents {
       }
     });
   }
-  
+
   private async loadHostedEvents(reset: boolean = true): Promise<void> {
     const userId = this.userId();
     if (!userId || this.isLoading()) return;
-    
+
     this.isLoading.set(true);
     const page = reset ? 1 : this.currentPage();
-    
+
     try {
       const response = await this.eventService.getMyEvents({
         page,
@@ -57,17 +57,17 @@ export class ProfileHostedEvents {
         roles: 'Host,CoHost,Sponsor',
         user_id: userId
       });
-      
+
       const eventsData = response?.data?.data || [];
       const pagination = response?.data?.pagination || {};
       const total = pagination.totalCount || 0;
-      
+
       if (reset) {
         this.events.set(eventsData);
       } else {
-        this.events.update(current => [...current, ...eventsData]);
+        this.events.update((current) => [...current, ...eventsData]);
       }
-      
+
       this.currentPage.set(pagination.currentPage || page);
       this.totalPages.set(pagination.totalPages || Math.ceil(total / this.pageLimit));
       this.hasMore.set((pagination.currentPage || page) < (pagination.totalPages || Math.ceil(total / this.pageLimit)));
@@ -104,7 +104,7 @@ export class ProfileHostedEvents {
         const pagination = response?.data?.pagination || {};
         const total = pagination.totalCount || 0;
 
-        this.events.update(current => [...current, ...eventsData]);
+        this.events.update((current) => [...current, ...eventsData]);
         this.currentPage.set(pagination.currentPage || nextPage);
         this.totalPages.set(pagination.totalPages || Math.ceil(total / this.pageLimit));
         this.hasMore.set((pagination.currentPage || nextPage) < (pagination.totalPages || Math.ceil(total / this.pageLimit)));

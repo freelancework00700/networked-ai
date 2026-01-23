@@ -59,13 +59,13 @@
             <!-- Profile -->
             <!-- <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" /> -->
             <div class="w-12 h-12 rounded-full flex items-center justify-center relative overflow-hidden">
-              <img 
+              <img
                 [ngSrc]="getImageUrl(u.thumbnail_url || '')"
                 [alt]="u.name"
                 fill
                 placeholder
                 (error)="onImageError($event)"
-                class="object-cover rounded-full" 
+                class="object-cover rounded-full"
               />
             </div>
             <!-- Details -->
@@ -82,7 +82,7 @@
               <div class="text-xs text-gray-500">
                 @if (u.company_name) {
                   {{ u.company_name }}
-                } 
+                }
               </div>
             </div>
 

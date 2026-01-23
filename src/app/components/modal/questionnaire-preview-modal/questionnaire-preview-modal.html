@@ -75,7 +75,11 @@
 
           <!-- Phone Input -->
           @if ((question.question_type || question.type) === 'PhoneNumber') {
-            <mobile-input [controlName]="'question_' + i" [label]="''" [required]="(question.is_required !== undefined ? question.is_required : question.required) || false" />
+            <mobile-input
+              [controlName]="'question_' + i"
+              [label]="''"
+              [required]="(question.is_required !== undefined ? question.is_required : question.required) || false"
+            />
           }
 
           <!-- Number Input -->
@@ -104,7 +108,11 @@
               }
             </div>
             <!-- Validation Error for Single Choice -->
-            @if (getQuestionControl(i)?.invalid && getQuestionControl(i)?.touched && (question.is_required !== undefined ? question.is_required : question.required)) {
+            @if (
+              getQuestionControl(i)?.invalid &&
+              getQuestionControl(i)?.touched &&
+              (question.is_required !== undefined ? question.is_required : question.required)
+            ) {
               <div class="accent-red body-12M">Please select an option.</div>
             }
           }
@@ -144,7 +152,11 @@
               }
             </div>
             <!-- Validation Error for Rating -->
-            @if (getQuestionControl(i)?.invalid && getQuestionControl(i)?.touched && (question.is_required !== undefined ? question.is_required : question.required)) {
+            @if (
+              getQuestionControl(i)?.invalid &&
+              getQuestionControl(i)?.touched &&
+              (question.is_required !== undefined ? question.is_required : question.required)
+            ) {
               <div class="accent-red body-12M">Please select a rating.</div>
             }
           }

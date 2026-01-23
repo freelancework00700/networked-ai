@@ -139,7 +139,7 @@ export class MobileInput implements OnInit {
       const availabilityValidator = availability(this.userService, this.authService, 'mobile', () => this.getPhoneNumber(), this.checkIfExists());
       asyncValidators.push((control: AbstractControl) => {
         // don't run the API call if shouldValidate flag is false
-        
+
         if (!this.shouldValidate()) {
           return of(null);
         }
@@ -157,7 +157,7 @@ export class MobileInput implements OnInit {
     if (this.parentFormGroup.get(this.controlName())) {
       this.parentFormGroup.removeControl(this.controlName());
     }
-    
+
     this.parentFormGroup.addControl(
       this.controlName(),
       this.fb.control('', {

@@ -10,15 +10,7 @@ import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import {
-  IonContent,
-  IonFooter,
-  IonHeader,
-  IonInfiniteScroll,
-  IonInfiniteScrollContent,
-  IonToolbar,
-  NavController
-} from '@ionic/angular/standalone';
+import { IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent, IonToolbar, NavController } from '@ionic/angular/standalone';
 import { InputTextModule } from 'primeng/inputtext';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
 @Component({
@@ -26,7 +18,18 @@ import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rx
   styleUrl: './create-group.scss',
   templateUrl: './create-group.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonFooter, Searchbar, IonContent, IonHeader, IonToolbar, Button, InputTextModule, IonInfiniteScroll, IonInfiniteScrollContent, NgOptimizedImage]
+  imports: [
+    IonFooter,
+    Searchbar,
+    IonContent,
+    IonHeader,
+    IonToolbar,
+    Button,
+    InputTextModule,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
+    NgOptimizedImage
+  ]
 })
 export class CreateGroup {
   private navCtrl = inject(NavController);
@@ -110,7 +113,7 @@ export class CreateGroup {
     if (state?.roomId) {
       this.roomId.set(state.roomId);
       this.from.set(state.from === 'chat-info' ? 'chat-info' : 'new-chat');
-      
+
       // Load existing group members to track who's already added
       await this.loadExistingGroupMembers(state.roomId);
     }
@@ -123,7 +126,7 @@ export class CreateGroup {
     try {
       this.isLoadingRoom.set(true);
       const room = await this.messagesService.getChatRoomById(roomId);
-      
+
       // Extract user IDs from existing members
       const memberIds = new Set<string>();
       if (room.users && Array.isArray(room.users)) {
@@ -133,7 +136,7 @@ export class CreateGroup {
           }
         });
       }
-      
+
       this.existingMemberIds.set(memberIds);
     } catch (error) {
       console.error('Error loading existing group members:', error);
@@ -355,7 +358,7 @@ export class CreateGroup {
 
     try {
       await this.messagesService.joinRoom(roomId, selectedIds);
-      
+
       // Navigate back to chat-info after successful addition
       this.navCtrl.back();
     } catch (error) {

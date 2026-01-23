@@ -7,7 +7,10 @@
     (click)="onToggle()"
   >
     <!-- Date Box -->
-    <div class="flex flex-col items-center justify-center w-16 h-20 rounded-lg bg-white flex-shrink-0" [ngClass]="selected() ? 'border border-gray-300' : ''">
+    <div
+      class="flex flex-col items-center justify-center w-16 h-20 rounded-lg bg-white flex-shrink-0"
+      [ngClass]="selected() ? 'border border-gray-300' : ''"
+    >
       <div [class]="isWeekend() ? 'body-12 text-red-600' : 'body-12 neutral-03'">{{ event().dayOfWeek }}</div>
       <div [class]="isWeekend() ? 'heading-h3 text-red-600' : 'heading-h3 neutral-01'">{{ event().day }}</div>
     </div>
@@ -21,14 +24,7 @@
 
     <!-- Icon/Logo -->
     <div class="w-[72px] min-w-[72px] h-[72px] overflow-hidden rounded-lg relative">
-      <img
-        fill
-        placeholder
-        [alt]="event().title || 'Event image'"
-        (error)="onImageError($event)"
-        [ngSrc]="eventImage()"
-        class="object-cover"
-      />
+      <img fill placeholder [alt]="event().title || 'Event image'" (error)="onImageError($event)" [ngSrc]="eventImage()" class="object-cover" />
     </div>
   </div>
 

@@ -1,8 +1,8 @@
 <ion-header mode="md">
   <ion-toolbar>
-    <div class="flex items-center p-4  cursor-pointer max-w-[672px] mx-auto">
+    <div class="flex items-center p-4 cursor-pointer max-w-[672px] mx-auto">
       <i class="pi pi-arrow-left neutral-03" (click)="back()"></i>
-      <div class="body-14M text-center w-full">{{hasAnyPlans() ? 'My Subscriptions' : 'Set Up Subscription'}}</div>
+      <div class="body-14M text-center w-full">{{ hasAnyPlans() ? 'My Subscriptions' : 'Set Up Subscription' }}</div>
       <div class="w-6"></div>
     </div>
 
@@ -38,9 +38,7 @@
                 </div>
               </div>
               <div class="heading-h2 neutral-01 mb-2">Start an Event Subscription Model</div>
-              <div class="body-14M neutral-02 mb-6">
-                Let members pay you monthly for a more premium experience with access to exclusive events!
-              </div>
+              <div class="body-14M neutral-02 mb-6">Let members pay you monthly for a more premium experience with access to exclusive events!</div>
             </div>
           </div>
         }
@@ -56,9 +54,7 @@
                 </div>
               </div>
               <div class="heading-h2 neutral-01 mb-2">Start a Sponsor Subscription Model</div>
-              <div class="body-14M neutral-02 mb-6">
-                Create a sponsorship plan for sponsors to pay regularly to sponsor your events!
-              </div>
+              <div class="body-14M neutral-02 mb-6">Create a sponsorship plan for sponsors to pay regularly to sponsor your events!</div>
             </div>
           </div>
         }
@@ -106,40 +102,20 @@
       <!-- Event-specific button (when sponsor has plans but event doesn't) -->
       @if (showEventEmptyState()) {
         <div class="p-5 max-w-[672px] mx-auto">
-          <app-button 
-            label="Create Event Subscription Plan" 
-            color="info" 
-            iconName="pi-crown"
-            (click)="onCreatePlan('event')"
-          />
+          <app-button label="Create Event Subscription Plan" color="info" iconName="pi-crown" (click)="onCreatePlan('event')" />
         </div>
       }
       <!-- Sponsor-specific button (when event has plans but sponsor doesn't) -->
       @else if (showSponsorEmptyState()) {
         <div class="p-5 max-w-[672px] mx-auto">
-          <app-button 
-            label="Create Sponsor Subscription Plan" 
-            color="primary" 
-            iconName="pi-crown"
-            (click)="onCreatePlan('sponsor')"
-          />
+          <app-button label="Create Sponsor Subscription Plan" color="primary" iconName="pi-crown" (click)="onCreatePlan('sponsor')" />
         </div>
       }
       <!-- Generic buttons (when both have no plans) -->
       @else if (showGenericEmptyState()) {
         <div class="flex flex-col gap-2 w-full p-3">
-          <app-button 
-            label="Create Event Subscription Plan" 
-            color="info" 
-            iconName="pi-crown"
-            (click)="onCreatePlan('event')"
-          />
-          <app-button 
-            label="Create Sponsor Subscription Plan" 
-            color="primary" 
-            iconName="pi-crown"
-            (click)="onCreatePlan('sponsor')"
-          />
+          <app-button label="Create Event Subscription Plan" color="info" iconName="pi-crown" (click)="onCreatePlan('event')" />
+          <app-button label="Create Sponsor Subscription Plan" color="primary" iconName="pi-crown" (click)="onCreatePlan('sponsor')" />
         </div>
       }
     }

@@ -2,7 +2,15 @@ import { ModalService } from '@/services/modal.service';
 import { EventService } from '@/services/event.service';
 import { Searchbar } from '@/components/common/searchbar';
 import { EmptyState } from '@/components/common/empty-state';
-import { ModalController, IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, IonContent, IonHeader, IonToolbar } from '@ionic/angular/standalone';
+import {
+  ModalController,
+  IonSpinner,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonContent,
+  IonHeader,
+  IonToolbar
+} from '@ionic/angular/standalone';
 import { PostEventCard } from '@/components/card/post-event-card';
 import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit } from '@angular/core';
 import { IEvent } from '@/interfaces/event';
@@ -18,28 +26,28 @@ export class PostEventModal implements OnInit {
   private modalCtrl = inject(ModalController);
   private modalService = inject(ModalService);
   private eventService = inject(EventService);
-  
+
   searchQuery = signal<string>('');
   segmentValue = signal<'All Events' | 'My Events'>('All Events');
-  
+
   // Cache events for both tabs
   allEvents = signal<IEvent[]>([]);
   myEvents = signal<IEvent[]>([]);
-  
+
   // Loading states for each tab
   isLoadingAllEvents = signal<boolean>(false);
   isLoadingMyEvents = signal<boolean>(false);
-  
+
   // Loading more states for infinite scroll
   isLoadingMoreAllEvents = signal<boolean>(false);
   isLoadingMoreMyEvents = signal<boolean>(false);
-  
+
   // Pagination state for each tab
   private allEventsPage = signal<number>(1);
   private myEventsPage = signal<number>(1);
   private allEventsTotalPages = signal<number>(0);
   private myEventsTotalPages = signal<number>(0);
-  
+
   private readonly pageLimit = 10;
   private searchTimeout?: ReturnType<typeof setTimeout>;
 
@@ -82,7 +90,7 @@ export class PostEventModal implements OnInit {
       } else {
         this.isLoadingMyEvents.set(true);
       }
-      
+
       // Always reset pagination and events when resetting
       if (reset) {
         if (includeParticipantEvents) {
@@ -93,32 +101,32 @@ export class PostEventModal implements OnInit {
           this.myEvents.set([]);
         }
       }
-      
+
       const currentPage = includeParticipantEvents ? this.allEventsPage() : this.myEventsPage();
-      
+
       const response = await this.eventService.getEvents({
         page: currentPage,
         limit: this.pageLimit,
         search: search,
         include_participant_events: includeParticipantEvents
       });
-      
+
       const events = response?.data?.data || [];
       const pagination = response?.data?.pagination;
-      
+
       // Store events in appropriate cache
       if (includeParticipantEvents) {
         if (reset) {
           this.allEvents.set(events);
         } else {
-          this.allEvents.update(current => [...current, ...events]);
+          this.allEvents.update((current) => [...current, ...events]);
         }
         this.allEventsTotalPages.set(pagination?.totalPages || 0);
       } else {
         if (reset) {
           this.myEvents.set(events);
         } else {
-          this.myEvents.update(current => [...current, ...events]);
+          this.myEvents.update((current) => [...current, ...events]);
         }
         this.myEventsTotalPages.set(pagination?.totalPages || 0);
       }
@@ -136,7 +144,7 @@ export class PostEventModal implements OnInit {
 
   async loadMoreEvents(event: Event): Promise<void> {
     const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
-    
+
     if (this.isLoadingMore() || !this.hasMore()) {
       infiniteScroll.complete();
       return;
@@ -172,11 +180,11 @@ export class PostEventModal implements OnInit {
         // Update page number after successful response
         if (includeParticipantEvents) {
           this.allEventsPage.set(nextPage);
-          this.allEvents.update(current => [...current, ...events]);
+          this.allEvents.update((current) => [...current, ...events]);
           this.allEventsTotalPages.set(pagination?.totalPages || 0);
         } else {
           this.myEventsPage.set(nextPage);
-          this.myEvents.update(current => [...current, ...events]);
+          this.myEvents.update((current) => [...current, ...events]);
           this.myEventsTotalPages.set(pagination?.totalPages || 0);
         }
       } else {
@@ -211,11 +219,11 @@ export class PostEventModal implements OnInit {
 
   onSegmentChange(segment: 'All Events' | 'My Events'): void {
     this.segmentValue.set(segment);
-    
+
     // Reset loading more states
     this.isLoadingMoreAllEvents.set(false);
     this.isLoadingMoreMyEvents.set(false);
-    
+
     // Always reset and load fresh data when switching tabs
     this.loadEvents(true);
   }

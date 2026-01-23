@@ -23,7 +23,7 @@ export class Mentions {
   control = input<FormControl>();
   overlayOrigin = input.required<CdkOverlayOrigin>();
   position = input<'above' | 'below'>('below'); // 'above' for comments, 'below' for new-post
-  
+
   // Outputs
   userSelected = output<IUser>();
 
@@ -112,7 +112,7 @@ export class Mentions {
   onTextInput(event: Event): void {
     const textarea = event.target as HTMLTextAreaElement;
     const value = textarea.value;
-    
+
     // Match @username including dots, underscores, and hyphens (allow empty for just @)
     const match = value.match(/@([\w.]*)$/);
 
@@ -136,22 +136,22 @@ export class Mentions {
     console.log(user);
     const textarea = this.textareaRef()?.nativeElement;
     if (!textarea) return;
-    
+
     const currentValue = textarea.value;
-    console.log("currentValue:", currentValue);
-    
+    console.log('currentValue:', currentValue);
+
     // Match @username including dots (allow empty for just @)
     const match = currentValue.match(/@([\w.]*)$/);
-    console.log("match:", match);
-    
+    console.log('match:', match);
+
     if (match) {
       const beforeAt = currentValue.substring(0, match.index);
       const afterAt = currentValue.substring(match.index! + match[0].length);
       const username = user.username || '';
       const newValue = `${beforeAt}@${username} ${afterAt}`;
-      
+
       textarea.value = newValue;
-      
+
       // Update form control if provided
       const formCtrl = this.control();
       if (formCtrl) {

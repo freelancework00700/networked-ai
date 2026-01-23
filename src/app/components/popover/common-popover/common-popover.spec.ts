@@ -9,8 +9,7 @@ describe('CommonPopover', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CommonPopover]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(CommonPopover);
     component = fixture.componentInstance;

@@ -20,11 +20,11 @@
       </div>
     }
 
-    <div class="px-4">  
+    <div class="px-4">
       <post-card [post]="post" />
     </div>
   }
-  
+
   <!-- Infinite scroll -->
   <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreFeeds($event)">
     <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more posts..." />

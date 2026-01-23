@@ -90,7 +90,7 @@ export class QuestionnairePreviewModal implements OnInit {
   });
 
   hasPrivateQuestions = computed(() => {
-    return this.displayedQuestions().some((q) => (q.is_public === false || q.visibility === 'private'));
+    return this.displayedQuestions().some((q) => q.is_public === false || q.visibility === 'private');
   });
 
   ngOnInit(): void {

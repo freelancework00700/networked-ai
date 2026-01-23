@@ -9,7 +9,6 @@
         <ion-spinner></ion-spinner>
       </div>
     } @else if (posts().length === 0) {
-
       <profile-empty-state
         buttonIcon="pi-plus"
         buttonText="Start a Post"
@@ -23,7 +22,7 @@
           <post-card [post]="post" />
         </div>
       }
-      
+
       <!-- Infinite scroll -->
       @if (hasMore()) {
         <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreFeeds($event)">

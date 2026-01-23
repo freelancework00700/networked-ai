@@ -143,7 +143,7 @@ export class Messages implements OnInit, OnDestroy {
       const page = reset ? 1 : this.messagesService.currentPage() + 1;
       const filter = this.activeTab();
       const search = this.searchInput().trim() || undefined;
-      
+
       await this.messagesService.getChatRooms({
         page,
         limit: 10,
@@ -161,7 +161,7 @@ export class Messages implements OnInit, OnDestroy {
    */
   async loadMoreRooms(event: Event): Promise<void> {
     const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
-    
+
     if (!this.hasMoreRooms()) {
       infiniteScroll.complete();
       return;
@@ -192,18 +192,18 @@ export class Messages implements OnInit, OnDestroy {
     if (room.event?.title) {
       return room.event.title;
     }
-    
+
     if (room.name) {
       return room.name;
     }
-    
+
     // For personal chats without name, use other user's name
     if (room.is_personal && room.users && room.users.length > 0) {
       const currentUserId = this.authService.currentUser()?.id;
-      const otherUser = room.users.find(user => user.id !== currentUserId);
+      const otherUser = room.users.find((user) => user.id !== currentUserId);
       return otherUser?.name || otherUser?.username || 'Unknown User';
     }
-    
+
     return 'Unknown Chat';
   }
 
@@ -218,13 +218,13 @@ export class Messages implements OnInit, OnDestroy {
     if (room.event?.image_url) {
       return room.event.image_url;
     }
-    
+
     if (room.profile_image) return room.profile_image;
-    
+
     // For personal chats, use other user's thumbnail
     if (room.is_personal && room.users && room.users.length > 0) {
       const currentUserId = this.authService.currentUser()?.id;
-      const otherUser = room.users.find(user => user.id !== currentUserId);
+      const otherUser = room.users.find((user) => user.id !== currentUserId);
       return otherUser?.thumbnail_url || '';
     }
     return '';
@@ -237,8 +237,8 @@ export class Messages implements OnInit, OnDestroy {
     if (!room.users || room.users.length === 0) return 0;
     const currentUserId = this.authService.currentUser()?.id;
     if (!currentUserId) return 0;
-    
-    const currentUser = room.users.find(user => user.id === currentUserId);
+
+    const currentUser = room.users.find((user) => user.id === currentUserId);
     return currentUser?.unreadMessageCount || 0;
   }
 
@@ -259,20 +259,17 @@ export class Messages implements OnInit, OnDestroy {
 
   formatTime(isoString: string): string {
     if (!isoString) return '';
-    
+
     const date = new Date(isoString);
     const now = new Date();
 
-    const isToday = date.getDate() === now.getDate() &&
-                    date.getMonth() === now.getMonth() &&
-                    date.getFullYear() === now.getFullYear();
+    const isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
 
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
-    const isYesterday = date.getDate() === yesterday.getDate() &&
-                        date.getMonth() === yesterday.getMonth() &&
-                        date.getFullYear() === yesterday.getFullYear();
-    
+    const isYesterday =
+      date.getDate() === yesterday.getDate() && date.getMonth() === yesterday.getMonth() && date.getFullYear() === yesterday.getFullYear();
+
     if (isToday) {
       return this.datePipe.transform(date, 'h:mm a') || '';
     } else if (isYesterday) {
@@ -339,9 +336,9 @@ export class Messages implements OnInit, OnDestroy {
 
   goToChat(room: ChatRoom) {
     console.log('goToChat', room);
-    
+
     // Pass room data in state - chat-room will use user_ids and is_personal to create/get room
-    this.navigationService.navigateForward('/chat-room', false, { 
+    this.navigationService.navigateForward('/chat-room', false, {
       chatRoom: room,
       user_ids: room.user_ids,
       is_personal: room.is_personal,

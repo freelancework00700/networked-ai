@@ -18,7 +18,18 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   styleUrl: './city-events.scss',
   templateUrl: './city-events.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, IonHeader, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, IonSkeletonText, EventCard, Searchbar, EmptyState]
+  imports: [
+    CommonModule,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
+    IonSkeletonText,
+    EventCard,
+    Searchbar,
+    EmptyState
+  ]
 })
 export class CityEvents implements OnInit, OnDestroy {
   navCtrl = inject(NavController);
@@ -46,17 +57,14 @@ export class CityEvents implements OnInit, OnDestroy {
   private async loadCityImage(city: string, state: string): Promise<{ image_url?: string; thumbnail_url?: string } | undefined> {
     try {
       const cities = await this.eventService.getTopCities();
-      const matchedCity = cities.find(c => 
-        (c.city || '').toLowerCase() === city.toLowerCase() && 
-        c.state.toLowerCase() === state.toLowerCase()
-      );
+      const matchedCity = cities.find((c) => (c.city || '').toLowerCase() === city.toLowerCase() && c.state.toLowerCase() === state.toLowerCase());
       return matchedCity ? { image_url: matchedCity.image_url, thumbnail_url: matchedCity.thumbnail_url } : undefined;
     } catch (error) {
       console.error('Error loading city image:', error);
       return undefined;
     }
   }
-  
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -75,18 +83,18 @@ export class CityEvents implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Setup debounced search
     this.setupSearchDebounce();
-    
+
     // Check for city object in navigation state first
     const navigation = this.router.currentNavigation();
     const state: any = navigation?.extras?.state;
-    
+
     const params = this.route.snapshot.queryParamMap;
     const cityParam = params.get('city');
     const stateParam = params.get('state');
-    
+
     // If coming from "see all" button (no query params), don't set city/state
     const hasQueryParams = cityParam || stateParam;
-    
+
     if (state?.city) {
       const cityObj = state.city;
       const city = cityObj.city || '';
@@ -114,7 +122,7 @@ export class CityEvents implements OnInit, OnDestroy {
 
       this.loadCityImage(city, stateName).then((cityData) => {
         if (cityData) {
-          this.selectedCity.update(current => ({
+          this.selectedCity.update((current) => ({
             ...current,
             image_url: cityData.image_url,
             thumbnail_url: cityData.thumbnail_url
@@ -139,14 +147,14 @@ export class CityEvents implements OnInit, OnDestroy {
       if (this.isInitialLoad()) {
         this.isLoadingEvents.set(true);
       }
-      
+
       const city = this.selectedCity();
-      
+
       const params: any = {
         page: page,
         limit: this.pageLimit,
         order_by: 'start_date',
-        order_direction: 'ASC',
+        order_direction: 'ASC'
       };
 
       if (search && search.trim()) {
@@ -159,21 +167,19 @@ export class CityEvents implements OnInit, OnDestroy {
       if (city.state) {
         params.state = city.state;
       }
-      
+
       const response = await this.eventService.getEvents(params);
 
       if (response?.data?.data) {
-        const events = Array.isArray(response.data.data) 
-          ? response.data.data 
-          : [];
-        
+        const events = Array.isArray(response.data.data) ? response.data.data : [];
+
         if (append) {
-          this.allEvents.update(current => [...current, ...events]);
+          this.allEvents.update((current) => [...current, ...events]);
         } else {
           // Replace content directly without showing loader
           this.allEvents.set(events);
         }
-        
+
         // Update pagination
         const pagination = response?.data?.pagination;
         if (pagination) {
@@ -181,7 +187,7 @@ export class CityEvents implements OnInit, OnDestroy {
           this.totalPages.set(pagination.totalPages || 0);
         }
       }
-      
+
       // Mark initial load as complete
       if (this.isInitialLoad()) {
         this.isInitialLoad.set(false);
@@ -195,13 +201,8 @@ export class CityEvents implements OnInit, OnDestroy {
     }
   }
 
-
   private setupSearchDebounce(): void {
-    this.searchSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((query: string) => {
+    this.searchSubject.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef)).subscribe((query: string) => {
       this.searchQuery.set(query);
       this.currentPage.set(1);
       this.totalPages.set(0);
@@ -217,7 +218,7 @@ export class CityEvents implements OnInit, OnDestroy {
     if (result) {
       const city = result.city || '';
       const stateName = result.state || '';
-      
+
       if (!city && !stateName) {
         this.selectedCity.set({
           city: '',
@@ -228,11 +229,10 @@ export class CityEvents implements OnInit, OnDestroy {
         });
       } else {
         const cities = await this.eventService.getTopCities();
-        const matchedCity = cities.find(c => 
-          (c.city || '').toLowerCase() === city.toLowerCase() && 
-          c.state.toLowerCase() === stateName.toLowerCase()
+        const matchedCity = cities.find(
+          (c) => (c.city || '').toLowerCase() === city.toLowerCase() && c.state.toLowerCase() === stateName.toLowerCase()
         );
-        
+
         this.selectedCity.set({
           city: city,
           state: stateName,
@@ -241,7 +241,7 @@ export class CityEvents implements OnInit, OnDestroy {
           thumbnail_url: matchedCity?.thumbnail_url
         });
       }
-      
+
       this.currentPage.set(1);
       this.totalPages.set(0);
       await this.loadEvents(); // Reload events when city changes

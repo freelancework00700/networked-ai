@@ -34,26 +34,26 @@ export class EventCard {
   formattedDate = computed(() => {
     const event = this.currentEvent();
     if (!event) return 'Date not set';
-    
+
     if (event.start_date) {
       const formatted = this.eventService.formatDateTime(event.start_date, event.end_date);
       return formatted || 'Date not set';
     }
-    
+
     if (event.date) {
       return event.date;
     }
-    
+
     return 'Date not set';
   });
 
   formattedLocation = computed(() => {
     const event = this.currentEvent();
     if (!event) return 'Location not specified';
-    
+
     if (event.address) {
       return event.address;
-    }    
+    }
     return 'Location not specified';
   });
 
@@ -65,9 +65,7 @@ export class EventCard {
 
   eventOrganization = computed(() => {
     const event = this.currentEvent();
-    const hostName = event?.participants?.find((p: any) => 
-      (p.role || '').toLowerCase() === 'host'
-    )?.user?.name;
+    const hostName = event?.participants?.find((p: any) => (p.role || '').toLowerCase() === 'host')?.user?.name;
     return hostName || event?.organization || 'Networked AI';
   });
 
@@ -99,7 +97,7 @@ export class EventCard {
 
     this.localEvent.set({
       ...currentEvent,
-      is_like: newIsLiked,    
+      is_like: newIsLiked
     });
 
     try {
@@ -108,7 +106,7 @@ export class EventCard {
       console.error('Error toggling event like:', error);
       this.localEvent.set({
         ...currentEvent,
-        is_like: currentIsLiked,
+        is_like: currentIsLiked
       });
     }
   }

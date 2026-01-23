@@ -1,16 +1,20 @@
-<ng-template cdkConnectedOverlay 
-  [cdkConnectedOverlayOpen]="showMentions()" 
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOpen]="showMentions()"
   [cdkConnectedOverlayOrigin]="overlayOrigin()"
-  [cdkConnectedOverlayPositions]="positions()" 
+  [cdkConnectedOverlayPositions]="positions()"
   [cdkConnectedOverlayHasBackdrop]="false"
-  [cdkConnectedOverlayLockPosition]="true">
+  [cdkConnectedOverlayLockPosition]="true"
+>
   @if (allUsers().length > 0) {
     <ul class="ngx-selectable-list">
       @for (user of allUsers(); track user.id; let i = $index) {
-        <li class="ngx-selectable-list-item flex items-center justify-between gap-2" 
-            [class.active]="i === activeIndex()" 
-            (click)="selectMention(user)"
-            (mousedown)="$event.preventDefault()">
+        <li
+          class="ngx-selectable-list-item flex items-center justify-between gap-2"
+          [class.active]="i === activeIndex()"
+          (click)="selectMention(user)"
+          (mousedown)="$event.preventDefault()"
+        >
           <div class="flex items-center gap-2">
             <div class="relative w-8 h-8 flex-shrink-0">
               <img

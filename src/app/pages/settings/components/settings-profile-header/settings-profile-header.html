@@ -1,10 +1,15 @@
 <div class="flex items-center justify-between p-4 bg-neutral-07 mb-4 border border-neutral-300 rounded-3xl">
   <div class="flex items-center gap-3 flex-1">
     <!-- Avatar -->
-      <div class="relative w-[52px] h-[52px] rounded-full overflow-hidden">
-        <img fill placeholder class="rounded-full object-cover" (error)="onImageError($event)"
-          [ngSrc]="getImageUrl(currentUser()?.thumbnail_url ?? '')" />
-      </div>
+    <div class="relative w-[52px] h-[52px] rounded-full overflow-hidden">
+      <img
+        fill
+        placeholder
+        class="rounded-full object-cover"
+        (error)="onImageError($event)"
+        [ngSrc]="getImageUrl(currentUser()?.thumbnail_url ?? '')"
+      />
+    </div>
 
     <!-- Name and Edit Profile -->
     <div class="flex flex-col gap-1 flex-1">
@@ -16,7 +21,7 @@
         </div>
       </div>
       @if (showEditProfile()) {
-      <span class="body-14R neutral-03 cursor-pointer" (click)="onEditProfileClick()">Edit Profile</span>
+        <span class="body-14R neutral-03 cursor-pointer" (click)="onEditProfileClick()">Edit Profile</span>
       }
     </div>
   </div>

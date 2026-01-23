@@ -1,13 +1,6 @@
 <div class="inner-content px-4 pt-4">
   <div class="relative w-20 h-20 overflow-hidden rounded-full">
-    <img
-      [ngSrc]="getImageUrl()"
-      fill
-      placeholder
-      alt="Profile picture"
-      class="rounded-full object-cover"
-      (error)="onImageError($event)"
-    />
+    <img [ngSrc]="getImageUrl()" fill placeholder alt="Profile picture" class="rounded-full object-cover" (error)="onImageError($event)" />
   </div>
 
   <div class="heading-h3 pt-4">Block {{ getUserName() }}?</div>

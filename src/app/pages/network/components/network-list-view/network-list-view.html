@@ -15,7 +15,7 @@
   @for (user of users(); track user.id) {
     <user-card-list [user]="user" />
   }
-  
+
   @if (hasMore()) {
     <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreUsers($event)">
       <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more users..." />

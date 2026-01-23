@@ -14,11 +14,11 @@
       subtitle="You don't have any upcoming events yet!"
     />
   } @else {
-  <div class="flex flex-col gap-4 mt-2">
-    @for (event of events(); track event.id) {
-      <upcoming-event-card [event]="event" />
-    }
-  </div>
+    <div class="flex flex-col gap-4 mt-2">
+      @for (event of events(); track event.id) {
+        <upcoming-event-card [event]="event" />
+      }
+    </div>
 
     <ion-infinite-scroll (ionInfinite)="loadMoreEvents($event)" [disabled]="!hasMore()">
       <ion-infinite-scroll-content loadingText="Loading more events..."></ion-infinite-scroll-content>

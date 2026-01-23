@@ -14,49 +14,45 @@
         <div class="body-14R neutral-03">Loading...</div>
       </div>
     } @else {
-        <div class="bg-neutral-07 px-4 border border-neutral-300 rounded-3xl">
-            <div class="flex items-center justify-between w-full py-3 cursor-pointer">
-              <div class="flex items-center gap-3 flex-1">
-                <span class="body-14R neutral-03">Email</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="body-14R neutral-01">{{ currentUser()?.email || 'Not set' }}</span>
-                <i class="pi pi-pencil cursor-pointer neutral-04 !text-[16px]" (click)="onEditEmail()"></i>
-              </div>
-            </div>
-
-            <div class="h-px bg-neutral-05"></div>
-      
-            <div class="flex items-center justify-between w-full py-3 cursor-pointer">
-              <div class="flex items-center gap-3 flex-1">
-                <span class="body-14R neutral-03">Phone Number</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="body-14R neutral-01">{{ currentUser()?.mobile || 'Not set' }}</span>
-                <i class="pi pi-pencil cursor-pointer neutral-04 !text-[16px]" (click)="onEditPhone()"></i>
-              </div>
-            </div>
-
-            <div class="h-px bg-neutral-05"></div>
-      
-            <div class="flex items-center justify-between w-full py-3 cursor-pointer">
-              <div class="flex items-center gap-3 flex-1">
-                <span class="body-14R neutral-03">Username</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="body-14R neutral-01">{{ currentUser()?.username || 'Not set' }}</span>
-                <i class="pi pi-pencil cursor-pointer neutral-04 !text-[16px]" (click)="onEditUsername()"></i>
-              </div>
-            </div>
+      <div class="bg-neutral-07 px-4 border border-neutral-300 rounded-3xl">
+        <div class="flex items-center justify-between w-full py-3 cursor-pointer">
+          <div class="flex items-center gap-3 flex-1">
+            <span class="body-14R neutral-03">Email</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="body-14R neutral-01">{{ currentUser()?.email || 'Not set' }}</span>
+            <i class="pi pi-pencil cursor-pointer neutral-04 !text-[16px]" (click)="onEditEmail()"></i>
+          </div>
         </div>
+
+        <div class="h-px bg-neutral-05"></div>
+
+        <div class="flex items-center justify-between w-full py-3 cursor-pointer">
+          <div class="flex items-center gap-3 flex-1">
+            <span class="body-14R neutral-03">Phone Number</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="body-14R neutral-01">{{ currentUser()?.mobile || 'Not set' }}</span>
+            <i class="pi pi-pencil cursor-pointer neutral-04 !text-[16px]" (click)="onEditPhone()"></i>
+          </div>
+        </div>
+
+        <div class="h-px bg-neutral-05"></div>
+
+        <div class="flex items-center justify-between w-full py-3 cursor-pointer">
+          <div class="flex items-center gap-3 flex-1">
+            <span class="body-14R neutral-03">Username</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="body-14R neutral-01">{{ currentUser()?.username || 'Not set' }}</span>
+            <i class="pi pi-pencil cursor-pointer neutral-04 !text-[16px]" (click)="onEditUsername()"></i>
+          </div>
+        </div>
+      </div>
 
       <!-- Delete Account Button -->
       <div class="mb-6">
-        <button
-          type="button"
-          class="w-full flex items-center justify-center py-3 !text-red-700 cursor-pointer body-14R"
-          (click)="onDeleteAccount()"
-        >
+        <button type="button" class="w-full flex items-center justify-center py-3 !text-red-700 cursor-pointer body-14R" (click)="onDeleteAccount()">
           <span>Delete Account</span>
         </button>
       </div>

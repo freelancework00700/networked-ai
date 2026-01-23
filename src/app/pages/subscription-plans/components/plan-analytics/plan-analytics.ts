@@ -22,20 +22,20 @@ export class PlanAnalytics {
   // Chart data and options
   chartData = computed(() => {
     const isSponsor = this.isSponsor();
-    
+
     // Create gradient function for sponsor plans
     const getBorderColor = (context: any) => {
       if (!isSponsor) {
         return '#2B5BDE';
       }
-      
+
       const chart = context.chart;
       const { ctx, chartArea } = chart;
-      
+
       if (!chartArea) {
         return '#F5BC61';
       }
-      
+
       const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
       gradient.addColorStop(0, '#9E8F76');
       gradient.addColorStop(0.1428, '#7A6A50');
@@ -43,22 +43,22 @@ export class PlanAnalytics {
       gradient.addColorStop(0.405, '#9D7F4E');
       gradient.addColorStop(0.6046, '#C9A770');
       gradient.addColorStop(0.8652, '#796A52');
-      
+
       return gradient;
     };
-    
+
     const getPointColor = (context: any) => {
       if (!isSponsor) {
         return '#2B5BDE';
       }
-      
+
       const chart = context.chart;
       const { ctx, chartArea } = chart;
-      
+
       if (!chartArea) {
         return '#F5BC61';
       }
-      
+
       const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
       gradient.addColorStop(0, '#9E8F76');
       gradient.addColorStop(0.1428, '#7A6A50');
@@ -66,10 +66,10 @@ export class PlanAnalytics {
       gradient.addColorStop(0.405, '#9D7F4E');
       gradient.addColorStop(0.6046, '#C9A770');
       gradient.addColorStop(0.8652, '#796A52');
-      
+
       return gradient;
     };
-    
+
     return {
       labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
       datasets: [
@@ -91,10 +91,10 @@ export class PlanAnalytics {
 
   chartOptions = computed(() => {
     const isSponsor = this.isSponsor();
-    
+
     // For tooltip, use a solid color (gradients don't work well in tooltips)
     const tooltipColor = isSponsor ? '#F5BC61' : '#2B5BDE';
-    
+
     return {
       responsive: true,
       maintainAspectRatio: false,

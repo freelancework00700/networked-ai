@@ -27,18 +27,7 @@ interface ChangeAccountInfoForm {
   styleUrl: './change-account-info.scss',
   templateUrl: './change-account-info.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    Button,
-    EmailInput,
-    MobileInput,
-    TextInput,
-    UsernameInput,
-    PasswordInput,
-    IonHeader,
-    IonToolbar,
-    IonContent,
-    ReactiveFormsModule
-  ]
+  imports: [Button, EmailInput, MobileInput, TextInput, UsernameInput, PasswordInput, IonHeader, IonToolbar, IonContent, ReactiveFormsModule]
 })
 export class ChangeAccountInfo implements OnInit {
   // services
@@ -215,17 +204,17 @@ export class ChangeAccountInfo implements OnInit {
         // Send OTP to new email
         // await this.authService.sendOtp({ email: newValue });
         this.navigationService.navigateForward('/settings/verify-otp', false, {
-            email: newValue,
-            successTitle: 'Email Successfully Updated',
-            successDescription: "You've verified your new email address. Use this for quick login next time."
+          email: newValue,
+          successTitle: 'Email Successfully Updated',
+          successDescription: "You've verified your new email address. Use this for quick login next time."
         });
       } else if (this.isPhone()) {
         // Send OTP to new phone number
         // await this.authService.sendOtp({ mobile: newValue });
         this.navigationService.navigateForward('/settings/verify-otp', false, {
-            mobile: newValue,
-            successTitle: 'Phone Number Successfully Updated',
-            successDescription: "You've verified your new phone number. Use this for quick login next time."
+          mobile: newValue,
+          successTitle: 'Phone Number Successfully Updated',
+          successDescription: "You've verified your new phone number. Use this for quick login next time."
         });
       } else {
         // Username - direct update (no OTP)
@@ -237,8 +226,7 @@ export class ChangeAccountInfo implements OnInit {
       }
     } catch (error: any) {
       console.error(`Error updating ${this.type()}:`, error);
-      const errorMsg =
-        error.message || `Failed to update ${this.type()}. Please try again.`;
+      const errorMsg = error.message || `Failed to update ${this.type()}. Please try again.`;
       this.toasterService.showError(errorMsg);
     } finally {
       this.isLoading.set(false);

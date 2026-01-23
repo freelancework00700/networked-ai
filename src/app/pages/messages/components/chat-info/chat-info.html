@@ -30,13 +30,7 @@
         >
           @if (groupImage()) {
             <div class="relative w-full h-full rounded-full overflow-hidden">
-              <img 
-              fill 
-              placeholder
-              (error)="onImageError($event)"
-              class="rounded-full object-cover"
-              [ngSrc]="getImageUrl(groupImage() || '')"
-            />
+              <img fill placeholder (error)="onImageError($event)" class="rounded-full object-cover" [ngSrc]="getImageUrl(groupImage() || '')" />
             </div>
           } @else {
             <i class="pi pi-camera text-xl text-white"></i>
@@ -45,12 +39,14 @@
 
         <div class="body-16M neutral-01">{{ groupName() }}</div>
         <div class="text-xs text-gray-500">Group · {{ members().length }} members</div>
-        <div class="text-xs text-gray-400">Created by 
+        <div class="text-xs text-gray-400">
+          Created by
           @if (chatRoom()?.created_by_user?.id === authService.currentUser()?.id) {
             <span>you</span>
           } @else {
             <span>{{ chatRoom()?.created_by_user?.name || chatRoom()?.created_by_user?.username }}</span>
-          }, {{ createdDate() }}
+          }
+          , {{ createdDate() }}
         </div>
       </div>
 
@@ -75,13 +71,7 @@
         @for (m of members(); track m.id) {
           <div class="flex items-center gap-3 py-3 border-b border-gray-200" (click)="onUserClick(m)">
             <div class="w-12 h-12 rounded-full overflow-hidden relative">
-              <img
-                fill
-                placeholder
-                class="rounded-full object-cover"
-                (error)="onImageError($event)"
-                [ngSrc]="getImageUrl(m?.thumbnail_url ?? '')"
-              />
+              <img fill placeholder class="rounded-full object-cover" (error)="onImageError($event)" [ngSrc]="getImageUrl(m?.thumbnail_url ?? '')" />
             </div>
 
             <div class="flex-1">

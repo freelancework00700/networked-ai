@@ -38,11 +38,11 @@ export class MySubscriptions implements OnInit {
 
   // computed
   eventSubscriptions = computed(() => {
-    return this.allSubscriptions().filter(sub => sub.type === 'event');
+    return this.allSubscriptions().filter((sub) => sub.type === 'event');
   });
 
   sponsorSubscriptions = computed(() => {
-    return this.allSubscriptions().filter(sub => sub.type === 'sponsor');
+    return this.allSubscriptions().filter((sub) => sub.type === 'sponsor');
   });
 
   currentSubscriptions = computed(() => {
@@ -59,7 +59,7 @@ export class MySubscriptions implements OnInit {
     this.isLoading.set(true);
     try {
       const subscriptionsData = await this.subscriptionService.getUserSubscriptions(1, 10);
-      
+
       // Ensure subscriptionsData is an array
       if (!Array.isArray(subscriptionsData)) {
         console.warn('Subscriptions data is not an array:', subscriptionsData);
@@ -120,7 +120,7 @@ export class MySubscriptions implements OnInit {
 
   onSubscriptionClick(subscription: ISubscription): void {
     // Find the raw subscription data
-    const rawData = this.rawSubscriptionsData().find(sub => sub.id === subscription.id);
+    const rawData = this.rawSubscriptionsData().find((sub) => sub.id === subscription.id);
     if (!rawData) {
       console.error('Raw subscription data not found');
       return;
@@ -129,7 +129,7 @@ export class MySubscriptions implements OnInit {
     // Get plan ID from product
     const product = rawData.product || rawData.plan;
     const planId = product?.id || rawData.product_id;
-    
+
     if (!planId) {
       console.error('Plan ID not found');
       return;

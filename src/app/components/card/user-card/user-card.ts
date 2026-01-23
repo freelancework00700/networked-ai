@@ -31,7 +31,7 @@ export class UserCard {
   // computed
   userImage = computed(() => {
     const user = this.user();
-    return getImageUrlOrDefault(user?.thumbnail_url|| '');
+    return getImageUrlOrDefault(user?.thumbnail_url || '');
   });
 
   userName = computed(() => {

@@ -97,13 +97,13 @@ export class Login implements OnInit, OnDestroy {
   private async loginWithEmail() {
     try {
       this.emailInput()?.shouldValidate.set(true);
-      
+
       // validate email and password
       if (!(await validateFields(this.loginForm(), ['email', 'password']))) {
         this.emailInput()?.shouldValidate.set(false);
         return;
       }
-      
+
       this.emailInput()?.shouldValidate.set(false);
 
       // set loading state
@@ -132,14 +132,14 @@ export class Login implements OnInit, OnDestroy {
     console.log('sendOtp');
     // Enable async validation on mobile input before validation
     this.mobileInput()?.shouldValidate.set(true);
-    
+
     // get full phone number and validate phone number
     const mobile = this.mobileInput()?.getPhoneNumber();
     if (!(await validateFields(this.loginForm(), ['mobile'])) || !mobile) {
       this.mobileInput()?.shouldValidate.set(false);
       return;
     }
-    
+
     // Disable async validation after successful validation
     this.mobileInput()?.shouldValidate.set(false);
 

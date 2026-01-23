@@ -53,7 +53,7 @@ export class HomeEvent implements OnInit, OnDestroy {
   isLoading = signal<boolean>(false);
 
   private queryParamsSubscription?: Subscription;
-  
+
   currentUser = this.authService.currentUser;
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
@@ -66,7 +66,6 @@ export class HomeEvent implements OnInit, OnDestroy {
 
   cityCards = computed(() => this.eventService.cityCards());
   isLoadingCities = computed(() => this.eventService.isLoadingCities());
-
 
   feedPosts: FeedPost[] = [
     {
@@ -113,7 +112,7 @@ export class HomeEvent implements OnInit, OnDestroy {
       if (this.previousLoginState === null) {
         this.previousUserId = currentUserId;
         this.previousLoginState = currentLoginState;
-        
+
         this.loadEventsIfNeeded();
         this.loadTopCities();
         return;
@@ -165,7 +164,7 @@ export class HomeEvent implements OnInit, OnDestroy {
     const hasPublicEvents = this.eventService.publicEvents().length > 0;
     const hasUpcomingEvents = this.eventService.upcomingEvents().length > 0;
     const loggedIn = this.isLoggedIn();
-    
+
     if (loggedIn && hasRecommendedEvents && hasPublicEvents) return;
     if (!loggedIn && hasPublicEvents) return;
 
@@ -182,7 +181,7 @@ export class HomeEvent implements OnInit, OnDestroy {
       } else if (!hasPublicEvents) {
         await this.loadPublicEvents();
       }
-      
+
       // Load upcoming events if in upcoming mode and not already loaded
       if (!hasUpcomingEvents) {
         await this.loadUpcomingEvents();
@@ -203,7 +202,7 @@ export class HomeEvent implements OnInit, OnDestroy {
     if (!this.isLoggedIn()) {
       return;
     }
-    
+
     try {
       this.isLoading.set(true);
       await this.eventService.getRecommendedEvents({
@@ -236,7 +235,7 @@ export class HomeEvent implements OnInit, OnDestroy {
     try {
       this.isLoading.set(true);
       const loggedIn = this.isLoggedIn();
-      
+
       if (!loggedIn) {
         // When not logged in, only load public events
         await this.loadPublicEvents(reset);
@@ -301,16 +300,14 @@ export class HomeEvent implements OnInit, OnDestroy {
   }
 
   onCityClick(city: ICity): void {
-    this.navigationService.navigateForward(
-      `/event/city?city=${encodeURIComponent(city.city || '')}&state=${encodeURIComponent(city.state)}`,
-      false,
-      { city: city }
-    );
+    this.navigationService.navigateForward(`/event/city?city=${encodeURIComponent(city.city || '')}&state=${encodeURIComponent(city.state)}`, false, {
+      city: city
+    });
   }
 
   private async loadUpcomingEvents(reset: boolean = true): Promise<void> {
     if (!this.isLoggedIn()) return;
-    
+
     const currentUser = this.currentUser();
     if (!currentUser?.id) return;
 

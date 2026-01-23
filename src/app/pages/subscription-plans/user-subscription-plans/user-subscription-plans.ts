@@ -13,24 +13,12 @@ import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-bu
 import { IonHeader, IonToolbar, IonContent, IonIcon, NavController } from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy } from '@angular/core';
 
-
-
 @Component({
   selector: 'user-subscription-plans',
   templateUrl: './user-subscription-plans.html',
   styleUrl: './user-subscription-plans.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    Button,
-    IonIcon,
-    IonHeader,
-    IonToolbar,
-    IonContent,
-    CommonModule,
-    PlanPreview,
-    SegmentButton,
-    ReactiveFormsModule,
-  ]
+  imports: [Button, IonIcon, IonHeader, IonToolbar, IonContent, CommonModule, PlanPreview, SegmentButton, ReactiveFormsModule]
 })
 export class UserSubscriptionPlans implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
@@ -55,9 +43,9 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   filteredPlans = computed(() => {
     const filter = this.planTypeFilter();
     const allPlans = this.plans();
-    
-    if (filter === 'event') return allPlans.filter(plan => !plan.is_sponsor);
-    return allPlans.filter(plan => plan.is_sponsor);
+
+    if (filter === 'event') return allPlans.filter((plan) => !plan.is_sponsor);
+    return allPlans.filter((plan) => plan.is_sponsor);
   });
 
   currentPlan = computed(() => {
@@ -70,8 +58,8 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
 
   hasBothPlanTypes = computed(() => {
     const allPlans = this.plans();
-    const hasEvent = allPlans.some(p => !p.is_sponsor);
-    const hasSponsor = allPlans.some(p => p.is_sponsor);
+    const hasEvent = allPlans.some((p) => !p.is_sponsor);
+    const hasSponsor = allPlans.some((p) => p.is_sponsor);
     return hasEvent && hasSponsor;
   });
 
@@ -86,8 +74,8 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     const plan = this.currentPlan();
     if (!plan) return this.fb.group({});
 
-    const monthlyPrice = plan.prices.find(p => p.interval === 'month');
-    const annualPrice = plan.prices.find(p => p.interval === 'year');
+    const monthlyPrice = plan.prices.find((p) => p.interval === 'month');
+    const annualPrice = plan.prices.find((p) => p.interval === 'year');
 
     return this.fb.group({
       name: [plan.name],
@@ -121,14 +109,14 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     const plan = this.currentPlan();
     if (!plan || !plan.events) return [];
     // Transform events to the format expected by plan-preview
-    return plan.events.map(event => this.transformEventForPlanPreview(event));
+    return plan.events.map((event) => this.transformEventForPlanPreview(event));
   });
 
   // Get actual annual price from prices array
   annualPriceValue = computed(() => {
     const plan = this.currentPlan();
     if (!plan) return 0;
-    const annualPrice = plan.prices.find(p => p.interval === 'year');
+    const annualPrice = plan.prices.find((p) => p.interval === 'year');
     return annualPrice ? parseFloat(annualPrice.amount) : 0;
   });
 
@@ -144,28 +132,28 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   // Check if annual subscription is available
   hasAnnualSubscription = computed(() => {
     const plan = this.currentPlan();
-    return plan ? !!plan.prices.find(p => p.interval === 'year') : false;
+    return plan ? !!plan.prices.find((p) => p.interval === 'year') : false;
   });
 
   monthlyPriceValue = computed(() => {
     const plan = this.currentPlan();
     if (!plan) return 0;
-    const monthlyPrice = plan.prices.find(p => p.interval === 'month');
+    const monthlyPrice = plan.prices.find((p) => p.interval === 'month');
     return monthlyPrice ? parseFloat(monthlyPrice.amount) : 0;
   });
 
   discountValue = computed(() => {
     const plan = this.currentPlan();
     if (!plan) return 0;
-    const annualPrice = plan.prices.find(p => p.interval === 'year');
-    
+    const annualPrice = plan.prices.find((p) => p.interval === 'year');
+
     // Use discount_percentage from API if available
     if (annualPrice?.discount_percentage !== null && annualPrice?.discount_percentage !== undefined) {
       return Number(annualPrice.discount_percentage);
     }
-    
+
     // Otherwise calculate from prices
-    const monthlyPrice = plan.prices.find(p => p.interval === 'month');
+    const monthlyPrice = plan.prices.find((p) => p.interval === 'month');
     if (!monthlyPrice || !annualPrice) return 0;
     const annualBase = parseFloat(monthlyPrice.amount) * 12;
     const annualActual = parseFloat(annualPrice.amount);
@@ -176,8 +164,8 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   discountType = computed(() => {
     const plan = this.currentPlan();
     if (!plan) return 'percentage' as 'percentage' | 'fixed';
-    const annualPrice = plan.prices.find(p => p.interval === 'year');
-    
+    const annualPrice = plan.prices.find((p) => p.interval === 'year');
+
     // Map banner_display_type from API to discountType
     // API uses 'fixed' or 'percentage', component uses 'fixed' or 'percentage'
     if (annualPrice?.banner_display_type === 'fixed') {
@@ -200,7 +188,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     const plan = this.currentPlan();
     if (!plan) return '';
     const interval = this.selectedPlanInterval();
-    const price = plan.prices.find(p => p.interval === interval);
+    const price = plan.prices.find((p) => p.interval === interval);
     return price?.id || '';
   });
 
@@ -224,7 +212,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     const plan = this.currentPlan();
     if (!plan) return null;
     const interval = this.selectedPlanInterval();
-    const price = plan.prices.find(p => p.interval === interval);
+    const price = plan.prices.find((p) => p.interval === interval);
     if (!price || !price.subscriptions || price.subscriptions.length === 0) return null;
     return price.subscriptions[0];
   });
@@ -254,7 +242,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     if (!plan || !subscription) return null;
 
     const interval = this.selectedPlanInterval();
-    const price = plan.prices.find(p => p.interval === interval);
+    const price = plan.prices.find((p) => p.interval === interval);
     if (!price) return null;
 
     const priceDisplay = `$${parseFloat(price.amount).toFixed(2)} /${interval === 'year' ? 'y' : 'm'}`;
@@ -285,10 +273,10 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     const endDate = this.subscriptionEndDate();
     if (!endDate) return '';
     const date = new Date(endDate);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   });
 
@@ -304,7 +292,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
       isActive: boolean;
     }> = [];
 
-    if (allPlans.some(p => !p.is_sponsor)) {
+    if (allPlans.some((p) => !p.is_sponsor)) {
       options.push({
         type: 'event',
         label: 'Show Event Subscription Plans',
@@ -314,7 +302,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
       });
     }
 
-    if (allPlans.some(p => p.is_sponsor)) {
+    if (allPlans.some((p) => p.is_sponsor)) {
       options.push({
         type: 'sponsor',
         label: 'Show Sponsor Subscription Plans',
@@ -327,7 +315,6 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
 
     return options;
   });
-
 
   async ngOnInit(): Promise<void> {
     // Check if coming from my-subscriptions page using navigation state
@@ -347,7 +334,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
       }
       await this.loadPlans(userId);
     }
-    
+
     // Close dropdown when clicking outside
     document.addEventListener('click', this.handleClickOutside.bind(this));
   }
@@ -372,7 +359,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
         this.navCtrl.back();
         return;
       }
-      
+
       // Transform to PlanData format
       const transformedPlan: PlanData = {
         id: planData.id || '',
@@ -392,7 +379,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
         total_subscribers: planData.total_subscribers || 0,
         event_ids: planData.event_ids || []
       };
-      
+
       this.plans.set([transformedPlan]);
       this.selectedPlanIndex.set(0);
       this.planTypeFilter.set(transformedPlan.is_sponsor ? 'sponsor' : 'event');
@@ -409,7 +396,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     this.isLoading.set(true);
     try {
       const plansData = await this.subscriptionService.getSubscriptionPlansByUserId(userId);
-      this.plans.set(plansData as PlanData[] || []);
+      this.plans.set((plansData as PlanData[]) || []);
 
       if (!plansData || plansData.length === 0) {
         this.toasterService.showError('No subscription plans found');
@@ -427,7 +414,6 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     }
   }
 
-
   private transformEventForPlanPreview(event: any): any {
     if (!event.start_date) {
       // Parse address to extract city, state, country
@@ -435,7 +421,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
       const city = addressParts.length > 1 ? addressParts[0].trim() : '';
       const state = addressParts.length > 2 ? addressParts[1].trim() : '';
       const country = addressParts.length > 3 ? addressParts[2].trim() : addressParts[addressParts.length - 1]?.trim() || '';
-      
+
       return {
         id: event.id || '',
         title: event.title || '',
@@ -526,7 +512,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     this.isLoading.set(true);
     try {
       const response = await this.subscriptionService.createSubscriptionPaymentIntent(priceId);
-      
+
       if (response?.client_secret) {
         await this.openPaymentModal(response.client_secret, plan.name, response);
       } else {
@@ -553,7 +539,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
         console.log('Subscription ID:', paymentIntentResponse.subscription_id);
         // You can store this subscription_id for future reference
       }
-      
+
       // Get plan ID for sharing
       const plan = this.currentPlan();
       const planId = plan?.id;
@@ -575,7 +561,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
           }
         },
         onConfirm: async () => {
-          this.navigationService  .back();
+          this.navigationService.back();
         }
       });
     }
@@ -594,7 +580,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
         endDate,
         onConfirm: async () => {
           await this.subscriptionService.cancelSubscription(subscriptionId);
-          
+
           const userId = this.route.snapshot.paramMap.get('userId');
           if (userId) {
             await this.loadPlans(userId);

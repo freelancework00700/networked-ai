@@ -36,11 +36,11 @@ export class Onboarding implements AfterViewInit, OnDestroy {
             this.currentSlide.set(swiper.activeIndex);
 
             // request permissions for the current slide
-            if(swiper.activeIndex === 0) {
+            if (swiper.activeIndex === 0) {
               this.permissionsService.requestCameraPermission();
-            } else if(swiper.activeIndex === 1) {
+            } else if (swiper.activeIndex === 1) {
               this.permissionsService.requestLocationPermission();
-            } else if(swiper.activeIndex === 2) {
+            } else if (swiper.activeIndex === 2) {
               this.permissionsService.requestContactsPermission();
             }
           }

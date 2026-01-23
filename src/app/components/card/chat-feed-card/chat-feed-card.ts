@@ -1,5 +1,5 @@
 import { NgOptimizedImage } from '@angular/common';
-import { ChatEventCard } from "../chat-event-card";
+import { ChatEventCard } from '../chat-event-card';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { Component, computed, inject, input } from '@angular/core';
@@ -24,7 +24,6 @@ export class ChatFeedCard {
 
     return medias.find((m: any) => m.order === 1) ?? null;
   });
-
 
   onPostClick(): void {
     const feed = this.feed();

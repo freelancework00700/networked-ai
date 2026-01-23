@@ -21,21 +21,21 @@
 
       @if (searchQuery().trim()) {
         @if (searchResults().length > 0) {
-        <div class="flex flex-col gap-4 pt-4 px-4">
-          @for (suggestion of searchResults(); track suggestion.id) {
-            <user-card-list [user]="suggestion" />
-          }
-            
+          <div class="flex flex-col gap-4 pt-4 px-4">
+            @for (suggestion of searchResults(); track suggestion.id) {
+              <user-card-list [user]="suggestion" />
+            }
+
             @if (hasMore()) {
               <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreSearchResults($event)">
                 <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more users..." />
               </ion-infinite-scroll>
             }
-        </div>
+          </div>
         } @else if (!isSearching()) {
-        <div class="px-4">
-          <search-empty-state (clearSearch)="searchQuery.set('')" />
-        </div>
+          <div class="px-4">
+            <search-empty-state (clearSearch)="searchQuery.set('')" />
+          </div>
         }
       } @else {
         <div>
@@ -55,7 +55,7 @@
               <div class="flex items-center justify-between">
                 <div class="body-16SB neutral-01">Added You</div>
               </div>
-  
+
               <div class="mt-3">
                 @for (user of visibleSuggestions(); track user.id) {
                   <user-network-request-card [user]="user" (accept)="acceptNetwork($event)" (reject)="rejectNetwork($event)" />

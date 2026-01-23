@@ -14,11 +14,11 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 export class BusinessCard {
   private navigationService = inject(NavigationService);
   private authService = inject(AuthService);
-  
+
   user = input<any>(null);
-  
+
   currentUser = computed(() => this.user() || this.authService.currentUser());
-  
+
   goToEditProfile(): void {
     this.navigationService.navigateForward('/profile/edit');
   }

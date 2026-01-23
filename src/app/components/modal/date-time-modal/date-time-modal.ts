@@ -42,14 +42,14 @@ export class DateTimeModal implements OnInit {
 
   getFormattedValue(): string {
     if (!this.value) return '';
-    
+
     if (this.type === 'time') {
       if (this.value.includes('T')) {
         return this.value;
       }
       return this.convertTimeToISO(this.value);
     }
-    
+
     return this.value;
   }
 
@@ -102,12 +102,12 @@ export class DateTimeModal implements OnInit {
       }
       return this.convertTimeToISO(this.min);
     }
-    
+
     // For date type, return undefined if min is not provided to allow all dates including past dates
     if (!this.min) {
       return undefined;
     }
-    
+
     return this.min;
   }
 

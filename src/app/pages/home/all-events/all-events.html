@@ -67,7 +67,7 @@
             <event-card [event]="event" />
           }
         }
-        
+
         @if (hasMore()) {
           <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreEvents($event)">
             <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more events..." />

@@ -39,7 +39,6 @@ export interface StripePaymentErrorEvent {
 
 @Injectable({ providedIn: 'root' })
 export class StripeService extends BaseApiService {
-
   async createPaymentIntent(payload: PaymentIntentRequest): Promise<PaymentIntentResponse> {
     try {
       const response: any = await this.post<PaymentIntentResponse>('/events/payment-intent', payload);

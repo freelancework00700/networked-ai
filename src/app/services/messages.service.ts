@@ -17,20 +17,22 @@ export class MessagesService extends BaseApiService {
     currentPage: 1,
     totalPages: 1
   });
-  
+
   currentPage = signal<number>(1);
   currentSearch = signal<string>('');
 
   /**
    * Get chat rooms for the current user with pagination, search, and filter
    */
-  async getChatRooms(params: {
-    page?: number;
-    limit?: number;
-    search?: string; // when provided as '' it clears search
-    filter?: 'all' | 'unread' | 'group' | 'event' | 'network';
-    append?: boolean;
-  } = {}): Promise<{ rooms: ChatRoom[]; pagination: ChatRoomsPagination }> {
+  async getChatRooms(
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string; // when provided as '' it clears search
+      filter?: 'all' | 'unread' | 'group' | 'event' | 'network';
+      append?: boolean;
+    } = {}
+  ): Promise<{ rooms: ChatRoom[]; pagination: ChatRoomsPagination }> {
     try {
       this.isLoading.set(true);
       const currentUser = this.authService.currentUser();
@@ -44,10 +46,7 @@ export class MessagesService extends BaseApiService {
       const search = hasSearchParam ? (params.search ?? '') : this.currentSearch();
       const filter = params.filter ?? 'all';
 
-      let httpParams = new HttpParams()
-        .set('page', page.toString())
-        .set('limit', limit.toString())
-        .set('filter', filter);
+      let httpParams = new HttpParams().set('page', page.toString()).set('limit', limit.toString()).set('filter', filter);
 
       if (search.trim()) {
         httpParams = httpParams.set('search', search);
@@ -65,11 +64,11 @@ export class MessagesService extends BaseApiService {
       };
 
       // Filter out deleted rooms
-      const activeRooms = rooms.filter(room => !room.is_deleted);
+      const activeRooms = rooms.filter((room) => !room.is_deleted);
 
       if (params.append) {
         // Append to existing rooms
-        this.chatRooms.update(current => [...current, ...activeRooms]);
+        this.chatRooms.update((current) => [...current, ...activeRooms]);
       } else {
         // Replace existing rooms
         this.chatRooms.set(activeRooms);
@@ -105,17 +104,18 @@ export class MessagesService extends BaseApiService {
   /**
    * Get messages for a specific chat room with pagination
    */
-  async getMessagesByRoomId(roomId: string, params: {
-    page?: number;
-    limit?: number;
-  } = {}): Promise<{ messages: ChatMessage[]; pagination: ChatRoomsPagination }> {
+  async getMessagesByRoomId(
+    roomId: string,
+    params: {
+      page?: number;
+      limit?: number;
+    } = {}
+  ): Promise<{ messages: ChatMessage[]; pagination: ChatRoomsPagination }> {
     try {
       const page = params.page || 1;
       const limit = params.limit || 10;
 
-      let httpParams = new HttpParams()
-        .set('page', page.toString())
-        .set('limit', limit.toString());
+      let httpParams = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
       const response = await this.get<MessagesResponse>(`/messages/by-room/${roomId}`, {
         params: httpParams
@@ -175,13 +175,13 @@ export class MessagesService extends BaseApiService {
         payload.profile_image = params.profile_image;
       }
 
-      const response = await this.post<{ 
-        success: boolean; 
-        message: string; 
-        data: any
+      const response = await this.post<{
+        success: boolean;
+        message: string;
+        data: any;
       }>('/chat-rooms/', payload);
-      
-      return { 
+
+      return {
         room_id: response.data.id || response.data.room_id,
         room: response.data
       };
@@ -197,7 +197,7 @@ export class MessagesService extends BaseApiService {
   async getChatRoomById(roomId: string): Promise<ChatRoom> {
     try {
       const response = await this.get<{ success: boolean; message: string; data: ChatRoom }>(`/chat-rooms/${roomId}`);
-      
+
       return response.data;
     } catch (error) {
       console.error('Error fetching chat room:', error);
@@ -229,7 +229,7 @@ export class MessagesService extends BaseApiService {
       }
 
       const response = await this.post<{ success: boolean; message: string; data: { message: ChatMessage; media: any } }>('/messages/', payload);
-      
+
       return { message: response.data.message };
     } catch (error) {
       console.error('Error sending message:', error);
@@ -255,8 +255,11 @@ export class MessagesService extends BaseApiService {
         payload.message = message.trim();
       }
 
-      const response = await this.postFormData<{ success: boolean; message: string; data: { message: ChatMessage; media: any } }>('/messages/', payload);
-      
+      const response = await this.postFormData<{ success: boolean; message: string; data: { message: ChatMessage; media: any } }>(
+        '/messages/',
+        payload
+      );
+
       return { message: response.data.message };
     } catch (error) {
       console.error('Error sending message with file:', error);
@@ -276,7 +279,7 @@ export class MessagesService extends BaseApiService {
       };
 
       const response = await this.put<{ success: boolean; message: string; data: { message: ChatMessage } }>('/messages/', payload);
-      
+
       return response.data.message;
     } catch (error) {
       console.error('Error updating message:', error);
@@ -300,12 +303,12 @@ export class MessagesService extends BaseApiService {
     const currentUser = this.authService.currentUser();
     if (!currentUser?.id) return;
 
-    const existingRoom = this.chatRooms().find(r => r.id === room.id);
+    const existingRoom = this.chatRooms().find((r) => r.id === room.id);
     if (existingRoom) {
       this.applyRoomUpdated(room);
       return;
     }
-    this.chatRooms.update(current => [room, ...current]);
+    this.chatRooms.update((current) => [room, ...current]);
   }
 
   applyRoomUpdated(room: ChatRoom): void {
@@ -313,10 +316,10 @@ export class MessagesService extends BaseApiService {
     if (!currentUser?.id) return;
 
     const isUserInRoom = room.user_ids?.includes(currentUser.id) || false;
-    
-    this.chatRooms.update(current => {
-      const roomIndex = current.findIndex(r => r.id === room.id);
-      
+
+    this.chatRooms.update((current) => {
+      const roomIndex = current.findIndex((r) => r.id === room.id);
+
       if (roomIndex === -1) {
         if (isUserInRoom) {
           return [room, ...current];
@@ -325,7 +328,7 @@ export class MessagesService extends BaseApiService {
       }
 
       if (!isUserInRoom) {
-        return current.filter(r => r.id !== room.id);
+        return current.filter((r) => r.id !== room.id);
       }
 
       const updated = [...current];
@@ -370,4 +373,3 @@ export class MessagesService extends BaseApiService {
     }
   }
 }
-

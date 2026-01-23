@@ -41,7 +41,6 @@ export interface Benefit {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PlanDetailsForm implements OnInit, OnDestroy {
-
   descriptionGeneratorService = inject(DescriptionGeneratorService);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
@@ -52,8 +51,9 @@ export class PlanDetailsForm implements OnInit, OnDestroy {
   benefits = input.required<Benefit[]>();
   isSponsorPlan = input<boolean>(true);
   benefitErrors = input<Set<string>>(new Set());
-  SPONSOR_GRADIENT = 'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
-  
+  SPONSOR_GRADIENT =
+    'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
+
   // Local signals
   nameValue = signal<string>('');
   monthlyPriceValue = signal<number>(0);
@@ -61,7 +61,7 @@ export class PlanDetailsForm implements OnInit, OnDestroy {
   discountType = signal<'percentage' | 'fixed'>('percentage');
   showDescriptionEditor = signal<boolean>(false);
   isGeneratingDescription = signal<boolean>(false);
-  
+
   private subscriptions = new Subscription();
 
   // Outputs

@@ -53,10 +53,10 @@ export class DeleteAccountModal {
 
     try {
       this.isLoading.set(true);
-      
+
       // Close the delete account modal
       await this.modalCtrl.dismiss();
-      
+
       // Show success modal - navigation will happen when user clicks close
       await this.modalService.openSuccessModal({
         title: 'Your Account Has Been Deleted.',

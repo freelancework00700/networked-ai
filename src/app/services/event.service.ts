@@ -1335,16 +1335,15 @@ export class EventService extends BaseApiService {
     }
   }
 
-  async changeCheckInStatus(payload:any){
+  async changeCheckInStatus(payload: any) {
     try {
-      const response = await this.put<any>(`/event-attendees/check-in`,payload);
+      const response = await this.put<any>(`/event-attendees/check-in`, payload);
       return response?.data;
     } catch (error) {
       console.error('Error check in:', error);
       throw error;
     }
   }
-
 
   async deleteAttendees(id: string): Promise<EventResponse> {
     try {
@@ -1356,11 +1355,7 @@ export class EventService extends BaseApiService {
     }
   }
 
-  async shareEvent(payload: {
-    event_id: string;
-    peer_ids?: string[];
-    send_entire_network?: boolean;
-  }): Promise<any> {
+  async shareEvent(payload: { event_id: string; peer_ids?: string[]; send_entire_network?: boolean }): Promise<any> {
     try {
       const response = await this.post<any>('/chat-rooms/share', payload);
       return response;

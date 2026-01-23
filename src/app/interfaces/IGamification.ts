@@ -54,4 +54,3 @@ export interface LeaderboardResponse {
     alltime: LeaderboardData;
   };
 }
-

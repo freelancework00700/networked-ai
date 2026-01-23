@@ -14,7 +14,6 @@ import { environment } from 'src/environments/environment';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProfileImagePreviewOverlay {
-
   user = input<IUser | null>(null);
   isViewingOtherProfile = input<boolean>(false);
   closeOverlay = output<void>();
@@ -39,14 +38,12 @@ export class ProfileImagePreviewOverlay {
     }
   }
 
-  onShare(): void {
-  }
+  onShare(): void {}
 
-  onBusinessCard(): void {
-  }
+  onBusinessCard(): void {}
 
   getImage(user: IUser | null): string {
-    return user?.image_url as string || user?.thumbnail_url || '';
+    return (user?.image_url as string) || user?.thumbnail_url || '';
   }
 
   onImageError(event: Event): void {

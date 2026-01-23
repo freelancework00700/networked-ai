@@ -1,14 +1,7 @@
 <div class="flex items-center gap-3 py-4 border-b border-surface-200 cursor-pointer" (click)="onCardClick()">
   <!-- image -->
   <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
-    <img 
-      [ngSrc]="userImage()"
-      [alt]="user().name"
-      fill
-      placeholder
-      (error)="onImageError($event)"
-      class="object-cover rounded-full" 
-    />
+    <img [ngSrc]="userImage()" [alt]="user().name" fill placeholder (error)="onImageError($event)" class="object-cover rounded-full" />
   </div>
 
   <!-- name and details  -->

@@ -19,7 +19,7 @@ export class ChatEventCard {
   inPost = input<boolean>(false);
   frontendUrl = environment.frontendUrl || 'https://dev.app.net-worked.ai';
   eventLinkText = computed(() => `${this.frontendUrl}/event/${this.event()?.slug}`);
-  
+
   getImageUrl(imageUrl = ''): string {
     return getImageUrlOrDefault(imageUrl);
   }

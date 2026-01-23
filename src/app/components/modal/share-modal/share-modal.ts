@@ -7,7 +7,17 @@ import { ToasterService } from '@/services/toaster.service';
 import { NetworkService } from '@/services/network.service';
 import { FeedService } from '@/services/feed.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { IonIcon, IonHeader, IonFooter, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner, ModalController } from '@ionic/angular/standalone';
+import {
+  IonIcon,
+  IonHeader,
+  IonFooter,
+  IonToolbar,
+  IonContent,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonSpinner,
+  ModalController
+} from '@ionic/angular/standalone';
 import { Input, inject, signal, computed, Component, ChangeDetectionStrategy, OnInit, DestroyRef, ChangeDetectorRef, effect } from '@angular/core';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, from, catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -20,7 +30,21 @@ import { EventService } from '@/services/event.service';
   styleUrl: './share-modal.scss',
   templateUrl: './share-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonIcon, Checkbox, IonFooter, Searchbar, IonHeader, IonToolbar, ReactiveFormsModule, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner, NgOptimizedImage]
+  imports: [
+    Button,
+    IonIcon,
+    Checkbox,
+    IonFooter,
+    Searchbar,
+    IonHeader,
+    IonToolbar,
+    ReactiveFormsModule,
+    IonContent,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
+    IonSpinner,
+    NgOptimizedImage
+  ]
 })
 export class ShareModal implements OnInit {
   // services
@@ -75,7 +99,7 @@ export class ShareModal implements OnInit {
   });
 
   selectedUserIds = computed(() => {
-    return this.selectedUsers().map(u => u.id);
+    return this.selectedUsers().map((u) => u.id);
   });
 
   constructor() {
@@ -87,12 +111,14 @@ export class ShareModal implements OnInit {
         switchMap((searchText: string) => {
           this.isLoading.set(true);
           this.currentPage.set(1);
-          
-          return from(this.networkService.getMyConnections({
-            page: 1,
-            limit: 20,
-            search: searchText || undefined
-          })).pipe(
+
+          return from(
+            this.networkService.getMyConnections({
+              page: 1,
+              limit: 20,
+              search: searchText || undefined
+            })
+          ).pipe(
             catchError((error) => {
               console.error('Error fetching network connections:', error);
               this.isLoading.set(false);
@@ -104,7 +130,7 @@ export class ShareModal implements OnInit {
       )
       .subscribe((response) => {
         const users: IUser[] = response.data || [];
-        
+
         this.yourNetwork.set(users);
         this.currentPage.set(response.pagination?.currentPage || 1);
         this.totalPages.set(response.pagination?.totalPages || 0);
@@ -147,7 +173,7 @@ export class ShareModal implements OnInit {
       const users: IUser[] = response.data || [];
 
       if (append) {
-        this.yourNetwork.update(current => [...current, ...users]);
+        this.yourNetwork.update((current) => [...current, ...users]);
       } else {
         this.yourNetwork.set(users);
       }
@@ -165,7 +191,7 @@ export class ShareModal implements OnInit {
 
   async loadMoreUsers(event: Event): Promise<void> {
     const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
-    
+
     if (this.isLoadingMore() || !this.hasMore()) {
       infiniteScroll.complete();
       return;
@@ -210,7 +236,7 @@ export class ShareModal implements OnInit {
 
   onSelectAllChange(checked: boolean) {
     this.sendEntireNetwork.set(checked);
-    
+
     if (checked) {
       const network = this.yourNetwork();
       const selected = this.selectedUsers();
@@ -231,7 +257,6 @@ export class ShareModal implements OnInit {
   }
 
   getUserDisplayName(user: IUser): string {
-    
     const name = user.name || user.username || '';
     const parts = name.split(' ');
     if (parts.length > 1) {
@@ -243,14 +268,12 @@ export class ShareModal implements OnInit {
   async share(): Promise<void> {
     const sendEntireNetwork = this.sendEntireNetwork();
     const selectedIds = this.selectedUserIds();
-  
+
     if (!sendEntireNetwork && selectedIds.length === 0) {
-      this.toasterService.showError(
-        'Please select at least one user or enable "Send to Entire Network"'
-      );
+      this.toasterService.showError('Please select at least one user or enable "Send to Entire Network"');
       return;
     }
-  
+
     try {
       this.isSharing.set(true);
 
@@ -259,63 +282,53 @@ export class ShareModal implements OnInit {
           this.toasterService.showError('Invalid post share request');
           return;
         }
-  
+
         const payload: {
           feed_id: string;
           peer_ids?: string[];
           send_entire_network?: boolean;
         } = {
-          feed_id: this.feedId,
+          feed_id: this.feedId
         };
-        
-        sendEntireNetwork
-          ? (payload.send_entire_network = true)
-          : (payload.peer_ids = selectedIds);
-  
+
+        sendEntireNetwork ? (payload.send_entire_network = true) : (payload.peer_ids = selectedIds);
+
         const response = await this.feedService.shareFeed(payload);
-  
-        this.toasterService.showSuccess(
-          response.message || 'Post shared successfully'
-        );
+
+        this.toasterService.showSuccess(response.message || 'Post shared successfully');
       }
-  
+
       if (this.type === 'Event') {
         if (!this.eventId) {
           this.toasterService.showError('Invalid event share request');
           return;
         }
-  
+
         const payload: {
           event_id: string;
           peer_ids?: string[];
-          type: "Event"
+          type: 'Event';
           send_entire_network?: boolean;
         } = {
           event_id: this.eventId,
-          type: "Event",
-           send_entire_network:false,
-          peer_ids:selectedIds
+          type: 'Event',
+          send_entire_network: false,
+          peer_ids: selectedIds
         };
-  
+
         const response = await this.eventService.shareEvent(payload);
-  
-        this.toasterService.showSuccess(
-          response.message || 'Event shared successfully'
-        );
+
+        this.toasterService.showSuccess(response.message || 'Event shared successfully');
       }
-  
+
       await this.modalCtrl.dismiss({ success: true });
-  
     } catch (error: any) {
       console.error('Error sharing:', error);
-      this.toasterService.showError(
-        error?.message || 'Failed to share. Please try again.'
-      );
+      this.toasterService.showError(error?.message || 'Failed to share. Please try again.');
     } finally {
       this.isSharing.set(false);
     }
   }
-  
 
   async close() {
     await this.modalCtrl.dismiss();

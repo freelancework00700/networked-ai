@@ -1,12 +1,12 @@
 import { IUser } from '@/interfaces/IUser';
 import { SelectModule } from 'primeng/select';
-import { ButtonModule } from "primeng/button";
+import { ButtonModule } from 'primeng/button';
 import { NgOptimizedImage } from '@angular/common';
-import { Button } from "@/components/form/button";
+import { Button } from '@/components/form/button';
 import { UserService } from '@/services/user.service';
 import { ModalService } from '@/services/modal.service';
 import { EventService } from '@/services/event.service';
-import { Searchbar } from "@/components/common/searchbar";
+import { Searchbar } from '@/components/common/searchbar';
 import { ToasterService } from '@/services/toaster.service';
 import { PopoverService } from '@/services/popover.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
@@ -70,7 +70,6 @@ export class ManageRoleModal implements OnInit {
       label: 'Add Speaker',
       icon: 'pi pi-plus',
       command: () => this.addParticipant('Speaker')
-
     }
   ];
 
@@ -84,7 +83,8 @@ export class ManageRoleModal implements OnInit {
       this.fb.group({
         users: this.fb.array(
           this.participants
-            .filter(user => user.role !== 'Host').map((user) =>
+            .filter((user) => user.role !== 'Host')
+            .map((user) =>
               this.fb.group({
                 id: [user.user_id],
                 name: [user.user.name],
@@ -105,7 +105,7 @@ export class ManageRoleModal implements OnInit {
   filteredParticipants = computed(() => {
     const query = this.searchQuery().toLowerCase();
 
-    return this.usersFormArray.controls.filter(user => {
+    return this.usersFormArray.controls.filter((user) => {
       const username = user.value.username;
 
       // skip users without username
@@ -114,7 +114,6 @@ export class ManageRoleModal implements OnInit {
       return username.toLowerCase().includes(query);
     });
   });
-
 
   ChangeMode(): void {
     this.isAddMode.set(false);
@@ -182,7 +181,7 @@ export class ManageRoleModal implements OnInit {
   }
 
   isAlreadyInGroup(userId: string): boolean {
-    return this.usersFormArray.controls.some(user => user.value.id === userId);
+    return this.usersFormArray.controls.some((user) => user.value.id === userId);
   }
 
   onImageError(event: Event): void {
@@ -226,14 +225,16 @@ export class ManageRoleModal implements OnInit {
   }
 
   addAndSave(): void {
-    this.selectedMembers().forEach(member => {
-      this.usersFormArray.push(this.fb.group({
-        id: [member.id],
-        name: [member.name],
-        username: [member.username],
-        image: [member.thumbnail_url],
-        role: [this.selectedRole()]
-      }));
+    this.selectedMembers().forEach((member) => {
+      this.usersFormArray.push(
+        this.fb.group({
+          id: [member.id],
+          name: [member.name],
+          username: [member.username],
+          image: [member.thumbnail_url],
+          role: [this.selectedRole()]
+        })
+      );
 
       this.changeRole(this.usersFormArray.controls.length - 1, this.selectedRole());
     });

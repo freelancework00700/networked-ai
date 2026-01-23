@@ -1,5 +1,5 @@
-import { IEvent } from "./event";
-import { FeedPost } from "./IFeed";
+import { IEvent } from './event';
+import { FeedPost } from './IFeed';
 
 export interface ChatRoomUser {
   id: string;
@@ -99,8 +99,8 @@ export interface ChatMessage {
   deleted_at: string | null;
   posted_by_user: ChatMessageUser;
   is_deleted?: boolean;
-  feed?: FeedPost,
-  event?: IEvent
+  feed?: FeedPost;
+  event?: IEvent;
 }
 
 export interface MessagesResponse {
@@ -111,4 +111,3 @@ export interface MessagesResponse {
     pagination: ChatRoomsPagination;
   };
 }
-

@@ -57,39 +57,39 @@ export function getImageUrlOrDefault(imageUrl = '', defaultSvgPath = 'assets/ima
 
 export function onImageError(event: Event, defaultImagePath = 'assets/images/profile.jpeg'): void {
   const img = event.target as HTMLImageElement;
-  
+
   // hide the failed image
   img.style.display = 'none';
-  
+
   // get the fallback div (next sibling) or create it if it doesn't exist
   let fallback = img.nextElementSibling as HTMLElement;
-  
+
   // if fallback doesn't exist, create it
   if (!fallback || !fallback.classList.contains('image-error-fallback')) {
     fallback = document.createElement('div');
     fallback.className = 'absolute inset-0 bg-neutral-06 hidden image-error-fallback';
-    
+
     // get border radius from image if it has one
     const imgStyle = window.getComputedStyle(img);
     const borderRadius = imgStyle.borderRadius;
     if (borderRadius && borderRadius !== '0px') {
       fallback.style.borderRadius = borderRadius;
     }
-    
+
     // insert after the image
     img.parentElement?.insertBefore(fallback, img.nextSibling);
   }
-  
+
   // ensure grey background is set (neutral-06 color)
   fallback.style.backgroundColor = 'var(--neutral-06)';
-  
+
   // if default image path is provided, set it as background image
   if (defaultImagePath) {
     fallback.style.backgroundImage = `url(${defaultImagePath})`;
     fallback.style.backgroundSize = 'cover';
     fallback.style.backgroundPosition = 'center';
   }
-  
+
   // show the fallback div
   fallback.classList.remove('hidden');
 }

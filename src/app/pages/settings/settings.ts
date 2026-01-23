@@ -62,7 +62,7 @@ export class Settings implements OnInit {
       label: 'Permissions',
       icon: 'pi pi-cog',
       route: '/settings/permissions'
-    },
+    }
     // {
     //   label: 'App Icon Appearance',
     //   icon: 'pi pi-palette',
@@ -132,7 +132,7 @@ export class Settings implements OnInit {
     { title: 'About the App', items: this.aboutItems, useItemShowChevron: true }
   ]);
 
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
   onItemClick(item: any): void {
     if (item.route) {
@@ -192,7 +192,7 @@ export class Settings implements OnInit {
         await this.navigateToSubscriptionPlans();
         break;
       case 'send-mail':
-        window.open("mailto:admin&#64;net-worked.ai", '_self');
+        window.open('mailto:admin&#64;net-worked.ai', '_self');
         break;
     }
   }
@@ -237,6 +237,4 @@ export class Settings implements OnInit {
       presentationStyle: 'popover'
     });
   }
-
-
 }

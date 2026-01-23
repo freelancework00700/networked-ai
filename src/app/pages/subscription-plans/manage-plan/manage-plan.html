@@ -2,16 +2,12 @@
   <ion-toolbar>
     <div class="p-6 max-w-[672px] mx-auto">
       <div class="flex items-center gap-2 cursor-pointer">
-        <div class="pi pi-arrow-left"  (click)="back()"></div>
+        <div class="pi pi-arrow-left" (click)="back()"></div>
         <div class="body-14M neutral-02 text-center w-full">Manage Subscription Plan</div>
       </div>
-      
+
       <div class="mt-4">
-        <segment-button 
-          [items]="tabItems" 
-          [value]="tabValue()" 
-          (valueChange)="onTabChange($event)" 
-        />
+        <segment-button [items]="tabItems" [value]="tabValue()" (valueChange)="onTabChange($event)" />
       </div>
     </div>
   </ion-toolbar>
@@ -33,7 +29,7 @@
         />
       } @else {
         <!-- Analytics Tab -->
-        <app-plan-analytics 
+        <app-plan-analytics
           [planId]="planId()"
           [isSponsor]="isSponsor()"
           [events]="planData()?.events || []"
@@ -49,16 +45,10 @@
     <div class="p-6 max-w-[672px] mx-auto">
       @if (tabValue() === 'details') {
         <div class="flex items-center gap-2">
-          <app-button 
-            label="Cancel"
-            height="40px" 
-            color="secondary"
-            class="flex-1"
-            (click)="cancel()"
-          />
-          <app-button 
+          <app-button label="Cancel" height="40px" color="secondary" class="flex-1" (click)="cancel()" />
+          <app-button
             label="Save Changes"
-            height="40px" 
+            height="40px"
             [isLoading]="isSaving()"
             [customColor]="buttonColor()"
             class="flex-1"

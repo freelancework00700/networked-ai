@@ -23,7 +23,7 @@ import {
   computed,
   PLATFORM_ID,
   Input,
-  effect,
+  effect
 } from '@angular/core';
 import { FeedPost } from '@/interfaces/IFeed';
 import { Router } from '@angular/router';
@@ -384,7 +384,7 @@ export class PostCard {
 
     const result = await this.modalService.openBlockModal(currentPost.user);
     if (!result) return;
-    this.removePostFromUI(); 
+    this.removePostFromUI();
   }
 
   async sharePost() {

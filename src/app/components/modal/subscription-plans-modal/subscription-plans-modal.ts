@@ -24,11 +24,11 @@ export class SubscriptionPlansModal implements OnInit {
   selectedCount = signal<number>(0);
 
   eventPlans = computed(() => {
-    return this.plans.filter(plan => !plan.type || plan.type === 'event');
+    return this.plans.filter((plan) => !plan.type || plan.type === 'event');
   });
 
   sponsorPlans = computed(() => {
-    return this.plans.filter(plan => plan.type === 'sponsor');
+    return this.plans.filter((plan) => plan.type === 'sponsor');
   });
 
   constructor() {
@@ -40,7 +40,7 @@ export class SubscriptionPlansModal implements OnInit {
   ngOnInit(): void {
     const selectedIds = this.selectedPlanIds || [];
     const plansArray = this.fb.array(
-      this.plans.map(plan => 
+      this.plans.map((plan) =>
         this.fb.group({
           product_id: [plan.product_id],
           selected: [selectedIds.includes(plan.product_id)]
@@ -56,12 +56,10 @@ export class SubscriptionPlansModal implements OnInit {
   }
 
   getPlanControl(planId: string): FormControl<boolean> | null {
-    const planGroup = this.selectedPlansFormArray.controls.find(
-      (control: any) => control.value.product_id === planId
-    );
-    return planGroup?.get('selected') as FormControl<boolean> || null;
+    const planGroup = this.selectedPlansFormArray.controls.find((control: any) => control.value.product_id === planId);
+    return (planGroup?.get('selected') as FormControl<boolean>) || null;
   }
-  
+
   convertPlanToSubscription(plan: SubscriptionPlan): ISubscription {
     return {
       id: plan.product_id,
@@ -87,9 +85,7 @@ export class SubscriptionPlansModal implements OnInit {
   }
 
   updateSelectedCount(): void {
-    const selected = this.selectedPlansFormArray.controls.filter(
-      (control: any) => control.value.selected === true
-    ).length;
+    const selected = this.selectedPlansFormArray.controls.filter((control: any) => control.value.selected === true).length;
     this.selectedCount.set(selected);
   }
 

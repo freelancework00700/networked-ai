@@ -29,7 +29,7 @@ export class Network {
   searchQuery = signal<string>('');
   segmentValue = signal<string>('list');
   userId = signal<string | null>(null);
-  
+
   // services
   private navCtrl = inject(NavController);
   private modalService = inject(ModalService);
@@ -49,7 +49,7 @@ export class Network {
     return !!uid && !!currentUser && uid !== currentUser.id;
   });
   shouldShowSegments = computed(() => !this.isViewingOtherUser());
-  
+
   // Check if location filter is active
   isFilterActive = computed(() => {
     const lat = this.latitude();
@@ -59,9 +59,7 @@ export class Network {
   });
 
   constructor() {
-    this.route.queryParamMap
-    .pipe(takeUntilDestroyed())
-    .subscribe(params => {
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const userId = params.get('userId');
 
       if (userId) {
@@ -84,10 +82,10 @@ export class Network {
   headerText = computed(() => {
     const user = this.viewedUser();
     if (!user) return '';
-    
+
     const name = user.name || user.username || '';
     if (name) return `${name}'s Network`;
-    
+
     return '';
   });
 

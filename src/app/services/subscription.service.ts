@@ -53,7 +53,7 @@ export class SubscriptionService extends BaseApiService {
       }
 
       const response: any = await this.get<PlanData[]>(`/subscription/plan/user/${currentUser.id}`);
-      
+
       const plansData = response?.data || [];
 
       if (!Array.isArray(plansData) || plansData.length === 0) {
@@ -64,7 +64,7 @@ export class SubscriptionService extends BaseApiService {
 
       const plans: SubscriptionPlan[] = plansData.map((plan) => {
         const priceRange = this.formatPriceRange(plan.prices || []);
-        
+
         return {
           product_id: plan.id,
           name: plan.name,
@@ -100,16 +100,16 @@ export class SubscriptionService extends BaseApiService {
   // Format price range from prices array
   private formatPriceRange(prices: Array<{ amount: string; interval: string }>): string {
     if (prices.length === 0) return '';
-    
-    const monthlyPrice = prices.find(p => p.interval === 'month');
-    const yearlyPrice = prices.find(p => p.interval === 'year');
+
+    const monthlyPrice = prices.find((p) => p.interval === 'month');
+    const yearlyPrice = prices.find((p) => p.interval === 'year');
 
     const parts: string[] = [];
-    
+
     if (monthlyPrice) {
       parts.push(`$${parseFloat(monthlyPrice.amount).toFixed(0)}/m`);
     }
-    
+
     if (yearlyPrice) {
       parts.push(`$${parseFloat(yearlyPrice.amount).toFixed(0)}/y`);
     }
@@ -141,9 +141,7 @@ export class SubscriptionService extends BaseApiService {
   // Get a single subscription plan by ID
   async getPlanSubscribers(planId: string, page: number = 1, limit: number = 10): Promise<any> {
     try {
-      const params = new HttpParams()
-        .set('page', page.toString())
-        .set('limit', limit.toString());
+      const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
       const response = await this.get(`/subscription/plan/${planId}/subscribers`, { params });
       return response;
@@ -164,19 +162,22 @@ export class SubscriptionService extends BaseApiService {
   }
 
   // Update an existing subscription plan
-  async updatePlan(planId: string, payload: {
-    name: string;
-    description?: string;
-    prices: Array<{
-      amount: number;
-      interval: 'month' | 'year';
-      discount_percentage?: number | null;
-      banner_display_type?: 'percentage' | 'fixed' | null;
-    }>;
-    is_sponsor: boolean;
-    plan_benefits?: string[];
-    event_ids?: string[];
-  }): Promise<any> {
+  async updatePlan(
+    planId: string,
+    payload: {
+      name: string;
+      description?: string;
+      prices: Array<{
+        amount: number;
+        interval: 'month' | 'year';
+        discount_percentage?: number | null;
+        banner_display_type?: 'percentage' | 'fixed' | null;
+      }>;
+      is_sponsor: boolean;
+      plan_benefits?: string[];
+      event_ids?: string[];
+    }
+  ): Promise<any> {
     try {
       const response = await this.put<any>(`/subscription/plan/${planId}`, payload);
       return response;
@@ -200,7 +201,7 @@ export class SubscriptionService extends BaseApiService {
   // Create payment intent for subscription
   async createSubscriptionPaymentIntent(priceId: string): Promise<any> {
     try {
-      const response: any  = await this.post<any>('/subscription/payment-intent', { priceId });
+      const response: any = await this.post<any>('/subscription/payment-intent', { priceId });
       return response?.data;
     } catch (error) {
       console.error('Error creating subscription payment intent:', error);

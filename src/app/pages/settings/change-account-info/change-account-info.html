@@ -12,9 +12,9 @@
 <ion-content [fullscreen]="true" mode="md">
   <div class="w-full px-4 max-w-[672px] mx-auto py-4 h-full flex flex-col">
     @if (!isPassword()) {
-        <div class="mb-6">
-          <h1 class="heading-h2 neutral-01 mb-2">{{ title() }}</h1>
-        </div>
+      <div class="mb-6">
+        <h1 class="heading-h2 neutral-01 mb-2">{{ title() }}</h1>
+      </div>
     }
 
     <form [formGroup]="form()" (ngSubmit)="onConfirm()" class="flex flex-col flex-1 justify-between">
@@ -31,11 +31,7 @@
           </div>
 
           <div class="mb-4">
-            <password-input
-              [controlName]="'newValue'"
-              [isSubmitted]="isSubmitted()"
-              [label]="'New Password'"
-            />
+            <password-input [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [label]="'New Password'" />
           </div>
 
           <div class="mb-4">
@@ -58,12 +54,7 @@
                 [label]="currentLabel()"
               />
             } @else if (isPhone()) {
-              <mobile-input
-                [controlName]="'currentValue'"
-                [isSubmitted]="isSubmitted()"
-                [required]="false"
-                [label]="currentLabel()"
-              />
+              <mobile-input [controlName]="'currentValue'" [isSubmitted]="isSubmitted()" [required]="false" [label]="currentLabel()" />
             } @else {
               <text-input
                 [controlName]="'currentValue'"
@@ -78,26 +69,11 @@
           <!-- New Value -->
           <div class="mb-4">
             @if (isEmail()) {
-              <email-input
-                [controlName]="'newValue'"
-                [isSubmitted]="isSubmitted()"
-                [placeholder]="'Enter new email'"
-                [label]="newLabel()"
-              />
+              <email-input [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [placeholder]="'Enter new email'" [label]="newLabel()" />
             } @else if (isPhone()) {
-              <mobile-input
-                #newPhoneInput
-                [controlName]="'newValue'"
-                [isSubmitted]="isSubmitted()"
-                [label]="newLabel()"
-              />
+              <mobile-input #newPhoneInput [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [label]="newLabel()" />
             } @else {
-              <username-input
-                [controlName]="'newValue'"
-                [isSubmitted]="isSubmitted()"
-                [label]="newLabel()"
-                [checkIfTaken]="true"
-              />
+              <username-input [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [label]="newLabel()" [checkIfTaken]="true" />
             }
           </div>
         }
@@ -105,10 +81,7 @@
 
       <!-- Confirm Button -->
       <div class="mt-auto pb-4">
-        <app-button
-          [label]="confirmButtonLabel()"
-          (click)="onConfirm()"
-        />
+        <app-button [label]="confirmButtonLabel()" (click)="onConfirm()" />
       </div>
     </form>
   </div>

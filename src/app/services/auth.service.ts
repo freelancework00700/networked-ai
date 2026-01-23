@@ -116,7 +116,6 @@ export class AuthService extends BaseApiService {
   }
 
   private async socialLogin(): Promise<IAuthResponse> {
-
     const { token: firebase_token } = await FirebaseAuthentication.getIdToken();
 
     if (!firebase_token) {
@@ -190,8 +189,8 @@ export class AuthService extends BaseApiService {
     this.removeActiveAccount();
   }
 
-   //Fetch current user from API on refresh and update stored account
-   async refreshCurrentUser(): Promise<void> {
+  //Fetch current user from API on refresh and update stored account
+  async refreshCurrentUser(): Promise<void> {
     const activeAccount = this.getActiveAccount();
     if (!activeAccount?.id || !activeAccount?.token) {
       return;
@@ -207,20 +206,13 @@ export class AuthService extends BaseApiService {
     }
   }
 
-  async changePassword(
-    password: string,
-    new_password: string
-  ): Promise<any> {
+  async changePassword(password: string, new_password: string): Promise<any> {
     try {
-      const response = await this.post<any>(
-        '/auth/reset-password',
-        { password, new_password }
-      );
+      const response = await this.post<any>('/auth/reset-password', { password, new_password });
       return response;
     } catch (error) {
       console.error('Error changing password:', error);
       throw error;
     }
   }
-
 }

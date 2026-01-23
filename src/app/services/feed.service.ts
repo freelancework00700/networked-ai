@@ -1,7 +1,20 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { BaseApiService } from '@/services/base-api.service';
-import { FeedPost, FeedsResponse, MyFeedResponse, FeedResponse, FeedLikeResponse, FeedComment, FeedCommentsResponse, CommentLikeResponse, CommentResponse, FeedShareResponse, ReportReasonsResponse, ReportResponse } from '@/interfaces/IFeed';
+import {
+  FeedPost,
+  FeedsResponse,
+  MyFeedResponse,
+  FeedResponse,
+  FeedLikeResponse,
+  FeedComment,
+  FeedCommentsResponse,
+  CommentLikeResponse,
+  CommentResponse,
+  FeedShareResponse,
+  ReportReasonsResponse,
+  ReportResponse
+} from '@/interfaces/IFeed';
 import { AuthService } from '@/services/auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -12,17 +25,17 @@ export class FeedService extends BaseApiService {
   posts = signal<FeedPost[]>([]);
   publicFeeds = signal<FeedPost[]>([]);
   networkedFeeds = signal<FeedPost[]>([]);
-  
+
   // Pagination state for public feeds
   publicFeedsPage = signal(1);
   publicFeedsTotal = signal(0);
   publicFeedsHasMore = signal(true);
-  
+
   // Pagination state for networked feeds
   networkedFeedsPage = signal(1);
   networkedFeedsTotal = signal(0);
   networkedFeedsHasMore = signal(true);
-  
+
   // Pagination state for my feeds
   myFeedsPage = signal(1);
   myFeedsTotal = signal(0);
@@ -40,18 +53,20 @@ export class FeedService extends BaseApiService {
   }
 
   removePostFromFeed(postId: string) {
-    this.publicFeeds.update(list => list.filter(p => p.id !== postId));
-    this.networkedFeeds.update(list => list.filter(p => p.id !== postId));
+    this.publicFeeds.update((list) => list.filter((p) => p.id !== postId));
+    this.networkedFeeds.update((list) => list.filter((p) => p.id !== postId));
   }
 
-  async getMyFeeds(params: {
-    page?: number;
-    limit?: number;
-    append?: boolean; // If true, append to existing feeds instead of replacing
-  } = {}): Promise<{ posts: FeedPost[]; total: number; page: number; limit: number }> {
+  async getMyFeeds(
+    params: {
+      page?: number;
+      limit?: number;
+      append?: boolean; // If true, append to existing feeds instead of replacing
+    } = {}
+  ): Promise<{ posts: FeedPost[]; total: number; page: number; limit: number }> {
     try {
       let httpParams = new HttpParams();
-      
+
       if (params.page) {
         httpParams = httpParams.set('page', params.page.toString());
       }
@@ -62,16 +77,16 @@ export class FeedService extends BaseApiService {
       const response = await this.get<MyFeedResponse>('/feeds/me', { params: httpParams });
       const posts = response?.data?.data || [];
       const pagination = response?.data?.pagination;
-      
+
       // Store feeds
       if (params.append) {
         // Append new posts to existing ones
-        this.myPosts.update(current => [...current, ...posts]);
+        this.myPosts.update((current) => [...current, ...posts]);
       } else {
         // Replace existing posts
         this.myPosts.set(posts);
       }
-      
+
       // Update pagination state
       const currentPage = pagination?.currentPage || params?.page || 1;
       this.myFeedsPage.set(currentPage);
@@ -79,7 +94,7 @@ export class FeedService extends BaseApiService {
       const totalPages = pagination?.totalPages || Math.ceil((pagination?.totalCount || 0) / (params?.limit || 10));
       const hasMore = posts.length > 0 && currentPage < totalPages;
       this.myFeedsHasMore.set(hasMore);
-      
+
       return {
         posts,
         total: pagination?.totalCount || 0,
@@ -92,13 +107,16 @@ export class FeedService extends BaseApiService {
     }
   }
 
-  async getUserFeeds(userId: string, params: {
-    page?: number;
-    limit?: number;
-  } = {}): Promise<{ posts: FeedPost[]; total: number; page: number; limit: number; hasMore: boolean }> {
+  async getUserFeeds(
+    userId: string,
+    params: {
+      page?: number;
+      limit?: number;
+    } = {}
+  ): Promise<{ posts: FeedPost[]; total: number; page: number; limit: number; hasMore: boolean }> {
     try {
       let httpParams = new HttpParams();
-      
+
       if (params.page) {
         httpParams = httpParams.set('page', params.page.toString());
       }
@@ -109,11 +127,11 @@ export class FeedService extends BaseApiService {
       const response = await this.get<FeedsResponse>(`/feeds/user/${userId}`, { params: httpParams });
       const posts = response?.data?.data || [];
       const pagination = response?.data?.pagination;
-      
+
       const currentPage = pagination?.currentPage || params?.page || 1;
       const totalPages = pagination?.totalPages || 0;
       const hasMore = posts.length > 0 && currentPage < totalPages;
-      
+
       return {
         posts,
         total: pagination?.totalCount || 0,
@@ -135,7 +153,7 @@ export class FeedService extends BaseApiService {
   }): Promise<{ posts: FeedPost[]; total: number; page: number; limit: number }> {
     try {
       let httpParams = new HttpParams().set('is_public', params.is_public.toString());
-      
+
       if (params.page) {
         httpParams = httpParams.set('page', params.page.toString());
       }
@@ -146,12 +164,12 @@ export class FeedService extends BaseApiService {
       const response = await this.get<FeedsResponse>('/feeds', { params: httpParams });
       const posts = response?.data?.data || [];
       const pagination = response?.data?.pagination;
-      
+
       // Store feeds based on is_public
       if (params.is_public) {
         if (params.append) {
           // Append new posts to existing ones
-          this.publicFeeds.update(current => [...current, ...posts]);
+          this.publicFeeds.update((current) => [...current, ...posts]);
         } else {
           // Replace existing posts
           this.publicFeeds.set(posts);
@@ -166,7 +184,7 @@ export class FeedService extends BaseApiService {
       } else {
         if (params.append) {
           // Append new posts to existing ones
-          this.networkedFeeds.update(current => [...current, ...posts]);
+          this.networkedFeeds.update((current) => [...current, ...posts]);
         } else {
           // Replace existing posts
           this.networkedFeeds.set(posts);
@@ -179,10 +197,10 @@ export class FeedService extends BaseApiService {
         const hasMore = posts.length > 0 && currentPage < totalPages;
         this.networkedFeedsHasMore.set(hasMore);
       }
-      
+
       // Also update the general posts signal for backward compatibility
       this.posts.set(posts);
-      
+
       return {
         posts,
         total: pagination?.totalCount || 0,
@@ -279,7 +297,7 @@ export class FeedService extends BaseApiService {
 
   applyCommentCreated(feedId: string, comment: FeedComment): void {
     const current = this.currentPostComments();
-    
+
     // Only update if we're viewing this feed's comments
     if (!current || current.feedId !== feedId) return;
 
@@ -295,7 +313,7 @@ export class FeedService extends BaseApiService {
 
   applyCommentUpdated(feedId: string, updatedComment: FeedComment): void {
     const current = this.currentPostComments();
-    
+
     // Only update if we're viewing this feed's comments
     if (!current || current.feedId !== feedId) return;
 
@@ -307,14 +325,14 @@ export class FeedService extends BaseApiService {
           // Preserve UI-only properties, but use updated replies from server
           return {
             ...updatedComment,
-            isRepliesOpen: c.isRepliesOpen, // Keep UI state
+            isRepliesOpen: c.isRepliesOpen // Keep UI state
           };
         }
         // Check replies recursively
         if (c.replies && c.replies.length > 0) {
           return {
             ...c,
-            replies: c.replies.map(reply => updateCommentInTree(reply))
+            replies: c.replies.map((reply) => updateCommentInTree(reply))
           };
         }
         return c;
@@ -329,15 +347,13 @@ export class FeedService extends BaseApiService {
 
   applyCommentDeleted(feedId: string, commentId: string): void {
     const current = this.currentPostComments();
-    
+
     // Only update if we're viewing this feed's comments
     if (!current || current.feedId !== feedId) return;
 
     // Check if it's a parent comment or reply
-    const isParentComment = current.comments.some(c => c.id === commentId);
-    const isReply = current.comments.some(c => 
-      c.replies && c.replies.some(reply => reply.id === commentId)
-    );
+    const isParentComment = current.comments.some((c) => c.id === commentId);
+    const isReply = current.comments.some((c) => c.replies && c.replies.some((reply) => reply.id === commentId));
 
     if (isReply) return;
 
@@ -348,7 +364,7 @@ export class FeedService extends BaseApiService {
         if (!state || state.feedId !== feedId) return state;
         return {
           ...state,
-          comments: state.comments.filter(c => c.id !== commentId)
+          comments: state.comments.filter((c) => c.id !== commentId)
         };
       });
     }
@@ -365,13 +381,16 @@ export class FeedService extends BaseApiService {
     }
   }
 
-  async getFeedComments(feedId: string, params: {
-    page?: number;
-    limit?: number;
-  } = {}): Promise<{ comments: FeedComment[]; total: number; page: number; limit: number; totalPages: number }> {
+  async getFeedComments(
+    feedId: string,
+    params: {
+      page?: number;
+      limit?: number;
+    } = {}
+  ): Promise<{ comments: FeedComment[]; total: number; page: number; limit: number; totalPages: number }> {
     try {
       let httpParams = new HttpParams();
-      
+
       if (params.page) {
         httpParams = httpParams.set('page', params.page.toString());
       }
@@ -382,7 +401,7 @@ export class FeedService extends BaseApiService {
       const response = await this.get<FeedCommentsResponse>(`/feed-comments/feed/${feedId}`, { params: httpParams });
       const comments = response?.data?.data || [];
       const pagination = response?.data?.pagination;
-      
+
       return {
         comments,
         total: pagination?.totalCount || 0,
@@ -431,11 +450,7 @@ export class FeedService extends BaseApiService {
     }
   }
 
-  async shareFeed(payload: {
-    feed_id: string;
-    peer_ids?: string[];
-    send_entire_network?: boolean;
-  }): Promise<FeedShareResponse> {
+  async shareFeed(payload: { feed_id: string; peer_ids?: string[]; send_entire_network?: boolean }): Promise<FeedShareResponse> {
     try {
       const response = await this.post<FeedShareResponse>('/feed-shares/', payload);
       return response;
@@ -455,11 +470,7 @@ export class FeedService extends BaseApiService {
     }
   }
 
-  async reportFeed(payload: {
-    feed_id: string;
-    reason_id: string;
-    reason?: string;
-  }): Promise<ReportResponse> {
+  async reportFeed(payload: { feed_id: string; reason_id: string; reason?: string }): Promise<ReportResponse> {
     try {
       const response = await this.post<ReportResponse>('/feed-reports/', payload);
       return response;
@@ -469,11 +480,7 @@ export class FeedService extends BaseApiService {
     }
   }
 
-  async reportComment(payload: {
-    comment_id: string;
-    reason_id: string;
-    reason?: string;
-  }): Promise<ReportResponse> {
+  async reportComment(payload: { comment_id: string; reason_id: string; reason?: string }): Promise<ReportResponse> {
     try {
       const response = await this.post<ReportResponse>('/comment-reports/', payload);
       return response;
@@ -541,7 +548,7 @@ export class FeedService extends BaseApiService {
     this.publicFeeds.update((curr) => this.replaceByIdIfExists(curr, feed));
     this.networkedFeeds.update((curr) => this.replaceByIdIfExists(curr, feed));
     this.myPosts.update((curr) => this.replaceByIdIfExists(curr, feed));
-    
+
     // Also update the currently viewed post (for post-comments page)
     this.updateCurrentViewedPost(feed);
   }

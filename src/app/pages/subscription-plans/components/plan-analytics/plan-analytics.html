@@ -8,24 +8,18 @@
   <!-- Revenue Section -->
   <div class="flex flex-col gap-4">
     <div class="body-16M neutral-01">Revenue</div>
-    
+
     <!-- Revenue Cards -->
     <div class="flex gap-3">
-      <div 
-        class="flex-1 p-4 bg-white rounded-lg"
-        [class.sponsor-graph-border]="isSponsor()"
-        [class.event-graph-border]="!isSponsor()"
-      >
+      <div class="flex-1 p-4 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
         <div class="flex items-center justify-between mb-2">
           <div class="body-12R neutral-03">All-Time Revenue</div>
           <img src="assets/svg/ticket/dollar.svg" alt="Dollar" class="w-4 h-4" />
         </div>
         <div class="heading-h2 neutral-01">$17,882.01</div>
       </div>
-      
-      <div 
-        class="flex-1 p-4 border-2 border-gray-200 rounded-lg"
-      >
+
+      <div class="flex-1 p-4 border-2 border-gray-200 rounded-lg">
         <div class="flex items-center justify-between mb-2">
           <div class="body-12R neutral-03">MRR</div>
           <img src="assets/svg/subscription/calendar-check-black.svg" alt="Calendar" class="w-4 h-4" />
@@ -35,11 +29,7 @@
     </div>
 
     <!-- Revenue Graph -->
-    <div 
-      class="p-4 bg-white rounded-lg"
-      [class.sponsor-graph-border]="isSponsor()"
-      [class.event-graph-border]="!isSponsor()"
-    >
+    <div class="p-4 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
       <div class="body-14M neutral-01 mb-4">All Time Revenue</div>
       <p-chart type="line" [data]="chartData()" [options]="chartOptions()" class="h-[15rem]" />
     </div>
@@ -49,34 +39,21 @@
   <div class="flex flex-col gap-4">
     <div class="flex items-center justify-between">
       <div class="body-16M neutral-01">Subscribers</div>
-      <button 
-        type="button" 
-        class="body-14M cursor-pointer" 
-        [style.color]="buttonColor() || '#F5BC61'"
-        (click)="navigateToSubscribers()"
-      >
+      <button type="button" class="body-14M cursor-pointer" [style.color]="buttonColor() || '#F5BC61'" (click)="navigateToSubscribers()">
         See all
       </button>
     </div>
-    
+
     <div class="flex gap-3">
-      <div 
-        class="flex-1 p-4 bg-white rounded-lg"
-        [class.sponsor-graph-border]="isSponsor()"
-        [class.event-graph-border]="!isSponsor()"
-      >
+      <div class="flex-1 p-4 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
         <div class="flex justify-between items-center gap-2 mb-2">
           <div class="body-12R neutral-03">Total</div>
           <img src="assets/svg/subscription/user-check-black.svg" alt="User" class="w-5 h-5" />
         </div>
         <div class="heading-h2 neutral-01">{{ totalSubscribers() }}</div>
       </div>
-      
-      <div 
-        class="flex-1 p-4 bg-white rounded-lg"
-        [class.sponsor-graph-border]="isSponsor()"
-        [class.event-graph-border]="!isSponsor()"
-      >
+
+      <div class="flex-1 p-4 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
         <div class="flex justify-between items-center gap-2 mb-2">
           <div class="body-12R neutral-03">This Month</div>
           <img src="assets/svg/subscription/user-check-black.svg" alt="User" class="w-5 h-5" />
@@ -90,46 +67,29 @@
   <div class="flex flex-col gap-4">
     <div class="flex items-center justify-between">
       <div class="body-16M neutral-01">Events</div>
-      <button 
-        type="button"
-        class="body-14M cursor-pointer" 
-        [style.color]="buttonColor() || '#F5BC61'"
-        (click)="navigateToEvents()"
-      >
+      <button type="button" class="body-14M cursor-pointer" [style.color]="buttonColor() || '#F5BC61'" (click)="navigateToEvents()">
         See included events
       </button>
     </div>
-    
+
     <div class="flex gap-3">
-      <div 
-        class="flex-1 p-2 bg-white rounded-lg"
-        [class.sponsor-graph-border]="isSponsor()"
-        [class.event-graph-border]="!isSponsor()"
-      >
+      <div class="flex-1 p-2 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
         <div class="flex justify-between items-center gap-2 mb-2">
           <div class="body-12R neutral-03">Total</div>
           <img src="assets/svg/subscription/grid.svg" alt="Check" class="w-4 h-4" />
         </div>
         <div class="heading-h2 neutral-01">{{ totalEvents() }}</div>
       </div>
-      
-      <div 
-        class="flex-1 p-2 bg-white rounded-lg"
-        [class.sponsor-graph-border]="isSponsor()"
-        [class.event-graph-border]="!isSponsor()"
-      >
+
+      <div class="flex-1 p-2 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
         <div class="flex justify-between items-center gap-2 mb-2">
           <div class="body-12R neutral-03">Completed</div>
           <img src="assets/svg/subscription/calendar-checked.svg" alt="Check" class="w-5 h-5" />
         </div>
         <div class="heading-h2 neutral-01">{{ completedEvents() }}</div>
       </div>
-      
-      <div 
-        class="flex-1 p-2 bg-white rounded-lg"
-        [class.sponsor-graph-border]="isSponsor()"
-        [class.event-graph-border]="!isSponsor()"
-      >
+
+      <div class="flex-1 p-2 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
         <div class="flex justify-between items-center gap-2 mb-2">
           <div class="body-12R neutral-03">Upcoming</div>
           <div class="pi pi-clock text-neutral-03 !text-[15px]"></div>

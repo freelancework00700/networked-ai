@@ -45,7 +45,6 @@ export class HomeFeed implements OnDestroy {
     return feeds || [];
   });
 
-
   // Computed pagination state based on current filter
   hasMore = computed(() => {
     const filter = this.feedFilter();
@@ -75,7 +74,7 @@ export class HomeFeed implements OnDestroy {
       if (currentUser) {
         untracked(() => {
           this.loadAllFeeds();
-        })
+        });
       } else {
         this.loadPublicFeeds();
       }
@@ -185,7 +184,7 @@ export class HomeFeed implements OnDestroy {
   async refresh(): Promise<void> {
     try {
       const loggedIn = this.isLoggedIn();
-      
+
       if (!loggedIn) {
         // When not logged in, only refresh public feeds
         this.feedService.publicFeedsPage.set(1);
@@ -227,7 +226,6 @@ export class HomeFeed implements OnDestroy {
       queryParamsHandling: 'merge'
     });
   }
-
 
   onImageError(event: Event): void {
     onImageError(event);

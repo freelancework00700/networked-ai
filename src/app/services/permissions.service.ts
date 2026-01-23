@@ -43,7 +43,7 @@ export class PermissionsService {
 
       const result = await Camera.requestPermissions({ permissions: ['camera'] });
       console.log('Camera requestPermissions result:', result);
-      
+
       return {
         granted: result.camera === 'granted',
         status: result.camera as PermissionStatus
@@ -96,16 +96,16 @@ export class PermissionsService {
       } catch (checkError: any) {
         // If checkPermissions fails due to location services being disabled
         const errorMessage = checkError?.message || checkError?.toString() || '';
-        const isLocationServicesDisabled = 
+        const isLocationServicesDisabled =
           errorMessage.includes('Location services are not enabled') ||
           errorMessage.includes('Location services') ||
           checkError?.code === 'OS-PLUG-GLOC-0003';
-        
+
         if (isLocationServicesDisabled) {
-          return { 
-            granted: false, 
+          return {
+            granted: false,
             status: 'denied',
-            locationServicesDisabled: true 
+            locationServicesDisabled: true
           };
         }
         throw checkError;
@@ -152,25 +152,25 @@ export class PermissionsService {
 
     try {
       const result = await Geolocation.checkPermissions();
-      
+
       return {
         granted: result.location === 'granted',
         status: result.location as PermissionStatus
       };
     } catch (error: any) {
       console.error('Check location permission error:', error);
-      
+
       const errorMessage = error?.message || error?.toString() || '';
-      const isLocationServicesDisabled = 
+      const isLocationServicesDisabled =
         errorMessage.includes('Location services are not enabled') ||
         errorMessage.includes('Location services') ||
         error?.code === 'OS-PLUG-GLOC-0003';
-      
+
       if (isLocationServicesDisabled) {
-        return { 
-          granted: false, 
+        return {
+          granted: false,
           status: 'denied',
-          locationServicesDisabled: true 
+          locationServicesDisabled: true
         };
       }
       return { granted: false, status: 'denied' };
@@ -299,7 +299,7 @@ export class PermissionsService {
         case 'camera':
           previousStatus = (await this.checkCameraPermission()).status;
           console.log('camera previousStatus', previousStatus);
-          
+
           if (previousStatus === 'denied') {
             await NativeSettings.open({
               optionAndroid: AndroidSettings.ApplicationDetails,
@@ -308,7 +308,7 @@ export class PermissionsService {
             settingsOpened = true;
             return { result: { granted: false, status: 'denied' }, settingsOpened: true };
           }
-          
+
           result = await this.requestCameraPermission();
           console.log('camera-result', result);
           break;
@@ -317,7 +317,7 @@ export class PermissionsService {
           const locationCheck = await this.checkLocationPermission();
           previousStatus = locationCheck.status;
           console.log('location previousStatus', previousStatus);
-          
+
           if (locationCheck.locationServicesDisabled) {
             await NativeSettings.open({
               optionAndroid: AndroidSettings.Location,
@@ -326,7 +326,7 @@ export class PermissionsService {
             settingsOpened = true;
             return { result: { granted: false, status: 'denied', locationServicesDisabled: true }, settingsOpened: true };
           }
-          
+
           if (previousStatus === 'denied') {
             await NativeSettings.open({
               optionAndroid: AndroidSettings.ApplicationDetails,
@@ -335,10 +335,10 @@ export class PermissionsService {
             settingsOpened = true;
             return { result: { granted: false, status: 'denied' }, settingsOpened: true };
           }
-          
+
           result = await this.requestLocationPermission();
           console.log('location-result', result);
-          
+
           if (result.locationServicesDisabled) {
             await NativeSettings.open({
               optionAndroid: AndroidSettings.Location,
@@ -353,7 +353,7 @@ export class PermissionsService {
           const contactCheck = await this.checkContactsPermission();
           previousStatus = contactCheck.status;
           console.log('contact previousStatus', previousStatus);
-          
+
           if (previousStatus === 'denied') {
             await NativeSettings.open({
               optionAndroid: AndroidSettings.ApplicationDetails,
@@ -362,7 +362,7 @@ export class PermissionsService {
             settingsOpened = true;
             return { result: { granted: false, status: 'denied' }, settingsOpened: true };
           }
-          
+
           result = await this.requestContactsPermission();
           console.log('contact-result', result);
           break;
