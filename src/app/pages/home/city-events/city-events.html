@@ -1,5 +1,5 @@
 <ion-header mode="md">
-  <ion-toolbar mode="md" [style.--background]="'transparent'">
+  <ion-toolbar mode="md" [style.--background]="'transparent'" class="!pt-0">
     <div class="relative w-full h-[210px] max-w-[672px] mx-auto">
       <div
         class="absolute inset-0 bg-cover bg-center events-bg max-h-[170px] h-[170px]"
@@ -14,7 +14,7 @@
 
       <div class="absolute inset-0 bg-black/40 max-h-[170px] h-[170px]"></div>
 
-      <div class="relative z-10 flex flex-col h-full px-6 py-6">
+      <div class="relative z-10 flex flex-col h-full px-[24px] py-[40px]">
         <div
           class="w-12 h-12 rounded-full flex items-center justify-center bg-black/35 backdrop-blur-md border border-white/15 cursor-pointer min-h-12"
           (click)="goBack()"
@@ -37,7 +37,7 @@
         </div>
 
         <searchbar
-          class="header-searchbar pt-[32px]"
+          class="header-searchbar pt-[20px]"
           [searchQuery]="searchQuery()"
           [placeholder]="'Search events'"
           (searchChange)="onSearchChange($event)"

@@ -72,7 +72,7 @@ ion-content {
 ion-header {
   box-shadow: none !important;
 
-  ion-toolbar {
+  .ion-page ion-toolbar {
     padding: 0px !important;
     --background: var(--neutral-07);
     padding-top: env(safe-area-inset-top) !important;
