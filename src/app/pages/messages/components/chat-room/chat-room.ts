@@ -26,6 +26,8 @@ import { InputIcon } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { ChatFeedCard } from '@/components/card/chat-feed-card';
 import { ChatEventCard } from '@/components/card/chat-event-card';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'chat-room',
@@ -65,6 +67,7 @@ export class ChatRoom implements OnInit, OnDestroy {
   private navigationService = inject(NavigationService);
   private router = inject(Router);
   private datePipe = new DatePipe('en-US');
+  private sanitizer = inject(DomSanitizer);
 
   // Socket event handler references for cleanup
   private messageCreatedHandler?: (payload: { message: ChatMessage }) => void;
@@ -89,6 +92,67 @@ export class ChatRoom implements OnInit, OnDestroy {
   sortedMessages = computed(() => {
     return this.sortMessages(this.messages());
   });
+
+  /**
+   * Check if we should show a date separator before a message
+   */
+  shouldShowDateSeparator(currentIndex: number): boolean {
+    const messages = this.sortedMessages();
+    if (currentIndex === 0) {
+      // Always show date separator for the first message
+      return true;
+    }
+
+    const currentMessage = messages[currentIndex];
+    const previousMessage = messages[currentIndex - 1];
+
+    // if (!currentMessage || !previousMessage) {
+    //   return false;
+    // }
+
+    const currentDate = new Date(currentMessage.created_at);
+    const previousDate = new Date(previousMessage.created_at);
+
+    // Check if the day has changed
+    return (
+      currentDate.getDate() !== previousDate.getDate() ||
+      currentDate.getMonth() !== previousDate.getMonth() ||
+      currentDate.getFullYear() !== previousDate.getFullYear()
+    );
+  }
+
+  /**
+   * Format date label for separator (Today, Yesterday, or date)
+   */
+  formatDateLabel(isoString: string): string {
+    if (!isoString) return '';
+
+    const messageDate = new Date(isoString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Reset time to compare only dates
+    const messageDateOnly = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+
+    if (messageDateOnly.getTime() === todayOnly.getTime()) {
+      return 'Today';
+    } else if (messageDateOnly.getTime() === yesterdayOnly.getTime()) {
+      return 'Yesterday';
+    } else {
+      // Format as "Mon Jan 28" or "Mon Jan 28, 2026" if not current year
+      const currentYear = today.getFullYear();
+      const messageYear = messageDate.getFullYear();
+
+      if (messageYear === currentYear) {
+        return this.datePipe.transform(messageDate, 'EEE MMM d') || '';
+      } else {
+        return this.datePipe.transform(messageDate, 'EEE MMM d, y') || '';
+      }
+    }
+  }
 
   isLoading = signal<boolean>(false);
   isLoadingMore = signal<boolean>(false);
@@ -596,5 +660,61 @@ export class ChatRoom implements OnInit, OnDestroy {
   navigateToNetwork() {
     const room = this.chatRoom();
     this.navCtrl.navigateForward(`/event/questionnaire-response/${room.event_id}?Host=false`);
+  }
+
+  /**
+   * Render message text with clickable profile links
+   */
+  renderMessageText(text: string): SafeHtml {
+    if (!text) return '';
+
+    const frontendUrl = environment.frontendUrl || 'https://dev.app.net-worked.ai';
+    const escapedFrontendUrl = frontendUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Pattern to match profile URLs: https://dev.app.net-worked.ai/username
+    const fullProfileUrlPattern = new RegExp(
+      `(${escapedFrontendUrl}/([\\w.-]+))`,
+      'gi'
+    );
+
+    let modifiedText = text;
+    const processedUrls = new Set<string>();
+
+    // First, replace full profile URLs with clickable links
+    modifiedText = modifiedText.replace(fullProfileUrlPattern, (match, fullUrl, username) => {
+      processedUrls.add(fullUrl.toLowerCase());
+      return `<a href="#" class="profile-link" data-username="${username}" style="color:#1a73e8; text-decoration:underline; cursor:pointer;">${fullUrl}</a>`;
+    });
+
+    // Then handle other regular URLs (non-profile URLs)
+    const urlRegex = /(?<!href=")(?<!data-username="[^"]*">)(https?:\/\/[^\s<]+)/gi;
+    modifiedText = modifiedText.replace(urlRegex, (url) => {
+      // Skip if it's already been processed as a profile link
+      if (processedUrls.has(url.toLowerCase())) {
+        return url;
+      }
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8; text-decoration:underline;">${url}</a>`;
+    });
+    return this.sanitizer.bypassSecurityTrustHtml(modifiedText);
+  }
+
+  /**
+   * Handle click on profile link in message
+   */
+  onProfileLinkClick(event: Event): void {
+    const target = event.target as HTMLElement;
+
+    // Check if clicked element is a profile link or inside one
+    const profileLink = target.closest('.profile-link') as HTMLElement;
+    if (!profileLink) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const username = profileLink.getAttribute('data-username');
+
+    if (username) {
+      this.navigationService.navigateForward(`/${username}`);
+    }
   }
 }

@@ -20,7 +20,6 @@ import { UserCardList } from '@/components/card/user-card-list';
 import { NetworkService } from '@/services/network.service';
 import { SocketService } from '@/services/socket.service';
 import { IUser } from '@/interfaces/IUser';
-import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 
 @Component({
   selector: 'network-list-view',
@@ -112,21 +111,50 @@ export class NetworkListView implements OnDestroy {
   }
 
   private setupNetworkConnectionListener(): void {
+    console.log('setupNetworkConnectionListener');
     this.socketService.onAfterRegistration(() => {
       this.socketService.on('network:connection:update', this.networkConnectionHandler);
     });
   }
 
-  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+  private networkConnectionHandler = (payload: IUser) => {
+    console.log('networkConnectionHandler', payload);
     if (!payload || !payload.id) return;
 
     const userId = payload.id;
     const newStatus = payload.connection_status;
+    const currentUserId = this.currentUser()?.id;
 
-    this.users.update((users) => users.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
+    if (userId === currentUserId) return;
+
+    this.users.update((users) => {
+      const existingUserIndex = users.findIndex((user) => user.id === userId);
+
+      if (newStatus === 'NotConnected') {
+        if (existingUserIndex !== -1) {
+          return users.filter((user) => user.id !== userId);
+        }
+        return users;
+      }
+
+      const userUpdate: Partial<IUser> = {
+        ...payload,
+        connection_status: newStatus
+      };
+
+      if (existingUserIndex !== -1) {
+        return users.map((user) => (user.id === userId ? { ...user, ...userUpdate } : user));
+      } else {
+        if (newStatus === 'Connected') {
+          return [{ ...userUpdate } as IUser, ...users];
+        }
+      }
+      return users;
+    });
   };
 
   ngOnDestroy(): void {
+    console.log('network ngOnDestroy');
     this.socketService.off('network:connection:update', this.networkConnectionHandler);
   }
 

@@ -16,6 +16,10 @@ import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, V
 import { IUser } from '@/interfaces/IUser';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { environment } from 'src/environments/environment';
+import { CommonShareFooter } from '@/components/common/common-share-footer/common-share-footer';
+import { NavController } from '@ionic/angular/standalone';
+import { ModalService } from '@/services/modal.service';
+import { MessagesService } from '@/services/messages.service';
 
 interface SocialLink {
   type: 'website' | 'facebook' | 'twitter' | 'instagram' | 'snapchat' | 'linkedin' | 'phone' | 'email';
@@ -30,7 +34,7 @@ interface SocialLink {
   styleUrl: './business-card.scss',
   templateUrl: './business-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonContent, IonToolbar, IonHeader, IonFooter, Button, IonIcon, NgOptimizedImage, QrCodeComponent]
+  imports: [IonContent, IonToolbar, IonHeader, IonFooter, Button, IonIcon, NgOptimizedImage, QrCodeComponent, CommonShareFooter]
 })
 export class BusinessCardPage implements OnInit {
   @ViewChild('cardDownloadSection', { static: false, read: ElementRef }) cardDownloadSection?: ElementRef<HTMLDivElement>;
@@ -39,6 +43,9 @@ export class BusinessCardPage implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private toasterService = inject(ToasterService);
+  private navCtrl = inject(NavController);
+  private modalService = inject(ModalService);
+  private messagesService = inject(MessagesService);
 
   user = signal<IUser | null>(null);
   showMoreLinks = signal(false);
@@ -275,39 +282,46 @@ export class BusinessCardPage implements OnInit {
   }
 
   async onShareTo(): Promise<void> {
-    if (!this.isNativePlatform()) {
-      // For web, use Web Share API if available
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: this.user()?.username || 'Business Card',
-            text: this.profileLink()
-          });
-          return;
-        } catch (error: any) {
-          if (error.name !== 'AbortError') {
-            console.error('Error sharing:', error);
-          }
-          return;
-        }
-      }
-      this.toasterService.showError('Share to is only available on mobile devices');
-      return;
-    }
-
     const link = this.profileLink();
     if (!link) {
       this.toasterService.showError('Profile link not available');
       return;
     }
 
+    const title = this.user()?.name || this.user()?.username || 'Business Card';
+
+    // For web, use Web Share API if available
+    // if (Capacitor.getPlatform() === 'web') {
+    //   if (navigator.share) {
+    //     try {
+    //       await navigator.share({
+    //         title: title,
+    //         text: link
+    //       });
+    //       return;
+    //     } catch (error: any) {
+    //       if (error.name !== 'AbortError') {
+    //         console.error('Error sharing:', error);
+    //       }
+    //       return;
+    //     }
+    //   } else {
+    //     // Fallback: copy to clipboard
+    //     await this.onCopyLink();
+    //     return;
+    //   }
+    // }
+
+    // For mobile (Android/iOS), use Capacitor Share
     try {
       await Share.share({
-        title: this.user()?.username || 'Business Card',
+        title: title,
         text: link
       });
-    } catch (error) {
-      console.error('Error sharing:', error);
+    } catch (error: any) {
+      if (error.message && !error.message.includes('cancel')) {
+        console.error('Error sharing:', error);
+      }
     }
   }
 
@@ -337,12 +351,73 @@ export class BusinessCardPage implements OnInit {
     }
 
     const link = this.profileLink();
-    window.open(`sms://&body=${encodeURIComponent(link)}`, '_blank');
+    const message = encodeURIComponent(`Check out my profile: ${link}`);
+    window.open(`sms:${user.mobile}?body=${message}`, '_self');
   }
 
-  onChat(): void {
-    // TODO: Implement chat functionality
-    console.log('Chat clicked');
+  async onChat(): Promise<void> {
+    const user = this.user();
+    const link = this.profileLink();
+    
+    if (!link) {
+      this.toasterService.showError('Profile link not available');
+      return;
+    }
+
+    if (!user?.id) {
+      this.toasterService.showError('User information not available');
+      return;
+    }
+
+    try {
+      const profileMessage = `Check out ${user.name || user.username}'s profile: ${link}`;
+      
+      // Prepare payload for shareInChat API - share to entire network
+      const payload: {
+        type: string;
+        message: string;
+        send_entire_network: boolean;
+      } = {
+        type: 'Text',
+        message: profileMessage,
+        send_entire_network: true
+      };
+
+      // Call share API
+      await this.messagesService.shareInChat(payload);
+      this.toasterService.showSuccess('Profile shared to your network successfully');
+    } catch (error: any) {
+      console.error('Error sharing profile in chat:', error);
+      this.toasterService.showError(error?.message || 'Failed to share profile');
+    }
+  }
+
+  onEmail(): void {
+    const user = this.user();
+    if (!user?.email) {
+      this.toasterService.showError('Email not available');
+      return;
+    }
+
+    const link = this.profileLink();
+    const subject = encodeURIComponent(`Check out my profile - ${user.name || user.username}`);
+    const body = encodeURIComponent(`Hi,\n\nCheck out my profile: ${link}`);
+    
+    window.open(`mailto:${user.email}?subject=${subject}&body=${body}`, '_self');
+  }
+
+  onWhatsapp(): void {
+    const link = this.profileLink();
+    if (!link) {
+      this.toasterService.showError('Profile link not available');
+      return;
+    }
+
+    const message = encodeURIComponent(`Check out my profile: ${link}`);
+    const whatsappUrl = `https://wa.me/?text=${message}`;
+    
+    // Try WhatsApp Web/App URL
+    window.open(whatsappUrl, '_blank');
   }
 
   onImageError(event: Event): void {

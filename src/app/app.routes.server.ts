@@ -52,7 +52,7 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
-    path: 'comments/:id',
+    path: 'post/:id',
     renderMode: RenderMode.Server
   },
   {

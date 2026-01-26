@@ -1,6 +1,6 @@
 import { Button } from '@/components/form/button';
 import { IonIcon } from '@ionic/angular/standalone';
-import { IonToolbar, IonFooter, ModalController } from '@ionic/angular/standalone';
+import { IonToolbar, IonFooter, ModalController, NavController } from '@ionic/angular/standalone';
 import { ToasterService } from '@/services/toaster.service';
 import { NgOptimizedImage } from '@angular/common';
 import { Capacitor } from '@capacitor/core';
@@ -13,6 +13,8 @@ import { IUser } from '@/interfaces/IUser';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { environment } from 'src/environments/environment';
 import { CommonShareFooter } from '@/components/common/common-share-footer';
+import { MessagesService } from '@/services/messages.service';
+import { AuthService } from '@/services/auth.service';
 
 @Component({
   selector: 'share-profile-modal',
@@ -26,6 +28,9 @@ export class ShareProfileModal {
 
   private modalCtrl = inject(ModalController);
   private toasterService = inject(ToasterService);
+  private navCtrl = inject(NavController);
+  private messagesService = inject(MessagesService);
+  private authService = inject(AuthService);
 
   @Input() user?: IUser;
 
@@ -136,5 +141,123 @@ export class ShareProfileModal {
 
   getImageUrl(url: string | undefined | null): string {
     return getImageUrlOrDefault(url || '');
+  }
+
+  onContact(): void {
+    if (!this.user?.mobile) {
+      this.toasterService.showError('Phone number not available');
+      return;
+    }
+
+    const link = this.profileLink();
+    const message = encodeURIComponent(`Check out my profile: ${link}`);
+    window.open(`sms:${this.user.mobile}?body=${message}`, '_self');
+  }
+
+  onCopyLink(): Promise<void> {
+    return this.copyLink();
+  }
+
+  async onShareTo(): Promise<void> {
+    const link = this.profileLink();
+    if (!link) {
+      this.toasterService.showError('Profile link not available');
+      return;
+    }
+
+    const title = this.user?.name || this.user?.username || 'Profile';
+
+    // For mobile (Android/iOS), use Capacitor Share
+    try {
+      await Share.share({
+        title: title,
+        text: link
+      });
+    } catch (error: any) {
+      if (error.message && !error.message.includes('cancel')) {
+        console.error('Error sharing:', error);
+      }
+    }
+  }
+
+  async onChat(): Promise<void> {
+    const link = this.profileLink();
+    
+    if (!link) {
+      this.toasterService.showError('Profile link not available');
+      return;
+    }
+
+    if (!this.user?.id) {
+      this.toasterService.showError('User information not available');
+      return;
+    }
+
+    try {
+      const profileMessage = `Check out ${this.user.name || this.user.username}'s profile: ${link}`;
+      
+      // Prepare payload for shareInChat API - share to entire network
+      const payload: {
+        type: string;
+        message: string;
+        send_entire_network: boolean;
+      } = {
+        type: 'Text',
+        message: profileMessage,
+        send_entire_network: true
+      };
+
+      // Call share API
+      await this.messagesService.shareInChat(payload);
+      this.toasterService.showSuccess('Profile shared to your network successfully');
+    } catch (error: any) {
+      console.error('Error sharing profile in chat:', error);
+      this.toasterService.showError(error?.message || 'Failed to share profile');
+    }
+  }
+
+  onEmail(): void {
+    if (!this.user?.email) {
+      this.toasterService.showError('Email not available');
+      return;
+    }
+
+    const link = this.profileLink();
+    const subject = encodeURIComponent(`Check out my profile - ${this.user.name || this.user.username}`);
+    const body = encodeURIComponent(`Hi,\n\nCheck out my profile: ${link}`);
+    
+    window.open(`mailto:${this.user.email}?subject=${subject}&body=${body}`, '_self');
+  }
+
+  onWhatsapp(): void {
+    const link = this.profileLink();
+    if (!link) {
+      this.toasterService.showError('Profile link not available');
+      return;
+    }
+
+    const message = encodeURIComponent(`Check out my profile: ${link}`);
+    const whatsappUrl = `https://wa.me/?text=${message}`;
+    
+    // Try WhatsApp Web/App URL
+    window.open(whatsappUrl, '_blank');
+  }
+
+  onShareToX(): void {
+    const link = this.profileLink();
+    if (!link) return;
+
+    const text = encodeURIComponent(link);
+    const twitterUrl = `https://x.com/intent/tweet?text=${text}`;
+    window.open(twitterUrl, '_blank');
+  }
+
+  onShareToThreads(): void {
+    const link = this.profileLink();
+    if (!link) return;
+
+    const text = encodeURIComponent(link);
+    const threadsUrl = `https://threads.net/intent/post?text=${text}`;
+    window.open(threadsUrl, '_blank');
   }
 }

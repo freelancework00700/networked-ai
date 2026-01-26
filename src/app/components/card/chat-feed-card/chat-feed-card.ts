@@ -28,7 +28,7 @@ export class ChatFeedCard {
   onPostClick(): void {
     const feed = this.feed();
     if (!feed) return;
-    this.navigationService.navigateForward(`/comments/${feed.id}`);
+    this.navigationService.navigateForward(`/post/${feed.id}`);
   }
 
   getImageUrl(imageUrl = ''): string {

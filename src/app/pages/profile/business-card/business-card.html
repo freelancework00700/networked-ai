@@ -117,52 +117,22 @@
 
 <ion-footer mode="md">
   <ion-toolbar mode="md">
-    <!-- Action Buttons -->
     <div class="w-full px-4 pb-4 max-w-[672px] mx-auto">
+      <!-- Download Button -->
       <div class="flex gap-3">
         <app-button color="secondary" label="Download" iconName="pi-download" (click)="onDownload()" class="flex-1" />
       </div>
-      <!-- Share Options -->
-      <div class="share-options-container">
-        <div class="share-options-scroll">
-          <button type="button" class="share-option-item" (click)="onContact()">
-            <div class="share-option-icon">
-              <ion-icon name="call-outline" class="text-[24px] neutral-03"></ion-icon>
-            </div>
-            <span class="body-12R neutral-03">Contact</span>
-          </button>
-          <button type="button" class="share-option-item" (click)="onCopyLink()">
-            <div class="share-option-icon">
-              <ion-icon name="link-outline" class="text-[24px] neutral-03"></ion-icon>
-            </div>
-            <span class="body-12R neutral-03">Link</span>
-          </button>
-          <button type="button" class="share-option-item" (click)="onShareTo()">
-            <div class="share-option-icon">
-              <ion-icon name="share-outline" class="text-[24px] neutral-03"></ion-icon>
-            </div>
-            <span class="body-12R neutral-03">Share to</span>
-          </button>
-          <button type="button" class="share-option-item" (click)="onShareToThreads()">
-            <div class="share-option-icon">
-              <ion-icon name="logo-instagram" class="text-[24px] neutral-03"></ion-icon>
-            </div>
-            <span class="body-12R neutral-03">Threads</span>
-          </button>
-          <button type="button" class="share-option-item" (click)="onShareToX()">
-            <div class="share-option-icon">
-              <ion-icon name="logo-twitter" class="text-[24px] neutral-03"></ion-icon>
-            </div>
-            <span class="body-12R neutral-03">X</span>
-          </button>
-          <button type="button" class="share-option-item" (click)="onChat()">
-            <div class="share-option-icon">
-              <ion-icon name="chatbubble-outline" class="text-[24px] neutral-03"></ion-icon>
-            </div>
-            <span class="body-12R neutral-03">Chat</span>
-          </button>
-        </div>
-      </div>
     </div>
+    <!-- Share Footer -->
+    <common-share-footer
+      (onContact)="onContact()"
+      (onCopyLink)="onCopyLink()"
+      (onShareTo)="onShareTo()"
+      (onChat)="onChat()"
+      (onEmail)="onEmail()"
+      (onWhatsapp)="onWhatsapp()"
+      (onX)="onShareToX()"
+      (onThread)="onShareToThreads()"
+    />
   </ion-toolbar>
 </ion-footer>

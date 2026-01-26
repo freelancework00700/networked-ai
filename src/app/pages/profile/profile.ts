@@ -27,10 +27,10 @@ import { ScrollHandlerDirective } from '@/directives/scroll-handler.directive';
 import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { ToasterService } from '@/services/toaster.service';
 import { SocketService } from '@/services/socket.service';
-import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 import { StripeService } from '@/services/stripe.service';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { IUser } from '@/interfaces/IUser';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
@@ -257,7 +257,7 @@ export class Profile implements OnDestroy {
     });
   }
 
-  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+  private networkConnectionHandler = (payload: IUser) => {
     if (!payload || !payload.id) return;
 
     const currentUser = this.currentUser();
