@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
 import { SocketService } from '@/services/socket.service';
+import { App, URLOpenListenerEvent } from '@capacitor/app';
 import { IonRouterOutlet } from '@ionic/angular/standalone';
 import { NavigationService } from '@/services/navigation.service';
 import { LiveUpdateService } from '@/services/live-update.service';
@@ -59,6 +60,9 @@ export class AppComponent {
 
     // initialize live updates (native only)
     void this.liveUpdateService.init();
+
+    // setup deep linking (native only)
+    this.setupDeepLinking();
   }
 
   private async updateCurrentLocation(): Promise<void> {
@@ -72,5 +76,19 @@ export class AppComponent {
     } catch (error) {
       console.error('Error getting current location:', error);
     }
+  }
+
+  setupDeepLinking() {
+    App.addListener('appUrlOpen', ({ url }: URLOpenListenerEvent) => {
+      if (!url) return;
+
+      try {
+        const parsed = new URL(url);
+        const path = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        setTimeout(() => this.navigationService.navigateForward(path));
+      } catch {
+        this.navigationService.navigateForward(url);
+      }
+    });
   }
 }
