@@ -1,9 +1,10 @@
 import { firstValueFrom } from 'rxjs';
 import { Capacitor } from '@capacitor/core';
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { ModalService } from '@/services/modal.service';
+import { inject, Injectable, signal } from '@angular/core';
 import { CapacitorUpdater } from '@capgo/capacitor-updater';
-import { AlertController, LoadingController, ToastController } from '@ionic/angular/standalone';
+import { ToasterService } from '@/services/toaster.service';
 
 type GithubAsset = {
   name: string;
@@ -17,18 +18,18 @@ type GithubRelease = {
 };
 
 @Injectable({ providedIn: 'root' })
-export class UpdaterService {
+export class LiveUpdateService {
+  // constants
   private readonly GITHUB_REPO = 'networked-ai';
   private readonly GITHUB_OWNER = 'freelancework00700';
 
+  // services
   private http = inject(HttpClient);
-  private alertCtrl = inject(AlertController);
-  private toastCtrl = inject(ToastController);
-  private loadingCtrl = inject(LoadingController);
+  private modalService = inject(ModalService);
+  private toasterService = inject(ToasterService);
 
-  private isDownloading = false;
-  private listenersAdded = false;
-  private activeLoading?: HTMLIonLoadingElement;
+  // signals
+  private confirmButtonLabel = signal('Download');
 
   /**
    * Call once on app start (native only).
@@ -49,30 +50,16 @@ export class UpdaterService {
     await this.checkForUpdates({ interactive: false });
   }
 
-  /**
-   * Manual trigger (hook this to a settings button if you want).
-   */
-  async checkForUpdatesManually(): Promise<void> {
-    await this.checkForUpdates({ interactive: true });
-  }
-
   private async checkForUpdates({ interactive }: { interactive: boolean }): Promise<void> {
-    if (!Capacitor.isNativePlatform()) {
-      if (interactive) {
-        await this.showToast('Live updates are only available on a native build.');
-      }
-      return;
-    }
-
     const release = await this.getLatestRelease();
     if (!release) {
-      if (interactive) await this.showToast('Failed to fetch latest release.');
+      if (interactive) await this.toasterService.showError('Failed to fetch latest release.');
       return;
     }
 
     const buildAsset = release.assets.find((a) => a.name === 'build.zip');
     if (!buildAsset) {
-      if (interactive) await this.showToast('No build.zip found in the latest GitHub release.');
+      if (interactive) await this.toasterService.showError('No build.zip found in the latest GitHub release.');
       return;
     }
 
@@ -80,45 +67,32 @@ export class UpdaterService {
     const nextVersion = release.tag_name;
 
     if (currentVersion && currentVersion === nextVersion) {
-      if (interactive) await this.showToast('You are already on the latest version.');
+      if (interactive) await this.toasterService.showError('You are already on the latest version.');
       return;
     }
 
     // show prompt and (if accepted) download + apply
-    await this.promptAndUpdate({
-      tag: nextVersion,
-      sizeBytes: buildAsset.size,
-      url: buildAsset.browser_download_url
-    });
+    await this.promptAndUpdate({ tag: nextVersion, sizeBytes: buildAsset.size, url: buildAsset.browser_download_url});
   }
 
   private async promptAndUpdate(info: { tag: string; sizeBytes: number; url: string }): Promise<void> {
-    const alert = await this.alertCtrl.create({
-      header: 'Update available',
-      message: `Version: <strong>${info.tag}</strong><br/>Size: <strong>${this.formatFileSize(info.sizeBytes)}</strong>`,
-      buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        {
-          text: 'Download',
-          role: 'confirm',
-          handler: () => this.startDownload(info)
-        }
-      ]
+    this.confirmButtonLabel.set('Download');
+    await this.modalService.openConfirmModal({
+      iconPosition: 'left',
+      iconBgColor: '#C73838',
+      title: 'Update Available',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      confirmButtonLabel: 'Download',
+      icon: 'assets/svg/alert-white.svg',
+      confirmButtonLabelSignal: this.confirmButtonLabel,
+      onConfirm: async () => await this.startDownload(info),
+      description: `A new version of the app is available.<br/>Version: ${info.tag}<br/>Size: ${this.formatFileSize(info.sizeBytes)}`,
     });
-
-    await alert.present();
   }
 
   private async startDownload(info: { tag: string; url: string }): Promise<void> {
-    if (this.isDownloading) return;
-    this.isDownloading = true;
-
-    const loading = await this.loadingCtrl.create({
-      message: 'Preparing download…',
-      backdropDismiss: false
-    });
-    await loading.present();
-    this.activeLoading = loading;
+    this.confirmButtonLabel.set('Downloading… 0%');
 
     try {
       const version = await CapacitorUpdater.download({
@@ -130,19 +104,12 @@ export class UpdaterService {
         throw new Error('Download returned no version');
       }
 
-      this.setLoadingMessage('Download complete! Applying update…');
+      this.confirmButtonLabel.set('Applying update…');
       await CapacitorUpdater.set(version);
-
-      await loading.dismiss();
-      await this.showToast('Update applied. Reloading…');
-      window.location.reload();
     } catch (error) {
       console.error('Update download/apply failed:', error);
-      await loading.dismiss();
-      await this.showToast(`Update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      this.activeLoading = undefined;
-      this.isDownloading = false;
+      await this.toasterService.showError(`Update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.confirmButtonLabel.set('Download');
     }
   }
 
@@ -168,13 +135,12 @@ export class UpdaterService {
     }
   }
 
-  private addCapgoListenersOnce(): void {
-    if (this.listenersAdded) return;
-    this.listenersAdded = true;
+  private async addCapgoListenersOnce(): Promise<void> {
+    await CapacitorUpdater.removeAllListeners();
 
     CapacitorUpdater.addListener('download', (info: { percent: number }) => {
       const pct = Math.max(0, Math.min(100, info.percent ?? 0));
-      this.setLoadingMessage(`Downloading… ${Math.round(pct)}%`);
+      this.confirmButtonLabel.set(`Downloading… ${Math.round(pct)}%`);
     });
 
     CapacitorUpdater.addListener('downloadFailed', (err: any) => {
@@ -192,22 +158,6 @@ export class UpdaterService {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-  }
-
-  private setLoadingMessage(message: string): void {
-    // Ionic overlays allow setting properties after present()
-    const loading = this.activeLoading;
-    if (!loading) return;
-    loading.message = message;
-  }
-
-  private async showToast(message: string): Promise<void> {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 2500,
-      position: 'bottom'
-    });
-    await toast.present();
   }
 }
 

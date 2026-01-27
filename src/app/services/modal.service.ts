@@ -2,12 +2,12 @@ import { Login } from '@/pages/login';
 import { IUser } from '@/interfaces/IUser';
 import { Signup } from '@/pages/signup/signup';
 import { EventQr } from '@/pages/event/event-qr';
-import { inject, Injectable } from '@angular/core';
 import { SubscriptionPlan } from '@/interfaces/event';
 import { MenuItem } from '@/components/modal/menu-modal';
 import { CreateEvent } from '@/pages/event/create-event';
 import { RsvpModal } from '@/components/modal/rsvp-modal';
 import { MenuModal } from '@/components/modal/menu-modal';
+import { inject, Injectable, Signal } from '@angular/core';
 import { TitleModal } from '@/components/modal/title-modal';
 import { TicketsModal } from '@/components/modal/tickets-modal';
 import { LoadingModal } from '@/components/modal/loading-modal';
@@ -390,6 +390,7 @@ export class ModalService {
     customColor?: string;
     onConfirm?: () => Promise<any>;
     onShare?: () => void | Promise<void>;
+    confirmButtonLabelSignal?: Signal<string>;
   }): Promise<{ data: any; role: string } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',

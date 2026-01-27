@@ -4,9 +4,9 @@ import { Capacitor } from '@capacitor/core';
 import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
 import { SocketService } from '@/services/socket.service';
-import { UpdaterService } from '@/services/updater.service';
 import { IonRouterOutlet } from '@ionic/angular/standalone';
 import { NavigationService } from '@/services/navigation.service';
+import { LiveUpdateService } from '@/services/live-update.service';
 import { PermissionsService } from '@/services/permissions.service';
 import { inject, effect, Component, viewChild } from '@angular/core';
 import { PushNotificationService } from '@/services/push-notification.service';
@@ -24,7 +24,7 @@ export class AppComponent {
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private socketService = inject(SocketService);
-  private updaterService = inject(UpdaterService);
+  private liveUpdateService = inject(LiveUpdateService);
   private navigationService = inject(NavigationService);
   private permissionsService = inject(PermissionsService);
   private pushNotificationService = inject(PushNotificationService);
@@ -58,7 +58,7 @@ export class AppComponent {
     }
 
     // initialize live updates (native only)
-    void this.updaterService.init();
+    void this.liveUpdateService.init();
   }
 
   private async updateCurrentLocation(): Promise<void> {
