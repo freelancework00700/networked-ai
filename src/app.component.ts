@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
 import { SocketService } from '@/services/socket.service';
+import { UpdaterService } from '@/services/updater.service';
 import { IonRouterOutlet } from '@ionic/angular/standalone';
 import { NavigationService } from '@/services/navigation.service';
 import { PermissionsService } from '@/services/permissions.service';
@@ -23,6 +24,7 @@ export class AppComponent {
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private socketService = inject(SocketService);
+  private updaterService = inject(UpdaterService);
   private navigationService = inject(NavigationService);
   private permissionsService = inject(PermissionsService);
   private pushNotificationService = inject(PushNotificationService);
@@ -54,6 +56,9 @@ export class AppComponent {
     if (Capacitor.isNativePlatform()) {
       this.pushNotificationService.initialize();
     }
+
+    // initialize live updates (native only)
+    void this.updaterService.init();
   }
 
   private async updateCurrentLocation(): Promise<void> {

@@ -15,6 +15,11 @@ const config: CapacitorConfig = {
       skipNativeAuth: false,
       authDomain: 'app.net-worked.ai',
       providers: ['google.com', 'apple.com', 'phone', 'facebook.com']
+    },
+    CapacitorUpdater: {
+      autoUpdate: false,
+      autoDeletePrevious: true,
+      updateUrl: "https://github.com/freelancework00700/networked-ai/releases/latest/download/build.zip"
     }
   }
 };
