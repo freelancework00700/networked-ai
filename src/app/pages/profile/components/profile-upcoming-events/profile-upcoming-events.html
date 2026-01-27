@@ -1,9 +1,27 @@
 <div class="flex flex-col px-[2px] py-4">
   <div class="heading-h3 neutral-01">Upcoming Events</div>
 
-  <div class="flex flex-col gap-4 mt-2">
-    @for (event of events(); track event.id) {
-      <upcoming-event-card [event]="event" />
-    }
-  </div>
+  @if (isLoading()) {
+    <div class="flex items-center justify-center py-8">
+      <div class="body-14M neutral-03">Loading...</div>
+    </div>
+  } @else if (events().length === 0) {
+    <profile-empty-state
+      buttonIcon="pi-calendar"
+      buttonText="Browse Events"
+      buttonRoute="/"
+      title="No Upcoming Events"
+      subtitle="You don't have any upcoming events yet!"
+    />
+  } @else {
+    <div class="flex flex-col gap-4 mt-2">
+      @for (event of events(); track event.id) {
+        <upcoming-event-card [event]="event" />
+      }
+    </div>
+
+    <ion-infinite-scroll (ionInfinite)="loadMoreEvents($event)" [disabled]="!hasMore()">
+      <ion-infinite-scroll-content loadingText="Loading more events..."></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  }
 </div>

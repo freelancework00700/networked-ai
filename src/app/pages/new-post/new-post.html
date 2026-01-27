@@ -1,93 +1,75 @@
-<ion-header>
+<ion-header mode="md">
   <ion-toolbar>
     <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
       <div class="pi pi-times pr-2" (click)="navCtrl.back()"></div>
-      <div class="body-14M">New Post</div>
+      <div class="body-14M">{{ isEditMode() ? 'Edit Post' : 'New Post' }}</div>
     </div>
   </ion-toolbar>
 </ion-header>
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" mode="md">
   <div class="min-h-full">
     <div class="w-full max-w-[672px] mx-auto p-4 flex flex-col gap-4">
       <!-- caption-input -->
       <div class="flex items-start gap-3 py-3 pb-0 bg-neutral-07 px-4">
-        <img src="/assets/images/profile.jpeg" alt="Profile" class="w-15 h-15 object-cover rounded-full" />
+        <div class="relative w-[60px] h-[60px] flex-shrink-0 overflow-hidden rounded-full">
+          <img
+            fill
+            priority
+            placeholder
+            alt="Profile"
+            class="rounded-full object-cover"
+            (error)="onImageError($event)"
+            [ngSrc]="currentUserImage()"
+          />
+        </div>
         <div class="flex-1 flex flex-col gap-1">
-          <div class="body-14SB neutral-01">Ethan Cortazzo</div>
+          <div class="body-14SB neutral-01">{{ currentUserName() }}</div>
 
           <div class="relative-block-container">
             <div>
               <textarea
-                #textareaRef
+                #textareaEl
+                cdkOverlayOrigin
+                #textareaOrigin="cdkOverlayOrigin"
                 class="w-full border-none outline-none resize-none"
                 [formControl]="textCtrl"
                 [placeholder]="'Start writing here...'"
                 wrap="hard"
               ></textarea>
-
-              <ngx-mentions
-                [textInputElement]="textareaRef"
-                [menuTemplate]="menuTemplate"
-                [mentionsConfig]="mentionsConfig"
-                [searchRegexp]="searchRegexp"
-                [mentions]="mentions"
-                [removeWholeTagOnBackspace]="true"
-                (search)="loadChoices($event)"
-                (selectedChoicesChange)="onSelectedChoicesChange($event)"
-                (menuShow)="onMenuShow()"
-                (menuHide)="onMenuHide()"
-              ></ngx-mentions>
-
-              <ng-template #menuTemplate let-selectChoice="selectChoice">
-                <ul
-                  class="ngx-selectable-list"
-                  ngxKbListNavigation
-                  [choices]="choices"
-                  (selectChoice)="selectChoice($event)"
-                  [class.loader-only]="!choices.length && loading"
-                >
-                  @for (user of choices; track user.id) {
-                    <li class="ngx-selectable-list-item flex items-center justify-between gap-2" (click)="selectChoice(user)">
-                      <!-- Left: avatar + name -->
-                      <div class="flex items-center gap-2">
-                        <img [src]="user.thumbnail || 'assets/images/profile.jpeg'" class="w-8 h-8 rounded-full object-cover" />
-                        <span title="{{ user.name }}">{{ user.name }}</span>
-                      </div>
-
-                      <!-- Right: Networked chip -->
-                      @if (user.isNetwork) {
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium"> Networked </span>
-                      }
-                    </li>
-                  }
-                </ul>
-              </ng-template>
+              <mentions
+                [textareaRef]="textareaRef"
+                [control]="textCtrl"
+                [overlayOrigin]="textareaOrigin"
+                [position]="'below'"
+                (userSelected)="onMentionSelected($event)"
+              />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- location -->
-      @if (form().get('location')?.value) {
-        <div class="flex items-start gap-1 body-14R neutral-03 pl-20">
-          <i class="pi pi-map-marker mt-1"></i>
-          <span class="leading-snug">
-            {{ form().get('location')?.value }}
-          </span>
-        </div>
-      }
-
       <!-- Media Items -->
       @if (mediaItems().length) {
-        <div #swiperEl class="swiper">
+        <div #swiperEl class="swiper swiper-post-card">
           <div class="swiper-wrapper">
             @for (item of mediaItems(); track item.id) {
               <div class="swiper-slide">
                 <div class="slide-content">
-                  <div class="slide-image">
+                  <div class="slide-image bg-black">
                     <!-- IMAGE -->
                     @if (item.type === 'image' || item.type === 'gif') {
-                      <img src="{{ item.url }}" />
+                      @if (isBlobUrl(item.url)) {
+                        <img [src]="item.url" class="object-cover" (error)="onImageError($event)" />
+                      } @else {
+                        <img
+                          fill
+                          placeholder
+                          class="object-cover"
+                          (error)="onImageError($event)"
+                          [ngSrc]="getImageUrl(item.url)"
+                          [loaderParams]="{ thumbnail: item.url }"
+                        />
+                      }
                     }
 
                     <!-- VIDEO -->
@@ -106,13 +88,25 @@
               </div>
             }
           </div>
+          <div class="swiper-pagination"></div>
         </div>
         <div #scrollContainer class="thumbnail-container" cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="drop($event)">
           @for (item of mediaItems(); track item.id) {
             <div class="thumbnail" cdkDrag [cdkDragBoundary]="scrollContainer" (click)="goToSlide($index)">
               <!-- IMAGE -->
               @if (item.type === 'image' || item.type === 'gif') {
-                <img [src]="item.url" />
+                @if (isBlobUrl(item.url)) {
+                  <img [src]="item.url" class="object-cover rounded" (error)="onImageError($event)" />
+                } @else {
+                  <img
+                    fill
+                    placeholder
+                    class="object-cover rounded"
+                    (error)="onImageError($event)"
+                    [ngSrc]="getImageUrl(item.url)"
+                    [loaderParams]="{ thumbnail: item.url }"
+                  />
+                }
               }
 
               <!-- VIDEO -->
@@ -137,6 +131,16 @@
         </div>
       }
 
+      <!-- location -->
+      @if (form().get('location')?.value) {
+        <div class="flex items-start gap-1 body-14R neutral-03">
+          <i class="pi pi-map-marker mt-1"></i>
+          <span class="leading-snug">
+            {{ form().get('location')?.value }}
+          </span>
+        </div>
+      }
+
       <!-- Visibility -->
       <div class="flex items-center justify-between pl-2">
         <label class="body-16SB">Visibility</label>
@@ -152,7 +156,7 @@
     </div>
   </div>
 </ion-content>
-<ion-footer>
+<ion-footer mode="md">
   <ion-toolbar>
     <div class="flex items-center justify-between p-6 max-w-[672px] mx-auto">
       <div class="action-icons flex items-center gap-6">
@@ -162,7 +166,14 @@
         <ion-icon [src]="'/assets/svg/social-feed/calendar-plus.svg'" (click)="openEventModal()" class="w-5 h-5" />
       </div>
 
-      <app-button [label]="'Post'" [disabled]="isLoading()" (click)="handleCreatePost()" width="100px" height="35px" />
+      <app-button
+        [label]="'Post'"
+        [disabled]="isPostDisabled() || postLoading()"
+        [isLoading]="postLoading()"
+        (click)="handleCreatePost()"
+        width="100px"
+        height="35px"
+      />
     </div>
     <input
       #fileInput

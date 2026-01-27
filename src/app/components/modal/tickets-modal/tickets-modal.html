@@ -1,0 +1,110 @@
+<ion-header mode="md">
+  <ion-toolbar>
+    <div class="flex items-center gap-2 px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
+      <i class="pi pi-arrow-left" (click)="close()"></i>
+      <div class="body-14M text-center w-full">Your Tickets</div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content mode="md" class="tickets-content">
+  <div class="h-full flex justify-center p-6">
+    <div class="w-full max-w-[672px] flex flex-col">
+      <div class="relative flex-1">
+        <div #swiperEl class="swiper h-full">
+          <div class="swiper-wrapper">
+            @for (ticket of userTickets(); track ticket.id || $index) {
+              <div class="swiper-slide">
+                <div class="flex justify-center">
+                  <div class="relative rounded-[30px] p-1 border-3 bg-gradient-to-r w-full" [ngClass]="progressBarColor()">
+                    <div class="relative rounded-[28px] overflow-hidden text-white">
+                      <div
+                        class="absolute inset-0 bg-cover bg-center"
+                        [style.backgroundImage]="'url(' + getImageUrl(event().thumbnail_url) + ')'"
+                      ></div>
+                      <div class="absolute inset-0 bg-black/30"></div>
+
+                      <div class="relative p-4 mt-30">
+                        <div class="detail-card border-3" [ngClass]="progressBarColor()">
+                          <!-- QR -->
+                          <div class="relative flex justify-center mb-4">
+                            <div class="relative">
+                              <qr-code [value]="ticket.id" [size]="128" [class.qr-code]="ticket.is_checked_in"></qr-code>
+
+                              @if (ticket.is_checked_in) {
+                                <div class="qr-overlay">
+                                  <ion-icon name="checkmark"></ion-icon>
+                                </div>
+                              }
+                            </div>
+                          </div>
+
+                          <!-- Content -->
+                          <div class="heading-h2">{{ event().title }}</div>
+                          <div class="text-white mb-4">{{ host()?.name }}</div>
+
+                          <div class="flex items-center gap-4 mb-4">
+                            <div class="border border-surface-400 rounded-full p-3">
+                              <ion-icon src="/assets/svg/user-check.svg"></ion-icon>
+                            </div>
+                            <div>
+                              <div class="body-14M">{{ ticket.name }}</div>
+                              <div class="text-surface-400">Ticket Holder</div>
+                            </div>
+                          </div>
+
+                          <div class="flex items-center gap-4 mb-4">
+                            <div class="border border-surface-400 rounded-full p-3">
+                              <i class="pi pi-calendar"></i>
+                            </div>
+                            <div>
+                              <div class="body-14M">{{ formattedEventDate() }}</div>
+                              <div class="text-surface-400">{{ formattedEventTime() }}</div>
+                            </div>
+                          </div>
+
+                          <div class="flex items-center gap-4">
+                            <div class="border border-surface-400 rounded-full p-3">
+                              <i class="pi pi-map-marker"></i>
+                            </div>
+                            <div>
+                              <div class="body-14M">{{ event().address }}</div>
+                              <div class="text-surface-400">{{ event().state }}, {{ event().country }}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Pager -->
+      @if (userTickets().length > 1) {
+        <div class="flex items-center justify-center gap-4 py-3 text-sm text-surface-500">
+          <button (click)="swiper.slidePrev()">
+            <div class="pi pi-angle-left !text-[20px]"></div>
+          </button>
+          <span class="body-14M">{{ activeIndex() + 1 }} of {{ userTickets().length }} tickets</span>
+          <button (click)="swiper.slideNext()">
+            <div class="pi pi-angle-right !text-[20px]"></div>
+          </button>
+        </div>
+      }
+      <!-- Buttons -->
+      <div class="mt-4 flex flex-col gap-3 pb-6">
+        <div class="min-h-[48px]">
+          @if (userTickets()[activeIndex()]?.apple_wallet_pass_url) {
+            <app-button label="Add to Wallet" (click)="addToWallet()" customColor="#000" icon="/assets/svg/apple-wallet.svg" />
+          }
+        </div>
+
+        <app-button label="Contact Host" color="secondary" (click)="contactHost()" [disabled]="!host()?.email" />
+      </div>
+    </div>
+  </div>
+</ion-content>

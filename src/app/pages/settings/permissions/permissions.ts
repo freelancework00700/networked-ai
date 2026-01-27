@@ -6,7 +6,6 @@ import { App } from '@capacitor/app';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { FormsModule } from '@angular/forms';
 
-
 export interface Permission {
   id: string;
   name: string;
@@ -27,7 +26,7 @@ export class Permissions implements OnInit, OnDestroy {
   // services
   navCtrl = inject(NavController);
   private permissionsService = inject(PermissionsService);
-  
+
   // listener
   private appResumeListener?: PluginListenerHandle;
 
@@ -80,7 +79,7 @@ export class Permissions implements OnInit, OnDestroy {
     const permissions = this.permissions();
     const updatedPermissions = await Promise.all(
       permissions.map(async (permission) => {
-        let result: any
+        let result: any;
         switch (permission.id) {
           case 'camera':
             result = await this.permissionsService.checkCameraPermission();
@@ -103,7 +102,7 @@ export class Permissions implements OnInit, OnDestroy {
         };
       })
     );
-    
+
     this.permissions.set(updatedPermissions);
     console.log('this.permissions() updated:', permissions);
   }
@@ -115,17 +114,17 @@ export class Permissions implements OnInit, OnDestroy {
   async onToggleChange(permissionId: string, event: CustomEvent): Promise<void> {
     event.stopPropagation();
     const checked = event.detail.checked;
-    const permission = this.permissions().find(p => p.id === permissionId);
-    
+    const permission = this.permissions().find((p) => p.id === permissionId);
+
     if (permission) {
       if (checked) {
         await this.requestPermission(permission);
       } else {
         if (permission.accessLevel !== 'denied') {
           NativeSettings.open({
-            optionAndroid: AndroidSettings.ApplicationDetails, 
+            optionAndroid: AndroidSettings.ApplicationDetails,
             optionIOS: IOSSettings.App
-          })
+          });
         }
       }
     }
@@ -133,10 +132,8 @@ export class Permissions implements OnInit, OnDestroy {
 
   private updatePermission(permissionId: string, enabled: boolean, accessLevel?: 'denied' | 'ask' | 'always'): void {
     const currentPermissions = this.permissions();
-    const updatedPermissions = currentPermissions.map(p => 
-      p.id === permissionId 
-        ? { ...p, enabled, accessLevel: accessLevel || p.accessLevel } 
-        : p
+    const updatedPermissions = currentPermissions.map((p) =>
+      p.id === permissionId ? { ...p, enabled, accessLevel: accessLevel || p.accessLevel } : p
     );
     console.log('updatedPermissions', updatedPermissions);
     this.permissions.set(updatedPermissions);
@@ -147,9 +144,7 @@ export class Permissions implements OnInit, OnDestroy {
       return;
     }
 
-    const { result, settingsOpened } = await this.permissionsService.requestPermission(
-      permission.id as 'camera' | 'location' | 'contact'
-    );
+    const { result, settingsOpened } = await this.permissionsService.requestPermission(permission.id as 'camera' | 'location' | 'contact');
 
     if (settingsOpened) {
       return;

@@ -1,62 +1,172 @@
 import { Swiper } from 'swiper';
+import { Pagination } from 'swiper/modules';
 import { NavController } from '@ionic/angular';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
+import { AuthService } from '@/services/auth.service';
+import { FeedService } from '@/services/feed.service';
+import { NavigationService } from '@/services/navigation.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
-import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output, signal, ViewChild } from '@angular/core';
+import { DatePipe, NgOptimizedImage, isPlatformBrowser } from '@angular/common';
+import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+  ViewChild,
+  computed,
+  PLATFORM_ID,
+  Input,
+  effect
+} from '@angular/core';
+import { FeedPost } from '@/interfaces/IFeed';
+import { Router } from '@angular/router';
+import { NetworkService } from '@/services/network.service';
+import { SocketService } from '@/services/socket.service';
+import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 
 @Component({
-  imports: [Button],
+  imports: [Button, NgOptimizedImage],
   selector: 'post-card',
   styleUrl: './post-card.scss',
   templateUrl: './post-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PostCard {
-  @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
+  postRemoved = output<string>();
 
-  post = input.required<any>();
+  @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
+  post = input.required<FeedPost>();
+  postPreview = signal<FeedPost | null>(null);
 
   navCtrl = inject(NavController);
   sanitizer = inject(DomSanitizer);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
+  authService = inject(AuthService);
+  feedService = inject(FeedService);
+  navigationService = inject(NavigationService);
+  router = inject(Router);
+  private socketService = inject(SocketService);
 
-  onLike = output<void>();
-  onComment = output<void>();
+  private platformId = inject(PLATFORM_ID);
+  private networkService = inject(NetworkService);
+
+  private datePipe = new DatePipe('en-US');
+
   onMore = output<void>();
 
   swiper?: Swiper;
 
   currentSlide = signal(0);
-  menuItems: MenuItem[] = [
-    { label: 'Not Interested', icon: 'pi pi-eye-slash', iconType: 'pi', action: 'notInterested' },
-    { label: 'Add @sammyk982 to network', icon: 'assets/svg/addUserIcon.svg', iconType: 'svg', action: 'edit' },
-    { label: 'Mute @sammyk982', icon: 'assets/svg/alertOffBlackIcon.svg', iconType: 'svg', action: 'mute' },
-    { label: 'Unmute @sammyk982', icon: 'assets/svg/alertBlackIcon.svg', iconType: 'svg', action: 'unmute' },
-    { label: 'Block @sammyk982', icon: 'pi pi-ban', iconType: 'pi', action: 'block' },
-    { label: 'Report post', icon: 'assets/svg/social-feed/report.svg', iconType: 'svg', action: 'report' },
-    { label: 'Unfollow @sammyk982', icon: 'assets/svg/social-feed/user-minus.svg', iconType: 'svg', action: 'unfollow' },
+  isLoading = signal(false);
+
+  // Computed property to check if post belongs to current user
+  isCurrentUserPost = computed(() => {
+    const currentUser = this.authService.currentUser();
+    const postUserId = this.post().user_id;
+    return currentUser?.id === postUserId;
+  });
+
+  // Menu items for current user's posts (Edit/Delete only)
+  currentUserMenuItems: MenuItem[] = [
     { label: 'Edit', icon: 'assets/svg/editIconBlack.svg', iconType: 'svg', action: 'edit' },
     { label: 'Delete', icon: 'assets/svg/deleteIcon.svg', iconType: 'svg', danger: true, action: 'delete' }
   ];
 
+  getOtherUserMenuItems(): MenuItem[] {
+    const items: MenuItem[] = [];
+
+    items.push({
+      label: 'Not Interested',
+      icon: 'pi pi-eye-slash',
+      iconType: 'pi',
+      action: 'notInterested'
+    });
+
+    if (this.postPreview()?.user?.connection_status === 'NotConnected') {
+      items.push({
+        label: 'Add to network',
+        icon: 'assets/svg/addUserIcon.svg',
+        iconType: 'svg',
+        action: 'addToNetwork'
+      });
+    }
+
+    items.push({
+      label: 'Block',
+      icon: 'pi pi-ban',
+      iconType: 'pi',
+      action: 'block'
+    });
+
+    items.push({
+      label: 'Report post',
+      icon: 'assets/svg/social-feed/report.svg',
+      iconType: 'svg',
+      action: 'report'
+    });
+
+    console.log('connectionStatus', this.postPreview()?.user?.connection_status);
+
+    if (this.postPreview()?.user?.connection_status === 'Connected') {
+      items.push({
+        label: 'Unfollow',
+        icon: 'assets/svg/social-feed/user-minus.svg',
+        iconType: 'svg',
+        action: 'unfollow'
+      });
+    }
+
+    return items;
+  }
+
+  // Computed properties for API data
+  sortedMedias = computed(() => {
+    const medias = this.post().medias;
+    if (!medias || medias.length === 0) return [];
+    return [...medias].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  });
+
+  createdAtTimestamp = computed(() => {
+    const dateStr = this.post().created_at;
+    return dateStr ? new Date(dateStr).getTime() : Date.now();
+  });
+
+  updatedAtTimestamp = computed(() => {
+    const dateStr = this.post().updated_at;
+    return dateStr ? new Date(dateStr).getTime() : undefined;
+  });
+
+  constructor() {
+    effect(() => {
+      this.postPreview.set(this.post());
+    });
+    this.setupNetworkConnectionListener();
+  }
   ngAfterViewChecked() {
+    // Only initialize Swiper in browser environment (not during SSR)
+    if (!isPlatformBrowser(this.platformId)) return;
+
     if (this.swiper) return;
     if (!this.swiperEl?.nativeElement) return;
-    if (!this.post().media?.length) return;
+    if (!this.sortedMedias().length) return;
 
     this.swiper = new Swiper(this.swiperEl.nativeElement, {
+      modules: [Pagination],
       slidesPerView: 1,
       spaceBetween: 0,
       allowTouchMove: true,
       observer: true,
-
+      nested: true,
       pagination: {
-        el: '.swiper-pagination',
-        clickable: true
+        el: '.swiper-pagination'
       },
 
       on: {
@@ -67,19 +177,8 @@ export class PostCard {
     });
   }
 
-  eventsMap = new Map<string, any>([
-    [
-      '-OaRVjr6NoQrDdd1Bi1u',
-      {
-        title: 'Atlanta Makes Me Laugh',
-        location: 'Atlanta, GA',
-        date: 'Fri 8/30'
-      }
-    ]
-  ]);
-
-  getEvent(eventId: string) {
-    return this.eventsMap.get(eventId);
+  formatEventDate(dateString: string): string {
+    return this.datePipe.transform(dateString, 'EEE MMM d') || '';
   }
 
   getTimeAgo = (timestamp: number, updatedTimestamp?: number) => {
@@ -95,6 +194,9 @@ export class PostCard {
     }
 
     const diffInMilliseconds = now - displayTimestamp;
+
+    if (diffInMilliseconds < 1000) return 'now';
+
     const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     const diffInHours = Math.floor(diffInMinutes / 60);
@@ -114,7 +216,10 @@ export class PostCard {
   };
 
   async openMenu() {
-    const result = await this.modalService.openMenuModal(this.menuItems);
+    // Show different menu items based on whether it's the current user's post
+    const menuItems = this.isCurrentUserPost() ? this.currentUserMenuItems : this.getOtherUserMenuItems();
+
+    const result = await this.modalService.openMenuModal(menuItems);
     if (!result) return;
 
     const actions: Record<string, () => void> = {
@@ -122,17 +227,63 @@ export class PostCard {
       delete: () => this.deletePost(),
       report: () => this.reportPost(),
       block: () => this.blockUser(),
-      unfollow: () => this.unfollowPost(),
-      unmute: () => this.unmutePost(),
-      mute: () => this.mutePost(),
-      notInterested: () => this.notInterestedPost()
+      unfollow: () => this.showRemoveConnectionAlert(),
+      notInterested: () => this.notInterestedPost(),
+      addToNetwork: () => this.addToNetwork()
     };
 
     actions[result.role]?.();
   }
 
   editPost() {
-    this.navCtrl.navigateForward(`/new-post`);
+    this.navCtrl.navigateForward(`/new-post`, {
+      state: { postId: this.post().id, post: this.post() }
+    });
+  }
+
+  async addToNetwork() {
+    // TODO: Implement add to network functionality
+    this.isLoading.set(true);
+    const id = this.post().user_id;
+    if (!id) return;
+
+    try {
+      await this.networkService.sendNetworkRequest(id);
+      this.toasterService.showSuccess('Network request sent successfully');
+    } catch (error) {
+      console.error('Error sending network request:', error);
+      this.toasterService.showError('Failed to send network request');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async showRemoveConnectionAlert(): Promise<void> {
+    const id = this.post().user_id;
+    if (!id) return;
+    const user = this.post().user;
+    const username = user?.username || user?.name || 'this user';
+
+    const result = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/alert-white.svg',
+      title: 'Remove Network?',
+      description: `Are you sure you want to remove ${username} from your network list? The user won't be notified.`,
+      confirmButtonLabel: 'Remove',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      iconBgColor: '#C73838',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        try {
+          await this.networkService.removeNetworkConnection(id);
+          this.toasterService.showSuccess('Network connection removed');
+        } catch (error) {
+          console.error('Error removing network connection:', error);
+          this.toasterService.showError('Failed to remove network connection');
+          throw error;
+        }
+      }
+    });
   }
 
   async deletePost() {
@@ -144,91 +295,197 @@ export class PostCard {
       confirmButtonLabel: 'Delete',
       cancelButtonLabel: 'Cancel',
       confirmButtonColor: 'danger',
-      iconPosition: 'left'
+      iconPosition: 'left',
+      onConfirm: async () => {
+        const postId = this.post().id;
+        const response = await this.feedService.deletePost(postId!);
+        this.toasterService.showSuccess(response.message);
+
+        const currentRoute = this.router.url;
+        const isOnCommentsPage = currentRoute.includes('/comments/');
+        const isCurrentUserPost = this.isCurrentUserPost();
+        if (isOnCommentsPage && isCurrentUserPost) {
+          this.navigationService.back();
+        }
+        return response;
+      }
     });
 
-    if (result && result.role === 'confirm') {
-      this.toasterService.showSuccess('post deleted');
+    if (result && result.role === 'error') {
+      this.toasterService.showError('Failed to delete post. Please try again.');
+    }
+  }
+
+  private removePostFromUI(): void {
+    const currentRoute = this.router.url;
+    const isOnCommentsPage = currentRoute.includes('/comments/');
+
+    // Navigate back if on comments page
+    if (isOnCommentsPage) {
+      this.navigationService.back();
+    }
+
+    // Emit post id to parent
+    this.feedService.removePostFromFeed(this.post().id!);
+  }
+
+  async notInterestedPost() {
+    const result = await this.modalService.openConfirmModal({
+      iconName: 'pi pi-eye-slash',
+      iconBgColor: '#6B7280',
+      title: 'Not Interested',
+      description: 'We will show you fewer posts like this.',
+      confirmButtonLabel: 'Confirm',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'primary',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        const postId = this.post().id!;
+        this.removePostFromUI();
+      }
+    });
+
+    if (result?.role === 'error') {
+      this.toasterService.showError('Something went wrong. Please try again.');
     }
   }
 
   async reportPost() {
-    const result = await this.modalService.openReportModal();
-    if (!result) return;
-    const resultModal = await this.modalService.openConfirmModal({
-      icon: 'assets/svg/deleteWhiteIcon.svg',
-      iconBgColor: '#F5BC61',
-      title: 'Report Submitted',
-      description: 'We use these reports to show you less of this kind of content in the future.',
-      confirmButtonLabel: 'Done'
-    });
-    if (resultModal && resultModal.role === 'confirm') {
-      this.toasterService.showSuccess('Event cancelled');
+    const result = await this.modalService.openReportModal('Post');
+    if (!result || !result.reason_id) return;
+
+    const postId = this.post().id;
+    if (!postId) return;
+
+    try {
+      await this.feedService.reportFeed({
+        feed_id: postId,
+        reason_id: result.reason_id,
+        reason: result.reason
+      });
+
+      await this.modalService.openConfirmModal({
+        icon: 'assets/svg/deleteWhiteIcon.svg',
+        iconBgColor: '#F5BC61',
+        title: 'Report Submitted',
+        description: 'We use these reports to show you less of this kind of content in the future.',
+        confirmButtonLabel: 'Done'
+      });
+      this.removePostFromUI();
+    } catch (error) {
+      console.error('Error reporting post:', error);
+      this.toasterService.showError('Failed to report post. Please try again.');
     }
-    this.toasterService.showSuccess('Post reported');
   }
 
   async blockUser() {
-    const result = await this.modalService.openBlockModal();
+    const currentPost = this.post();
+    if (!currentPost?.user) return;
+
+    const result = await this.modalService.openBlockModal(currentPost.user);
     if (!result) return;
-
-    this.toasterService.showSuccess('User blocked');
-  }
-
-  unfollowPost() {
-    console.log('unfollow');
-  }
-
-  unmutePost() {
-    console.log('unmute');
-  }
-
-  mutePost() {
-    console.log('mute');
-  }
-
-  notInterestedPost() {
-    console.log('not interested');
+    this.removePostFromUI();
   }
 
   async sharePost() {
-    const result = await this.modalService.openShareModal(this.post().post_id, 'Post');
-    if (result) {
-      this.toasterService.showSuccess('Post shared');
+    const postId = this.post().id;
+    if (!postId) return;
+
+    await this.modalService.openShareModal(postId, 'Post', postId);
+  }
+
+  openFullscreen(index: number) {
+    const media = this.sortedMedias()[index];
+    if (media && media.media_type === 'Image' && media.media_url) {
+      this.modalService.openImagePreviewModal(media.media_url);
     }
   }
 
   renderText(text: string): SafeHtml {
     if (!text) return '';
 
-    const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-
-    let modifiedText = text.replace(mentionRegex, (match, username, uid) => {
-      return `<a href="/${uid}" class="text-blue-500">@${username}</a>`;
+    // Use a negative lookbehind to avoid matching mentions already inside HTML tags
+    const mentionRegex = /(?<!<[^>]*>)@([\w.]+)/g;
+    let modifiedText = text.replace(mentionRegex, (match, username) => {
+      // Check if this mention is already inside an anchor tag
+      if (match.includes('<a')) return match;
+      return `<a href="#" class="mention-link brand-03" data-username="${username}" style="font-weight:500; text-decoration:none; cursor:pointer;">${match}</a>`;
     });
 
-    modifiedText = modifiedText.replace(urlRegex, (match, url) => {
-      return `<a href="${url}" target="_blank" class="text-blue-500">${url}</a>`;
-    });
-
-    return this.sanitizer.bypassSecurityTrustHtml(modifiedText);
-  }
-
-  openFullscreen(index: number) {
-    this.modalService.openImagePreviewModal(this.post().media[index].url);
-  }
-
-  renderCommentText(text: string): SafeHtml {
-    if (!text) return '';
-
+    // Finally, handle URLs (avoid replacing URLs that are already in href attributes)
     const urlRegex = /(?<!href=")(https?:\/\/[^\s<]+)/gi;
-
-    const modifiedText = text.replace(
-      urlRegex,
-      (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8; text-decoration:underline;">${url}</a>`
-    );
+    modifiedText = modifiedText.replace(urlRegex, (url) => {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8; text-decoration:underline;">${url}</a>`;
+    });
 
     return this.sanitizer.bypassSecurityTrustHtml(modifiedText);
   }
+
+  onMentionClick(event: Event): void {
+    event.stopPropagation();
+    const target = event.target as HTMLElement;
+    const mentionLink = target.closest('.mention-link') as HTMLElement;
+    if (mentionLink) {
+      event.preventDefault();
+      const username = mentionLink.getAttribute('data-username');
+      if (username) {
+        this.navigationService.navigateForward(`/${username}`);
+      }
+    }
+  }
+
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
+  }
+
+  onImageError(event: Event): void {
+    onImageError(event);
+  }
+
+  async toggleLike(): Promise<void> {
+    const postId = this.post().id;
+    try {
+      await this.feedService.toggleLike(postId!);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  }
+
+  onComment(): void {
+    const postId = this.post().id;
+    this.navCtrl.navigateForward(['/comments', postId!], { state: { post: this.post() } });
+  }
+
+  navigateToEvent(slug: string): void {
+    this.navigationService.navigateForward(`/event/${slug}`);
+  }
+
+  handleEventCardClick(event: Event, slug: string): void {
+    event.stopPropagation();
+    this.navigateToEvent(slug);
+  }
+
+  private setupNetworkConnectionListener(): void {
+    this.socketService.onAfterRegistration(() => {
+      this.socketService.on('network:connection:update', this.networkConnectionHandler);
+    });
+  }
+
+  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+    if (!payload?.id) return;
+
+    const current = this.postPreview();
+    if (!current?.user) return;
+
+    // Update only if this post belongs to the same user
+    if (current.user.id !== payload.id) return;
+
+    this.postPreview.set({
+      ...current,
+      user: {
+        ...current.user,
+        connection_status: payload.connection_status
+      }
+    });
+  };
 }

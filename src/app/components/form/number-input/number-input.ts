@@ -89,7 +89,12 @@ export class NumberInput {
       validators.push(Validators.max(this.max()!));
     }
 
-    this.parentFormGroup.addControl(this.controlName(), this.fb.control('', validators));
+    if (this.parentFormGroup.get(this.controlName())) {
+      this.control.setValidators(validators);
+      this.control.updateValueAndValidity();
+    } else {
+      this.parentFormGroup.addControl(this.controlName(), this.fb.control('', validators));
+    }
 
     // check validation if there's an value (edit scenario)
     const subscription = this.control.valueChanges.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {

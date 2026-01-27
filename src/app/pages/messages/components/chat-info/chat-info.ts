@@ -1,30 +1,48 @@
 import { Button } from '@/components/form/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ModalService } from '@/services/modal.service';
+import { MessagesService } from '@/services/messages.service';
+import { ChatRoom, ChatRoomUser } from '@/interfaces/IChat';
 import { MenuItem } from '@/components/modal/menu-modal';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { IonToggle, IonContent, IonHeader, IonToolbar, IonFooter, NavController } from '@ionic/angular/standalone';
+import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy, computed } from '@angular/core';
+import { IonToggle, IonContent, IonHeader, IonToolbar, IonFooter, NavController, ViewWillEnter } from '@ionic/angular/standalone';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { NgOptimizedImage } from '@angular/common';
+import { AuthService } from '@/services/auth.service';
+import { NavigationService } from '@/services/navigation.service';
+import { SocketService } from '@/services/socket.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'chat-info',
   styleUrl: './chat-info.scss',
   templateUrl: './chat-info.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonFooter, IonToolbar, IonHeader, IonContent, IonToggle, Button, InputTextModule]
+  imports: [IonFooter, IonToolbar, IonHeader, IonContent, IonToggle, Button, InputTextModule, NgOptimizedImage]
 })
-export class ChatInfo {
+export class ChatInfo implements ViewWillEnter, OnDestroy {
   private router = inject(Router);
   private navCtrl = inject(NavController);
+  private messagesService = inject(MessagesService);
+  private socketService = inject(SocketService);
+  authService = inject(AuthService);
+  navigationService = inject(NavigationService);
+
+  // Socket event handler reference for cleanup
+  private roomUpdatedHandler?: (payload: ChatRoom) => void;
 
   isEditingName = signal(false);
   notificationsOn = signal(true);
-  groupName = signal('Sports Group');
-  createdDate = signal('13 OCT 2024');
+  groupName = signal<string>('Group');
+  createdDate = signal<string>('');
   private route = inject(ActivatedRoute);
   tempGroupName = signal(this.groupName());
   private modalService = inject(ModalService);
   groupImage = signal<string | null>('assets/images/profile.jpeg');
+  roomId = signal<string | null>(null);
+  chatRoom = signal<ChatRoom | null>(null);
+  members = signal<ChatRoomUser[]>([]);
   menuItems: MenuItem[] = [
     { label: 'Add Members', icon: 'assets/svg/addUserIcon.svg', iconType: 'svg', action: 'addMembers' },
     { label: 'Change Group Name', icon: 'assets/svg/editIconBlack.svg', iconType: 'svg', action: 'changeGroupName' },
@@ -32,50 +50,130 @@ export class ChatInfo {
     { label: 'Leave Group', icon: 'pi pi-sign-out text-6', iconType: 'pi', danger: true, action: 'leaveGroup' }
   ];
 
-  ngOnInit() {
+  isLoggedIn = computed(() => !!this.authService.currentUser());
+
+  async initializePage(): Promise<void> {
     const routePath = this.router.url;
+    const groupId = this.route.snapshot.paramMap.get('id');
 
-    this.route.params.subscribe(async (params) => {
-      const groupId = params['id'];
-      if (!groupId) return;
+    if (!this.isLoggedIn()) return;
 
-      if (routePath.includes('group-invitation')) {
-        await this.modalService.openGroupInvitationModal(groupId);
+    if (groupId) {
+      this.roomId.set(groupId);
+
+      if (!this.chatRoom()) {
+        const room = await this.messagesService.getChatRoomById(groupId);
+        this.applyRoom(room);
+      }
+    }
+
+    if (groupId && routePath.includes('group-invitation')) {
+      await this.modalService.openGroupInvitationModal(this.chatRoom());
+    }
+  }
+  async ngOnInit() {
+    const navigation = this.router.currentNavigation();
+    const state: any = navigation?.extras?.state || {};
+    const stateRoom = state?.chatRoom as ChatRoom | undefined;
+
+    if (stateRoom) {
+      this.applyRoom(stateRoom);
+    }
+
+    if (!this.isLoggedIn()) {
+      const result = await this.modalService.openLoginModal();
+
+      if (result?.success) {
+        await this.initializePage();
+      }
+      return;
+    }
+
+    await this.initializePage();
+  }
+
+  private setupRoomUpdateListener(): void {
+    const currentRoomId = this.roomId();
+    if (!currentRoomId) return;
+
+    if (this.roomUpdatedHandler) {
+      this.socketService.off('room:updated', this.roomUpdatedHandler);
+    }
+
+    this.roomUpdatedHandler = (payload: ChatRoom) => {
+      const roomId = this.roomId();
+      if (payload.id === roomId) {
+        console.log('Room updated for current chat-info room:', payload);
+        this.applyRoom(payload);
+      }
+    };
+
+    this.socketService.onAfterRegistration(() => {
+      if (this.roomUpdatedHandler) {
+        this.socketService.on('room:updated', this.roomUpdatedHandler);
       }
     });
   }
 
-  members = signal([
-    {
-      id: '1',
-      name: 'Jonah Jameson',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      isYou: true
-    },
-    {
-      id: '2',
-      name: 'Kathryn Murphy',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting'
-    },
-    {
-      id: '3',
-      name: 'Esther Howard',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting'
-    },
-    {
-      id: '4',
-      name: 'Arlene McCoy',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting'
+  ngOnDestroy(): void {
+    if (this.roomUpdatedHandler) {
+      this.socketService.off('room:updated', this.roomUpdatedHandler);
     }
-  ]);
+  }
+
+  async ionViewWillEnter() {
+    if (!this.roomUpdatedHandler) {
+      this.setupRoomUpdateListener();
+    }
+  }
+
+  private applyRoom(room: ChatRoom): void {
+    this.chatRoom.set(room);
+    this.roomId.set(room.id);
+
+    if (room.event?.title) {
+      this.groupName.set(room.event.title);
+      this.tempGroupName.set(room.event.title);
+    } else {
+      this.groupName.set(room.name || 'Group');
+      this.tempGroupName.set(room.name || 'Group');
+    }
+
+    // If event is available, prioritize event images
+    if (room.event?.thumbnail_url) {
+      this.groupImage.set(room.event.thumbnail_url);
+    } else if (room.event?.image_url) {
+      this.groupImage.set(room.event.image_url);
+    } else {
+      this.groupImage.set(room.profile_image || 'assets/images/profile.jpeg');
+    }
+
+    this.createdDate.set(new Date(room.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }));
+    if (room.users && room.users.length) {
+      this.members.set(room.users);
+    } else {
+      this.members.set([]);
+    }
+  }
+
+  onImageError(event: Event): void {
+    onImageError(event);
+  }
+
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
+  }
+
+  getDiamondPath(user: ChatRoomUser): string {
+    const points = user?.total_gamification_points || 0;
+    if (points >= 50000) return '/assets/svg/gamification/diamond-50k.svg';
+    if (points >= 40000) return '/assets/svg/gamification/diamond-40k.svg';
+    if (points >= 30000) return '/assets/svg/gamification/diamond-30k.svg';
+    if (points >= 20000) return '/assets/svg/gamification/diamond-20k.svg';
+    if (points >= 10000) return '/assets/svg/gamification/diamond-10k.svg';
+    if (points >= 5000) return '/assets/svg/gamification/diamond-5k.svg';
+    return '/assets/svg/gamification/diamond-1k.svg';
+  }
 
   startEditGroupName() {
     this.tempGroupName.set(this.groupName());
@@ -95,7 +193,18 @@ export class ChatInfo {
   }
 
   handleBack() {
-    this.router.navigate(['/chat-room', this.route.snapshot.params['id']]);
+    const navigation = this.router.currentNavigation();
+    const state: any = navigation?.extras?.state;
+
+    // If this screen was opened right after creating a new group,
+    // back should always go to messages list.
+    if (state?.from === 'new-group') {
+      this.navCtrl.navigateRoot('/messages');
+      return;
+    }
+
+    // Otherwise, preserve existing back behavior (e.g. coming from chat-room)
+    this.navCtrl.back();
   }
 
   toggleNotifications() {
@@ -120,14 +229,18 @@ export class ChatInfo {
     await this.modalService.openShareGroupModal({
       name: this.groupName() || '',
       membersCount: this.members().length,
-      inviteLink: 'networked-ai.com/username_here',
-      qrCodeUrl: 'assets/svg/QR.svg',
+      inviteLink: `${environment.frontendUrl}/group-invitation/${this.roomId()}`,
       image: this.groupImage() || ''
     });
   }
 
   async addMembers() {
-    this.navCtrl.navigateForward(`/create-group`, { queryParams: { groupId: this.route.snapshot.params['id'] } });
+    this.navCtrl.navigateForward(`/create-group`, {
+      state: {
+        roomId: this.roomId(),
+        from: 'chat-info'
+      }
+    });
   }
 
   async changeGroupName() {
@@ -170,7 +283,27 @@ export class ChatInfo {
     });
 
     if (result && result.role === 'confirm') {
-      this.navCtrl.navigateForward('/messages');
+      const roomId = this.roomId();
+      const currentUserId = this.authService.currentUser()?.id;
+
+      if (!roomId || !currentUserId) {
+        console.error('Missing roomId or userId');
+        return;
+      }
+
+      try {
+        await this.messagesService.leaveRoom(roomId, currentUserId);
+        this.navCtrl.navigateRoot('/messages');
+      } catch (error) {
+        console.error('Error leaving group:', error);
+      }
+    }
+  }
+
+  onUserClick(user: ChatRoomUser): void {
+    const username = user?.username;
+    if (username) {
+      this.navigationService.navigateForward(`/${username}`);
     }
   }
 }

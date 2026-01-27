@@ -1,10 +1,10 @@
 import { inject, Component, Input } from '@angular/core';
 import { Button } from '@/components/form/button';
-import { IonHeader, IonToolbar, IonContent, ModalController, NavController, IonFooter } from '@ionic/angular/standalone';
+import { IonToolbar, ModalController, NavController, IonFooter } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'success-modal',
-  imports: [Button, IonHeader, IonToolbar, IonContent, IonFooter],
+  imports: [Button, IonToolbar, IonFooter],
   styleUrl: './success-modal.scss',
   templateUrl: './success-modal.html'
 })

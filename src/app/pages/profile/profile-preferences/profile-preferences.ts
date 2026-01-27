@@ -29,6 +29,7 @@ export class ProfilePreferences implements OnInit, OnDestroy {
 
   // signals
   maxSelections = 3;
+  loading = signal(false);
   isLoading = signal(false);
   currentStep = signal<number>(1);
   type = signal<PreferenceType>('all');
@@ -43,7 +44,6 @@ export class ProfilePreferences implements OnInit, OnDestroy {
 
   // subscriptions
   private queryParamsSubscription?: Subscription;
-
 
   // variables
   readonly steps = [
@@ -79,7 +79,7 @@ export class ProfilePreferences implements OnInit, OnDestroy {
   });
 
   hasNoData = computed(() => {
-    return !this.isLoading() && this.currentItems().length === 0;
+    return !this.loading() && this.currentItems().length === 0;
   });
 
   currentSelected = computed(() => {
@@ -117,7 +117,7 @@ export class ProfilePreferences implements OnInit, OnDestroy {
   }
 
   async loadData(): Promise<void> {
-    this.isLoading.set(true);
+    this.loading.set(true);
     try {
       const preferenceType = this.type();
 
@@ -139,7 +139,7 @@ export class ProfilePreferences implements OnInit, OnDestroy {
       const message = BaseApiService.getErrorMessage(error, 'Failed to load preferences.');
       this.toasterService.showError(message);
     } finally {
-      this.isLoading.set(false);
+      this.loading.set(false);
     }
   }
 

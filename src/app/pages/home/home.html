@@ -1,23 +1,75 @@
-<ion-header mode="md">
+<ion-header mode="md" [class.events-tab]="tab() === 'events'">
   <ion-toolbar mode="md">
     <!-- user and notification -->
     @if (isLoggedIn()) {
-      <div class="w-full p-6 px-4 max-w-[672px] mx-auto">
+      <div class="header-profile-section w-full p-6 px-4 max-w-[672px] mx-auto">
         <profile-header-toolbar />
       </div>
     }
 
     <!-- segment buttons -->
-    <segment-button [items]="tabItems" [value]="tab()" (valueChange)="onSegmentChange($event)" />
+    <div class="header-segment-section">
+      <segment-button [items]="tabItems" [value]="tab()" (valueChange)="onSegmentChange($event)" />
+    </div>
+
+    <!-- Feed header content (filters and post composer) - only visible on feed tab -->
+    @if (tab() === 'feed' && homeFeedRefSignal(); as homeFeed) {
+      <div class="feed-header-content max-w-[672px] mx-auto">
+        <!-- Filter buttons -->
+        <div class="feed-filter-section bg-neutral-07 flex gap-2 p-4">
+          <button
+            type="button"
+            class="filter-button"
+            [class.active]="homeFeed.feedFilter() === 'public'"
+            (click)="homeFeed.feedFilter.set('public'); homeFeed.onFilterChange()"
+          >
+            Public
+          </button>
+          <button
+            type="button"
+            class="filter-button"
+            [class.active]="homeFeed.feedFilter() === 'networked'"
+            (click)="homeFeed.feedFilter.set('networked'); homeFeed.onFilterChange()"
+          >
+            Networked
+          </button>
+        </div>
+
+        <!-- Post composer - only show when logged in -->
+        @if (isLoggedIn()) {
+          <div class="feed-post-composer flex items-center gap-2 p-4 bg-neutral-07 border-b border-[#dbdbdb]">
+            <div class="relative w-[40px] h-[40px] flex-shrink-0 overflow-hidden rounded-full">
+              <img
+                fill
+                placeholder
+                alt="avatar"
+                class="rounded-full object-cover"
+                (error)="homeFeed.onImageError($event)"
+                [ngSrc]="homeFeed.currentUserImage()"
+              />
+            </div>
+            <div class="flex-1 flex flex-col" (click)="navCtrl.navigateForward('/new-post')">
+              <div class="post-composer-name body-14SB neutral-01">{{ homeFeed.currentUserName() }}</div>
+              <div class="body-12M neutral-03">Start a new post...</div>
+            </div>
+          </div>
+        }
+      </div>
+    }
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <div class="w-full max-w-[672px] mx-auto relative h-full">
-    @if (tab() === 'events') {
-      <home-event />
-    } @else {
-      <home-feed />
-    }
+<ion-content [fullscreen]="true" [scrollEvents]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
+    <ion-refresher-content mode="md"></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="w-full max-w-[672px] mx-auto relative">
+    <div [hidden]="tab() === 'feed'">
+      <home-event #homeEventRef />
+    </div>
+    <div [hidden]="tab() === 'events'">
+      <home-feed [currentUser]="currentUser()" #homeFeedRef />
+    </div>
   </div>
 </ion-content>

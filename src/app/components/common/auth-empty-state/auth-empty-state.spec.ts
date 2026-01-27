@@ -12,7 +12,7 @@ describe('AuthEmptyState', () => {
 
     fixture = TestBed.createComponent(AuthEmptyState);
     component = fixture.componentInstance;
-    
+
     fixture.componentRef.setInput('type', 'menu');
     fixture.detectChanges();
   });

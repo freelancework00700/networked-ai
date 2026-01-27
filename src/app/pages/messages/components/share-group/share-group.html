@@ -14,11 +14,9 @@
   </div>
 
   <!-- QR CODE -->
-  <div class="flex justify-center my-6">
-    <div
-      class="p-[1px] rounded-xl bg-[linear-gradient(153.43deg,#9E8F76_7.68%,#7A6A50_24.01%,#F6D9AB_42.02%,#9D7F4E_58.77%,#C9A770_79.3%,#796A52_91.44%)]"
-    >
-      <img [src]="group()?.qrCodeUrl" class="w-40 h-40" />
+  <div class="flex justify-center mb-4" #downloadableSection>
+    <div class="bg-white rounded-2xl p-2 m-2 border gradient-border">
+      <qr-code [value]="group()?.inviteLink" [size]="128" errorCorrectionLevel="M"></qr-code>
     </div>
   </div>
 
@@ -30,42 +28,22 @@
     </div>
     <img src="assets/svg/copyBlackIcon.svg" (click)="copyLink()" />
   </div>
-
-  <!-- DOWNLOAD -->
-  <app-button
-    label="Download"
-    icon="assets/svg/downloadBlackIcon.svg"
-    class="w-full"
-    (click)="downloadQr()"
-    iconPos="right"
-    [isLoading]="isDownloading()"
-  />
-
-  <!-- SHARE OPTIONS -->
-  <div class="flex justify-around mt-6 text-center">
-    <div class="flex flex-col items-center gap-1" (click)="onContact()">
-      <img src="assets/svg/users.svg" class="w-5 h-5 object-contain" />
-      <span class="text-xs">Contact</span>
-    </div>
-
-    <div class="flex flex-col items-center gap-1" (click)="onShare()">
-      <i class="pi pi-upload text-lg"></i>
-      <span class="text-xs">Share to</span>
-    </div>
-
-    <div class="flex flex-col items-center gap-1" (click)="onChat()">
-      <ion-icon name="chatbox-outline" class="text-lg"></ion-icon>
-      <span class="text-xs">Chat</span>
-    </div>
-
-    <div class="flex flex-col items-center gap-1" (click)="onMessenger()">
-      <img src="assets/svg/messengerIcon.svg" class="w-5 h-5 object-contain" />
-      <span class="text-xs">Messenger</span>
-    </div>
-
-    <div class="flex flex-col items-center gap-1" (click)="onStory()">
-      <ion-icon name="logo-instagram" class="text-lg"></ion-icon>
-      <span class="text-xs">Story</span>
-    </div>
-  </div>
 </div>
+
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="w-full px-4 py-4 max-w-[672px] mx-auto">
+      <!-- Download Button -->
+      <app-button
+        class="w-full"
+        iconPos="right"
+        label="Download"
+        (click)="downloadQr()"
+        [isLoading]="isDownloading()"
+        icon="assets/svg/downloadBlackIcon.svg"
+      />
+    </div>
+
+    <common-share-footer />
+  </ion-toolbar>
+</ion-footer>

@@ -1,118 +1,121 @@
+import { IEvent } from '@/interfaces/event';
+import { NgOptimizedImage } from '@angular/common';
 import { ModalService } from '@/services/modal.service';
-import { MenuItem } from '@/components/modal/menu-modal';
-import { NavController } from '@ionic/angular/standalone';
-import { input, Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { EventService } from '@/services/event.service';
 import { ToasterService } from '@/services/toaster.service';
-
-export interface IEvent {
-  date: string;
-  day?: string;
-  views: string;
-  title: string;
-  image: string;
-  location: string;
-  dayOfWeek?: string;
-  organization: string;
-}
+import { NavigationService } from '@/services/navigation.service';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { input, Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 
 @Component({
   selector: 'event-card',
+  imports: [NgOptimizedImage],
   styleUrl: './event-card.scss',
   templateUrl: './event-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class EventCard {
-  navCtrl = inject(NavController);
+  private navigationService = inject(NavigationService);
   private modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
+  private eventService = inject(EventService);
 
   event = input.required<IEvent>();
   variant = input<'default' | 'compact'>('default');
+  localEvent = signal<IEvent | null>(null);
 
-  menuItems: MenuItem[] = [
-    { label: 'Edit', icon: 'assets/svg/manage-event/edit.svg', iconType: 'svg', action: 'editEvent' },
-    { label: 'Analytics', icon: 'assets/svg/manage-event/analytics.svg', iconType: 'svg', action: 'viewEventAnalytics' },
-    { label: 'Questionnaire Responses', icon: 'assets/svg/manage-event/questionnaire.svg', iconType: 'svg', action: 'viewQuestionnaireResponses' },
-    { label: 'Manage Roles', icon: 'assets/svg/manage-event/settings.svg', iconType: 'svg', action: 'manageRoles' },
-    { label: 'Guest List', icon: 'assets/svg/manage-event/users.svg', iconType: 'svg', action: 'viewGuestList' },
-    { label: 'Event Page QR', icon: 'assets/svg/scanner.svg', iconType: 'svg', action: 'viewEventPageQr' },
-    // { label: 'Tap to pay', icon: 'assets/svg/manage-event/tap-to-pay.svg', iconType: 'svg', action: 'viewTapToPay' },
-    { label: 'Share Event', icon: 'pi pi-upload', iconType: 'pi', action: 'shareEvent' },
-    { label: 'Cancel Event', icon: 'assets/svg/manage-event/calendar-x.svg', iconType: 'svg', danger: true, action: 'cancelEvent' }
-  ];
+  currentEvent = computed(() => this.localEvent() || this.event());
 
-  networkSuggestions = [
-    { id: '1', name: 'Kathryn Murphy', role: 'staff' },
-    { id: '2', name: 'Esther Howard' },
-    { id: '3', name: 'Arlene McCoy' },
-    { id: '4', name: 'Darlene Robertson', role: 'speaker' },
-    { id: '5', name: 'Ronald Richards', role: 'sponsor' },
-    { id: '6', name: 'Albert Flores' }
-  ];
+  isEventLiked = computed(() => {
+    const currentEvent = this.currentEvent();
+    return currentEvent?.is_like || false;
+  });
 
-  async openMenu() {
-    const result = await this.modalService.openMenuModal(this.menuItems);
-    if (!result?.role) return;
+  formattedDate = computed(() => {
+    const event = this.currentEvent();
+    if (!event) return 'Date not set';
 
-    const actions: Record<string, () => void> = {
-      editEvent: () => this.editEvent(),
-      viewEventAnalytics: () => this.viewEventAnalytics(),
-      viewQuestionnaireResponses: () => this.viewQuestionnaireResponses(),
-      manageRoles: () => this.manageRoles(),
-      viewGuestList: () => this.viewGuestList(),
-      viewEventPageQr: () => this.viewEventPageQr(),
-      viewTapToPay: () => this.viewTapToPay(),
-      shareEvent: () => this.shareEvent(),
-      cancelEvent: () => this.cancelEvent()
-    };
-    actions[result.role]?.();
+    if (event.start_date) {
+      const formatted = this.eventService.formatDateTime(event.start_date, event.end_date);
+      return formatted || 'Date not set';
+    }
+
+    if (event.date) {
+      return event.date;
+    }
+
+    return 'Date not set';
+  });
+
+  formattedLocation = computed(() => {
+    const event = this.currentEvent();
+    if (!event) return 'Location not specified';
+
+    if (event.address) {
+      return event.address;
+    }
+    return 'Location not specified';
+  });
+
+  eventImage = computed(() => {
+    const event = this.currentEvent();
+    const imageUrl = event?.image_url || '';
+    return getImageUrlOrDefault(imageUrl);
+  });
+
+  eventOrganization = computed(() => {
+    const event = this.currentEvent();
+    const hostName = event?.participants?.find((p: any) => (p.role || '').toLowerCase() === 'host')?.user?.name;
+    return hostName || event?.organization || 'Networked AI';
+  });
+
+  viewEvent() {
+    const eventSlug = this.event().slug;
+    if (eventSlug) {
+      this.navigationService.navigateForward(`/event/${eventSlug}`);
+    }
   }
-
-  editEvent() {
-    this.navCtrl.navigateForward(`/create-event`);
-  }
-
-  viewEventAnalytics() {
-    this.navCtrl.navigateForward(`/event-analytics/1111`);
-  }
-
-  viewQuestionnaireResponses() {
-    this.navCtrl.navigateForward(`/questionnaire-response/1111`);
-  }
-
-  async manageRoles() {
-    const result = await this.modalService.openManageRoleModal(this.networkSuggestions, '1111');
-  }
-
-  viewGuestList() {
-    this.navCtrl.navigateForward(`/guest-list/1111`);
-  }
-
-  viewEventPageQr() {
-    this.navCtrl.navigateForward(`/event-qr/1111`);
-  }
-  viewTapToPay() {}
 
   async shareEvent() {
-    const result = await this.modalService.openShareModal('1111', 'Event');
-    if (result) {
-      this.toasterService.showSuccess('Event shared');
+    const eventId = this.event().id;
+    if (eventId) {
+      const result = await this.modalService.openShareModal(eventId, 'Event');
+      if (result) {
+        this.toasterService.showSuccess('Event shared');
+      }
     }
   }
 
-  async cancelEvent() {
-    const result = await this.modalService.openConfirmModal({
-      icon: 'assets/svg/deleteWhiteIcon.svg',
-      iconBgColor: '#C73838',
-      title: 'Cancel This Event',
-      description: 'Are you sure you want to cancel this event? We’ll notify everyone that have registered, and issue automatic refunds.',
-      confirmButtonLabel: 'Cancel Event',
-      cancelButtonLabel: 'Cancel',
-      confirmButtonColor: 'danger',
-      iconPosition: 'left'
+  async likeEvent(event: Event) {
+    event.stopPropagation();
+    const eventId = this.event().id;
+    if (!eventId) return;
+
+    const currentEvent = this.currentEvent();
+    const currentIsLiked = currentEvent?.is_like || false;
+    const newIsLiked = !currentIsLiked;
+
+    this.localEvent.set({
+      ...currentEvent,
+      is_like: newIsLiked
     });
-    if (result && result.role === 'confirm') {
-      this.toasterService.showSuccess('Event cancelled');
+
+    try {
+      await this.eventService.likeEvent(eventId);
+    } catch (error) {
+      console.error('Error toggling event like:', error);
+      this.localEvent.set({
+        ...currentEvent,
+        is_like: currentIsLiked
+      });
     }
+  }
+
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
+  }
+
+  onImageError(event: any): void {
+    onImageError(event);
   }
 }

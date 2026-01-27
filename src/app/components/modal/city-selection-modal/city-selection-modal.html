@@ -12,16 +12,35 @@
 <ion-content>
   <div class="px-6 pb-6">
     <div class="mb-4">
-      <searchbar [searchQuery]="searchQuery()" [placeholder]="'Search location'" (searchChange)="onSearchChange($event)" (clear)="onSearchClear()" />
+      <searchbar [searchQuery]="searchQuery()" [placeholder]="'Select city'" (searchChange)="onSearchChange($event)" (clear)="onSearchClear()" />
     </div>
+
+    <!-- All option - always visible -->
+    <div
+      class="flex items-center justify-between py-3 border-b border-surface-200 cursor-pointer hover:bg-surface-50 transition-colors"
+      [class.bg-brand-01/10]="isAllSelected()"
+      (click)="selectAll()"
+    >
+      <div class="body-regular-14" [class.brand-02]="isAllSelected()" [class.neutral-01]="!isAllSelected()">
+        All
+      </div>
+    </div>
+
+    <!-- City list -->
 
     @for (city of filteredCities(); track city.name + city.state) {
       <div
         class="flex items-center justify-between py-3 border-b border-surface-200 cursor-pointer hover:bg-surface-50 transition-colors"
+        [class.bg-brand-01/10]="isSelected()(city)"
         (click)="selectCity(city)"
       >
-        <div class="body-regular-14 neutral-01">
-          {{ city.name }}, {{ city.state }}
+        <div class="body-regular-14" [class.brand-02]="isSelected()(city)" [class.neutral-01]="!isSelected()(city)">
+          @if (city.name.trim()) {
+            <span> {{ city.name }}, </span> 
+          }
+          @if (city.state.trim()) {
+            <span>{{ city.state }}</span>
+          }
           @if (city.isCurrentLocation) {
             <span class="body-12 neutral-04 ml-2">(Current Location)</span>
           }

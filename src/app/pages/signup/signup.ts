@@ -11,10 +11,10 @@ import { MobileInput } from '@/components/form/mobile-input';
 import { BaseApiService } from '@/services/base-api.service';
 import { PasswordInput } from '@/components/form/password-input';
 import { NavigationService } from '@/services/navigation.service';
+import { IonContent, IonIcon, ModalController } from '@ionic/angular/standalone';
 import { SocialLoginButtons } from '@/components/common/social-login-buttons';
-import { IonIcon, IonContent, ModalController } from '@ionic/angular/standalone';
-import { signal, inject, Component, viewChild, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { signal, inject, Component, viewChild, OnInit, OnDestroy, Input } from '@angular/core';
 
 interface SignupForm {
   email?: FormControl<string | null>;
@@ -28,9 +28,11 @@ type SignupMethod = 'email' | 'mobile';
   selector: 'signup',
   styleUrl: './signup.scss',
   templateUrl: './signup.html',
-  imports: [Button, IonIcon, OtpInput, IonContent, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule]
+  imports: [Button, IonIcon, OtpInput, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule, IonContent]
 })
 export class Signup implements OnInit, OnDestroy {
+  @Input() onSignupSuccess: () => void = () => {};
+  @Input() isRsvpModal: boolean = false;
   // services
   router = inject(Router);
   fb = inject(FormBuilder);
@@ -43,6 +45,7 @@ export class Signup implements OnInit, OnDestroy {
 
   // view child
   mobileInput = viewChild(MobileInput);
+  emailInput = viewChild(EmailInput);
 
   // signals
   isInvalidOtp = signal(false);
@@ -93,8 +96,15 @@ export class Signup implements OnInit, OnDestroy {
 
   private async sendVerificationCode() {
     if (this.activeTab() === 'email') {
+      this.emailInput()?.shouldValidate.set(true);
+
       // validate email and password
-      if (!(await validateFields(this.signupForm(), ['email', 'password']))) return;
+      if (!(await validateFields(this.signupForm(), ['email', 'password']))) {
+        this.emailInput()?.shouldValidate.set(false);
+        return;
+      }
+
+      this.emailInput()?.shouldValidate.set(false);
 
       const { email, password } = this.signupForm().value;
       if (!email || !password) return;
@@ -104,7 +114,7 @@ export class Signup implements OnInit, OnDestroy {
       try {
         this.isLoading.set(true);
         await this.authService.sendOtp({ email });
-        
+
         // store email and password for later registration
         this.email.set(email);
         this.otpSent.set(true);
@@ -118,14 +128,21 @@ export class Signup implements OnInit, OnDestroy {
     } else {
       // validate mobile
       const mobile = this.mobileInput()?.getPhoneNumber();
-      if (!(await validateFields(this.signupForm(), ['mobile'])) || !mobile) return;
+
+      this.mobileInput()?.shouldValidate.set(true);
+      if (!(await validateFields(this.signupForm(), ['mobile'])) || !mobile) {
+        this.mobileInput()?.shouldValidate.set(false);
+        return;
+      }
+
+      this.mobileInput()?.shouldValidate.set(false);
 
       // check if account exists (validation is handled by checkIfTaken)
       // if validation passes, account doesn't exist, proceed to send OTP
       try {
         this.isLoading.set(true);
         await this.authService.sendOtp({ mobile });
-        
+
         // store phone number for later registration
         this.otpSent.set(true);
         this.phoneNumber.set(mobile);
@@ -159,7 +176,7 @@ export class Signup implements OnInit, OnDestroy {
           this.toasterService.showError('Invalid OTP for email.');
           return;
         }
-        
+
         // register with email and password
         const { password } = this.signupForm().value;
         await this.authService.register({ email: this.email(), password: password! });
@@ -171,15 +188,19 @@ export class Signup implements OnInit, OnDestroy {
           this.toasterService.showError('Invalid OTP for mobile.');
           return;
         }
-        
+
         // register with mobile
         await this.authService.register({ mobile: this.phoneNumber() });
       }
 
       // after successful registration, navigate to profile setup
-      await this.modalService.close();
-      await this.modalService.openPhoneEmailVerifiedModal(this.activeTab());
-      this.navigationService.navigateForward('/profile/setup', true);
+      if (this.isRsvpModal) {
+        this.onSignupSuccess();
+      } else {
+        await this.modalService.close();
+        await this.modalService.openPhoneEmailVerifiedModal(this.activeTab());
+        this.navigationService.navigateForward('/profile/setup', true);
+      }
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Invalid OTP or failed to create account.');
       this.toasterService.showError(message);
@@ -202,13 +223,13 @@ export class Signup implements OnInit, OnDestroy {
   async resendOtp() {
     try {
       this.isLoading.set(true);
-      
+
       if (this.activeTab() === 'email') {
         await this.authService.sendOtp({ email: this.email() });
       } else {
         await this.authService.sendOtp({ mobile: this.phoneNumber() });
       }
-      
+
       this.toasterService.showSuccess('Verification code resent successfully.');
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to resend verification code.');
@@ -216,6 +237,31 @@ export class Signup implements OnInit, OnDestroy {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  goToLogin() {
+    if (this.isRsvpModal) {
+      this.modalCtrl.dismiss();
+      this.modalService.openLoginModal();
+    } else {
+      this.navigationService.navigateForward('/login');
+    }
+  }
+
+  async goToTerms() {
+    if (this.isRsvpModal) {
+      await this.modalService.dismissAllModals();
+    }
+
+    this.navigationService.navigateForward('/terms');
+  }
+
+  async goToPrivacyPolicy() {
+    if (this.isRsvpModal) {
+      await this.modalService.dismissAllModals();
+    }
+
+    this.navigationService.navigateForward('/policy');
   }
 
   ngOnDestroy() {

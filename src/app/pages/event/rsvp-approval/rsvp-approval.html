@@ -1,0 +1,109 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="flex items-center gap-2 py-6 px-4 max-w-[672px] mx-auto">
+      <div class="pi pi-arrow-left cursor-pointer" (click)="goBack()"></div>
+      <div class="body-14M neutral-02 text-center w-full">RSVP Approval</div>
+      <div class="w-6"></div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" mode="md">
+  <div class="min-h-full">
+    <div class="w-full max-w-[672px] mx-auto">
+      <!-- Segment Buttons -->
+      <div class="px-4 pt-4">
+        <segment-button [items]="segmentItems" [value]="selectedTab()" (valueChange)="onTabChange($event)" />
+      </div>
+
+      <!-- Searchbar -->
+      <div class="px-4 pt-4">
+        <searchbar
+          [searchQuery]="searchQuery()"
+          (searchChange)="searchQuery.set($event)"
+          (clear)="searchQuery.set('')"
+          placeholder="Search by name or email"
+        />
+      </div>
+
+      <!-- Content -->
+      <div>
+        @if (isLoading()) {
+          <div class="flex items-center justify-center py-8">
+            <div class="body-14M neutral-03">Loading...</div>
+          </div>
+        } @else if (filteredRequests().length === 0) {
+          <app-empty-state title="No RSVP's requests found" message="" icon="/assets/svg/email.svg" />
+        } @else {
+          <div class="flex flex-col gap-4">
+            @for (request of filteredRequests(); track request.id) {
+              <div class="border-b border-surface-300 p-4 flex flex-col">
+                <!-- User Info -->
+                <div class="flex items-center gap-3">
+                  <div class="w-15 h-15 rounded-full overflow-hidden relative">
+                    <img
+                      fill
+                      placeholder
+                      [alt]="request.user?.name || 'User'"
+                      (error)="onImageError($event)"
+                      [ngSrc]="getImageUrl(request.user?.thumbnail_url)"
+                      class="object-cover rounded-full"
+                    />
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                      <div class="body-14M neutral-01">{{ request.user?.name || 'Guest' }}</div>
+                      <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
+                        <img src="assets/svg/diamondYellow.svg" class="h-4" />
+                        <span class="text-xs font-semibold">{{ request.user?.value || 0 }}</span>
+                      </div>
+                    </div>
+                    <div>
+                      @if (selectedTab() === 'processed') {
+                        <div
+                          class="px-3 py-1 rounded-full text-center"
+                          [class.bg-yellow-100]="request.status === 'Pending' || request.status === 'pending'"
+                          [class.bg-green-100]="request.status === 'Approved' || request.status === 'approved'"
+                          [class.bg-red-100]="request.status === 'Rejected' || request.status === 'rejected'"
+                        >
+                          <span
+                            class="body-12M"
+                            [class.text-yellow-800]="request.status === 'Pending' || request.status === 'pending'"
+                            [class.text-green-800]="request.status === 'Approved' || request.status === 'approved'"
+                            [class.text-red-800]="request.status === 'Rejected' || request.status === 'rejected'"
+                          >
+                            {{ request.status }}
+                          </span>
+                        </div>
+                      }
+                      @if (selectedTab() === 'pending') {
+                        <div class="flex gap-2">
+                          <app-button
+                            label="Approve"
+                            (click)="approveRequest(request.id)"
+                            width="100px"
+                            height="32px"
+                            color="primary"
+                            [disabled]="isProcessing() || processingRequestId() === request.id"
+                          />
+                          <app-button
+                            label="Reject"
+                            (click)="rejectRequest(request.id)"
+                            width="100px"
+                            height="32px"
+                            color="secondary"
+                            [disabled]="isProcessing() || processingRequestId() === request.id"
+                          />
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</ion-content>

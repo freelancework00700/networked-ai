@@ -1,32 +1,32 @@
-import { SettingListItem, SettingsListItem } from '@/pages/settings/components/settings-list-item';
-import { SettingsProfileHeader } from '@/pages/settings/components/settings-profile-header';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
+import { StripeService } from '@/services/stripe.service';
 import { ToasterService } from '@/services/toaster.service';
+import { NavigationService } from '@/services/navigation.service';
+import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
 import { signal, inject, Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, NavController, IonIcon } from '@ionic/angular/standalone';
-import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
-
+import { SettingsProfileHeader } from '@/pages/settings/components/settings-profile-header';
+import { SettingListItem, SettingsListItem } from '@/pages/settings/components/settings-list-item';
 @Component({
   selector: 'settings',
   styleUrl: './settings.scss',
   templateUrl: './settings.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SettingsProfileHeader, SettingsListItem, IonHeader, IonToolbar, IonContent, IonIcon]
+  imports: [SettingsProfileHeader, SettingsListItem, IonHeader, IonToolbar, IonContent]
 })
 export class Settings implements OnInit {
   // services
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   private authService = inject(AuthService);
   private modalService = inject(ModalService);
+  private stripeService = inject(StripeService);
   private toasterService = inject(ToasterService);
 
   // signals
-  userName = signal<string>('Sandra Tanner');
-  userPoints = signal<number>(200);
-  userImageUrl = signal<string>('/assets/images/profile.jpeg');
-  appVersion = signal<string>('9.17.0');
-  buildVersion = signal<string>('12');
+  appVersion = signal<string>('1.2.05');
+  buildVersion = signal<string>('1');
 
   // settings sections
   accountItems = signal<SettingListItem[]>([
@@ -40,11 +40,11 @@ export class Settings implements OnInit {
       icon: 'pi pi-lock',
       route: '/settings/change-account-info/password'
     },
-    {
-      label: 'Payment',
-      icon: 'pi pi-credit-card',
-      route: '/settings/payment'
-    },
+    // {
+    //   label: 'Payment',
+    //   icon: 'pi pi-credit-card',
+    //   route: '/settings/payment'
+    // },
     {
       label: 'Payment History',
       icon: 'pi pi-history',
@@ -56,25 +56,25 @@ export class Settings implements OnInit {
     {
       label: 'Notifications',
       icon: 'pi pi-bell',
-      route: '/settings/notifications'
+      route: '/notification'
     },
     {
       label: 'Permissions',
       icon: 'pi pi-cog',
       route: '/settings/permissions'
-    },
-    {
-      label: 'App Icon Appearance',
-      icon: 'pi pi-palette',
-      route: '/settings/app-icon'
     }
+    // {
+    //   label: 'App Icon Appearance',
+    //   icon: 'pi pi-palette',
+    //   route: '/settings/app-icon'
+    // }
   ]);
 
   resourcesItems = signal<SettingListItem[]>([
     {
       label: 'Contact Support',
       icon: 'pi pi-comments',
-      route: '/settings/contact-support'
+      action: 'send-mail'
     },
     {
       label: 'Rate in App Store',
@@ -84,7 +84,7 @@ export class Settings implements OnInit {
     {
       label: 'Invite a Friend',
       icon: 'pi pi-user-plus',
-      action: 'invite-friend'
+      route: '/add-network'
     }
   ]);
 
@@ -92,12 +92,12 @@ export class Settings implements OnInit {
     {
       label: 'My Subscriptions Plans',
       icon: 'pi pi-crown',
-      route: '/subscription-plans'
+      action: 'subscription-plans'
     },
     {
       label: 'My Subscriptions',
       icon: 'pi pi-crown',
-      route: '/subscriptions'
+      route: '/subscription'
     }
   ]);
 
@@ -114,12 +114,12 @@ export class Settings implements OnInit {
     },
     {
       label: 'Terms & Conditions',
-      route: '/settings/terms',
+      route: '/terms',
       showChevron: true
     },
     {
       label: 'Privacy Policy',
-      route: '/settings/privacy',
+      route: '/policy',
       showChevron: true
     }
   ]);
@@ -136,29 +136,65 @@ export class Settings implements OnInit {
 
   onItemClick(item: any): void {
     if (item.route) {
-      this.navCtrl.navigateForward(item.route);
+      this.navigationService.navigateForward(item.route);
     } else if (item.action) {
       this.handleAction(item.action);
     }
   }
 
-  private handleAction(action: string): void {
-    switch (action) {
-      case 'rate-app':
-        this.toasterService.showSuccess('Rate app feature coming soon!');
-        break;
-      case 'invite-friend':
-        this.toasterService.showSuccess('Invite friend feature coming soon!');
-        break;
+  async navigateToSubscriptionPlans(): Promise<void> {
+    const user = this.authService.currentUser();
+    if (!user?.email) {
+      this.toasterService.showError('Please add your email to your profile to view subscription plans.');
+      return;
+    }
+    if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
+      this.navigationService.navigateForward('/subscription/plans');
+    } else {
+      await this.openStripePayoutModal();
     }
   }
 
-  onEditProfileClick(): void {
-    this.navCtrl.navigateForward('/profile/edit');
+  async openStripePayoutModal(): Promise<void> {
+    await this.modalService.openConfirmModal({
+      icon: 'assets/svg/payoutIcon.svg',
+      iconBgColor: '#C73838',
+      title: 'Add Payout Details',
+      description: 'To view subscription plans in app, you must setup your payout details with Stripe.',
+      confirmButtonLabel: 'Connect Payment',
+      cancelButtonLabel: 'Maybe Later',
+      confirmButtonColor: 'primary',
+      iconPosition: 'center',
+      onConfirm: () => this.handleStripeAccountCreation()
+    });
   }
 
-  onQrCodeClick(): void {
-    this.toasterService.showSuccess('QR code feature coming soon!');
+  async handleStripeAccountCreation(): Promise<void> {
+    try {
+      const accountResponse = await this.stripeService.createStripeAccount();
+      if (accountResponse?.url) {
+        window.location.href = accountResponse.url;
+      } else {
+        this.toasterService.showError('Failed to get Stripe account URL. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating Stripe account:', error);
+      this.toasterService.showError('Error creating Stripe account. Please try again.');
+    }
+  }
+
+  private async handleAction(action: string): Promise<void> {
+    switch (action) {
+      case 'rate-app':
+        await this.rateApp();
+        break;
+      case 'subscription-plans':
+        await this.navigateToSubscriptionPlans();
+        break;
+      case 'send-mail':
+        window.open('mailto:admin&#64;net-worked.ai', '_self');
+        break;
+    }
   }
 
   async onSignOut(): Promise<void> {
@@ -176,11 +212,29 @@ export class Settings implements OnInit {
 
       if (result && result.role === 'confirm') {
         await this.authService.signOut();
-        this.navCtrl.navigateRoot('/');
+        this.navigationService.navigateRoot('/');
       }
     } catch (error: any) {
       console.error('Sign out error:', error);
       this.toasterService.showError(error.message || 'Failed to sign out. Please try again.');
     }
+  }
+
+  async rateApp() {
+    const platform = Capacitor.getPlatform();
+
+    let url = '';
+
+    if (platform === 'android') {
+      url = 'https://play.google.com/store/apps/details?id=app.networked.ai';
+    } else {
+      // Web fallback
+      url = 'https://play.google.com/store/apps/details?id=app.networked.ai';
+    }
+
+    await Browser.open({
+      url,
+      presentationStyle: 'popover'
+    });
   }
 }

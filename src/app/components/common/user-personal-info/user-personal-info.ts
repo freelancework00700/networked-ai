@@ -27,6 +27,8 @@ export class UserPersonalInfo {
 
   // view child
   @ViewChild(MobileInput) mobileInput?: MobileInput;
+  @ViewChild(EmailInput) emailInput?: EmailInput;
+  @ViewChild(UsernameInput) usernameInput?: UsernameInput;
 
   // constants
   private readonly validationFields = ['title', 'first_name', 'last_name', 'email', 'mobile', 'username', 'dob', 'account_type', 'address'];
@@ -37,7 +39,19 @@ export class UserPersonalInfo {
 
   // validate all personal info fields
   async validate(): Promise<boolean> {
-    return await validateFields(this.formGroup(), this.validationFields);
+    // Enable async validation on inputs before validation
+    this.emailInput?.shouldValidate.set(true);
+    this.mobileInput?.shouldValidate.set(true);
+    this.usernameInput?.shouldValidate.set(true);
+
+    const isValid = await validateFields(this.formGroup(), this.validationFields);
+
+    // Disable async validation after validation
+    this.emailInput?.shouldValidate.set(false);
+    this.mobileInput?.shouldValidate.set(false);
+    this.usernameInput?.shouldValidate.set(false);
+
+    return isValid;
   }
 
   // initialize fields based on user data (disable email/mobile if already set)
@@ -71,5 +85,9 @@ export class UserPersonalInfo {
     const currentAddress = this.formGroup().get('address')?.value || '';
     const { address, latitude, longitude } = await this.modalService.openLocationModal(currentAddress);
     this.formGroup().patchValue({ address, latitude, longitude });
+  }
+
+  getMaxDate(): string {
+    return new Date().toISOString().split('T')[0];
   }
 }

@@ -1,0 +1,15 @@
+.stripe-payment-container {
+  padding: 10px;
+  border: 1px solid var(--neutral-05);
+  border-radius: 16px;
+  min-height: 50px;
+  width: 100%;
+}
+
+.error-message {
+  color: var(--danger-01);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--danger-03);
+  margin-top: 12px;
+}

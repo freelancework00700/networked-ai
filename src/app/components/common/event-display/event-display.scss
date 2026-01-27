@@ -1,0 +1,24 @@
+// Event display styles
+.event-map {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper-event-detail {
+  .swiper-pagination {
+    bottom: 10px;
+  }
+}
+
+.subscriber-chip {
+  background: radial-gradient(
+    161.73% 107.14% at 9.38% -7.14%,
+    #e6dac7 13.46%,
+    #f4d7a9 38.63%,
+    rgba(201, 164, 105, 0.94) 69.52%,
+    #bf9e69 88.87%,
+    rgba(195, 167, 121, 0.9) 100%
+  ) !important;
+  border-radius: 9999px;
+}
+

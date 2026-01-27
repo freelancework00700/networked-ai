@@ -11,10 +11,10 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <div class="w-full px-4 max-w-[672px] mx-auto">
+  <div class="w-full px-4 py-6 max-w-[672px] mx-auto">
     @if (profileForm) {
       <form [formGroup]="profileForm!" class="h-full">
-        @if (tab() === 'profile') {
+        <div [hidden]="tab() === 'preferences'">
           <!-- profile image -->
           <div class="flex flex-col items-center mb-8">
             <profile-image-input controlName="image_url" label="Profile Picture" [required]="false" />
@@ -28,9 +28,9 @@
             <div class="body-16SB neutral-01 mt-4">Additional Information</div>
             <user-additional-info [formGroup]="profileForm" />
           </div>
-        }
+        </div>
 
-        @if (tab() === 'preferences') {
+        <div [hidden]="tab() === 'profile'">
           <div class="flex flex-col gap-6">
             <!-- what's your vibe? -->
             <div class="flex flex-col gap-3">
@@ -41,7 +41,7 @@
                 </button>
               </div>
               <div class="flex flex-wrap items-center gap-2 min-h-[32px]">
-                @if (!currentUser()?.vibes) {
+                @if (!currentUser()?.vibes?.length) {
                   <span class="body-14R neutral-03">No vibes selected</span>
                 } @else {
                   @for (vibe of currentUser()?.vibes; track vibe.id) {
@@ -63,7 +63,7 @@
                 </button>
               </div>
               <div class="flex flex-wrap items-center gap-2 min-h-[32px]">
-                @if (!currentUser()?.interests) {
+                @if (!currentUser()?.interests?.length) {
                   <span class="body-14R neutral-03">No interests selected</span>
                 } @else {
                   @for (interest of currentUser()?.interests; track interest.id) {
@@ -85,7 +85,7 @@
                 </button>
               </div>
               <div class="flex flex-wrap items-center gap-2 min-h-[32px]">
-                @if (!currentUser()?.hobbies) {
+                @if (!currentUser()?.hobbies?.length) {
                   <span class="body-14R neutral-03">No hobbies selected</span>
                 } @else {
                   @for (hobby of currentUser()?.hobbies; track hobby.id) {
@@ -98,7 +98,7 @@
               </div>
             </div>
           </div>
-        }
+        </div>
       </form>
     }
   </div>

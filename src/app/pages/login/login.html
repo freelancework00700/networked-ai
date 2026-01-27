@@ -1,23 +1,36 @@
-<ion-content [fullscreen]="true">
+<ion-content fullscreen="true">
   <div class="h-full pt-safe">
     <div class="w-full px-4 py-6 max-w-[672px] mx-auto">
       <!-- logo and title -->
-      <div class="flex flex-col gap-5">
-        <div class="text-center">
-          <div class="flex justify-center">
-            <ion-icon src="assets/svg/logo.svg" class="w-[63px] h-[28px]" />
+      @if (!isRsvpModal) {
+        <div class="flex flex-col gap-5">
+          <div class="text-center">
+            <div class="flex justify-center">
+              <ion-icon src="assets/svg/logo.svg" class="w-[63px] h-[28px]" />
+            </div>
+            <div class="text-[10px] font-semibold pt-1">Networked AI</div>
           </div>
-          <div class="text-[10px] font-semibold pt-1">Networked AI</div>
-        </div>
 
-        <div class="text-center heading-h1 neutral-01">
-          <div class="">Get out,</div>
-          <div>
-            Get
-            <span class="bg-[linear-gradient(170deg,rgba(245,188,97,1)_0%,rgba(158,102,10,1)_94%)] bg-clip-text text-transparent">Networked.</span>
+          <div class="text-center heading-h1 neutral-01">
+            <div class="">Get out,</div>
+            <div>
+              Get
+              <span class="bg-[linear-gradient(170deg,rgba(245,188,97,1)_0%,rgba(158,102,10,1)_94%)] bg-clip-text text-transparent">Networked.</span>
+            </div>
           </div>
         </div>
-      </div>
+      } @else {
+        <div class="flex flex-col gap-3">
+          <div>
+            <ion-icon src="assets/svg/logo.svg" class="w-[63px] h-[28px]" />
+            <div class="text-[10px] font-semibold pt-1">Networked AI</div>
+          </div>
+          <div>
+            <div class="heading-h1 neutral-01">Welcome Back!</div>
+            <div class="body-16SB font-semibold neutral-03">Sign in to your account to continue.</div>
+          </div>
+        </div>
+      }
 
       <!-- social login buttons -->
       <social-login-buttons />
@@ -80,7 +93,7 @@
 
           <!-- forgot password -->
           <div class="flex items-center justify-end mb-8 py-3">
-            <div class="body-14SB brand-02 cursor-pointer" (click)="navigationService.navigateForward('/forgot-password')">Forgot password?</div>
+            <div class="body-14SB brand-02 cursor-pointer" (click)="goToForgotPassword()">Forgot password?</div>
           </div>
         } @else {
           <div class="min-h-[224px]">
@@ -111,14 +124,14 @@
         <!-- create account link -->
         <div class="text-center text-sm p-3">
           <span class="neutral-03 body-14M">Don't have an account? </span>
-          <a (click)="navigationService.navigateForward('/signup', true)" class="body-14SB brand-02 cursor-pointer"> Create one here </a>
+          <a (click)="goToSignup()" class="body-14SB brand-02 cursor-pointer"> Create one here </a>
         </div>
 
         <!-- terms and privacy policy -->
         <div class="text-center text-sm">
           <span class="neutral-03 body-14R">By continuing, I agree to the </span>
-          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navigationService.navigateForward('/terms')"> terms of service </a>and
-          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navigationService.navigateForward('/policy')"> privacy policy. </a>
+          <a (click)="goToTerms()" class="body-14SB neutral-02 !underline cursor-pointer"> terms of service </a>and
+          <a (click)="goToPrivacyPolicy()" class="body-14SB neutral-02 !underline cursor-pointer"> privacy policy. </a>
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@
   <div class="flex items-center justify-center">
     <ion-datetime
       mode="md"
-      [value]="value"
+      [value]="getFormattedValue()"
       [preferWheel]="true"
       [presentation]="type"
       [min]="getMinValue()"

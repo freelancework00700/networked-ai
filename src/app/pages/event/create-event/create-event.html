@@ -1,0 +1,118 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-6 max-w-[672px] mx-auto">
+      <div class="flex items-center gap-2">
+        <div
+          class="pi pi-arrow-left"
+          [class.cursor-pointer]="!isButtonDisabled()"
+          [class.cursor-not-allowed]="isButtonDisabled()"
+          [class.opacity-50]="isButtonDisabled()"
+          (click)="!isButtonDisabled() && previousStep()"
+        ></div>
+        @if (!isModalMode) {
+          <div class="body-14M neutral-02 text-center w-full">Create an Event</div>
+        } @else {
+          <div class="body-14M neutral-02 text-center w-full">Edit Event {{ eventData?.title }}</div>
+        }
+      </div>
+      <div class="flex items-center justify-between mt-6">
+        <div class="heading-h2 neutral-01">{{ stepHeading() }}</div>
+        <!-- Steps -->
+        <div class="flex items-center gap-1">
+          @for (step of steps(); track step) {
+            <div
+              class="rounded-full transition-all duration-200"
+              [class]="step === currentStep() ? 'w-8 h-2 bg-black' : step < currentStep() ? 'w-2 h-2 bg-black' : 'w-2 h-2 bg-gray-300'"
+            ></div>
+          }
+        </div>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" mode="md">
+  <div class="w-full p-6 pt-0 max-w-[672px] mx-auto">
+    <form [formGroup]="eventForm()" class="h-full" (ngSubmit)="createEvent()">
+      <!-- step 1: event details -->
+      <div [hidden]="currentStep() !== 1" class="flex flex-col gap-6">
+        <event-details [eventForm]="eventForm()" [isSubmitted]="isSubmitted()" />
+      </div>
+
+      <!-- step 2: event tickets -->
+      <div [hidden]="currentStep() !== 2" class="flex flex-col gap-6">
+        <event-tickets [eventForm]="eventForm()" [openConfirmModal]="handleConfirmModal" />
+      </div>
+
+      <!-- step 3: event settings -->
+      <div [hidden]="currentStep() !== 3" class="flex flex-col gap-6">
+        <event-settings
+          [eventForm]="eventForm()"
+          [isModalMode]="isModalMode"
+          [isEditMode]="isEditMode()"
+          [openConfirmModal]="handleConfirmModal"
+          (generateRepeatingEvents)="generateRepeatingEventsIfReady()"
+        />
+      </div>
+
+      <!-- step 4: event preview -->
+      <div [hidden]="currentStep() !== 4" class="flex flex-col gap-4">
+        <event-display
+          [eventData]="eventDisplayData()"
+          [selectedDate]="selectedDate()"
+          [onDateChange]="onDateChange.bind(this)"
+          [showPreviewBanner]="true"
+          [hideDateSelector]="isEditMode()"
+        />
+      </div>
+    </form>
+  </div>
+</ion-content>
+
+<ion-footer mode="md">
+  <ion-toolbar>
+    <div class="p-6 max-w-[672px] mx-auto">
+      @if (currentStep() == 2) {
+        @if (getFieldValue('is_subscriber_exclusive')) {
+          <!-- When subscriber exclusive, show next button directly -->
+          <app-button [label]="buttonLabel()" [iconName]="buttonIcon()" [iconPos]="iconPos()" (click)="handleButtonClick()" />
+        } @else {
+          <!-- Regular flow: Create Ticket button -->
+          <div class="flex items-center gap-2">
+            <app-button
+              label="Create Ticket"
+              [icon]="currentStep() === 2 ? 'assets/svg/ticket.svg' : ''"
+              (click)="eventTickets.createTicket()"
+              class="flex-1"
+              [color]="tickets.length > 0 ? 'secondary' : 'primary'"
+            />
+            @if (tickets.length > 0) {
+              <app-button [label]="buttonLabel()" [iconName]="buttonIcon()" [iconPos]="iconPos()" (click)="handleButtonClick()" class="flex-1" />
+            }
+          </div>
+        }
+      } @else {
+        @if (!isModalMode) {
+          @if (hasQuestionnaire() && currentStep() === 4) {
+            <div class="mb-4">
+              <app-button label="Preview Questionnaire" (click)="openQuestionnairePreview()" color="secondary" class="w-full" />
+            </div>
+          }
+          <app-button
+            [label]="buttonLabel()"
+            [iconName]="buttonIcon()"
+            [iconPos]="iconPos()"
+            (click)="handleButtonClick()"
+            [disabled]="isButtonDisabled()"
+            [isLoading]="isButtonDisabled()"
+          />
+        } @else {
+          <div class="flex items-center gap-2">
+            <app-button label="Cancel" (click)="cancelModal()" class="w-full" color="secondary" />
+            <app-button label="Save Changes" (click)="handleButtonClick()" class="w-full" />
+          </div>
+        }
+      }
+    </div>
+  </ion-toolbar>
+</ion-footer>

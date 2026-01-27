@@ -9,7 +9,7 @@ describe('PaymentTransactionItem', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [PaymentTransactionItem],
-      imports: [IonicModule.forRoot()],
+      imports: [IonicModule.forRoot()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(PaymentTransactionItem);

@@ -1,0 +1,52 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 max-w-[672px] mx-auto">
+      <div class="pi pi-arrow-left cursor-pointer" (click)="navigationService.back()"></div>
+      <div class="body-14M neutral-02 text-center w-full">Subscribers List</div>
+      <img src="assets/svg/downloadBlackIcon.svg" alt="Download" class="w-6 h-6 cursor-pointer" />
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" mode="md">
+  <div class="min-h-full">
+    <div class="w-full max-w-[672px] mx-auto p-6">
+      <!-- Plan Name -->
+      @if (planName()) {
+        <div class="body-14R neutral-03 mb-4">{{ planName() }}</div>
+      }
+
+      <!-- Section Title -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="body-16SB neutral-01">Subscribers</div>
+        <div class="body-14M neutral-03">{{ users().length }}</div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="flex items-center justify-between pt-2 pb-4">
+        <searchbar
+          [placeholder]="'Search by username'"
+          [searchQuery]="searchQuery()"
+          (searchChange)="searchQuery.set($event)"
+          (clear)="searchQuery.set('')"
+          class="w-full"
+        />
+      </div>
+
+      <!-- User List -->
+      @if (isLoading()) {
+        <div class="flex justify-center items-center py-8">
+          <i class="pi pi-spinner pi-spin text-2xl"></i>
+        </div>
+      } @else if (filteredUsers().length > 0) {
+        @for (user of filteredUsers(); track user.id) {
+          <div class="border-b border-gray-200">
+            <user-card-list [user]="user" />
+          </div>
+        }
+      } @else {
+        <app-empty-state title="No subscribers found" message="" />
+      }
+    </div>
+  </div>
+</ion-content>

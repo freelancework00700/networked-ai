@@ -1,0 +1,41 @@
+<ion-header mode="md">
+  <ion-toolbar>
+    <div class="flex items-center p-4 cursor-pointer max-w-[672px] mx-auto">
+      <i class="pi pi-arrow-left neutral-03" (click)="back()"></i>
+      <div class="body-14M text-center w-full">Manage My Subscription</div>
+      <div class="w-6"></div>
+    </div>
+
+    <segment-button [items]="segmentItems" [value]="segmentValue()" (valueChange)="onSegmentChange($event)" />
+  </ion-toolbar>
+</ion-header>
+
+<ion-content mode="md">
+  <div class="w-full max-w-[672px] mx-auto h-full">
+    <div class="p-5 h-full">
+      @if (isLoading()) {
+        <div class="flex items-center justify-center h-full min-h-[400px]">
+          <div class="body-14M neutral-03">Loading subscriptions...</div>
+        </div>
+      } @else if (hasSubscriptions()) {
+        <div class="flex flex-col gap-4">
+          @for (subscription of currentSubscriptions(); track subscription.id) {
+            <app-subscription-card [data]="subscription" mode="subscription" (click)="onSubscriptionClick($event)" />
+          }
+        </div>
+      } @else {
+        <div class="flex items-center justify-center h-full min-h-[400px]">
+          <div class="flex flex-col items-center justify-center gap-1 text-center px-5">
+            <div class="bg-white rounded-3xl shadow-md p-3 flex items-center justify-center mb-5">
+              <div class="icon-container">
+                <i class="pi pi-crown text-white text-2xl!"></i>
+              </div>
+            </div>
+            <div class="heading-h3 neutral-01 mb-2">No Subscriptions Yet</div>
+            <div class="body-14M neutral-02">Plans that you're subscribed to will appear here once you have an active subscription.</div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</ion-content>

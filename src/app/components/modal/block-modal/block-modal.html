@@ -1,24 +1,26 @@
 <div class="inner-content px-4 pt-4">
-  <img src="assets/images/profile.jpeg" class="w-20 h-20 rounded-full" />
+  <div class="relative w-20 h-20 overflow-hidden rounded-full">
+    <img [ngSrc]="getImageUrl()" fill placeholder alt="Profile picture" class="rounded-full object-cover" (error)="onImageError($event)" />
+  </div>
 
-  <div class="heading-h3 pt-4">Block Jonathan L.?</div>
+  <div class="heading-h3 pt-4">Block {{ getUserName() }}?</div>
 
   <div class="body-14R neutral-03">This will also block any other accounts they may have or create in the future.</div>
 
   <div class="flex flex-col gap-2 py-4">
-    <div>
-      <div class="pi pi-ban !text-lg pr-2"></div>
-      They won't be able to message you or find your profile
+    <div class="flex items-center gap-2">
+      <div class="pi pi-ban !text-lg"></div>
+      <span class="body-14R neutral-02">They won't be able to message you or find your profile</span>
     </div>
 
     <div class="flex items-center gap-2">
       <img src="assets/svg/alertOffBlackIcon.svg" class="w-5 h-5" />
-      They won’t be notified that you blocked them
+      <span class="body-14R neutral-02">They won't be notified that you blocked them</span>
     </div>
 
     <div class="flex items-center gap-2">
       <img src="assets/svg/manage-event/settings.svg" class="w-5 h-5" />
-      You can unblock them anytime through settings.
+      <span class="body-14R neutral-02">You can unblock them anytime through settings.</span>
     </div>
   </div>
 </div>

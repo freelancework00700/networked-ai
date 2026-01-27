@@ -9,9 +9,14 @@
         type="button"
         class="flex items-center gap-1.5 brand-02 body-14M hover:opacity-80 transition-opacity cursor-pointer"
         (click)="onGenerateClick()?.()"
+        [disabled]="isGenerating()"
       >
-        {{ isCustomize() ? 'Customize' : 'Generate' }}
-        <img src="assets/svg/generateIcon.svg" alt="Generate" class="w-5 h-5" />
+        @if (isGenerating()) {
+          <ion-spinner name="crescent" class="w-5 h-5"></ion-spinner>
+        } @else {
+          {{ isCustomize() ? 'Customize' : 'Generate' }}
+          <img src="assets/svg/generateIcon.svg" alt="Generate" class="w-5 h-5" />
+        }
       </button>
     }
   </div>

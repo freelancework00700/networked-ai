@@ -30,10 +30,10 @@
   <mobile-input [checkIfTaken]="true" [showVerifiedIcon]="true" [isSubmitted]="isSubmitted()" />
 
   <!-- username input -->
-  <username-input [isSubmitted]="isSubmitted()" />
+  <username-input [isSubmitted]="isSubmitted()" [checkIfTaken]="true" />
 
   <!-- birthdate input -->
-  <date-input controlName="dob" label="Birth Date" placeholder="Select Date" [isSubmitted]="isSubmitted()" />
+  <date-input controlName="dob" label="Birth Date" placeholder="Select Date" [isSubmitted]="isSubmitted()" [max]="getMaxDate()" />
 
   <!-- account type input -->
   <text-input

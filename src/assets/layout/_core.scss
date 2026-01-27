@@ -14,6 +14,21 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.2;
+  --scroll-progress: 0;
+
+  ion-tab-bar {
+    transform: translateY(calc(100% * var(--scroll-progress, 0))) !important;
+    transition: transform 0.3s ease !important;
+  }
+}
+
+ion-header {
+  --scroll-progress: 0;
+  position: relative;
+  z-index: 10;
+  
+  transform: translateY(calc(-100% * var(--scroll-progress, 0))) !important;
+  transition: transform 0.3s ease !important;
 }
 
 a {

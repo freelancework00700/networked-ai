@@ -1,29 +1,19 @@
 <div
   class="flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
-  [ngClass]="{ 'cursor-pointer': !achievement().isLocked, 'cursor-not-allowed': achievement().isLocked }"
+  [class.cursor-pointer]="!badge().is_locked"
+  [class.cursor-not-allowed]="badge().is_locked"
   (click)="handleClick()"
 >
-  <div class="relative w-16 h-16 flex items-center justify-center">
-    @if (achievement().isLocked) {
-      <img src="/assets/svg/gamification/hexagon-bg.svg" alt="Hexagon" class="absolute inset-0 w-full h-full object-contain" />
-    } @else {
-      <img [src]="getPolygonIcon()" [alt]="'Polygon ' + achievement().threshold" class="absolute inset-0 w-full h-full object-contain" />
+  <div class="w-16 h-16 flex items-center justify-center">
+    @if (badgeImageUrl()) {
+      <img [src]="badgeImageUrl()" [alt]="badge().title" class="w-full h-full object-contain" />
     }
-    <div class="relative z-10 flex flex-col items-center">
-      <span class="body-16SB" [ngClass]="achievement().isLocked ? 'neutral-03' : 'text-black'">{{ achievement().threshold }}</span>
-      @if (achievement().isLocked) {
-        <ion-icon src="/assets/svg/lock.svg" class="neutral-03 text-xs"></ion-icon>
-      } @else if (getTypeIcon()) {
-        <ion-icon [src]="getTypeIcon()" class="text-black text-xs"></ion-icon>
-      }
-    </div>
   </div>
-  @if (achievement().isLocked) {
+  @if (badge().is_locked) {
     <span class="neutral-04 body-10">Locked</span>
+  } @else if (badge().completed_date) {
+    <span class="neutral-04 body-10">{{ badge().completed_date | date: 'dd/MM/yy' }}</span>
   } @else {
-    <span class="neutral-04 body-10">{{ achievement().achievedDate || 'Unlocked' }}</span>
+    <span class="neutral-04 body-10">Unlocked</span>
   }
-  <div class="w-full h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden" [ngClass]="{ 'opacity-0': !achievement().isLocked }">
-    <div class="h-full rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]" [style.width.%]="achievement().progress"></div>
-  </div>
 </div>

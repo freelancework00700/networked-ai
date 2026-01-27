@@ -1,7 +1,7 @@
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { IonFooter, IonToolbar } from '@ionic/angular/standalone';
-import { Input, inject, Component, ChangeDetectionStrategy } from '@angular/core';
+import { Input, inject, Component, ChangeDetectionStrategy, signal } from '@angular/core';
 
 export interface ConfirmModalConfig {
   icon?: string; // SVG path
@@ -36,12 +36,37 @@ export class ConfirmModal {
   @Input() confirmButtonLabel = 'Confirm';
   @Input() iconPosition: 'left' | 'center' = 'center';
   @Input() confirmButtonColor: 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' = 'primary';
+  @Input() onConfirm?: () => Promise<any>;
+  @Input() shareButtonLabel?: string;
+  @Input() onShare?: () => void | Promise<void>;
 
-  confirm(): void {
-    this.modalService.close(true, 'confirm');
+  isLoading = signal(false);
+
+  async confirm(): Promise<void> {
+    if (!this.onConfirm) {
+      this.modalService.close(true, 'confirm');
+      return;
+    }
+    try {
+      this.isLoading.set(true);
+      await this.onConfirm();
+      this.modalService.close(true, 'confirm');
+    } catch (error) {
+      this.modalService.close(false, 'error');
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 
   cancel(): void {
-    this.modalService.close(false, 'cancel');
+    if (!this.isLoading()) {
+      this.modalService.close(false, 'cancel');
+    }
+  }
+
+  async share(): Promise<void> {
+    if (this.onShare) {
+      await this.onShare();
+    }
   }
 }

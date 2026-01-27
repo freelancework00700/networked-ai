@@ -1,331 +1,348 @@
+import { Subscription, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { IEvent } from '@/interfaces/event';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Button } from '@/components/form/button';
-import { NavController } from '@ionic/angular/standalone';
-import { Searchbar } from '@/components/common/searchbar';
 import { ModalService } from '@/services/modal.service';
+import { EventService } from '@/services/event.service';
+import { EventCard } from '@/components/card/event-card';
+import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
+import { Searchbar } from '@/components/common/searchbar';
 import { EmptyState } from '@/components/common/empty-state';
-import { EventCard, IEvent } from '@/components/card/event-card';
-import { inject, signal, computed, Component } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
+import { NavigationService } from '@/services/navigation.service';
+import { AuthService } from '@/services/auth.service';
+import { UserService } from '@/services/user.service';
+import { IonHeader, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, IonSkeletonText } from '@ionic/angular/standalone';
+import { inject, signal, computed, Component, OnInit, OnDestroy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-all-events',
-  imports: [CommonModule, IonHeader, IonToolbar, IonContent, EventCard, Searchbar, Button, EmptyState],
+  imports: [
+    CommonModule,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
+    IonSkeletonText,
+    EventCard,
+    UpcomingEventCard,
+    Searchbar,
+    Button,
+    EmptyState
+  ],
   templateUrl: './all-events.html',
   styleUrl: './all-events.scss'
 })
-export class AllEvents {
+export class AllEvents implements OnInit, OnDestroy {
   // services
-  navCtrl = inject(NavController);
   modalService = inject(ModalService);
+  eventService = inject(EventService);
+  route = inject(ActivatedRoute);
+  router = inject(Router);
+  navigationService = inject(NavigationService);
+  authService = inject(AuthService);
+  userService = inject(UserService);
+  private destroyRef = inject(DestroyRef);
 
   // signals
   searchQuery = signal('');
-  displayedEventsCount = signal(6);
   selectedDate = signal<string>('');
   selectedLocation = signal<string>('');
+  latitude = signal<string>('');
+  longitude = signal<string>('');
   selectedDistance = signal<number>(20);
+  allEvents = signal<IEvent[]>([]);
+  isLoadingEvents = signal<boolean>(false);
+  isLoadingMore = signal<boolean>(false);
+  currentPage = signal<number>(1);
+  totalPages = signal<number>(0);
+  userFromState = signal<any>(null);
+  hasMore = computed(() => this.currentPage() < this.totalPages());
+  private queryParamsSubscription?: Subscription;
+  private searchSubject = new Subject<string>();
 
-  allEvents: IEvent[] = [
-    {
-      title: 'Tech Innovation Summit',
-      organization: 'Atlanta Tech Hub',
-      date: 'Fri 8/30, 7:00 AM',
-      location: 'Atlanta, GA',
-      views: '12',
-      image: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Fri',
-      day: '12'
-    },
-    {
-      title: 'Music Festival 2024',
-      organization: 'Atlanta Music Scene',
-      date: 'Sat 9/1, 2:00 PM',
-      location: 'Atlanta, GA',
-      views: '45',
-      image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '1'
-    },
-    {
-      title: 'Business Networking Night',
-      organization: 'Atlanta Chamber',
-      date: 'Wed 9/4, 6:00 PM',
-      location: 'Atlanta, GA',
-      views: '28',
-      image: 'https://images.unsplash.com/photo-1444840535719-195841cb6e2b?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Wed',
-      day: '4'
-    },
-    {
-      title: 'Broadway Showcase',
-      organization: 'NYC Arts Council',
-      date: 'Sun 9/2, 3:00 PM',
-      location: 'New York, NJ',
-      views: '89',
-      image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '2'
-    },
-    {
-      title: 'Startup Pitch Night',
-      organization: 'NYC Ventures',
-      date: 'Thu 9/5, 7:00 PM',
-      location: 'New York, NJ',
-      views: '156',
-      image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Thu',
-      day: '5'
-    },
-    {
-      title: 'Mountain Hiking Adventure',
-      organization: 'Denver Outdoors',
-      date: 'Sat 9/7, 8:00 AM',
-      location: 'Denver, CO',
-      views: '67',
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '7'
-    },
-    {
-      title: 'Craft Beer Festival',
-      organization: 'Denver Brewers',
-      date: 'Sun 9/8, 12:00 PM',
-      location: 'Denver, CO',
-      views: '234',
-      image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '8'
-    },
-    {
-      title: 'Jazz Night Live',
-      organization: 'Chicago Jazz Club',
-      date: 'Fri 9/6, 9:00 PM',
-      location: 'Chicago, IL',
-      views: '91',
-      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Fri',
-      day: '6'
-    },
-    {
-      title: 'Food & Wine Expo',
-      organization: 'Chicago Culinary',
-      date: 'Sat 9/14, 11:00 AM',
-      location: 'Chicago, IL',
-      views: '178',
-      image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '14'
-    },
-    {
-      title: 'Desert Photography Workshop',
-      organization: 'Arizona Photographers',
-      date: 'Sun 9/15, 6:00 AM',
-      location: 'Phoenix, AZ',
-      views: '34',
-      image: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '15'
-    },
-    {
-      title: 'Yoga in the Park',
-      organization: 'Phoenix Wellness',
-      date: 'Mon 9/16, 7:00 AM',
-      location: 'Phoenix, AZ',
-      views: '56',
-      image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Mon',
-      day: '16'
-    },
-    {
-      title: 'Film Festival Opening',
-      organization: 'Toronto Cinema',
-      date: 'Thu 9/12, 7:30 PM',
-      location: 'Toronto, CA',
-      views: '201',
-      image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Thu',
-      day: '12'
-    },
-    {
-      title: 'Hockey Game Night',
-      organization: 'Toronto Sports',
-      date: 'Sat 9/21, 8:00 PM',
-      location: 'Toronto, CA',
-      views: '312',
-      image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '21'
-    },
-    {
-      title: 'Rock & Roll Hall of Fame Tour',
-      organization: 'Cleveland Music',
-      date: 'Sun 9/22, 2:00 PM',
-      location: 'Cleveland, OH',
-      views: '78',
-      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '22'
-    },
-    {
-      title: 'Lake Erie Sailing',
-      organization: 'Cleveland Yacht Club',
-      date: 'Sat 9/28, 10:00 AM',
-      location: 'Cleveland, OH',
-      views: '43',
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '28'
-    },
-    {
-      title: 'Beach Volleyball Tournament',
-      organization: 'Miami Sports',
-      date: 'Sun 9/29, 9:00 AM',
-      location: 'Miami, FL',
-      views: '145',
-      image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '29'
-    },
-    {
-      title: 'Latin Music Night',
-      organization: 'Miami Nights',
-      date: 'Fri 10/4, 10:00 PM',
-      location: 'Miami, FL',
-      views: '267',
-      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Fri',
-      day: '4'
-    },
-    {
-      title: 'Coffee Cupping Experience',
-      organization: 'Seattle Roasters',
-      date: 'Sat 10/5, 10:00 AM',
-      location: 'Seattle, WA',
-      views: '89',
-      image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '5'
-    },
-    {
-      title: 'Tech Meetup',
-      organization: 'Seattle Tech Hub',
-      date: 'Wed 10/9, 6:30 PM',
-      location: 'Seattle, WA',
-      views: '112',
-      image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Wed',
-      day: '9'
-    },
-    {
-      title: 'Historical Walking Tour',
-      organization: 'Boston Heritage',
-      date: 'Sun 10/6, 11:00 AM',
-      location: 'Boston, MA',
-      views: '56',
-      image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '6'
-    },
-    {
-      title: 'Marathon Training Session',
-      organization: 'Boston Runners',
-      date: 'Sat 10/12, 7:00 AM',
-      location: 'Boston, MA',
-      views: '134',
-      image: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '12'
-    },
-    {
-      title: 'Hollywood Movie Premiere',
-      organization: 'LA Entertainment',
-      date: 'Thu 10/10, 8:00 PM',
-      location: 'Los Angeles, CA',
-      views: '423',
-      image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Thu',
-      day: '10'
-    },
-    {
-      title: 'Surfing Competition',
-      organization: 'LA Beach Sports',
-      date: 'Sun 10/13, 7:00 AM',
-      location: 'Los Angeles, CA',
-      views: '298',
-      image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '13'
+  // Constants
+  private readonly pageLimit = 10;
+
+  async ngOnInit(): Promise<void> {
+    const navigation = this.router.currentNavigation();
+    const state = navigation?.extras?.state || history.state;
+    if (state?.user) {
+      this.userFromState.set(state.user);
     }
-  ];
 
-  filteredEvents = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const location = this.selectedLocation();
-    const date = this.selectedDate();
-    let events = this.allEvents;
+    this.setupSearchDebounce();
+    this.loadEvents(true);
+  }
 
-    if (location) {
-      events = events.filter((event) => event.location.includes(location));
+  // Helper methods
+  private formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private getQueryParams(): { eventFilter: string | null; userId: string | null } {
+    const params = this.route.snapshot.queryParamMap;
+    return {
+      eventFilter: params.get('eventFilter'),
+      userId: params.get('userId')
+    };
+  }
+
+  private getFilterParams(): {
+    search: string | undefined;
+    latitude: string | undefined;
+    longitude: string | undefined;
+    radius: number | undefined;
+    startDate: string | undefined;
+    todayDate: string;
+  } {
+    const search = this.searchQuery().trim() || undefined;
+    const latitude = this.latitude() || undefined;
+    const longitude = this.longitude() || undefined;
+    const radius = this.selectedDistance() || undefined;
+    const todayDate = this.formatDate(new Date());
+
+    let startDate: string | undefined = undefined;
+    if (this.selectedDate()) {
+      const date = new Date(this.selectedDate());
+      if (!isNaN(date.getTime())) {
+        startDate = this.formatDate(date);
+      }
     }
-    if (date) {
-      events = events.filter((event) => {
-        const eventDateStr = event.date.split(',')[0].trim();
-        return eventDateStr.includes(date.split('-')[1]?.split('-')[0] || '');
+
+    return { search, latitude, longitude, radius, startDate, todayDate };
+  }
+
+  private async fetchEvents(page: number, useTodayAsDefault: boolean = false): Promise<any> {
+    const { eventFilter, userId } = this.getQueryParams();
+    const { search, latitude, longitude, radius, startDate, todayDate } = this.getFilterParams();
+
+    const isPublicEvents = eventFilter === 'public';
+    const isRecommendedEvents = eventFilter === 'recommended';
+    const isHostedEvents = eventFilter === 'hosted';
+    const isAttendedEvents = eventFilter === 'attended';
+    const isLikedEvents = eventFilter === 'liked';
+    const isUpcomingEvents = eventFilter === 'upcoming';
+
+    const baseParams: any = {
+      page,
+      limit: this.pageLimit,
+      search,
+      radius,
+      start_date: startDate,
+      order_by: 'start_date' as const,
+      order_direction: 'ASC' as const
+    };
+
+    // Only add latitude/longitude if location is selected (not city)
+    if (latitude && longitude) {
+      baseParams.latitude = latitude;
+      baseParams.longitude = longitude;
+    }
+
+    if (isHostedEvents && userId) {
+      return await this.eventService.getEvents({
+        ...baseParams,
+        roles: 'Host,CoHost,Sponsor',
+        user_id: userId
       });
     }
 
-    if (query) {
-      events = events.filter(
-        (event) =>
-          event.title.toLowerCase().includes(query) ||
-          event.organization.toLowerCase().includes(query) ||
-          event.location.toLowerCase().includes(query)
-      );
+    if (isAttendedEvents && userId) {
+      return await this.eventService.getEvents({
+        ...baseParams,
+        roles: 'Attendees',
+        user_id: userId
+      });
     }
 
-    return events;
+    if (isLikedEvents) {
+      return await this.eventService.getEvents({
+        ...baseParams,
+        is_liked: true
+      });
+    }
+
+    if (isUpcomingEvents) {
+      return await this.eventService.getEvents({
+        ...baseParams,
+        roles: 'Host,CoHost,Sponsor,Speaker,Staff,Attendees',
+        user_id: this.authService.currentUser()?.id,
+        is_upcoming_event: true
+      });
+    }
+
+    if (isRecommendedEvents) {
+      return await this.eventService.getEvents({
+        ...baseParams,
+        is_recommended: true
+      });
+    }
+
+    return await this.eventService.getEvents({
+      ...baseParams,
+      ...(isPublicEvents ? { is_public: true } : { is_my_events: false, is_included_me_event: true })
+    });
+  }
+
+  private handleEventsResponse(response: any, reset: boolean, page: number): void {
+    if (!response?.data?.data) return;
+
+    const events = Array.isArray(response.data.data) ? response.data.data : [];
+    const pagination = response?.data?.pagination || {};
+    const totalPages = pagination.totalPages || pagination.total_pages || 0;
+    const currentPageNum = pagination.currentPage || page;
+
+    if (reset) {
+      this.allEvents.set(events);
+    } else {
+      this.allEvents.update((existing) => [...existing, ...events]);
+    }
+
+    this.currentPage.set(currentPageNum);
+    this.totalPages.set(totalPages || Math.ceil((pagination.totalCount || 0) / this.pageLimit));
+  }
+
+  private setupSearchDebounce(): void {
+    this.searchSubject.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef)).subscribe((query: string) => {
+      this.searchQuery.set(query);
+      this.currentPage.set(1);
+      this.totalPages.set(0);
+      this.loadEvents(true, true); // true for reset, true for isSearch
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.queryParamsSubscription?.unsubscribe();
+    this.modalService.dismissAllModals();
+  }
+
+  private async loadEvents(reset: boolean = false, isSearch: boolean = false): Promise<void> {
+    try {
+      if (reset && !isSearch) {
+        this.isLoadingEvents.set(true);
+      }
+
+      const page = reset ? 1 : this.currentPage();
+      const response = await this.fetchEvents(page);
+      this.handleEventsResponse(response, reset, page);
+    } catch (error) {
+      console.error('Error loading events:', error);
+    } finally {
+      this.isLoadingEvents.set(false);
+    }
+  }
+
+  filteredEvents = computed(() => this.allEvents());
+
+  // Check if we should use upcoming event card
+  isUpcomingFilter = computed(() => {
+    const { eventFilter } = this.getQueryParams();
+    return eventFilter === 'upcoming';
   });
 
-  displayedEvents = computed(() => {
-    return this.filteredEvents().slice(0, this.displayedEventsCount());
+  // Computed header text based on user and event filter
+  headerText = computed(() => {
+    const { eventFilter, userId } = this.getQueryParams();
+    const user = this.userFromState();
+    const currentUser = this.authService.currentUser();
+
+    // Check if viewing current user's events
+    const isCurrentUser = currentUser && userId && currentUser.id === userId;
+
+    // Get user name for display
+    const userName = user?.name || user?.username || '';
+
+    if (eventFilter === 'upcoming') {
+      return 'My Upcoming Events';
+    } else if (eventFilter === 'recommended') {
+      return 'Recommended Events';
+    } else if (eventFilter === 'public') {
+      return 'Public Events';
+    } else if (eventFilter === 'liked') {
+      return 'Liked Events';
+    } else if (eventFilter === 'hosted') {
+      return isCurrentUser ? 'My Events' : userName ? `${userName}'s Events` : 'Browse Events';
+    } else if (eventFilter === 'attended') {
+      return isCurrentUser ? 'My Attended Events' : userName ? `${userName}'s Attended Events` : 'Browse Events';
+    }
+
+    return 'Browse Events';
   });
 
-  hasMoreEvents = computed(() => {
-    return this.displayedEventsCount() < this.filteredEvents().length;
+  // Check if any filter is active
+  isFilterActive = computed(() => {
+    const hasLocation = !!(this.latitude() && this.longitude());
+    const hasDate = !!this.selectedDate();
+    const hasCustomDistance = this.selectedDistance() !== 20;
+
+    return hasLocation || hasDate || hasCustomDistance;
   });
 
   onSearchChange(query: string): void {
-    this.searchQuery.set(query);
-    this.displayedEventsCount.set(6);
+    this.searchSubject.next(query);
   }
 
   onSearchClear(): void {
-    this.searchQuery.set('');
-    this.displayedEventsCount.set(6);
+    this.searchSubject.next('');
   }
 
   async openFilter(): Promise<void> {
     const result = await this.modalService.openEventFilterModal({
       location: this.selectedLocation(),
       eventDate: this.selectedDate(),
-      distance: this.selectedDistance()
+      distance: this.selectedDistance(),
+      latitude: this.latitude(),
+      longitude: this.longitude()
     });
-    if (result) {
-      this.selectedLocation.set(result.location || '');
-      this.selectedDate.set(result.eventDate || '');
-      this.selectedDistance.set(result.distance || 20);
-      this.displayedEventsCount.set(6);
+
+    if (!result) return;
+
+    this.selectedLocation.set(result.location || '');
+    this.selectedDate.set(result.eventDate || '');
+    this.selectedDistance.set(result.distance || 20);
+    this.latitude.set(result.latitude || '');
+    this.longitude.set(result.longitude || '');
+
+    // Reload events with new filters
+    this.resetAndLoadEvents();
+  }
+
+  private resetAndLoadEvents(): void {
+    this.currentPage.set(1);
+    this.allEvents.set([]);
+    this.totalPages.set(0);
+    this.loadEvents(true);
+  }
+
+  async loadMoreEvents(event: Event): Promise<void> {
+    const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
+
+    if (this.isLoadingMore() || !this.hasMore()) {
+      infiniteScroll.complete();
+      return;
+    }
+
+    try {
+      this.isLoadingMore.set(true);
+      const nextPage = this.currentPage() + 1;
+      const response = await this.fetchEvents(nextPage, true);
+      this.handleEventsResponse(response, false, nextPage);
+    } catch (error) {
+      console.error('Error loading more events:', error);
+    } finally {
+      this.isLoadingMore.set(false);
+      infiniteScroll.complete();
     }
   }
 
-  loadMore(): void {
-    const currentCount = this.displayedEventsCount();
-    const maxCount = this.filteredEvents().length;
-    this.displayedEventsCount.set(Math.min(currentCount + 6, maxCount));
-  }
-
   goBack(): void {
-    this.navCtrl.back();
+    this.navigationService.back();
   }
 }

@@ -1,0 +1,54 @@
+<div class="bg-white p-2 border border-gray-200 rounded-xl" (click)="onPostClick()">
+  <!-- HEADER -->
+  <div class="flex items-center gap-3 mb-3">
+    <div class="relative w-[40px] h-[40px] flex-shrink-0 overflow-hidden rounded-full">
+      <img
+        fill
+        placeholder
+        [alt]="feed().user?.name || 'avatar'"
+        class="rounded-full object-cover"
+        (error)="onImageError($event)"
+        [ngSrc]="getImageUrl(feed().user?.thumbnail_url || feed().user?.image_url)"
+      />
+    </div>
+    <div class="font-semibold text-sm text-gray-900">
+      {{ feed()?.user?.name || 'Unknown Author' }}
+    </div>
+  </div>
+
+  <!-- MEDIA (FULL WIDTH IMAGE) -->
+  @if (firstMedia()) {
+    <div class="w-full relative h-[160px] overflow-hidden">
+      @if (firstMedia()?.media_type === 'Image') {
+        <img
+          fill
+          placeholder
+          class="object-cover cursor-pointer"
+          (error)="onImageError($event)"
+          [ngSrc]="getImageUrl(firstMedia()?.media_url)"
+          [loaderParams]="{ thumbnail: firstMedia()?.media_url }"
+        />
+      }
+
+      @if (firstMedia()?.media_type === 'Video') {
+        <video [src]="firstMedia()?.media_url" controls class="w-full h-full object-cover"></video>
+      }
+    </div>
+  } @else if (feed()?.events?.length) {
+    <app-chat-event-card [event]="feed()?.events[0]" [inPost]="true" />
+  }
+
+  <!-- TEXT -->
+  @if (feed()?.content) {
+    <div class="my-3 line-clamp-2">
+      {{ feed()?.content }}
+    </div>
+  }
+
+  <!-- STATS -->
+  <div class="text-xs text-gray-500 flex gap-2">
+    <span>{{ feed()?.total_likes || 0 }} likes</span>
+    <span>|</span>
+    <span>{{ feed()?.total_comments || 0 }} comments</span>
+  </div>
+</div>

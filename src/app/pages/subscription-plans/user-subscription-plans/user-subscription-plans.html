@@ -1,0 +1,136 @@
+<ion-header mode="md">
+  <ion-toolbar>
+    <div [class.mb-20]="isDropdownOpen()" class="max-w-[672px] mx-auto p-4">
+      <div class="flex items-center cursor-pointer pb-4">
+        <i class="pi pi-arrow-left neutral-03" (click)="back()"></i>
+        <div class="w-6"></div>
+      </div>
+
+      <!-- Plan Type Filter Dropdown -->
+      @if (hasBothPlanTypes()) {
+        <div class="relative dropdown-container border border-gray-400 rounded-lg">
+          <div
+            class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+            (click)="toggleDropdown()"
+          >
+            @if (planTypeFilter() === 'event') {
+              <div class="icon-container icon-event">
+                <i class="pi pi-crown text-white text-xl"></i>
+              </div>
+            } @else if (planTypeFilter() === 'sponsor') {
+              <div class="icon-container icon-sponsor">
+                <ion-icon src="/assets/svg/subscription/sponsorIcon.svg" class="text-2xl"></ion-icon>
+              </div>
+            } @else {
+              <div class="icon-container icon-event">
+                <i class="pi pi-crown text-white text-xl"></i>
+              </div>
+            }
+            <span class="body-14M flex-1">{{ getFilterLabel() }}</span>
+            <i class="pi pi-chevron-down transition-transform" [class.rotate-180]="isDropdownOpen()"></i>
+          </div>
+
+          <!-- Dropdown Options -->
+          @if (isDropdownOpen()) {
+            <div class="dropdown-options absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 overflow-hidden">
+              @for (option of dropdownOptions(); track option.type) {
+                <div
+                  class="flex items-center gap-2 p-2 m-2 cursor-pointer transition-colors hover:bg-gray-200 rounded-lg"
+                  [class.border]="option.isActive"
+                  [class.bg-gray-200]="option.isActive"
+                  [class.border-gray-400]="option.isActive"
+                  (click)="onPlanTypeFilterChange(option.type)"
+                >
+                  <div [class]="'icon-container ' + (option.type === 'event' ? 'icon-event' : 'icon-sponsor')">
+                    @if (option.iconSrc) {
+                      <ion-icon [src]="option.iconSrc" class="text-2xl"></ion-icon>
+                    } @else {
+                      <i [class]="option.iconClass"></i>
+                    }
+                  </div>
+                  <span class="body-14M flex-1">{{ option.label }}</span>
+                  @if (option.isActive) {
+                    <i class="pi pi-check" [style.color]="option.checkColor"></i>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (hasMultiplePlans()) {
+        <segment-button [items]="planTabs()" [value]="selectedTabValue()" (valueChange)="onPlanTabChange($event)" />
+      }
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" mode="md">
+  <div class="w-full max-w-[672px] mx-auto h-full p-4">
+    @if (currentPlan()) {
+      <div class="flex flex-col gap-6">
+        <!-- Plan Preview (subscription card shown inside when subscription data is provided) -->
+        <plan-preview
+          [planForm]="planForm()"
+          [benefits]="benefits()"
+          [selectedEvents]="selectedEvents()"
+          [discountType]="discountType()"
+          [events]="currentPlanEvents()"
+          [monthlyPriceValue]="monthlyPriceValue()"
+          [discountValue]="discountValue()"
+          [planType]="planType()"
+          [subscriptionCardData]="isFromMySubscriptions() && hasActiveSubscription() ? subscriptionCardData() : null"
+          (planSelected)="onPlanSelected($event)"
+        />
+      </div>
+    } @else {
+      <div class="flex items-center justify-center h-full min-h-[400px]">
+        <div class="body-14M neutral-03">No subscription plans available</div>
+      </div>
+    }
+    <div class="mt-6">
+      @if (hasActiveSubscription()) {
+        <button
+          type="button"
+          class="w-full h-[44px] body-14SB transition-colors rounded-lg flex items-center justify-center"
+          [class.accent-red]="!isSubscriptionCanceled()"
+          [class.text-red-300]="isSubscriptionCanceled()"
+          [class.cursor-not-allowed]="isSubscriptionCanceled()"
+          (click)="onUnsubscribe(currentSubscriptionId()!)"
+          [disabled]="isLoading() || isSubscriptionCanceled()"
+        >
+          <span>Unsubscribe</span>
+        </button>
+        @if (isSubscriptionCanceled()) {
+          <div class="mt-3 text-center">
+            <p class="body-12R neutral-03">Your subscription will end on {{ formattedEndDate() }}. You can subscribe again after this date.</p>
+          </div>
+        }
+      } @else {
+        <app-button
+          label="Subscribe Now"
+          iconName="pi-arrow-right"
+          iconPos="right"
+          [customColor]="'#2B5BDE'"
+          class="w-full"
+          (click)="subscribe()"
+          [isLoading]="isLoading()"
+          [disabled]="isLoading()"
+        />
+        <div class="mt-3 text-center">
+          <p class="body-12R neutral-03">
+            @if (currentPlan()) {
+              ${{ displayPriceValue() | number: '1.2-2' }}{{ displayPricePeriod() }}. Cancel anytime.
+            }
+          </p>
+          <p class="body-10R neutral-03 mt-2">
+            By continuing, you agree to the <a href="#" class="underline">Terms and Use</a> and <a href="#" class="underline">Privacy Policy</a>.
+            Subscriptions will automatically renew unless auto-renew is turned off 24h prior the renewal date.
+          </p>
+          <a href="#" class="body-12R neutral-03 mt-3 block text-center">Restore Purchases</a>
+        </div>
+      }
+    </div>
+  </div>
+</ion-content>

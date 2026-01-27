@@ -1,0 +1,39 @@
+<div class="bg-neutral-07 border border-surface-300 rounded-lg p-4 mb-4 shadow-sm">
+  <!-- Header Row: Promo Code Name and Action Buttons -->
+  <div class="flex justify-between items-start gap-4 mb-3">
+    <div class="flex-1 flex flex-col gap-1 min-w-0">
+      <div class="body-medium-14 neutral-01 truncate">{{ promo().promo_code }}</div>
+      <div class="body-bold-16 neutral-01">{{ calculatePromoDiscount() }}</div>
+    </div>
+    <div class="flex items-center gap-4">
+      <button (click)="onEdit()" type="button">
+        <img src="assets/svg/editIcon.svg" alt="edit" class="w-6 h-6" />
+      </button>
+      <button (click)="onDelete()" type="button">
+        <img src="assets/svg/cancelIcon.svg" alt="cancel" class="w-6 h-6" />
+      </button>
+    </div>
+  </div>
+
+  <!-- Details Row - Horizontal Layout -->
+  <div class="flex justify-between pt-3 w-full">
+    @if (promo().type === 'Percentage' && promo().capped_amount) {
+      <div class="flex flex-col text-sm flex-1">
+        <span class="text-neutral-400">Capped at</span>
+        <span class="text-neutral-900">{{ promo().capped_amount }}</span>
+      </div>
+    }
+
+    <div class="flex flex-col text-sm flex-1">
+      <span class="text-neutral-400">Redemption Limit</span>
+      <span class="text-neutral-900">
+        {{ promo().quantity ? promo().quantity + ' Users' : 'No limit' }}
+      </span>
+    </div>
+
+    <div class="flex flex-col text-sm flex-1">
+      <span class="text-neutral-400">Max use per user</span>
+      <span class="text-neutral-900">{{ promo().max_uses_per_user }}</span>
+    </div>
+  </div>
+</div>

@@ -1,314 +1,285 @@
+import { IEvent } from '@/interfaces/event';
 import { CommonModule } from '@angular/common';
 import { ModalService } from '@/services/modal.service';
+import { EventService } from '@/services/event.service';
 import { NavController } from '@ionic/angular/standalone';
+import { EventCard } from '@/components/card/event-card';
 import { Searchbar } from '@/components/common/searchbar';
 import { EmptyState } from '@/components/common/empty-state';
-import { EventCard, IEvent } from '@/components/card/event-card';
-import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { IonHeader, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent, IonSkeletonText } from '@ionic/angular/standalone';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit, OnDestroy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'app-city-events',
+  selector: 'scity-events',
   styleUrl: './city-events.scss',
   templateUrl: './city-events.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, IonHeader, IonToolbar, IonContent, EventCard, Searchbar, EmptyState]
+  imports: [
+    CommonModule,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
+    IonSkeletonText,
+    EventCard,
+    Searchbar,
+    EmptyState
+  ]
 })
-export class CityEvents {
+export class CityEvents implements OnInit, OnDestroy {
   navCtrl = inject(NavController);
   modalService = inject(ModalService);
+  eventService = inject(EventService);
+  private destroyRef = inject(DestroyRef);
 
-  selectedCity = signal<{ city: string; state: string; fullName: string }>({
-    city: 'Atlanta',
-    state: 'GA',
-    fullName: 'Atlanta, GA'
+  selectedCity = signal<{ city: string; state: string; fullName: string; image_url?: string; thumbnail_url?: string }>({
+    city: '',
+    state: '',
+    fullName: ''
   });
+
+  private formatFullName(city: string, state: string): string {
+    if (city && state) {
+      return `${city}, ${state}`;
+    } else if (city) {
+      return city;
+    } else if (state) {
+      return state;
+    }
+    return '';
+  }
+
+  private async loadCityImage(city: string, state: string): Promise<{ image_url?: string; thumbnail_url?: string } | undefined> {
+    try {
+      const cities = await this.eventService.getTopCities();
+      const matchedCity = cities.find((c) => (c.city || '').toLowerCase() === city.toLowerCase() && c.state.toLowerCase() === state.toLowerCase());
+      return matchedCity ? { image_url: matchedCity.image_url, thumbnail_url: matchedCity.thumbnail_url } : undefined;
+    } catch (error) {
+      console.error('Error loading city image:', error);
+      return undefined;
+    }
+  }
+
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   searchQuery = signal('');
-  displayedEventsCount = signal(6);
+  private searchSubject = new Subject<string>();
+  allEvents = signal<IEvent[]>([]);
+  isLoadingEvents = signal<boolean>(false);
+  isLoadingMore = signal<boolean>(false);
+  currentPage = signal<number>(1);
+  totalPages = signal<number>(0);
+  private isInitialLoad = signal<boolean>(true);
+  private readonly pageLimit = 10;
 
-  allEvents: IEvent[] = [
-    {
-      title: 'Tech Innovation Summit',
-      organization: 'Atlanta Tech Hub',
-      date: 'Fri 8/30, 7:00 AM',
-      location: 'Atlanta, GA',
-      views: '12 views',
-      image: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Fri',
-      day: '12'
-    },
-    {
-      title: 'Music Festival 2024',
-      organization: 'Atlanta Music Scene',
-      date: 'Sat 9/1, 2:00 PM',
-      location: 'Atlanta, GA',
-      views: '45 views',
-      image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '1'
-    },
-    {
-      title: 'Business Networking Night',
-      organization: 'Atlanta Chamber',
-      date: 'Wed 9/4, 6:00 PM',
-      location: 'Atlanta, GA',
-      views: '28 views',
-      image: 'https://images.unsplash.com/photo-1444840535719-195841cb6e2b?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Wed',
-      day: '4'
-    },
-    {
-      title: 'Broadway Showcase',
-      organization: 'NYC Arts Council',
-      date: 'Sun 9/2, 3:00 PM',
-      location: 'New York, NJ',
-      views: '89 views',
-      image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '2'
-    },
-    {
-      title: 'Startup Pitch Night',
-      organization: 'NYC Ventures',
-      date: 'Thu 9/5, 7:00 PM',
-      location: 'New York, NJ',
-      views: '156 views',
-      image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Thu',
-      day: '5'
-    },
-    {
-      title: 'Mountain Hiking Adventure',
-      organization: 'Denver Outdoors',
-      date: 'Sat 9/7, 8:00 AM',
-      location: 'Denver, CO',
-      views: '67 views',
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '7'
-    },
-    {
-      title: 'Craft Beer Festival',
-      organization: 'Denver Brewers',
-      date: 'Sun 9/8, 12:00 PM',
-      location: 'Denver, CO',
-      views: '234 views',
-      image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '8'
-    },
-    {
-      title: 'Jazz Night Live',
-      organization: 'Chicago Jazz Club',
-      date: 'Fri 9/6, 9:00 PM',
-      location: 'Chicago, IL',
-      views: '91 views',
-      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Fri',
-      day: '6'
-    },
-    {
-      title: 'Food & Wine Expo',
-      organization: 'Chicago Culinary',
-      date: 'Sat 9/14, 11:00 AM',
-      location: 'Chicago, IL',
-      views: '178 views',
-      image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '14'
-    },
-    {
-      title: 'Desert Photography Workshop',
-      organization: 'Arizona Photographers',
-      date: 'Sun 9/15, 6:00 AM',
-      location: 'Phoenix, AZ',
-      views: '34 views',
-      image: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '15'
-    },
-    {
-      title: 'Yoga in the Park',
-      organization: 'Phoenix Wellness',
-      date: 'Mon 9/16, 7:00 AM',
-      location: 'Phoenix, AZ',
-      views: '56 views',
-      image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Mon',
-      day: '16'
-    },
-    {
-      title: 'Film Festival Opening',
-      organization: 'Toronto Cinema',
-      date: 'Thu 9/12, 7:30 PM',
-      location: 'Toronto, CA',
-      views: '201 views',
-      image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Thu',
-      day: '12'
-    },
-    {
-      title: 'Hockey Game Night',
-      organization: 'Toronto Sports',
-      date: 'Sat 9/21, 8:00 PM',
-      location: 'Toronto, CA',
-      views: '312 views',
-      image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '21'
-    },
-    {
-      title: 'Rock & Roll Hall of Fame Tour',
-      organization: 'Cleveland Music',
-      date: 'Sun 9/22, 2:00 PM',
-      location: 'Cleveland, OH',
-      views: '78 views',
-      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '22'
-    },
-    {
-      title: 'Lake Erie Sailing',
-      organization: 'Cleveland Yacht Club',
-      date: 'Sat 9/28, 10:00 AM',
-      location: 'Cleveland, OH',
-      views: '43 views',
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '28'
-    },
-    {
-      title: 'Beach Volleyball Tournament',
-      organization: 'Miami Sports',
-      date: 'Sun 9/29, 9:00 AM',
-      location: 'Miami, FL',
-      views: '145 views',
-      image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '29'
-    },
-    {
-      title: 'Latin Music Night',
-      organization: 'Miami Nights',
-      date: 'Fri 10/4, 10:00 PM',
-      location: 'Miami, FL',
-      views: '267 views',
-      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Fri',
-      day: '4'
-    },
-    {
-      title: 'Coffee Cupping Experience',
-      organization: 'Seattle Roasters',
-      date: 'Sat 10/5, 10:00 AM',
-      location: 'Seattle, WA',
-      views: '89 views',
-      image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '5'
-    },
-    {
-      title: 'Tech Meetup',
-      organization: 'Seattle Tech Hub',
-      date: 'Wed 10/9, 6:30 PM',
-      location: 'Seattle, WA',
-      views: '112 views',
-      image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Wed',
-      day: '9'
-    },
-    {
-      title: 'Historical Walking Tour',
-      organization: 'Boston Heritage',
-      date: 'Sun 10/6, 11:00 AM',
-      location: 'Boston, MA',
-      views: '56 views',
-      image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '6'
-    },
-    {
-      title: 'Marathon Training Session',
-      organization: 'Boston Runners',
-      date: 'Sat 10/12, 7:00 AM',
-      location: 'Boston, MA',
-      views: '134 views',
-      image: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sat',
-      day: '12'
-    },
-    {
-      title: 'Hollywood Movie Premiere',
-      organization: 'LA Entertainment',
-      date: 'Thu 10/10, 8:00 PM',
-      location: 'Los Angeles, CA',
-      views: '423 views',
-      image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Thu',
-      day: '10'
-    },
-    {
-      title: 'Surfing Competition',
-      organization: 'LA Beach Sports',
-      date: 'Sun 10/13, 7:00 AM',
-      location: 'Los Angeles, CA',
-      views: '298 views',
-      image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
-      dayOfWeek: 'Sun',
-      day: '13'
+  hasMore = computed(() => this.currentPage() < this.totalPages());
+
+  ngOnInit(): void {
+    // Setup debounced search
+    this.setupSearchDebounce();
+
+    // Check for city object in navigation state first
+    const navigation = this.router.currentNavigation();
+    const state: any = navigation?.extras?.state;
+
+    const params = this.route.snapshot.queryParamMap;
+    const cityParam = params.get('city');
+    const stateParam = params.get('state');
+
+    // If coming from "see all" button (no query params), don't set city/state
+    const hasQueryParams = cityParam || stateParam;
+
+    if (state?.city) {
+      const cityObj = state.city;
+      const city = cityObj.city || '';
+      const stateName = cityObj.state || '';
+      this.selectedCity.set({
+        city: city,
+        state: stateName,
+        fullName: this.formatFullName(city, stateName),
+        image_url: cityObj.image_url,
+        thumbnail_url: cityObj.thumbnail_url
+      });
+      this.loadEvents();
+    } else if (hasQueryParams) {
+      // Only load events if query params are present
+      const city = cityParam || '';
+      const stateName = stateParam || '';
+      // Set initial values first
+      this.selectedCity.set({
+        city: city,
+        state: stateName,
+        fullName: this.formatFullName(city, stateName),
+        image_url: undefined,
+        thumbnail_url: undefined
+      });
+
+      this.loadCityImage(city, stateName).then((cityData) => {
+        if (cityData) {
+          this.selectedCity.update((current) => ({
+            ...current,
+            image_url: cityData.image_url,
+            thumbnail_url: cityData.thumbnail_url
+          }));
+        }
+      });
+      this.loadEvents();
+    } else {
+      this.selectedCity.set({
+        city: '',
+        state: '',
+        fullName: 'All',
+        image_url: undefined,
+        thumbnail_url: undefined
+      });
+      this.loadEvents();
     }
-  ];
+  }
 
-  filteredEvents = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const city = this.selectedCity();
-    let events = this.allEvents;
+  private async loadEvents(search?: string, isSearch: boolean = false, page: number = 1, append: boolean = false): Promise<void> {
+    try {
+      if (this.isInitialLoad()) {
+        this.isLoadingEvents.set(true);
+      }
 
-    events = events.filter((event) => event.location.includes(city.fullName));
+      const city = this.selectedCity();
 
-    if (query) {
-      events = events.filter(
-        (event) =>
-          event.title.toLowerCase().includes(query) ||
-          event.organization.toLowerCase().includes(query) ||
-          event.location.toLowerCase().includes(query)
-      );
+      const params: any = {
+        page: page,
+        limit: this.pageLimit,
+        order_by: 'start_date',
+        order_direction: 'ASC'
+      };
+
+      if (search && search.trim()) {
+        params.search = search.trim();
+      }
+
+      if (city.city) {
+        params.city = city.city;
+      }
+      if (city.state) {
+        params.state = city.state;
+      }
+
+      const response = await this.eventService.getEvents(params);
+
+      if (response?.data?.data) {
+        const events = Array.isArray(response.data.data) ? response.data.data : [];
+
+        if (append) {
+          this.allEvents.update((current) => [...current, ...events]);
+        } else {
+          // Replace content directly without showing loader
+          this.allEvents.set(events);
+        }
+
+        // Update pagination
+        const pagination = response?.data?.pagination;
+        if (pagination) {
+          this.currentPage.set(pagination.currentPage || page);
+          this.totalPages.set(pagination.totalPages || 0);
+        }
+      }
+
+      // Mark initial load as complete
+      if (this.isInitialLoad()) {
+        this.isInitialLoad.set(false);
+      }
+    } catch (error) {
+      console.error('Error loading events:', error);
+    } finally {
+      if (this.isLoadingEvents()) {
+        this.isLoadingEvents.set(false);
+      }
     }
+  }
 
-    return events;
-  });
-
-  displayedEvents = computed(() => {
-    return this.filteredEvents().slice(0, this.displayedEventsCount());
-  });
-
-  hasMoreEvents = computed(() => {
-    return this.displayedEventsCount() < this.filteredEvents().length;
-  });
+  private setupSearchDebounce(): void {
+    this.searchSubject.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef)).subscribe((query: string) => {
+      this.searchQuery.set(query);
+      this.currentPage.set(1);
+      this.totalPages.set(0);
+      this.loadEvents(query, true, 1, false);
+    });
+  }
 
   async openCitySelection(): Promise<void> {
-    const result = await this.modalService.openCitySelectionModal();
+    const currentCity = this.selectedCity();
+    const result = await this.modalService.openCitySelectionModal(
+      currentCity.city || currentCity.state ? { city: currentCity.city, state: currentCity.state } : undefined
+    );
     if (result) {
-      this.selectedCity.set(result);
-      this.displayedEventsCount.set(6);
+      const city = result.city || '';
+      const stateName = result.state || '';
+
+      if (!city && !stateName) {
+        this.selectedCity.set({
+          city: '',
+          state: '',
+          fullName: 'All',
+          image_url: undefined,
+          thumbnail_url: undefined
+        });
+      } else {
+        const cities = await this.eventService.getTopCities();
+        const matchedCity = cities.find(
+          (c) => (c.city || '').toLowerCase() === city.toLowerCase() && c.state.toLowerCase() === stateName.toLowerCase()
+        );
+
+        this.selectedCity.set({
+          city: city,
+          state: stateName,
+          fullName: this.formatFullName(city, stateName),
+          image_url: matchedCity?.image_url,
+          thumbnail_url: matchedCity?.thumbnail_url
+        });
+      }
+
+      this.currentPage.set(1);
+      this.totalPages.set(0);
+      await this.loadEvents(); // Reload events when city changes
     }
   }
 
   onSearchChange(query: string): void {
-    this.searchQuery.set(query);
-    this.displayedEventsCount.set(6);
+    this.searchSubject.next(query);
   }
 
   onSearchClear(): void {
-    this.searchQuery.set('');
-    this.displayedEventsCount.set(6);
+    this.searchSubject.next('');
   }
 
-  loadMore(): void {
-    const currentCount = this.displayedEventsCount();
-    const maxCount = this.filteredEvents().length;
-    this.displayedEventsCount.set(Math.min(currentCount + 6, maxCount));
+  async loadMoreEvents(event: Event): Promise<void> {
+    const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
+
+    if (this.isLoadingMore() || !this.hasMore()) {
+      infiniteScroll.complete();
+      return;
+    }
+
+    try {
+      this.isLoadingMore.set(true);
+      const nextPage = this.currentPage() + 1;
+      const search = this.searchQuery().trim() || undefined;
+      await this.loadEvents(search, false, nextPage, true);
+    } catch (error) {
+      console.error('Error loading more events:', error);
+    } finally {
+      this.isLoadingMore.set(false);
+      infiniteScroll.complete();
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Cleanup handled by takeUntilDestroyed
+    this.modalService.dismissAllModals();
   }
 
   goBack(): void {

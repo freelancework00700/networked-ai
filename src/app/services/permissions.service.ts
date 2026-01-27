@@ -1,9 +1,10 @@
-import { Injectable, inject } from '@angular/core';
-import { Capacitor } from '@capacitor/core';
 import { Camera } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
+import { ToasterService } from './toaster.service';
+import { isPlatformBrowser } from '@angular/common';
 import { Geolocation } from '@capacitor/geolocation';
 import { Contacts } from '@capacitor-community/contacts';
-import { ToasterService } from './toaster.service';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { NativeSettings, AndroidSettings, IOSSettings } from 'capacitor-native-settings';
 
 export type PermissionStatus = 'granted' | 'denied' | 'prompt' | 'prompt-with-rationale' | 'limited';
@@ -16,6 +17,7 @@ export interface PermissionResult {
 
 @Injectable({ providedIn: 'root' })
 export class PermissionsService {
+  private platformId = inject(PLATFORM_ID);
   private toasterService = inject(ToasterService);
 
   isNativePlatform(): boolean {
@@ -41,7 +43,7 @@ export class PermissionsService {
 
       const result = await Camera.requestPermissions({ permissions: ['camera'] });
       console.log('Camera requestPermissions result:', result);
-      
+
       return {
         granted: result.camera === 'granted',
         status: result.camera as PermissionStatus
@@ -94,16 +96,16 @@ export class PermissionsService {
       } catch (checkError: any) {
         // If checkPermissions fails due to location services being disabled
         const errorMessage = checkError?.message || checkError?.toString() || '';
-        const isLocationServicesDisabled = 
+        const isLocationServicesDisabled =
           errorMessage.includes('Location services are not enabled') ||
           errorMessage.includes('Location services') ||
           checkError?.code === 'OS-PLUG-GLOC-0003';
-        
+
         if (isLocationServicesDisabled) {
-          return { 
-            granted: false, 
+          return {
+            granted: false,
             status: 'denied',
-            locationServicesDisabled: true 
+            locationServicesDisabled: true
           };
         }
         throw checkError;
@@ -150,28 +152,68 @@ export class PermissionsService {
 
     try {
       const result = await Geolocation.checkPermissions();
-      
+
       return {
         granted: result.location === 'granted',
         status: result.location as PermissionStatus
       };
     } catch (error: any) {
       console.error('Check location permission error:', error);
-      
+
       const errorMessage = error?.message || error?.toString() || '';
-      const isLocationServicesDisabled = 
+      const isLocationServicesDisabled =
         errorMessage.includes('Location services are not enabled') ||
         errorMessage.includes('Location services') ||
         error?.code === 'OS-PLUG-GLOC-0003';
-      
+
       if (isLocationServicesDisabled) {
-        return { 
-          granted: false, 
+        return {
+          granted: false,
           status: 'denied',
-          locationServicesDisabled: true 
+          locationServicesDisabled: true
         };
       }
       return { granted: false, status: 'denied' };
+    }
+  }
+
+  /**
+   * Gets the current location for both web and native platforms
+   * @param options - Optional geolocation options (timeout, enableHighAccuracy, etc.)
+   * @returns Promise with latitude and longitude, or null if unavailable
+   */
+  async getCurrentLocation(): Promise<{ latitude: string; longitude: string } | null> {
+    const defaultOptions = { maximumAge: 0, timeout: 10000, enableHighAccuracy: false };
+
+    if (!this.isNativePlatform()) {
+      if (!isPlatformBrowser(this.platformId)) return null;
+
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, defaultOptions);
+        });
+
+        return {
+          latitude: position.coords.latitude.toString(),
+          longitude: position.coords.longitude.toString()
+        };
+      } catch (error: any) {
+        console.error('Error getting location on web:', error);
+        return null;
+      }
+    }
+
+    // Native platform
+    try {
+      const position = await Geolocation.getCurrentPosition(defaultOptions);
+
+      return {
+        latitude: position.coords.latitude.toString(),
+        longitude: position.coords.longitude.toString()
+      };
+    } catch (error: any) {
+      console.error('Error getting location on native:', error);
+      return null;
     }
   }
 
@@ -257,7 +299,7 @@ export class PermissionsService {
         case 'camera':
           previousStatus = (await this.checkCameraPermission()).status;
           console.log('camera previousStatus', previousStatus);
-          
+
           if (previousStatus === 'denied') {
             await NativeSettings.open({
               optionAndroid: AndroidSettings.ApplicationDetails,
@@ -266,7 +308,7 @@ export class PermissionsService {
             settingsOpened = true;
             return { result: { granted: false, status: 'denied' }, settingsOpened: true };
           }
-          
+
           result = await this.requestCameraPermission();
           console.log('camera-result', result);
           break;
@@ -275,7 +317,7 @@ export class PermissionsService {
           const locationCheck = await this.checkLocationPermission();
           previousStatus = locationCheck.status;
           console.log('location previousStatus', previousStatus);
-          
+
           if (locationCheck.locationServicesDisabled) {
             await NativeSettings.open({
               optionAndroid: AndroidSettings.Location,
@@ -284,7 +326,7 @@ export class PermissionsService {
             settingsOpened = true;
             return { result: { granted: false, status: 'denied', locationServicesDisabled: true }, settingsOpened: true };
           }
-          
+
           if (previousStatus === 'denied') {
             await NativeSettings.open({
               optionAndroid: AndroidSettings.ApplicationDetails,
@@ -293,10 +335,10 @@ export class PermissionsService {
             settingsOpened = true;
             return { result: { granted: false, status: 'denied' }, settingsOpened: true };
           }
-          
+
           result = await this.requestLocationPermission();
           console.log('location-result', result);
-          
+
           if (result.locationServicesDisabled) {
             await NativeSettings.open({
               optionAndroid: AndroidSettings.Location,
@@ -311,7 +353,7 @@ export class PermissionsService {
           const contactCheck = await this.checkContactsPermission();
           previousStatus = contactCheck.status;
           console.log('contact previousStatus', previousStatus);
-          
+
           if (previousStatus === 'denied') {
             await NativeSettings.open({
               optionAndroid: AndroidSettings.ApplicationDetails,
@@ -320,7 +362,7 @@ export class PermissionsService {
             settingsOpened = true;
             return { result: { granted: false, status: 'denied' }, settingsOpened: true };
           }
-          
+
           result = await this.requestContactsPermission();
           console.log('contact-result', result);
           break;

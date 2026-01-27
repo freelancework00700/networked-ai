@@ -1,0 +1,21 @@
+@if (peopleCards().length > 0) {
+  <div class="bg-neutral-06 py-3">
+    <div class="px-4">
+      <div class="flex items-center justify-between">
+        <div class="body-16SB neutral-01">People you might know</div>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <div class="swiper swiper-user-recommendation" #swiperEl>
+        <div class="swiper-wrapper">
+          @for (person of peopleCards(); track person.id) {
+            <div class="swiper-slide">
+              <user-card [user]="person" (added)="onUserAdded($event)" />
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

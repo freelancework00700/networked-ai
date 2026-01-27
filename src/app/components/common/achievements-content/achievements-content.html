@@ -1,0 +1,54 @@
+<div class="w-full max-w-[672px] mx-auto" [class.p-4]="showHeader()">
+  @if (showHeader()) {
+    <div class="flex justify-between items-center pb-4">
+      <div class="heading-h3 neutral-01">Your Networking Score</div>
+    </div>
+  } @else {
+    <div class="flex justify-between items-center pb-4">
+      <div class="heading-h3 neutral-01">Achievements</div>
+      @if (showSeeAll()) {
+        <div class="brand-02 body-14SB cursor-pointer" (click)="handleSeeAll()">See all</div>
+      }
+    </div>
+  }
+
+  @if (showNetworkingScore()) {
+    <networking-score-card [score]="networkingScore()" />
+  }
+
+  @if (isLoading()) {
+    <div class="flex items-center justify-center py-8">
+      <div class="body-14M neutral-03">Loading achievements...</div>
+    </div>
+  } @else {
+    @for (category of categories(); track category.key) {
+      <div [class.mb-6]="!$last">
+        <div class="flex items-center justify-between pb-3">
+          <div class="body-16M neutral-01">{{ category.displayName }}</div>
+          <div class="flex items-center gap-2">
+            @if (!category.allCompleted) {
+              <div class="w-[120px] sm:w-[200px] h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]" [style.width.%]="category.progress"></div>
+              </div>
+            }
+            @if (category.allCompleted) {
+              <div class="flex items-center gap-2">
+                <i class="pi pi-check"></i>
+                <div class="body-16M neutral-01 font-semibold">{{ category.currentCount | number }}</div>
+              </div>
+            } @else {
+              <div class="body-16M neutral-01 font-semibold whitespace-nowrap">
+                {{ category.currentCount | number }}/{{ category.nextBadgeCount | number }}
+              </div>
+            }
+          </div>
+        </div>
+        <div class="grid grid-cols-5 gap-2">
+          @for (badge of category.badges; track badge.id) {
+            <achievement-card [badge]="badge" (onClick)="openAchievementDetailModal($event, category.key)" />
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

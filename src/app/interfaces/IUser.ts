@@ -35,12 +35,14 @@ export interface IUser {
   settings?: IUserSettings;
   image_url?: File | string;
   stripe_account_id?: string;
+  stripe_account_status?: string;
   stripe_customer_id?: string;
   total_events_liked?: number;
   total_events_hosted?: number;
   total_events_spoken?: number;
   total_events_staffed?: number;
   total_events_cohosted?: number;
+  total_events_sponsored?: number;
   total_events_attended?: number;
   college_university_name?: string;
   total_gamification_points?: number;
@@ -51,6 +53,11 @@ export interface IUser {
   interests?: VibeItem[];
   hobby_ids?: string[];
   hobbies?: VibeItem[];
+  total_networks?: number;
+  connection_status?: string;
+  has_subscribed?: boolean;
+  subscription_plan_count?: number;
+  distance?: number;
 }
 
 export interface IUserResponse {
@@ -64,4 +71,50 @@ export interface VibeItem {
   name: string;
   icon: string;
   description?: string;
+}
+
+export interface UserSearchPagination {
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+}
+
+export interface UserSearchResponse {
+  users: IUser[];
+  pagination: UserSearchPagination;
+}
+
+export interface UserSearchApiResponse {
+  success: boolean;
+  message: string;
+  data: {
+    data?: IUser[];
+    pagination?: UserSearchPagination;
+  };
+}
+
+export interface NetworkConnection {
+  id: string;
+  user_id: string;
+  peer_id?: string;
+  peer?: IUser;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  updated_by?: string | null;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  is_deleted?: boolean;
+  [key: string]: any;
+}
+
+export interface NetworkConnectionsData {
+  data?: IUser[];
+  pagination?: UserSearchPagination;
+}
+
+export interface NetworkConnectionsApiResponse {
+  success: boolean;
+  message: string;
+  data?: NetworkConnectionsData;
 }

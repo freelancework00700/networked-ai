@@ -1,31 +1,43 @@
 <ion-header mode="md">
   <ion-toolbar mode="md">
     <div class="p-4 flex items-center justify-between">
-      <div class="heading-h3 neutral-01">Report Post</div>
+      <div class="heading-h3 neutral-01">
+        @if (type === 'User' && user) {
+          Report {{ user.username || user.name }}
+        } @else {
+          Report {{ type }}
+        }
+      </div>
       <i class="pi pi-times" (click)="close()"></i>
     </div>
   </ion-toolbar>
 </ion-header>
 
 <div class="inner-content px-4">
-  <form [formGroup]="form()" class="flex flex-col gap-2">
-    @for (reason of reasons; track reason) {
-      <div class="flex items-center gap-2">
-        <p-radiobutton [inputId]="reason" formControlName="reason" [value]="reason" name="reason"> </p-radiobutton>
-        <label [for]="reason" class="ml-2">{{ reason }}</label>
-      </div>
-    }
-
-    <div class="p-field my-3">
-      <text-input controlName="additionalComment" [required]="false" label="Additional comment" placeholder="Write your comment here (Optional)" />
+  @if (isLoading()) {
+    <div class="flex justify-center items-center py-8">
+      <ion-spinner></ion-spinner>
     </div>
-  </form>
+  } @else {
+    <form [formGroup]="form()" class="flex flex-col gap-2">
+      @for (reason of reasons(); track reason.id) {
+        <div class="flex items-center gap-2">
+          <p-radiobutton [inputId]="reason.id" formControlName="reason_id" [value]="reason.id" name="reason_id"> </p-radiobutton>
+          <label [for]="reason.id" class="ml-2">{{ reason?.reason }}</label>
+        </div>
+      }
+
+      <div class="p-field my-3">
+        <text-input controlName="additionalComment" [required]="false" label="Additional comment" placeholder="Write your comment here (Optional)" />
+      </div>
+    </form>
+  }
 </div>
 
 <ion-footer mode="md">
   <ion-toolbar mode="md">
     <div class="p-4">
-      <app-button label="Report" (click)="submitReport()" />
+      <app-button label="Report" (click)="submitReport()" [disabled]="isLoading()" />
     </div>
   </ion-toolbar>
 </ion-footer>

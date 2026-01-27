@@ -1,0 +1,93 @@
+ion-header {
+  &:not(.events-tab) {
+    transform: none !important;
+  }
+  
+  ion-toolbar {
+    .header-profile-section {
+      opacity: calc(1 - var(--scroll-progress, 0));
+      max-height: calc(200px * (1 - var(--scroll-progress, 0)));
+      padding: calc(1.5rem * (1 - var(--scroll-progress, 0))) calc(1rem * (1 - var(--scroll-progress, 0)));
+      overflow: hidden;
+      transition: opacity 0.1s ease, max-height 0.1s ease, padding 0.1s ease;
+      
+      // Hide completely when fully scrolled on mobile
+      @media (max-width: 768px) {
+        &[style*="--scroll-progress: 1"] {
+          display: none;
+        }
+      }
+    }
+
+    .header-segment-section {
+      opacity: calc(1 - var(--scroll-progress, 0));
+      max-height: calc(100px * (1 - var(--scroll-progress, 0)));
+      overflow: hidden;
+      transition: opacity 0.1s ease, max-height 0.1s ease;
+
+      // Hide completely when fully scrolled on mobile
+      @media (max-width: 768px) {
+        &[style*="--scroll-progress: 1"] {
+          display: none;
+        }
+      }
+    }
+  }
+
+  .feed-header-content {
+    .feed-filter-section {
+      opacity: calc(1 - var(--scroll-progress, 0));
+      max-height: calc(100px * (1 - var(--scroll-progress, 0)));
+      padding: calc(1rem * (1 - var(--scroll-progress, 0)));
+      overflow: hidden;
+      transition: opacity 0.1s ease, max-height 0.1s ease, padding 0.1s ease;
+
+      @media (max-width: 768px) {
+        display: flex;
+      }
+      
+      @media (max-width: 768px) {
+        &[style*="--scroll-progress: 1"] {
+          display: none;
+        }
+      }
+    }
+
+    .feed-post-composer {
+      padding: calc(0.75rem + 0.25rem * (1 - var(--scroll-progress, 0))) 1rem;
+      transition: padding 0.1s ease;
+
+      .post-composer-name {
+        display: block;
+        opacity: 1;
+        max-height: 50px;
+      }
+    }
+  }
+}
+
+.filter-button {
+  flex: 1 1 0%;
+  height: 2rem;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 20px;
+  border: 1px solid;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  font-family: 'Manrope', sans-serif;
+
+  &.active {
+    font-weight: 600;
+    color: var(--brand-02);
+    border-color: #e1910e;
+    background-color: var(--brand-07);
+  }
+
+  &:not(.active) {
+    font-weight: 500;
+    border-color: #d7d7d7;
+    color: var(--neutral-03);
+    background-color: var(--neutral-07);
+  }
+}

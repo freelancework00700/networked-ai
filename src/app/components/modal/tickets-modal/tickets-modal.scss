@@ -1,0 +1,36 @@
+.detail-card {
+  padding: 10px;
+  background:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+    radial-gradient(88.82% 228.46% at 4.26% 6.6%, rgba(207, 207, 207, 0.25) 0%, rgba(107, 107, 107, 0.15) 100%);
+  box-shadow: 4px 8px 16px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(16px);
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.qr-code {
+  filter: brightness(0.8);
+}
+
+.qr-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.qr-overlay ion-icon {
+  font-size: 60px;
+  color: #f5bc61;
+  border: 4px solid #f5bc61;
+  border-radius: 50%;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.tickets-content {
+  --padding-bottom: env(safe-area-inset-bottom);
+}

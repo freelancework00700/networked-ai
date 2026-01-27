@@ -1,7 +1,8 @@
-import { Component, inject, ChangeDetectionStrategy, signal, computed } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { NavController, IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import { UserService } from 'src/app/services/user.service';
 import { PaymentTransactionItem } from './components/payment-transaction-item';
+import { NavController, IonHeader, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
 
 export interface PaymentTransaction {
   id: string;
@@ -17,127 +18,92 @@ export interface PaymentTransaction {
   templateUrl: './payment-history.html',
   styleUrl: './payment-history.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonHeader, IonToolbar, IonContent, PaymentTransactionItem, DatePipe]
+  imports: [DatePipe, IonHeader, IonToolbar, IonContent, CommonModule, IonInfiniteScroll, PaymentTransactionItem, IonInfiniteScrollContent]
 })
-export class PaymentHistory {
-  // services
-  navCtrl = inject(NavController);
+export class PaymentHistory implements OnInit {
+  private navCtrl = inject(NavController);
+  private userService = inject(UserService);
 
-  // signals
   isDownloading = signal(false);
+  isLoading = signal(false);
 
-  // Mock transaction data
-  transactions = signal<PaymentTransaction[]>([
-    {
-      id: '1',
-      eventName: 'Atlanta Makes Me Laugh',
-      amount: 19.99,
-      isPayout: false,
-      date: new Date('2025-11-20T19:18:00')
-    },
-    {
-      id: '2',
-      eventName: 'Scheveningen 2',
-      amount: 10.99,
-      isPayout: false,
-      date: new Date('2025-11-20T19:18:00')
-    },
-    {
-      id: '3',
-      eventName: 'Stripe Payout',
-      amount: 200.00,
-      isPayout: true,
-      date: new Date('2025-11-19T19:18:00')
-    },
-    {
-      id: '4',
-      eventName: 'Atlanta Makes Me Laugh',
-      amount: 19.99,
-      isPayout: false,
-      date: new Date('2025-11-18T19:18:00')
-    },
-    {
-      id: '5',
-      eventName: 'Scheveningen 2',
-      amount: 10.99,
-      isPayout: false,
-      date: new Date('2025-11-18T19:18:00')
-    },
-    {
-      id: '6',
-      eventName: 'Atlanta Makes Me Laugh',
-      amount: 19.99,
-      isPayout: false,
-      date: new Date('2025-11-10T19:18:00')
-    },
-    {
-      id: '7',
-      eventName: 'Scheveningen 2',
-      amount: 10.99,
-      isPayout: false,
-      date: new Date('2025-11-10T19:18:00')
-    },
-    {
-      id: '8',
-      eventName: 'Atlanta Makes Me Laugh',
-      amount: 19.99,
-      isPayout: false,
-      date: new Date('2025-11-08T19:18:00')
-    },
-    {
-      id: '9',
-      eventName: 'Scheveningen 2',
-      amount: 10.99,
-      isPayout: false,
-      date: new Date('2025-11-08T19:18:00')
+  transactions = signal<any[]>([]);
+
+  private page = 1;
+  private limit = 20;
+  hasMore = signal(true);
+
+  ngOnInit(): void {
+    this.loadPaymentHistory();
+  }
+
+  async loadPaymentHistory(event?: CustomEvent): Promise<void> {
+    if (this.isLoading() || !this.hasMore()) {
+      event?.target && (event.target as HTMLIonInfiniteScrollElement).complete();
+      return;
     }
-  ]);
 
-  // Group transactions by date
-  groupedTransactions = computed(() => {
-    const grouped = new Map<string, PaymentTransaction[]>();
-    
-    this.transactions().forEach(transaction => {
-      const dateKey = this.formatDateKey(transaction.date);
-      // console.log(dateKey);
-      if (!grouped.has(dateKey)) {
-        grouped.set(dateKey, []);
+    try {
+      this.isLoading.set(true);
+
+      const response = await this.userService.paymentHistory(this.page, this.limit);
+
+      const newTransactions = response?.data ?? [];
+
+      this.transactions.update((prev) => [...prev, ...newTransactions]);
+
+      if (newTransactions.length < this.limit) {
+        this.hasMore.set(false);
+      } else {
+        this.page++;
       }
-      grouped.get(dateKey)!.push(transaction);
+    } catch (error) {
+      console.error('Error loading payment history', error);
+    } finally {
+      this.isLoading.set(false);
+      event?.target && (event.target as HTMLIonInfiniteScrollElement).complete();
+    }
+  }
+
+  groupedTransactions = computed(() => {
+    const transactions = this.transactions();
+
+    const groups = new Map<string, any[]>();
+
+    transactions.forEach((tx) => {
+      const dateKey = this.formatDateKey(tx.created_at);
+
+      if (!groups.has(dateKey)) {
+        groups.set(dateKey, []);
+      }
+
+      groups.get(dateKey)!.push(tx);
     });
 
-    console.log(grouped);
-
-    // Convert to array and sort by date (newest first)
-    return Array.from(grouped.entries())
-      .map(([dateKey, transactions]) => ({
-        dateKey,
-        date: this.parseDateKey(dateKey),
-        transactions: transactions.sort((a, b) => b.date.getTime() - a.date.getTime())
-      }))
-      .sort((a, b) => b.date.getTime() - a.date.getTime());
+    return Array.from(groups.entries()).map(([dateKey, transactions]) => ({
+      dateKey,
+      date: new Date(dateKey),
+      transactions
+    }));
   });
 
   hasTransactions = computed(() => this.transactions().length > 0);
 
-  // Format date key for grouping (e.g., "2025-11-20")
-  private formatDateKey(date: Date): string {
-    return date.toISOString().split('T')[0];
-  }
+  private formatDateKey(dateValue?: string | null): string {
+    if (!dateValue) {
+      return new Date().toISOString().split('T')[0];
+    }
 
-  // Parse date key back to Date
-  private parseDateKey(dateKey: string): Date {
-    return new Date(dateKey);
+    const date = new Date(dateValue);
+
+    if (isNaN(date.getTime())) {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    return date.toISOString().split('T')[0];
   }
 
   back(): void {
     this.navCtrl.back();
-  }
-
-  downloadHistory(): void {
-    this.isDownloading.set(true);
-    setTimeout(() => {
-      this.isDownloading.set(false);
-    }, 2000);
   }
 }

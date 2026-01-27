@@ -1,0 +1,175 @@
+<div class="flex flex-col gap-6">
+  <!-- Require RSVP Approval -->
+  <toggle-input [formGroup]="eventForm()" controlName="is_show_timer" label="Show Time?" />
+  <toggle-input [formGroup]="eventForm()" controlName="is_rsvp_approval_required" label="Require RSVP Approval?" />
+  <!-- Repeating Event -->
+  @if (!isModalMode() && !isEditMode()) {
+    <div>
+      <toggle-input [formGroup]="eventForm()" controlName="is_repeating_event" label="Repeating Event" />
+
+      @if (getFieldValue('is_repeating_event')) {
+        <div class="w-full mt-2">
+          <div class="border-l-3 border-neutral-300 pl-3">
+            <!-- Repeat Frequency -->
+            <div class="flex gap-2 mb-4">
+              @for (item of repeatOptions(); track item.value) {
+                <chip
+                  [type]="item.value"
+                  [color]="getFieldValue('repeating_frequency') === item.value ? 'lgold' : ''"
+                  (selectedType)="setRepeatFrequency(item.value)"
+                  class="w-full"
+                >
+                  <span class="body-14R flex justify-center">
+                    {{ item.label }}
+                  </span>
+                </chip>
+              }
+            </div>
+            <!-- Repeat Count -->
+            <label class="neutral-02 body-14M block mb-2"> How many times will the event occur in total? </label>
+
+            <div class="flex gap-2">
+              @for (item of repeatCountOptions(); track item.value) {
+                @if (item.value !== 'custom') {
+                  <chip
+                    [type]="item.value.toString()"
+                    [color]="getFieldValue('repeat_count') === item.value ? 'lgold' : ''"
+                    (selectedType)="handleRepeatCountClick(item.value)"
+                  >
+                    <span class="body-14R">
+                      {{ item.label }}
+                    </span>
+                  </chip>
+                } @else {
+                  <div>
+                    <number-input
+                      [formGroup]="eventForm()"
+                      controlName="custom_repeat_count"
+                      placeholder="Custom"
+                      [min]="5"
+                      [max]="10"
+                      class="w-14"
+                    ></number-input>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Events List -->
+          @if (getFieldValue('is_repeating_event') && repeatingEvents().length > 0) {
+            <div class="mt-4">
+              <div class="flex flex-col gap-2">
+                <!-- Main Event (Event #1) - from form data -->
+                <repeating-event-item [event]="mainEvent()" [isMainEvent]="true" />
+
+                <!-- Repeating Events (Event #2, #3, etc.) -->
+                @for (event of repeatingEvents(); track event['id']) {
+                  <repeating-event-item
+                    [event]="event"
+                    [isMainEvent]="false"
+                    (edit)="editRepeatingEvent(event)"
+                    (delete)="deleteRepeatingEvent(event['id'])"
+                  />
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+  <!-- Co-Hosts -->
+  <participant-input label="Co-Host(s)" type="CoHost" [selectedUsers]="coHosts()" (usersChange)="onUsersChange($event, 'co_hosts')" />
+
+  <!-- Sponsors -->
+  <participant-input label="Sponsor(s)" type="Sponsor" [selectedUsers]="sponsors()" (usersChange)="onUsersChange($event, 'sponsors')" />
+
+  <!-- Speakers -->
+  <participant-input label="Speaker(s)" type="Speaker" [selectedUsers]="speakers()" (usersChange)="onUsersChange($event, 'speakers')" />
+
+  <!-- Visibility -->
+  <div class="flex items-center justify-between">
+    <label class="neutral-02 body-14M">Visibility</label>
+    <div class="flex gap-2">
+      <chip [type]="isPublic() ? 'public' : 'invite-only'" [color]="isPublic() ? 'lgold' : ''" (selectedType)="setVisibility(true)">
+        <span class="body-14R">Public</span>
+      </chip>
+      <chip [type]="isPublic() ? 'public' : 'invite-only'" [color]="!isPublic() ? 'lgold' : ''" (selectedType)="setVisibility(false)">
+        <span class="body-14R">Invite Only</span>
+      </chip>
+    </div>
+  </div>
+
+  <!-- Allow +1's -->
+  <div>
+    <toggle-input [formGroup]="eventForm()" controlName="allow_plus_ones" label="Allow +1's?" />
+
+    @if (getFieldValue('allow_plus_ones')) {
+      <div class="w-full border-l-3 border-neutral-300 pl-2 mt-2">
+        <label class="neutral-02 body-14M block mb-2"> How many additional person per guest? </label>
+
+        <div class="flex flex-wrap gap-3">
+          @for (item of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track item) {
+            <chip
+              [type]="item.toString()"
+              [color]="getFieldValue('max_attendees_per_user') === item ? 'lgold' : ''"
+              (selectedType)="setPlusCount(item)"
+            >
+              <span class="body-14R">+{{ item }}</span>
+            </chip>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Questionnaire Section -->
+  <div>
+    <label class="neutral-02 body-14M block mb-4">Questionnaire</label>
+    <div class="flex flex-col gap-4">
+      @for (section of sections(); track section.type) {
+        <div class="border border-neutral-300 rounded-lg p-4">
+          <!-- Header Row: Label and Action Buttons -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              @if (hasQuestions(section.type)) {
+                <img src="assets/svg/checkIcon.svg" alt="{{ section.label }}" class="w-5 h-5" />
+              }
+              <div class="font-medium text-surface-900">{{ section.label }}</div>
+            </div>
+
+            <div class="flex gap-4">
+              @if (!hasQuestions(section.type)) {
+                <button (click)="openQuestionnaireModal(section.type)" type="button">
+                  <i class="pi pi-plus text-gray-700"></i>
+                </button>
+              } @else {
+                <button (click)="openQuestionnaireModal(section.type)" type="button">
+                  <img src="assets/svg/editIcon.svg" alt="Edit" />
+                </button>
+
+                <button (click)="deleteEventQuestionnaire(section.type)" type="button">
+                  <img src="assets/svg/deleteIcon.svg" alt="Delete" />
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Content Row: List of questions or placeholder -->
+          <div class="mt-2">
+            @if (!hasQuestions(section.type)) {
+              <div class="text-sm text-gray-500">{{ section.placeholder }}</div>
+            } @else {
+              <ul class="list-disc list-inside text-sm text-gray-500 space-y-1 pl-2">
+                @for (question of getSectionQuestions(section.type); track question.id) {
+                  <li>{{ question.question }}</li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

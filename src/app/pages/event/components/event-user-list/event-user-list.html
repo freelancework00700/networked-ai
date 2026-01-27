@@ -1,0 +1,45 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
+      <div class="pi pi-arrow-left" (click)="navigationService.back()"></div>
+      <!-- <div class="body-14M neutral-02 text-center w-full">{{ title() }}</div> -->
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" mode="md">
+  <div class="min-h-full">
+    <div class="w-full max-w-[672px] mx-auto p-6">
+      <!-- Event Title -->
+      @if (eventTitle()) {
+        <div class="body-14R neutral-03 mb-4">{{ eventTitle() }}</div>
+      }
+
+      <!-- Section Title -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="body-16SB neutral-01">{{ title() }}</div>
+        <div class="body-14M neutral-03">{{ users().length }}</div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="flex items-center justify-between pt-2 pb-4">
+        <searchbar
+          [placeholder]="'Search by username'"
+          [searchQuery]="searchQuery()"
+          (searchChange)="searchQuery.set($event)"
+          (clear)="searchQuery.set('')"
+          class="w-full"
+        />
+      </div>
+
+      <!-- User List -->
+      @for (user of filteredUsers(); track user.id) {
+        <div class="border-b border-gray-200">
+          <user-card-list [user]="user" />
+        </div>
+      } @empty {
+        <app-empty-state title="No users found" message="" />
+      }
+    </div>
+  </div>
+</ion-content>

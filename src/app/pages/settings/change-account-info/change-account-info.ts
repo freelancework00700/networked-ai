@@ -8,10 +8,11 @@ import { ToasterService } from '@/services/toaster.service';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { validateFields } from '@/utils/form-validation';
+import { ActivatedRoute, Router } from '@angular/router';
+import { NavigationService } from '@/services/navigation.service';
 import { signal, computed, inject, Component, ChangeDetectionStrategy, OnInit, ViewChild } from '@angular/core';
 import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 import { FormGroup, FormBuilder, ReactiveFormsModule, FormControl, AbstractControl, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 
 type AccountInfoType = 'email' | 'phone' | 'username' | 'password';
 
@@ -26,27 +27,17 @@ interface ChangeAccountInfoForm {
   styleUrl: './change-account-info.scss',
   templateUrl: './change-account-info.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    Button,
-    EmailInput,
-    MobileInput,
-    TextInput,
-    UsernameInput,
-    PasswordInput,
-    IonHeader,
-    IonToolbar,
-    IonContent,
-    ReactiveFormsModule
-  ]
+  imports: [Button, EmailInput, MobileInput, TextInput, UsernameInput, PasswordInput, IonHeader, IonToolbar, IonContent, ReactiveFormsModule]
 })
 export class ChangeAccountInfo implements OnInit {
   // services
   private fb = inject(FormBuilder);
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   private route = inject(ActivatedRoute);
   private toasterService = inject(ToasterService);
   private authService = inject(AuthService);
   private modalService = inject(ModalService);
+  router = inject(Router);
 
   // view child
   @ViewChild('newPhoneInput', { read: MobileInput }) newPhoneInput?: MobileInput;
@@ -96,20 +87,23 @@ export class ChangeAccountInfo implements OnInit {
       this.type.set(typeParam);
     }
 
-    // Initialize current values based on type
-    this.initializeCurrentValue();
-    this.initializeForm();
-  }
+    const navigation = this.router.currentNavigation();
+    const state = navigation?.extras?.state || history.state;
 
-  private initializeCurrentValue(): void {
-    // TODO: Load actual current values from user service
-    if (this.isEmail()) {
-      this.currentValue.set('user@gmail.com');
-    } else if (this.isPhone()) {
-      this.currentValue.set('1234567890');
-    } else {
-      this.currentValue.set('sandra_t');
+    console.log('state', state);
+
+    if (state) {
+      if (this.isEmail()) {
+        this.currentValue.set(state.email || 'user@gmail.com');
+      } else if (this.isPhone()) {
+        this.currentValue.set(state.phone || '1234567890');
+      } else {
+        this.currentValue.set(state.username || 'sandra_t');
+      }
     }
+    // Initialize current values based on type
+    // this.initializeCurrentValue();
+    this.initializeForm();
   }
 
   private initializeForm(): void {
@@ -134,8 +128,9 @@ export class ChangeAccountInfo implements OnInit {
 
     // Handle password change separately
     if (this.isPassword()) {
-      const newPassword = form.get('newValue')?.value;
-      const confirmPassword = form.get('confirmNewValue')?.value;
+      const password = form.get('currentValue')?.value || '';
+      const new_password = form.get('newValue')?.value || '';
+      const confirm_password = form.get('confirmNewValue')?.value;
 
       // Validate password fields
       if (!(await validateFields(form, ['currentValue', 'newValue', 'confirmNewValue']))) {
@@ -143,7 +138,7 @@ export class ChangeAccountInfo implements OnInit {
       }
 
       // Check if passwords match
-      if (newPassword !== confirmPassword) {
+      if (new_password !== confirm_password) {
         this.passwordsDontMatch.set(true);
         return;
       }
@@ -151,8 +146,8 @@ export class ChangeAccountInfo implements OnInit {
       try {
         this.isLoading.set(true);
         // TODO: Implement API call to change password
-        // await this.authService.changePassword({ currentPassword, newPassword });
-        
+        await this.authService.changePassword(password, new_password);
+
         // Show success modal
         await this.modalService.openSuccessModal({
           title: 'Password Successfully Updated',
@@ -161,7 +156,7 @@ export class ChangeAccountInfo implements OnInit {
         });
       } catch (error: any) {
         console.error('Error changing password:', error);
-          this.toasterService.showError(error.message || 'Failed to change password. Please try again.');
+        this.toasterService.showError(error.message || 'Failed to change password. Please try again.');
       } finally {
         this.isLoading.set(false);
       }
@@ -195,8 +190,8 @@ export class ChangeAccountInfo implements OnInit {
       const errorMsg = this.isEmail()
         ? 'New email must be different from current email.'
         : this.isPhone()
-        ? 'New phone number must be different from current phone number.'
-        : 'New username must be different from current username.';
+          ? 'New phone number must be different from current phone number.'
+          : 'New username must be different from current username.';
       this.toasterService.showError(errorMsg);
       return;
     }
@@ -208,22 +203,18 @@ export class ChangeAccountInfo implements OnInit {
         console.log('newValue', newValue);
         // Send OTP to new email
         // await this.authService.sendOtp({ email: newValue });
-        this.navCtrl.navigateForward('/settings/verify-otp', {
-          state: {
-            email: newValue,
-            successTitle: 'Email Successfully Updated',
-            successDescription: "You've verified your new email address. Use this for quick login next time."
-          }
+        this.navigationService.navigateForward('/settings/verify-otp', false, {
+          email: newValue,
+          successTitle: 'Email Successfully Updated',
+          successDescription: "You've verified your new email address. Use this for quick login next time."
         });
       } else if (this.isPhone()) {
         // Send OTP to new phone number
         // await this.authService.sendOtp({ mobile: newValue });
-        this.navCtrl.navigateForward('/settings/verify-otp', {
-          state: {
-            mobile: newValue,
-            successTitle: 'Phone Number Successfully Updated',
-            successDescription: "You've verified your new phone number. Use this for quick login next time."
-          }
+        this.navigationService.navigateForward('/settings/verify-otp', false, {
+          mobile: newValue,
+          successTitle: 'Phone Number Successfully Updated',
+          successDescription: "You've verified your new phone number. Use this for quick login next time."
         });
       } else {
         // Username - direct update (no OTP)
@@ -235,8 +226,7 @@ export class ChangeAccountInfo implements OnInit {
       }
     } catch (error: any) {
       console.error(`Error updating ${this.type()}:`, error);
-      const errorMsg =
-        error.message || `Failed to update ${this.type()}. Please try again.`;
+      const errorMsg = error.message || `Failed to update ${this.type()}. Please try again.`;
       this.toasterService.showError(errorMsg);
     } finally {
       this.isLoading.set(false);

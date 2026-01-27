@@ -1,0 +1,51 @@
+// Styles for user subscription plans page
+
+.icon-container {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.icon-event {
+  border-radius: 8px;
+  background: linear-gradient(138deg, #6188f5 8.51%, #0a329e 85.69%);
+  box-shadow: 0 6px 12px 0 rgba(9, 70, 103, 0.3);
+}
+
+.icon-sponsor {
+  border-radius: 8px;
+  background: radial-gradient(
+    194% 128.52% at 9.38% -7.14%,
+    #f9f2e6 13.46%,
+    #f4d7a9 38.63%,
+    rgba(201, 164, 105, 0.94) 69.52%,
+    #bf9e69 88.87%,
+    rgba(195, 167, 121, 0.9) 100%
+  );
+  box-shadow:
+    0 4px 7px 0 rgba(0, 0, 0, 0.11),
+    0 2px 4px 0 rgba(0, 0, 0, 0.09);
+}
+
+:host {
+
+  .dropdown-options {
+    animation: slideDown 0.2s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import { Observable, firstValueFrom } from 'rxjs';
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 
 export interface ApiError {
   error?: any;
@@ -20,6 +20,8 @@ export class BaseApiService {
       if (value !== undefined && value !== null && value !== '') {
         if (key === 'image_url' && (value instanceof File || typeof value === 'string')) {
           formData.append(key, value instanceof File ? value : value);
+        } else if (key === 'file' && value instanceof File) {
+          formData.append('file', value);
         } else if (value instanceof File) {
           formData.append(key, value);
         } else if (typeof value === 'object' && !(value instanceof Date)) {
@@ -57,9 +59,14 @@ export class BaseApiService {
   }
 
   // GET request
-  protected async get<T>(url: string): Promise<T> {
+  protected async get<T>(url: string, options?: { params?: HttpParams; responseType?: 'json' | 'text' | 'blob' | 'arraybuffer' }): Promise<T> {
     try {
-      return await firstValueFrom(this.http.get<T>(url));
+      return await firstValueFrom(
+        this.http.get<T>(url, {
+          ...(options || {}),
+          responseType: (options?.responseType ?? 'json') as any
+        })
+      );
     } catch (error) {
       return this.handleError(error);
     }

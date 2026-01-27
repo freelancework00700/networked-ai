@@ -1,0 +1,192 @@
+<div class="w-full max-w-[672px] mx-auto bg-neutral-0">
+  @if (showPreviewBanner()) {
+    <div class="flex items-center justify-between rounded-[12px] bg-[#E5E5E5] pl-1.5 pr-3 py-2 mb-4">
+      <div class="flex items-center gap-1.5">
+        <ion-icon src="../../../../assets/svg/notification/reminder.svg" class="h-[20px] w-[20px]"></ion-icon>
+        <div class="body-14R neutral-01">This is how your event will appear to the public</div>
+      </div>
+    </div>
+  }
+
+  @if (showPreviewBanner()) {
+    <div class="relative w-full h-[361px]">
+      <img
+        fill
+        placeholder
+        priority
+        [alt]="eventData().title + ' image'"
+        class="object-cover"
+        (error)="onImageError($event)"
+        [ngSrc]="getImageUrl(eventData().thumbnail_url || '')"
+      />
+    </div>
+  }
+
+  @if (eventData().isRepeatingEvent && dateItemsForDisplay().length > 0 && !hideDateSelector()) {
+    <div class="date-selector-container px-4 flex flex-col gap-0 pt-4">
+      <segment-button
+        [value]="selectedDate() || (dateItemsForDisplay()[0]?.value ?? '')"
+        [items]="dateItemsForDisplay()"
+        (valueChange)="handleDateChange($event)"
+      />
+    </div>
+  }
+
+  <div class="flex flex-col gap-8 pt-4 relative">
+    <div class="flex flex-col gap-4 px-4">
+      <div class="flex flex-col gap-1">
+        <!-- top chips -->
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-neutral-06 body-10 neutral-02 border border-[#E5E5E5]">
+              {{ eventData().isPublic ? 'Public Event' : 'Private Event' }}
+            </span>
+            @if (eventData().total_views) {
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-neutral-06 body-10 neutral-02 border border-[#E5E5E5]">
+                {{ eventData().total_views }} Views
+              </span>
+            }
+          </div>
+          @if (eventData().has_plans && !eventData().is_subscriber_exclusive) {
+            <div class="inline-flex items-center px-2 py-1 body-10 gap-1.5 text-white rounded-full bg-[#2B5BDE]">
+              <ion-icon src="/assets/svg/crown-white.svg" class="text-[12px]"></ion-icon>
+              <span>Free for Subscribers</span>
+            </div>
+          }
+          @if (eventData().is_subscriber_exclusive) {
+            <div class="subscriber-chip inline-flex items-center px-2 py-1 gap-1.5 body-10 text-[#5c3c09f0]">
+              <ion-icon src="/assets/svg/crown-sponsor.svg" class="text-[12px]"></ion-icon>
+              <span>Subscribers Exclusive</span>
+            </div>
+          }
+        </div>
+        <!-- title & host -->
+        <div class="body-16SB neutral-01 truncate">{{ eventData().title || 'Event Title' }}</div>
+        <div class="flex items-center gap-1 body-12 neutral-03">
+          <span>Hosted by</span>
+          <button type="button" class="body-12SB brand-02 flex items-center gap-1 max-w-full">
+            <span class="truncate">{{ eventData().hostName || 'Networked AI' }}</span>
+            <i class="pi pi-arrow-up-right !text-[12px] flex-shrink-0"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      @if (showActionButtons()) {
+        <div class="flex gap-3">
+          @if (eventData().isCurrentUserHost || eventData().isCurrentUserAttendee || eventData().isCurrentUserCoHost) {
+            <app-button label="Event Chat" icon="assets/svg/messageChatIcon.svg" (click)="onEventChatClick()?.()" class="flex-1" color="secondary" />
+          }
+          @if (eventData().isCurrentUserHost || eventData().isCurrentUserCoHost) {
+            <app-button label="Manage" icon="assets/svg/manage-event/settings.svg" (click)="onManageEventClick()?.()" class="flex-1" />
+          }
+        </div>
+      }
+
+      <!-- details rows -->
+      <div class="flex flex-col gap-3">
+        <!-- date & time -->
+        <div class="flex items-start gap-1.5">
+          <div class="pi pi-calendar neutral-03 !text-[16px] mt-0.5 flex-shrink-0"></div>
+          <div class="flex items-center justify-between gap-4 w-full min-w-0">
+            <div class="body-14R neutral-03 flex-shrink-0">Date &amp; Time</div>
+            <div class="body-14R neutral-01 truncate text-right">{{ eventData().formattedDateTime || 'Not set' }}</div>
+          </div>
+        </div>
+
+        <!-- admission -->
+        <div class="flex items-start gap-1.5">
+          <div class="pi pi-ticket neutral-03 !text-[16px] mt-0.5 flex-shrink-0"></div>
+          <div
+            class="flex items-center justify-between gap-4 w-full min-w-0"
+            [class.cursor-pointer]="hasMultipleTickets()"
+            (click)="handleAdmissionClick()"
+          >
+            <div class="body-14R neutral-03 flex-shrink-0">Admission</div>
+            <div class="body-14R neutral-01 truncate text-right flex items-center gap-1">
+              {{ eventData().admission || 'Free' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- location -->
+        <div class="flex items-start gap-1.5">
+          <div class="pi pi-map-marker neutral-03 !text-[16px] mt-0.5 flex-shrink-0"></div>
+          <div class="flex items-start justify-between gap-4 w-full min-w-0">
+            <div class="body-14R neutral-03 flex-shrink-0">Location</div>
+            <div class="body-14R neutral-01 truncate text-right">{{ eventData().location || 'Location not specified' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @for (section of eventData().userSections || []; track section.title) {
+      <div class="flex flex-col gap-3 px-4">
+        <div class="flex items-center justify-between gap-2">
+          <div class="body-14SB neutral-01 truncate">{{ section.title }}</div>
+          @if (section.users && section.users.length > 0) {
+            <i
+              class="pi pi-arrow-right neutral-02 !text-[16px] cursor-pointer flex-shrink-0"
+              (click)="handleUserListClick(section.title, section.users)"
+            ></i>
+          }
+        </div>
+        <avatar-group [users]="section.users || []" />
+      </div>
+    }
+
+    @if (displayMediasForDisplay().length > 0) {
+      <div class="flex flex-col gap-3 px-4">
+        <!-- media slider -->
+        <div class="relative rounded-[16px] overflow-hidden">
+          <div #swiperEl class="swiper swiper-event-detail">
+            <div class="swiper-wrapper">
+              @for (media of displayMediasForDisplay(); track media.id || $index) {
+                <div class="swiper-slide">
+                  <div class="slide-content">
+                    <div class="slide-image">
+                      @if (media.type === 'Video') {
+                        <video [src]="media.url" class="w-full h-[361px] object-cover" controls></video>
+                      }
+                      @if (media.type === 'Image') {
+                        <div class="relative w-full h-[361px]">
+                          <img
+                            fill
+                            placeholder
+                            priority
+                            [alt]="eventData().title + ' image ' + ($index + 1)"
+                            class="object-cover"
+                            (error)="onImageError($event)"
+                            [ngSrc]="getImageUrl(media.url || '')"
+                          />
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+            <div class="swiper-pagination"></div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- description text -->
+    @if (eventData().description) {
+      <div class="flex flex-col gap-3 px-4">
+        <div class="body-14M neutral-02" [innerHTML]="description()"></div>
+      </div>
+    }
+
+    <div class="px-4">
+      <div class="w-full rounded-[16px] overflow-hidden" style="height: 300px; position: relative">
+        <div #mapContainer class="event-map"></div>
+      </div>
+    </div>
+
+    @if (showHostPromo()) {
+      <host-event-promo-card />
+    }
+  </div>
+</div>

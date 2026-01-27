@@ -1,23 +1,23 @@
 <div class="flex items-center justify-between p-4 bg-neutral-07 mb-4 border border-neutral-300 rounded-3xl">
   <div class="flex items-center gap-3 flex-1">
     <!-- Avatar -->
-    <div class="w-[52px] h-[52px] min-w-[52px] rounded-full overflow-hidden bg-neutral-05">
-      @if (imageUrl()) {
-        <img [src]="imageUrl()" [alt]="name()" class="w-full h-full object-cover" />
-      } @else {
-        <div class="w-full h-full flex items-center justify-center">
-          <ion-icon name="person-outline" class="text-[28px] neutral-03"></ion-icon>
-        </div>
-      }
+    <div class="relative w-[52px] h-[52px] rounded-full overflow-hidden">
+      <img
+        fill
+        placeholder
+        class="rounded-full object-cover"
+        (error)="onImageError($event)"
+        [ngSrc]="getImageUrl(currentUser()?.thumbnail_url ?? '')"
+      />
     </div>
 
     <!-- Name and Edit Profile -->
     <div class="flex flex-col gap-1 flex-1">
       <div class="flex items-center gap-2">
-        <span class="body-14SB neutral-01 py-1 rounded">{{ name() }}</span>
+        <span class="body-14SB neutral-01 py-1 rounded">{{ currentUser()?.name }}</span>
         <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full py-0 h-[20px]">
-          <img src="assets/svg/diamondYellow.svg" alt="diamond" class="h-4 w-auto ml-1.5" />
-          <span class="text-sm font-medium pr-2">{{ points() }}</span>
+          <img [src]="diamondPath()" alt="diamond" class="h-4 w-auto ml-1.5" />
+          <span class="text-sm font-medium pr-2">{{ currentUser()?.total_gamification_points || 0 }}</span>
         </div>
       </div>
       @if (showEditProfile()) {

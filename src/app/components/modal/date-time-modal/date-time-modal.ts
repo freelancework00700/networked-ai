@@ -39,32 +39,84 @@ export class DateTimeModal implements OnInit {
       }
     }
   }
+
+  getFormattedValue(): string {
+    if (!this.value) return '';
+
+    if (this.type === 'time') {
+      if (this.value.includes('T')) {
+        return this.value;
+      }
+      return this.convertTimeToISO(this.value);
+    }
+
+    return this.value;
+  }
+
+  private formatReturnValue(value: string): string {
+    if (!value) return value;
+    if (value.includes('T')) {
+      if (this.type === 'time') {
+        try {
+          const date = new Date(value);
+          const hours = date.getHours().toString().padStart(2, '0');
+          const minutes = date.getMinutes().toString().padStart(2, '0');
+          return `${hours}:${minutes}`;
+        } catch {
+          return value;
+        }
+      } else {
+        return value.split('T')[0];
+      }
+    }
+
+    return value;
+  }
+
   dismiss(): void {
-    this.modalCtrl.dismiss(this.value);
+    const formattedValue = this.formatReturnValue(this.value);
+    this.modalCtrl.dismiss(formattedValue);
     this.modalService.close();
   }
 
-  // Common function to convert HH:mm to ISO datetime string with timezone adjustment
   private convertTimeToISO(timeString: string): string {
-    const [hours, minutes] = timeString.split(':');
+    if (!timeString || !timeString.includes(':')) {
+      return '';
+    }
+    const [hours, minutes] = timeString.split(':').map(Number);
     const today = new Date();
-    const localDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-    const timezoneOffset = localDate.getTimezoneOffset();
-    const utcDate = new Date(localDate.getTime() - timezoneOffset * 60 * 1000);
-    return utcDate.toISOString();
+    // Create ISO string with today's date and specified time
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const hour = String(hours).padStart(2, '0');
+    const minute = String(minutes).padStart(2, '0');
+    return `${year}-${month}-${day}T${hour}:${minute}:00`;
   }
 
   getMinValue(): string | undefined {
-    if (!this.min) return undefined;
     if (this.type === 'time') {
+      if (!this.min) return undefined;
+      if (this.min.includes('T')) {
+        return this.min;
+      }
       return this.convertTimeToISO(this.min);
     }
-    return this.min || undefined;
+
+    // For date type, return undefined if min is not provided to allow all dates including past dates
+    if (!this.min) {
+      return undefined;
+    }
+
+    return this.min;
   }
 
   getMaxValue(): string | undefined {
     if (this.type === 'time') {
       if (!this.max) return undefined;
+      if (this.max.includes('T')) {
+        return this.max;
+      }
       return this.convertTimeToISO(this.max);
     }
 
@@ -74,6 +126,6 @@ export class DateTimeModal implements OnInit {
       return futureDate.toISOString().split('T')[0];
     }
 
-    return this.max || undefined;
+    return this.max;
   }
 }

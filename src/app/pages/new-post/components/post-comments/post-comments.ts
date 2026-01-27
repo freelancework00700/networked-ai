@@ -5,12 +5,30 @@ import { Button } from '@/components/form/button';
 import { PostCard } from '@/components/card/post-card';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
+import { FeedService } from '@/services/feed.service';
 import { EmptyState } from '@/components/common/empty-state';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { NgxMentionsModule, ChoiceWithIndices } from 'ngx-mentions';
-import { Component, effect, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { IonToolbar, IonHeader, IonContent, NavController, IonFooter } from '@ionic/angular/standalone';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit, OnDestroy, ViewChild, ElementRef, computed } from '@angular/core';
+import {
+  IonToolbar,
+  IonHeader,
+  IonContent,
+  NavController,
+  IonFooter,
+  IonSpinner,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent
+} from '@ionic/angular/standalone';
+import { NgOptimizedImage } from '@angular/common';
+import { CommentResponse, FeedComment } from '@/interfaces/IFeed';
+import { Router, ActivatedRoute } from '@angular/router';
+import { AuthService } from '@/services/auth.service';
+import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
+import { NavigationService } from '@/services/navigation.service';
+import { Mentions } from '@/components/common/mentions';
+import { IUser } from '@/interfaces/IUser';
+import { OverlayModule } from '@angular/cdk/overlay';
 
 @Component({
   selector: 'post-comments',
@@ -26,274 +44,348 @@ import { IonToolbar, IonHeader, IonContent, NavController, IonFooter } from '@io
     MenuModule,
     IonContent,
     IonToolbar,
+    IonSpinner,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
     CommonModule,
-    NgxMentionsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    NgOptimizedImage,
+    Mentions,
+    OverlayModule
   ]
 })
-export class PostComments {
+export class PostComments implements OnInit, OnDestroy {
+  @ViewChild('textareaEl') textareaRef!: ElementRef<HTMLTextAreaElement>;
   navCtrl = inject(NavController);
   sanitizer = inject(DomSanitizer);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
+  feedService = inject(FeedService);
+  authService = inject(AuthService);
+  navigationService = inject(NavigationService);
+  router = inject(Router);
+  route = inject(ActivatedRoute);
 
-  choices: any[] = [];
-  mentions: ChoiceWithIndices[] = [];
+  currentUser = this.authService.currentUser;
+
   textCtrl: FormControl = new FormControl('');
-  searchRegexp = new RegExp('^([-&.\\w]+ *){0,3}$');
 
-  post = signal<any>(null);
+  post = this.feedService.currentViewedPost;
   loading = signal<boolean>(false);
+  isLoadingComments = signal<boolean>(false);
+  isLoadingPost = signal<boolean>(false);
+  currentPage = signal<number>(1);
+  totalPages = signal<number>(0);
+  totalComments = signal<number>(0);
   replyingTo = signal<{
     commentId: string;
     userName: string;
     userPhoto?: string;
   } | null>(null);
-  formattedText!: any;
 
-  parentCommentStatusBasedStyles = {
-    color: '#F5BC61'
-  };
+  hasMoreComments = computed(() => this.currentPage() < this.totalPages());
 
-  mentionsConfig = [
-    {
-      triggerCharacter: '@',
-      getChoiceLabel: (item: any): string => {
-        return `@${item.name}`;
+  // Track mentioned users: username -> user ID
+  private mentionedUsers = new Map<string, string>();
+
+  onMentionSelected(user: IUser): void {
+    if (user.username && user.id) {
+      this.mentionedUsers.set(user.username.toLowerCase(), user.id);
+    }
+  }
+
+  private extractMentionIds(commentText: string): string[] {
+    const mentionRegex = /@([\w.]+)/g;
+    const matches = commentText.matchAll(mentionRegex);
+    const mentionIds: string[] = [];
+
+    for (const match of matches) {
+      const username = match[1].toLowerCase();
+      const userId = this.mentionedUsers.get(username);
+      if (userId && !mentionIds.includes(userId)) {
+        mentionIds.push(userId);
       }
     }
-  ];
 
-  menuItems: MenuItem[] = [
-    {
+    return mentionIds;
+  }
+
+  getMenuItems(comment: FeedComment): MenuItem[] {
+    const currentUserId = this.currentUser()?.id;
+    const isOwnComment = comment.user_id === currentUserId || comment.created_by === currentUserId;
+
+    const items: MenuItem[] = [];
+
+    // View Profile is available for all comments
+    items.push({
       label: 'View Profile',
       icon: 'pi pi-user',
-      command: () => this.viewProfile()
-    },
-    {
-      label: 'Message',
-      icon: 'pi pi-envelope',
-      command: () => this.sendMessage()
-    },
-    {
-      separator: true
-    },
-    {
-      label: 'Report',
-      icon: 'pi pi-flag',
-      command: () => this.reportComment()
-    },
-    {
-      label: 'Block account',
-      icon: 'pi pi-ban',
-      command: () => this.blockUser()
-    }
-  ];
+      command: () => this.viewProfile(comment)
+    });
 
-  comments = signal<any[]>([
-    {
-      comment_id: 'HWCL26g6rwZeMOyenN6L',
-      text: 'https://www.npmjs.com/package/angular-mentions',
-      uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-      post_id: 'MuffELhtUqTbGnUJ3zmE',
-      createdAt: 1766127451868,
-      parent_comment_id: null,
-      like_count: 2,
-      reply_count: 0,
-      isLiked: true,
-      replies: [],
-      isSending: false
-    },
-    {
-      comment_id: 'voGvKv9Tq36p9KsbYuKQ',
-      parent_comment_id: null,
-      uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-      reply_count: 2,
-      text: 'test123',
-      post_id: 'MuffELhtUqTbGnUJ3zmE',
-      createdAt: 1756378928704,
-      like_count: 0,
-      isLiked: false,
-      replies: [
+    if (isOwnComment) {
+      // Show delete option for own comments
+      items.push({
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        command: () => this.deleteComment(comment)
+      });
+    } else {
+      // Options for other users' comments
+      items.push(
         {
-          comment_id: 'xLSf8Aj5RPtxzVSvyXOW',
-          text: 'test 123',
-          uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-          post_id: 'MuffELhtUqTbGnUJ3zmE',
-          createdAt: 1766127504771,
-          parent_comment_id: 'voGvKv9Tq36p9KsbYuKQ',
-          like_count: 4,
-          reply_count: 0,
-          isLiked: false,
-          replies: [],
-          isSending: false
+          label: 'Message',
+          icon: 'pi pi-envelope',
+          command: () => this.sendMessage(comment)
         },
         {
-          comment_id: 'qneGoETVRliLSp2FNrCk',
-          parent_comment_id: 'voGvKv9Tq36p9KsbYuKQ',
-          uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-          post_id: 'MuffELhtUqTbGnUJ3zmE',
-          like_count: 0,
-          createdAt: 1756378939910,
-          text: '123',
-          reply_count: 0,
-          isLiked: false
-        }
-      ]
-    },
-    {
-      comment_id: 'BKk8mYZhGEe39GI9zfIO',
-      parent_comment_id: null,
-      uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-      post_id: 'MuffELhtUqTbGnUJ3zmE',
-      createdAt: 1756359496204,
-      text: 'test comment',
-      reply_count: 2,
-      like_count: 6,
-      isLiked: false,
-      replies: [
-        {
-          comment_id: '6bgZ30Vqn6ZZecwkg889',
-          post_id: 'MuffELhtUqTbGnUJ3zmE',
-          reply_count: 0,
-          parent_comment_id: 'BKk8mYZhGEe39GI9zfIO',
-          uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-          text: '123',
-          createdAt: 1756378946006,
-          like_count: 0,
-          isLiked: false
+          separator: true
         },
         {
-          comment_id: 'qRr65alYV39qWAWU1Mdf',
-          createdAt: 1756378933651,
-          reply_count: 0,
-          like_count: 0,
-          text: 'test',
-          uid: 'DUtQ8jeMUANBUnye5InM6feXD0B3',
-          parent_comment_id: 'BKk8mYZhGEe39GI9zfIO',
-          post_id: 'MuffELhtUqTbGnUJ3zmE',
-          isLiked: false
+          label: 'Report',
+          icon: 'pi pi-flag',
+          command: () => this.reportComment(comment)
+        },
+        {
+          label: 'Block account',
+          icon: 'pi pi-ban',
+          command: () => this.blockUser(comment)
         }
-      ]
+      );
     }
-  ]);
 
-  private navEffect = effect(() => {
-    const state = history.state;
+    return items;
+  }
 
-    if (state?.post) {
-      this.post.set(state.post);
-    }
+  // Use computed to get comments from FeedService
+  comments = computed(() => {
+    const postId = this.post()?.id;
+    if (!postId) return [];
+    return this.feedService.getCommentsSignal(postId);
   });
 
-  ngOnInit() {
-    this.textCtrl.valueChanges.subscribe((content) =>
-      this.getFormattedHighlightText(this.textCtrl.value, this.mentions, this.parentCommentStatusBasedStyles)
-    );
-  }
-
-  viewProfile() {
-    console.log('View profile clicked');
-  }
-
-  sendMessage() {
-    console.log('Message clicked');
-  }
-
-  async reportComment() {
-    const result = await this.modalService.openReportModal();
-    if (!result) return;
-    const resultModal = await this.modalService.openConfirmModal({
-      icon: 'assets/svg/deleteWhiteIcon.svg',
-      iconBgColor: '#F5BC61',
-      title: 'Report Submitted',
-      description: 'We use these reports to show you less of this kind of content in the future.',
-      confirmButtonLabel: 'Done'
-    });
-    if (resultModal && resultModal.role === 'confirm') {
-      this.toasterService.showSuccess('Event cancelled');
+  async ngOnInit() {
+    const postId = this.route.snapshot.paramMap.get('id');
+    if (postId) {
+      try {
+        this.isLoadingPost.set(true);
+        const postData = await this.feedService.getPostById(postId);
+        if (postData) {
+          // Set the post in FeedService for real-time socket updates
+          this.feedService.setCurrentViewedPost(postData);
+          this.loadComments(postId);
+        }
+      } catch (error) {
+        console.error('Error loading post:', error);
+      } finally {
+        this.isLoadingPost.set(false);
+      }
     }
-    this.toasterService.showSuccess('Post reported');
   }
 
-  async blockUser() {
-    const result = await this.modalService.openBlockModal();
-    if (!result) return;
-
-    this.toasterService.showSuccess('User blocked');
+  ngOnDestroy(): void {
+    // Clear the currently viewed post when leaving the page
+    this.feedService.setCurrentViewedPost(null);
   }
 
-  onLike() {
-    this.post.set({
-      ...this.post(),
-      isLikedByYou: !this.post().isLikedByYou,
-      like_count: !this.post().isLikedByYou ? (this.post().like_count || 0) + 1 : Math.max((this.post().like_count || 1) - 1, 0)
+  private async loadComments(feedId: string, page: number = 1, limit: number = 10): Promise<void> {
+    try {
+      this.isLoadingComments.set(true);
+      const result = await this.feedService.getFeedComments(feedId, { page, limit });
+      this.totalComments.set(result.total);
+
+      // Add isRepliesOpen property to comments and their replies
+      const addRepliesOpen = (comment: FeedComment): FeedComment => {
+        return {
+          ...comment,
+          isRepliesOpen: false,
+          replies: comment.replies?.map((reply) => ({ ...reply, isRepliesOpen: false }))
+        };
+      };
+
+      const topLevelComments = result.comments.filter((comment) => !comment.parent_comment_id).map((comment) => addRepliesOpen(comment));
+
+      // Get current comments from FeedService
+      const currentComments = this.feedService.getCommentsSignal(feedId);
+
+      if (page === 1) {
+        this.feedService.setCommentsForFeed(feedId, topLevelComments);
+      } else {
+        this.feedService.setCommentsForFeed(feedId, [...currentComments, ...topLevelComments]);
+      }
+      this.currentPage.set(result.page);
+      this.totalPages.set(result.totalPages);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    } finally {
+      this.isLoadingComments.set(false);
+    }
+  }
+
+  async loadMoreComments(event: Event): Promise<void> {
+    const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
+    const postId = this.post()?.id;
+
+    if (!postId || !this.hasMoreComments()) {
+      infiniteScroll.complete();
+      return;
+    }
+
+    try {
+      const nextPage = this.currentPage() + 1;
+      await this.loadComments(postId, nextPage);
+      infiniteScroll.complete();
+    } catch (error) {
+      console.error('Error loading more comments:', error);
+      infiniteScroll.complete();
+    }
+  }
+
+  async deleteComment(comment: FeedComment): Promise<void> {
+    let deleteResponse: CommentResponse | null = null;
+
+    const result = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/deleteWhiteIcon.svg',
+      iconBgColor: '#C73838',
+      title: 'Delete Comment',
+      description: 'Are you sure you want to delete this comment? This action cannot be undone.',
+      confirmButtonLabel: 'Delete',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        deleteResponse = await this.feedService.deleteComment(comment.id);
+        return deleteResponse;
+      }
     });
+
+    if (result && result.role === 'confirm' && deleteResponse !== null) {
+      const isReply = !!comment.parent_comment_id;
+      const responseMessage = (deleteResponse as CommentResponse).message;
+
+      if (!isReply) {
+        this.totalComments.update((count) => Math.max(count - 1, 0));
+      }
+
+      // Show success message from API response
+      this.toasterService.showSuccess(responseMessage || 'Comment deleted successfully');
+    } else if (result && result.role === 'error') {
+      this.toasterService.showError('Failed to delete comment. Please try again.');
+    }
   }
 
-  toggleReplies(comment: any) {
+  viewProfile(comment: FeedComment) {
+    const username = comment.user?.username;
+    document.body.click();
+    setTimeout(() => this.navigationService.navigateForward(`/${username}`));
+  }
+
+  sendMessage(comment: FeedComment) {
+    console.log('Message clicked for:', comment.user?.username);
+    // TODO: Navigate to messages
+  }
+
+  async reportComment(comment: FeedComment) {
+    const result = await this.modalService.openReportModal('Comment');
+    if (!result || !result.reason_id) return;
+
+    try {
+      await this.feedService.reportComment({
+        comment_id: comment.id,
+        reason_id: result.reason_id,
+        reason: result.reason
+      });
+
+      await this.modalService.openConfirmModal({
+        icon: 'assets/svg/deleteWhiteIcon.svg',
+        iconBgColor: '#F5BC61',
+        title: 'Report Submitted',
+        description: 'We use these reports to show you less of this kind of content in the future.',
+        confirmButtonLabel: 'Done'
+      });
+    } catch (error) {
+      console.error('Error reporting comment:', error);
+      this.toasterService.showError('Failed to report comment. Please try again.');
+    }
+  }
+
+  async blockUser(comment: FeedComment) {
+    if (!comment.user) return;
+
+    const result = await this.modalService.openBlockModal(comment.user);
+    if (!result) return;
+  }
+
+  toggleReplies(comment: FeedComment) {
     comment.isRepliesOpen = !comment.isRepliesOpen;
   }
 
-  onLikeComment(comment: any, isReply: boolean = false) {
-    comment.isLiked = !comment.isLiked;
-    if (isReply) {
-      comment.like_count = comment.isLiked ? (comment.like_count || 0) + 1 : Math.max((comment.like_count || 1) - 1, 0);
-    } else {
-      comment.like_count = comment.isLiked ? (comment.like_count || 0) + 1 : Math.max((comment.like_count || 1) - 1, 0);
+  async onLikeComment(comment: FeedComment): Promise<void> {
+    const commentId = comment.id;
+
+    try {
+      await this.feedService.toggleCommentLike(commentId);
+    } catch (error) {
+      console.error('Error toggling comment like:', error);
+      this.toasterService.showError('Failed to like comment. Please try again.');
     }
   }
 
-  onShare() {
-    this.post.update((p) => ({ ...p, share_count: (p.share_count || 0) + 1 }));
-  }
-
-  sendComment() {
+  async sendComment(): Promise<void> {
     if (!this.textCtrl.value?.trim()) return;
 
     const replyTo = this.replyingTo();
-    const newComment = {
-      comment_id: Date.now(),
-      userName: 'You',
-      userPhoto: 'assets/images/profile.jpeg',
-      text: this.formattedText?.changingThisBreaksApplicationSecurity,
-      createdAt: Date.now(),
-      replies: [],
-      like_count: 0,
-      isLiked: false
-    };
+    const feedId = this.post()?.id;
+    if (!feedId) return;
 
-    this.comments.update((comments) => {
-      if (replyTo) {
-        return comments.map((comment) => {
-          if (comment.comment_id === replyTo.commentId) {
-            return {
-              ...comment,
-              replies: [...(comment.replies || []), newComment]
-            };
-          }
-          return comment;
-        });
-      }
+    // Get plain text comment (without HTML formatting)
+    const commentText = this.textCtrl.value?.trim() || '';
 
-      return [...comments, newComment];
-    });
-    this.formattedText = '';
-    this.textCtrl.setValue('');
-    this.replyingTo.set(null);
+    // Extract mention IDs from the comment text
+    const mentionIds = this.extractMentionIds(commentText);
 
     this.loading.set(true);
-    setTimeout(() => {
+
+    try {
+      const payload: {
+        feed_id: string;
+        comment: string;
+        parent_comment_id?: string | null;
+        mention_ids?: string[];
+      } = {
+        feed_id: feedId,
+        comment: commentText,
+        ...(replyTo && { parent_comment_id: replyTo.commentId }),
+        ...(mentionIds.length > 0 && { mention_ids: mentionIds })
+      };
+
+      await this.feedService.createComment(payload);
+
+      if (!replyTo) {
+        this.totalComments.update((count) => count + 1);
+      }
+
+      // Clear form
+      this.textCtrl.setValue('');
+      this.replyingTo.set(null);
+      this.mentionedUsers.clear();
+    } catch (error) {
+      console.error('Error sending comment:', error);
+      this.toasterService.showError('Failed to post comment. Please try again.');
+    } finally {
       this.loading.set(false);
-    }, 1000);
+    }
   }
 
-  getTimeAgo = (timestamp: number) => {
+  getTimeAgo = (dateString: string) => {
     const now = new Date().getTime();
+    const timestamp = new Date(dateString).getTime();
 
-    let displayTimestamp = timestamp;
+    const diffInMilliseconds = now - timestamp;
 
-    const diffInMilliseconds = now - displayTimestamp;
+    // If time difference is negative (future date) or very small, show "now"
+    if (diffInMilliseconds < 1000) return 'now';
+
     const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     const diffInHours = Math.floor(diffInMinutes / 60);
@@ -309,15 +401,22 @@ export class PostComments {
     else if (diffInMinutes > 0) timeAgo = `${diffInMinutes}m`;
     else timeAgo = `${diffInSeconds}s`;
 
-    return `${timeAgo}`;
+    return timeAgo;
   };
 
   renderCommentText(text: string): SafeHtml {
     if (!text) return '';
 
-    const urlRegex = /(?<!href=")(https?:\/\/[^\s<]+)/gi;
+    const mentionRegex = /@([\w.]+)/g;
+    let modifiedText = text.replace(
+      mentionRegex,
+      (match, username) =>
+        `<a href="#" class="mention-link brand-03" data-username="${username}" style="font-weight:500; text-decoration:none; cursor:pointer;">${match}</a>`
+    );
 
-    const modifiedText = text.replace(
+    // handle URLs (avoid replacing URLs that are already in href attributes)
+    const urlRegex = /(?<!href=")(https?:\/\/[^\s<]+)/gi;
+    modifiedText = modifiedText.replace(
       urlRegex,
       (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8; text-decoration:underline;">${url}</a>`
     );
@@ -325,11 +424,23 @@ export class PostComments {
     return this.sanitizer.bypassSecurityTrustHtml(modifiedText);
   }
 
-  onReplyClick(comment: any) {
+  onMentionClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    const mentionLink = target.closest('.mention-link') as HTMLElement;
+    if (mentionLink) {
+      event.preventDefault();
+      const username = mentionLink.getAttribute('data-username');
+      if (username) {
+        this.navigationService.navigateForward(`/${username}`);
+      }
+    }
+  }
+
+  onReplyClick(comment: FeedComment) {
     this.replyingTo.set({
-      commentId: comment.comment_id,
-      userName: comment.userName || 'User',
-      userPhoto: comment.userPhoto
+      commentId: comment.id,
+      userName: comment.user?.name || 'User',
+      userPhoto: comment.user?.thumbnail_url || comment.user?.image_url
     });
   }
 
@@ -337,139 +448,11 @@ export class PostComments {
     this.replyingTo.set(null);
   }
 
-  async loadChoices({ searchText, triggerCharacter }: { searchText: string; triggerCharacter: string }): Promise<any[]> {
-    let searchResults;
-    if (triggerCharacter === '@') {
-      searchResults = await this.getUsers();
-      this.choices = searchResults.filter((user) => {
-        return user.name.toLowerCase().indexOf(searchText.toLowerCase()) > -1;
-      });
-    } else {
-    }
-    return this.choices;
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
   }
 
-  getChoiceLabel = (user: any): string => {
-    return `@${user.name}`;
-  };
-
-  getDisplayLabel = (item: any): string => {
-    if (item.hasOwnProperty('name')) {
-      return (item as any).name;
-    }
-    return (item as any).tag;
-  };
-
-  onSelectedChoicesChange(choices: ChoiceWithIndices[]): void {
-    this.mentions = choices;
-    this.getFormattedHighlightText(this.textCtrl.value, this.mentions, this.parentCommentStatusBasedStyles);
-    console.log('mentions:', this.mentions);
-  }
-
-  onMenuShow(): void {
-    console.log('Menu show!');
-  }
-
-  onMenuHide(): void {
-    console.log('Menu hide!');
-    this.choices = [];
-  }
-
-  private getFormattedHighlightText(
-    content: string,
-    ranges: any[],
-    parentCommentStatusBasedStyles: {
-      color: string;
-    }
-  ) {
-    let highlightedContent = content;
-    let replaceContentIndex = 0;
-
-    ranges.forEach((range) => {
-      const start = range.indices.start;
-      const end = range.indices.end;
-      const highlightedText = content.substring(start, end);
-
-      const highlighted = `<a href="http://localhost:4200" style="color: ${parentCommentStatusBasedStyles.color}; white-space: nowrap; padding: 0 3px; border-radius: 3px; text-decoration: none;">${highlightedText}</a>`;
-
-      const newReplace = highlightedContent.substring(replaceContentIndex).replace(highlightedText, highlighted);
-
-      highlightedContent = replaceContentIndex === 0 ? newReplace : highlightedContent.substring(0, replaceContentIndex) + newReplace;
-
-      replaceContentIndex = highlightedContent.lastIndexOf('</a>') + 4;
-    });
-
-    highlightedContent = highlightedContent.replace(/\n/g, '<br>');
-
-    this.formattedText = this.sanitizer.bypassSecurityTrustHtml(highlightedContent) as string;
-  }
-
-  async getUsers(): Promise<any[]> {
-    this.loading.set(true);
-
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        this.loading.set(false);
-
-        resolve([
-          {
-            id: 1,
-            name: 'Amelia'
-          },
-          {
-            id: 2,
-            name: 'Doe'
-          },
-          {
-            id: 3,
-            name: 'John Doe'
-          },
-          {
-            id: 4,
-            name: 'John J. Doe'
-          },
-          {
-            id: 5,
-            name: 'John & Doe'
-          },
-          {
-            id: 6,
-            name: 'Fredericka Wilkie'
-          },
-          {
-            id: 7,
-            name: 'Collin Warden'
-          },
-          {
-            id: 8,
-            name: 'Hyacinth Hurla'
-          },
-          {
-            id: 9,
-            name: 'Paul Bud Mazzei'
-          },
-          {
-            id: 10,
-            name: 'Mamie Xander Blais'
-          },
-          {
-            id: 11,
-            name: 'Sacha Murawski'
-          },
-          {
-            id: 12,
-            name: 'Marcellus Van Cheney'
-          },
-          {
-            id: 12,
-            name: 'Lamar Kowalski'
-          },
-          {
-            id: 13,
-            name: 'Queena Gauss'
-          }
-        ]);
-      }, 600);
-    });
+  onImageError(event: Event): void {
+    onImageError(event);
   }
 }

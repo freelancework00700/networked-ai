@@ -115,7 +115,9 @@ export class AuthService extends BaseApiService {
     return response;
   }
 
-  private async socialLogin(firebase_token = ''): Promise<IAuthResponse> {
+  private async socialLogin(): Promise<IAuthResponse> {
+    const { token: firebase_token } = await FirebaseAuthentication.getIdToken();
+
     if (!firebase_token) {
       throw new Error('Firebase token is required');
     }
@@ -129,13 +131,14 @@ export class AuthService extends BaseApiService {
       this.setActiveAccount({ ...user, token: response.data.token });
     }
 
+    await FirebaseAuthentication.signOut();
     return response;
   }
 
   async signInWithGoogle(): Promise<IAuthResponse> {
     try {
-      const { credential } = await FirebaseAuthentication.signInWithGoogle();
-      return await this.socialLogin(credential?.idToken);
+      await FirebaseAuthentication.signInWithGoogle();
+      return await this.socialLogin();
     } catch (error) {
       console.error('error: ', error);
       throw new Error(FirebaseAuthError(error));
@@ -144,8 +147,8 @@ export class AuthService extends BaseApiService {
 
   async signInWithFacebook(): Promise<IAuthResponse> {
     try {
-      const { credential } = await FirebaseAuthentication.signInWithFacebook();
-      return await this.socialLogin(credential?.idToken);
+      await FirebaseAuthentication.signInWithFacebook();
+      return await this.socialLogin();
     } catch (error) {
       console.error('error: ', error);
       throw new Error(FirebaseAuthError(error));
@@ -154,8 +157,8 @@ export class AuthService extends BaseApiService {
 
   async signInWithApple(): Promise<IAuthResponse> {
     try {
-      const { credential } = await FirebaseAuthentication.signInWithApple();
-      return await this.socialLogin(credential?.idToken);
+      await FirebaseAuthentication.signInWithApple();
+      return await this.socialLogin();
     } catch (error) {
       console.error('error: ', error);
       throw new Error(FirebaseAuthError(error));
@@ -184,5 +187,32 @@ export class AuthService extends BaseApiService {
 
   async signOut(): Promise<void> {
     this.removeActiveAccount();
+  }
+
+  //Fetch current user from API on refresh and update stored account
+  async refreshCurrentUser(): Promise<void> {
+    const activeAccount = this.getActiveAccount();
+    if (!activeAccount?.id || !activeAccount?.token) {
+      return;
+    }
+
+    try {
+      const userService = this.injector.get(UserService);
+      const user = await userService.getUser(activeAccount.id);
+      const updatedUser = { ...user, token: activeAccount.token };
+      this.setActiveAccount(updatedUser);
+    } catch (error) {
+      console.error('Error refreshing current user on app load:', error);
+    }
+  }
+
+  async changePassword(password: string, new_password: string): Promise<any> {
+    try {
+      const response = await this.post<any>('/auth/reset-password', { password, new_password });
+      return response;
+    } catch (error) {
+      console.error('Error changing password:', error);
+      throw error;
+    }
   }
 }

@@ -1,14 +1,14 @@
-<ion-header>
+<ion-header mode="md">
   <ion-toolbar>
     <div class="relative p-4 max-w-[672px] mx-auto flex items-center">
       <i class="pi pi-arrow-left text-xl cursor-pointer z-10" (click)="handleBack()"></i>
-      <div class="absolute left-1/2 -translate-x-1/2 body-16M neutral-01">{{ routeId() ? 'Edit Group' : 'Create New Group' }}</div>
+      <div class="absolute left-1/2 -translate-x-1/2 body-16M neutral-01">{{ roomId() ? 'Edit Group' : 'Create New Group' }}</div>
     </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <div class="w-full max-w-[672px] mx-auto p-4 pt-0 flex flex-col gap-2">
+<ion-content [fullscreen]="true" mode="md">
+  <div class="w-full max-w-[672px] mx-auto p-4 flex flex-col gap-2">
     @if (isGroupDetails()) {
       <!-- Group Details Picture + Name Input -->
       <div class="flex items-center gap-4 mb-6">
@@ -16,8 +16,8 @@
         <input #fileInput type="file" accept="image/*" class="hidden" (change)="onGroupImageSelected($event)" />
 
         <div class="w-16 h-16 bg-neutral-05 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer" (click)="fileInput.click()">
-          @if (groupImage()) {
-            <img [src]="groupImage()!" alt="Group" class="w-full h-full rounded-full object-cover" />
+          @if (groupImagePreview()) {
+            <img [src]="groupImagePreview()!" alt="Group" class="w-full h-full rounded-full object-cover" />
           } @else {
             <i class="pi pi-camera text-white text-[24px]"></i>
           }
@@ -34,20 +34,26 @@
         @for (m of selectedMembers(); track m.id) {
           <div class="flex items-center gap-3 py-3 border-b border-gray-200">
             <!-- Profile -->
-            <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" />
+            <div class="w-12 h-12 rounded-full overflow-hidden relative">
+              <img fill placeholder class="rounded-full object-cover" (error)="onImageError($event)" [ngSrc]="getImageUrl(m?.thumbnail_url ?? '')" />
+            </div>
 
             <!-- Details -->
             <div class="flex-1">
               <div class="flex items-center gap-2">
-                <span class="font-medium">{{ m.name }}</span>
+                <span class="font-medium truncate">{{ getDisplayName(m) }}</span>
 
                 <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
-                  <img src="assets/svg/diamondYellow.svg" class="h-4" />
-                  <span class="text-xs font-semibold">{{ m.value }}</span>
+                  <img [src]="getDiamondPath(m)" class="h-4" />
+                  <span class="text-xs font-semibold">{{ m.total_gamification_points || 0 }}</span>
                 </div>
               </div>
 
-              <div class="text-xs text-gray-500">{{ m.jobTitle }}, {{ m.company }}</div>
+              @if (m.company_name) {
+                <div class="text-xs text-gray-500">
+                  {{ m.company_name }}
+                </div>
+              }
             </div>
           </div>
         }
@@ -59,7 +65,15 @@
             @for (m of selectedMembers(); track m.id) {
               <div class="flex flex-col items-center w-16">
                 <div class="relative">
-                  <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" />
+                  <div class="w-12 h-12 rounded-full overflow-hidden relative">
+                    <img
+                      fill
+                      placeholder
+                      class="rounded-full object-cover"
+                      (error)="onImageError($event)"
+                      [ngSrc]="getImageUrl(m?.thumbnail_url ?? '')"
+                    />
+                  </div>
 
                   <div
                     class="absolute -bottom-1 -right-1 bg-neutral-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
@@ -70,7 +84,7 @@
                 </div>
 
                 <div class="text-xs mt-1 w-full text-center truncate">
-                  {{ m.name }}
+                  {{ getDisplayName(m) }}
                 </div>
               </div>
             }
@@ -87,7 +101,7 @@
           />
         </div>
 
-        @if (searchText().trim() == '' || filteredSuggestions().length == 0) {
+        @if (searchText().trim() == '' || users().length == 0) {
           <div class="flex flex-col my-4">
             <div class="flex items-center justify-between p-2">
               <div class="flex items-center gap-3">
@@ -101,7 +115,7 @@
           </div>
         }
 
-        @if (routeId()) {
+        @if (roomId()) {
           <div class="flex flex-col my-4">
             <div class="flex items-center justify-between p-2">
               <div class="flex items-center gap-3">
@@ -116,13 +130,25 @@
         }
 
         <div>
-          @if (filteredSuggestions().length > 0) {
+          @if (users().length > 0) {
             <div class="body-14M neutral-01">Your Network</div>
 
-            @for (s of filteredSuggestions(); track s.id) {
-              <div class="flex items-center gap-3 py-4 border-b border-gray-200 cursor-pointer" (click)="toggleMember(s)">
-                <div class="relative">
-                  <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" />
+            @for (s of users(); track s.id) {
+              <div
+                class="flex items-center gap-3 py-4 border-b border-gray-200"
+                [class.cursor-pointer]="!isAlreadyInGroup(s.id)"
+                [class.cursor-not-allowed]="isAlreadyInGroup(s.id)"
+                [class.opacity-60]="isAlreadyInGroup(s.id)"
+                (click)="toggleMember(s)"
+              >
+                <div class="relative w-12 h-12 rounded-full overflow-hidden">
+                  <img
+                    fill
+                    placeholder
+                    class="rounded-full object-cover"
+                    (error)="onImageError($event)"
+                    [ngSrc]="getImageUrl(s?.thumbnail_url ?? '')"
+                  />
 
                   @if (isSelected(s.id)) {
                     <div
@@ -135,18 +161,28 @@
 
                 <div class="flex-1">
                   <div class="flex items-center gap-2">
-                    <span class="font-medium truncate">{{ s.name }}</span>
+                    <span class="font-medium truncate">{{ getDisplayName(s) }}</span>
 
                     <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
-                      <img src="assets/svg/diamondYellow.svg" class="h-4" />
-                      <span class="text-xs font-semibold">{{ s.value }}</span>
+                      <img [src]="getDiamondPath(s)" class="h-4" />
+                      <span class="text-xs font-semibold">{{ s.total_gamification_points || 0 }}</span>
                     </div>
                   </div>
 
-                  <div class="text-xs text-gray-500">{{ s.jobTitle }}, {{ s.company }}</div>
+                  <div class="text-xs" [class.text-gray-500]="!isAlreadyInGroup(s.id)" [class.text-gray-400]="isAlreadyInGroup(s.id)">
+                    @if (isAlreadyInGroup(s.id)) {
+                      Already added to the group
+                    } @else if (s.company_name) {
+                      {{ s.company_name }}
+                    }
+                  </div>
                 </div>
               </div>
             }
+
+            <ion-infinite-scroll [disabled]="!hasMore()" (ionInfinite)="loadMoreUsers($event)">
+              <ion-infinite-scroll-content loadingSpinner="lines" />
+            </ion-infinite-scroll>
           }
         </div>
       </div>
@@ -154,14 +190,14 @@
   </div>
 </ion-content>
 
-<ion-footer>
+<ion-footer mode="md">
   <ion-toolbar class="bg-white border-t border-gray-200">
     <div class="flex items-center gap-2 p-4 max-w-[672px] mx-auto w-full">
-      @if (routeId()) {
-        <app-button label="Add to Group" (click)="goToCreateGroup()" class="flex-1" />
+      @if (roomId() && selectedMembers().length > 0 && !isGroupDetails()) {
+        <app-button label="Add to Group" (click)="addMembersToGroup()" class="flex-1" />
       }
 
-      @if (!routeId() && selectedMembers().length > 0 && !isGroupDetails()) {
+      @if (!roomId() && selectedMembers().length > 0 && !isGroupDetails()) {
         <app-button label="Proceed" (click)="nextStep()" class="flex-1" />
       }
 

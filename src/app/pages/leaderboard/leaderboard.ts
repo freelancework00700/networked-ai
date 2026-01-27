@@ -1,28 +1,38 @@
 import { CommonModule } from '@angular/common';
 import { NavController } from '@ionic/angular/standalone';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, effect } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
-
+import { UserService } from '@/services/user.service';
+import { ToasterService } from '@/services/toaster.service';
+import { NavigationService } from '@/services/navigation.service';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { IonContent, IonToolbar, IonHeader, IonFooter } from '@ionic/angular/standalone';
+import { LeaderboardUser } from '@/interfaces/IGamification';
+
 type Tab = 'this-week' | 'all-time';
-interface LeaderboardEntry {
-  rank: number;
-  name: string;
-  score: number;
-  profileImage: string;
-  rankChange?: 'up' | 'down' | null;
-}
 
 @Component({
   selector: 'leaderboard',
   styleUrl: './leaderboard.scss',
   templateUrl: './leaderboard.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonFooter, IonHeader, IonToolbar, IonContent, CommonModule, SegmentButton]
+  imports: [IonFooter, IonHeader, IonToolbar, IonContent, CommonModule, SegmentButton, NgOptimizedImage]
 })
-export class Leaderboard {
+export class Leaderboard implements OnInit {
   navCtrl = inject(NavController);
+  private userService = inject(UserService);
+  private toasterService = inject(ToasterService);
+  private navigationService = inject(NavigationService);
+
   tab = signal<Tab>('this-week');
+  isLoading = signal<boolean>(false);
+  leaderboardData = signal<{
+    weekly: LeaderboardUser[];
+    alltime: LeaderboardUser[];
+    currentUserWeekly: LeaderboardUser | null;
+    currentUserAlltime: LeaderboardUser | null;
+  } | null>(null);
 
   tabItems: SegmentButtonItem[] = [
     {
@@ -35,118 +45,101 @@ export class Leaderboard {
     }
   ];
 
+  // Computed properties for current tab data
+  currentLeaderboard = computed(() => {
+    const data = this.leaderboardData();
+    if (!data) return [];
+    return this.tab() === 'this-week' ? data.weekly : data.alltime;
+  });
+
+  currentUser = computed(() => {
+    const data = this.leaderboardData();
+    if (!data) return null;
+    return this.tab() === 'this-week' ? data.currentUserWeekly : data.currentUserAlltime;
+  });
+
   // Top 3 users with medals
-  topThree: LeaderboardEntry[] = [
-    {
-      rank: 1,
-      name: 'Rachelle K.',
-      score: 55000, // diamond-50k
-      profileImage: 'assets/images/profile.jpeg',
-      rankChange: null
-    },
-    {
-      rank: 2,
-      name: 'Janice R.',
-      score: 45000, // diamond-40k
-      profileImage: 'assets/images/profile.jpeg',
-      rankChange: null
-    },
-    {
-      rank: 3,
-      name: 'Michael S.',
-      score: 35000, // diamond-30k
-      profileImage: 'assets/images/profile.jpeg',
-      rankChange: null
-    }
-  ];
+  topThree = computed(() => {
+    const leaderboard = this.currentLeaderboard();
+    return leaderboard.slice(0, 3);
+  });
 
   // Ranks 4-10
-  leaderboardEntries: LeaderboardEntry[] = [
-    {
-      rank: 4,
-      name: 'Kathryn Murphy',
-      score: 109888,
-      profileImage: 'assets/images/profile.jpeg',
-      rankChange: 'up'
-    },
-    {
-      rank: 5,
-      name: 'Kathryn Murphy',
-      score: 88900,
-      profileImage: 'assets/images/profile.jpeg',
-      rankChange: 'up'
-    },
-    {
-      rank: 6,
-      name: 'Kathryn Murphy',
-      score: 82433,
-      profileImage: 'assets/images/profile.jpeg',
-      rankChange: 'up'
-    },
-    {
-      rank: 7,
-      name: 'Kathryn Murphy',
-      score: 78766,
-      profileImage: 'assets/images/profile.jpeg',
-      rankChange: 'up'
-    },
-    {
-      rank: 8,
-      name: 'Kathryn Murphy',
-      score: 61900,
-      profileImage: 'assets/images/profile.jpeg',
-      rankChange: 'up'
-    },
-    {
-      rank: 9,
-      name: 'Kathryn Murphy',
-      score: 43100,
-      profileImage: 'assets/images/profile.jpeg',
-      rankChange: 'down'
-    },
-    {
-      rank: 10,
-      name: 'Kathryn Murphy',
-      score: 41870,
-      profileImage: 'assets/images/profile.jpeg',
-      rankChange: 'down'
-    }
-  ];
+  leaderboardEntries = computed(() => {
+    const leaderboard = this.currentLeaderboard();
+    return leaderboard.slice(3, 10);
+  });
 
   // User's own rank
-  userRank: LeaderboardEntry = {
-    rank: 55,
-    name: 'You',
-    score: 14610,
-    profileImage: 'assets/images/profile.jpeg',
-    rankChange: 'up'
-  };
+  userRank = computed(() => {
+    return this.currentUser();
+  });
+
+  async ngOnInit(): Promise<void> {
+    await this.loadLeaderboard();
+  }
+
+  private async loadLeaderboard(): Promise<void> {
+    try {
+      this.isLoading.set(true);
+      const response = await this.userService.getLeaderboard();
+      if (response.success && response.data) {
+        this.leaderboardData.set({
+          weekly: response.data.weekly?.leaderboard || [],
+          alltime: response.data.alltime?.leaderboard || [],
+          currentUserWeekly: response.data.weekly?.current_user || null,
+          currentUserAlltime: response.data.alltime?.current_user || null
+        });
+      }
+    } catch (error) {
+      console.error('Error loading leaderboard:', error);
+      this.toasterService.showError('Failed to load leaderboard');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  getUserImage(user: LeaderboardUser): string {
+    return getImageUrlOrDefault(user.thumbnail_url || '');
+  }
+
+  getUserDisplayName(user: LeaderboardUser): string {
+    return user.is_current_user ? 'You' : user.name || user.username;
+  }
 
   formatScore(score: number): string {
     return score.toLocaleString();
   }
 
-  getDiamondPath(score: number): string {
-    if (score >= 50000) {
+  getDiamondPath(points: number): string {
+    if (points >= 50000) {
       return '/assets/svg/gamification/diamond-50k.svg';
-    } else if (score >= 40000) {
+    } else if (points >= 40000) {
       return '/assets/svg/gamification/diamond-40k.svg';
-    } else if (score >= 30000) {
+    } else if (points >= 30000) {
       return '/assets/svg/gamification/diamond-30k.svg';
-    } else if (score >= 20000) {
+    } else if (points >= 20000) {
       return '/assets/svg/gamification/diamond-20k.svg';
-    } else if (score >= 10000) {
+    } else if (points >= 10000) {
       return '/assets/svg/gamification/diamond-10k.svg';
-    } else if (score >= 5000) {
+    } else if (points >= 5000) {
       return '/assets/svg/gamification/diamond-5k.svg';
-    } else if (score >= 1000) {
-      return '/assets/svg/gamification/diamond-1k.svg';
     } else {
-      return '/assets/svg/gamification/diamond-black.svg';
+      return '/assets/svg/gamification/diamond-1k.svg';
     }
   }
 
   onSegmentChange(value: string): void {
     this.tab.set(value as Tab);
+  }
+
+  onUserClick(username?: string): void {
+    if (username) {
+      this.navigationService.navigateForward(`/${username}`);
+    }
+  }
+
+  onImageError(event: Event): void {
+    onImageError(event);
   }
 }

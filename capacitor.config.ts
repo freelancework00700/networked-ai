@@ -8,6 +8,9 @@ const config: CapacitorConfig = {
     allowMixedContent: true
   },
   plugins: {
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert']
+    },
     FirebaseAuthentication: {
       skipNativeAuth: false,
       authDomain: 'app.net-worked.ai',

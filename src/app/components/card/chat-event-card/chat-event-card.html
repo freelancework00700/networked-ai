@@ -1,0 +1,42 @@
+<div class="flex flex-col gap-3 p-2 cursor-pointer">
+  <div class="relative flex items-center gap-4 border border-surface-200 rounded-xl p-2 bg-white" (click)="$event.stopPropagation(); goToEvent()">
+    <div class="relative h-22 w-22 flex-shrink-0 overflow-hidden rounded-xl">
+      <img
+        fill
+        placeholder
+        class="rounded-xl object-cover"
+        [ngSrc]="getImageUrl(event()?.thumbnail_url)"
+        (error)="onImageError($event)"
+        [alt]="event()?.title || 'event image'"
+      />
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <div class="body-14SB neutral-01">
+        {{ event()?.title }}
+      </div>
+
+      <div class="flex flex-col gap-1">
+        @if (event()?.address) {
+          <div class="flex items-start gap-2 body-12 neutral-02">
+            <i class="pi pi-map-marker !text-[14px]"></i>
+            <span class="line-clamp-1">{{ event()?.address }}</span>
+          </div>
+        }
+
+        <div class="flex items-start gap-2 body-12 neutral-02">
+          <i class="pi pi-calendar !text-[14px]"></i>
+          <span>{{ event()?.start_date | date: 'EEE MMM d' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  @if (!inPost()) {
+    <div class="whitespace-pre-line">
+      {{ eventMessage() }}
+    </div>
+    <div class="text-blue-600 underline cursor-pointer mt-2 inline-block" (click)="goToEvent()">
+      {{ eventLinkText() }}
+    </div>
+  }
+</div>

@@ -1,13 +1,22 @@
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
 import { AuthService } from '@/services/auth.service';
-import { HttpInterceptorFn } from '@angular/common/http';
+import { ModalService } from '@/services/modal.service';
 import { environment } from 'src/environments/environment';
+import { NavigationService } from '@/services/navigation.service';
+import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+
+let isLogoutModalOpen = false;
 
 export const apiInterceptor: HttpInterceptorFn = (req, next) => {
+  const router = inject(Router);
   const authService = inject(AuthService);
+  const modalService = inject(ModalService);
+  const navigationService = inject(NavigationService);
 
   // URLs that should skip token addition (e.g., login)
-  const skipUrls = ['api/auth/login', 'https://api.maptiler.com'];
+  const skipUrls = ['auth/login', 'https://api.maptiler.com', 'users/check', 'https://api.openai.com'];
   const shouldSkip = skipUrls.some((url) => req.url.includes(url));
 
   // check if URL is relative (starts with /) and not absolute (starts with http:// or https://)
@@ -35,5 +44,55 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
       })
     : req.clone({ url: apiUrl });
 
-  return next(clonedReq);
+  return next(clonedReq).pipe(
+    catchError((error: HttpErrorResponse) => {
+      handleInvalidToken(router, error, authService, modalService, navigationService);
+      return throwError(() => error);
+    })
+  );
+};
+
+const handleInvalidToken = async (
+  router: Router,
+  error: HttpErrorResponse,
+  authService: AuthService,
+  modalService: ModalService,
+  navigationService: NavigationService
+): Promise<void> => {
+  if (error.error?.errorCode === 'TOKEN_EXPIRED' && !isLogoutModalOpen) {
+    isLogoutModalOpen = true;
+
+    // Check if already on login page to avoid showing modal unnecessarily
+    const isOnLoginPage = router.url.includes('/login');
+
+    if (!isOnLoginPage) {
+      try {
+        // Open logout modal
+        const result = await modalService.openConfirmModal({
+          iconPosition: 'center',
+          iconBgColor: '#C73838',
+          iconName: 'pi-sign-out',
+          title: 'Session Expired',
+          cancelButtonLabel: 'Cancel',
+          confirmButtonColor: 'primary',
+          confirmButtonLabel: 'Sign In',
+          description: 'Your session has expired. Please sign in again to continue.'
+        });
+
+        if (result && result.role === 'confirm') {
+          await authService.signOut();
+          navigationService.navigateForward('/login');
+        }
+      } catch (err) {
+        console.error('Error handling invalid token:', err);
+      } finally {
+        // Reset flag after a delay to allow modal to close
+        setTimeout(() => (isLogoutModalOpen = false), 500);
+      }
+    } else {
+      // If already on login page, just sign out silently
+      authService.signOut();
+      isLogoutModalOpen = false;
+    }
+  }
 };

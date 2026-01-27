@@ -1,0 +1,36 @@
+<div class="profile-image-preview-container" (click)="close()">
+  <div class="image-container">
+    <div class="profile-image-wrapper">
+      <img
+        placeholder
+        [ngSrc]="getImageUrl(getImage(user()))"
+        [alt]="user()?.username || 'Profile image'"
+        (error)="onImageError($event)"
+        class="profile-image"
+        [loaderParams]="{ thumbnail: user()?.thumbnail_url }"
+        fill
+      />
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="action-buttons" (click)="$event.stopPropagation()">
+    <button type="button" class="action-button" (click)="onCopyLink()">
+      <ion-icon name="link-outline" class="action-icon"></ion-icon>
+      <span class="action-label">Copy Link</span>
+    </button>
+    @if (!isViewingOtherProfile()) {
+      <button type="button" class="action-button" (click)="onShare()">
+        <ion-icon name="share-outline" class="action-icon"></ion-icon>
+        <span class="action-label">Share</span>
+      </button>
+      <button type="button" class="action-button" (click)="onBusinessCard()">
+        <ion-icon name="qr-code-outline" class="action-icon"></ion-icon>
+        <span class="action-label">
+          <span>Business</span>
+          <span>Card</span>
+        </span>
+      </button>
+    }
+  </div>
+</div>

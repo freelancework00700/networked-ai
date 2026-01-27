@@ -1,10 +1,12 @@
 import { Observable, of } from 'rxjs';
 import { UserService } from '@/services/user.service';
+import { AuthService } from '@/services/auth.service';
 import { switchMap, catchError, debounceTime, map } from 'rxjs/operators';
 import { AbstractControl, ValidationErrors, AsyncValidatorFn } from '@angular/forms';
 
 export function availability(
   userService: UserService,
+  authService: AuthService,
   type: 'username' | 'email' | 'mobile',
   getValueFn?: () => string | undefined,
   checkExistence = false
@@ -22,6 +24,25 @@ export function availability(
 
     // normalize value based on type
     const normalizedValue = type === 'email' || type === 'username' ? value.toLowerCase() : value;
+
+    // check if the value matches current user's existing value, If it matches, skip API call and treat as valid
+    if (!checkExistence) {
+      const currentUser = authService.currentUser();
+      if (currentUser) {
+        let currentUserValue: string | null | undefined;
+        if (type === 'email') {
+          currentUserValue = currentUser.email?.toLowerCase();
+        } else if (type === 'username') {
+          currentUserValue = currentUser.username?.toLowerCase();
+        } else if (type === 'mobile') {
+          currentUserValue = currentUser.mobile;
+        }
+
+        if (currentUserValue && normalizedValue === currentUserValue) {
+          return of(null);
+        }
+      }
+    }
 
     return of(normalizedValue).pipe(
       debounceTime(300),

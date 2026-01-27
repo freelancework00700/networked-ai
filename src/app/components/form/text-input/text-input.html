@@ -38,5 +38,5 @@
 
 <!-- validation -->
 @if (isControlInvalid) {
-  <div class="accent-red pt-2 body-12M">Please enter the {{ label().toLowerCase() }}.</div>
+  <div class="accent-red pt-2 body-12M">Please enter the {{ label() ? label().toLowerCase() : 'value' }}.</div>
 }

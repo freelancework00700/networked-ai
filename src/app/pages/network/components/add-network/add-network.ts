@@ -5,177 +5,204 @@ import { Searchbar } from '@/components/common/searchbar';
 import { UserCardList } from '@/components/card/user-card-list';
 import { SearchEmptyState } from '@/components/common/search-empty-state';
 import { UserNetworkRequestCard } from '@/components/card/user-network-request-card';
-import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
-import { inject, signal, computed, Component, afterEveryRender, ChangeDetectionStrategy } from '@angular/core';
+import { UserRecommendations } from '@/components/common/user-recommendations';
+import { UserService } from '@/services/user.service';
+import { NetworkService } from '@/services/network.service';
+import { ToasterService } from '@/services/toaster.service';
+import { SocketService } from '@/services/socket.service';
+import { IonHeader, IonToolbar, IonContent, NavController, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
+import { inject, signal, computed, Component, afterEveryRender, ChangeDetectionStrategy, effect, DestroyRef, OnDestroy } from '@angular/core';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, from, map, catchError, of } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { IUser } from '@/interfaces/IUser';
+import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { NavigationService } from '@/services/navigation.service';
+import { Capacitor } from '@capacitor/core';
+
 @Component({
   selector: 'add-network',
   styleUrl: './add-network.scss',
   templateUrl: './add-network.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, UserCard, Searchbar, IonHeader, IonToolbar, IonContent, UserCardList, SearchEmptyState, UserNetworkRequestCard]
+  imports: [
+    Button,
+    Searchbar,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    UserCardList,
+    SearchEmptyState,
+    UserNetworkRequestCard,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
+    UserRecommendations
+  ]
 })
-export class AddNetwork {
+export class AddNetwork implements OnDestroy {
   // services
   private navCtrl = inject(NavController);
+  private userService = inject(UserService);
+  private networkService = inject(NetworkService);
+  private toasterService = inject(ToasterService);
+  private socketService = inject(SocketService);
+  private navigationService = inject(NavigationService);
+  private destroyRef = inject(DestroyRef);
+  private searchSubject = new Subject<string>();
 
   // signals
   showAll = signal(false);
   searchQuery = signal<string>('');
+  searchResults = signal<IUser[]>([]);
+  currentPage = signal<number>(1);
+  totalPages = signal<number>(0);
+  isLoadingMore = signal<boolean>(false);
+  isSearching = signal<boolean>(false);
+  networkRequests = signal<IUser[]>([]);
+  isLoadingRequests = signal<boolean>(false);
 
   visibleSuggestions = computed(() => {
-    const list = this.networkSuggestions();
+    const list = this.networkRequests();
     return this.showAll() ? list : list.slice(0, 3);
   });
 
   remainingCount = computed(() => {
-    const total = this.networkSuggestions().length;
+    const total = this.networkRequests().length;
     return total > 3 ? total - 3 : 0;
   });
 
-  peopleCards = [
-    {
-      name: 'Kathryn Murphy',
-      location: 'Atlanta, GA',
-      profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80'
-    },
-    {
-      name: 'Esther Howard',
-      location: 'Atlanta, GA',
-      profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80'
-    },
-    {
-      name: 'Arlene McCoy',
-      location: 'Atlanta, GA',
-      profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80'
-    }
-  ];
+  hasMore = computed(() => this.currentPage() < this.totalPages());
 
-  networkSuggestions = signal([
-    {
-      id: '1',
-      name: 'Kathryn Murphy',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.390648, lat: 33.748533 }
-    },
-    {
-      id: '2',
-      name: 'Esther Howard',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.395, lat: 33.75 }
-    },
-    {
-      id: '3',
-      name: 'Arlene McCoy',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: false,
-      requested: true,
-      langLocation: { lng: -84.385, lat: 33.745 }
-    },
-    {
-      id: '4',
-      name: 'Darlene Robertson',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.392, lat: 33.747 }
-    },
-    {
-      id: '5',
-      name: 'Ronald Richards',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.388, lat: 33.749 }
-    },
-    {
-      id: '6',
-      name: 'Albert Flores',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.391, lat: 33.746 }
-    },
-    {
-      id: '7',
-      name: 'Eleanor Pena',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      networked: false,
-      requested: true,
-      langLocation: { lng: -84.387, lat: 33.744 }
-    },
-    {
-      id: '8',
-      name: 'Savannah Nguyen',
-      value: 200,
-      jobTitle: 'Founder & CEO',
-      company: 'Cortazzo Consulting',
-      langLocation: { lng: -84.394, lat: 33.751 }
-    },
-    {
-      id: '9',
-      name: 'Guy Hawkins',
-      value: 200,
-      jobTitle: 'CTO',
-      company: 'Cortazzo Consulting',
-      networked: false,
-      langLocation: { lng: -84.389, lat: 33.748 }
-    },
-    {
-      id: '10',
-      name: 'Cody Fisher',
-      value: 200,
-      jobTitle: 'CFO',
-      company: 'Cortazzo Consulting',
-      networked: true,
-      langLocation: { lng: -84.386, lat: 33.7475 }
-    }
-  ]);
+  isNativePlatform = computed(() => Capacitor.isNativePlatform());
 
-  filteredSuggestions = computed(() => {
-    const q = this.searchQuery().trim().toLowerCase();
-    if (!q) return [];
-    return this.networkSuggestions().filter((item) => item.name.toLowerCase().includes(q));
-  });
+  constructor() {
+    afterEveryRender(() => this.initSwiper());
+
+    // Load network requests on init
+    this.loadNetworkRequests();
+
+    // Setup socket listener for real-time updates
+    this.setupNetworkConnectionListener();
+
+    // Setup debounced search
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((query) => {
+          const trimmedQuery = query.trim();
+
+          if (!trimmedQuery) {
+            // Clear search results when query is empty
+            this.searchResults.set([]);
+            this.isSearching.set(false);
+            this.currentPage.set(1);
+            this.totalPages.set(0);
+            return from(Promise.resolve([]));
+          }
+
+          // Set searching state
+          this.isSearching.set(true);
+
+          // Reset pagination for new search
+          this.currentPage.set(1);
+          this.totalPages.set(0);
+
+          return from(this.userService.searchUsers(trimmedQuery, 1, 15)).pipe(
+            map((result) => {
+              this.searchResults.set(result.users);
+              this.currentPage.set(result.pagination.currentPage);
+              this.totalPages.set(result.pagination.totalPages);
+              this.isSearching.set(false);
+              return result.users;
+            }),
+            catchError((error) => {
+              console.error('Error searching users:', error);
+              this.isSearching.set(false);
+              this.searchResults.set([]);
+              return of([]);
+            })
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
+
+    // Watch searchQuery changes and emit to subject
+    effect(() => {
+      this.searchSubject.next(this.searchQuery());
+    });
+  }
+
+  async loadMoreSearchResults(event: Event): Promise<void> {
+    const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
+    const search = this.searchQuery().trim();
+
+    if (this.isLoadingMore() || !this.hasMore() || !search) {
+      infiniteScroll.complete();
+      return;
+    }
+
+    try {
+      this.isLoadingMore.set(true);
+
+      const nextPage = this.currentPage() + 1;
+      const result = await this.userService.searchUsers(search, nextPage, 15);
+
+      // Append new results to existing ones
+      this.searchResults.update((current) => [...current, ...result.users]);
+      this.currentPage.set(result.pagination.currentPage);
+      this.totalPages.set(result.pagination.totalPages);
+    } catch (error) {
+      console.error('Error loading more search results:', error);
+    } finally {
+      this.isLoadingMore.set(false);
+      infiniteScroll.complete();
+    }
+  }
 
   navigateBack() {
     this.navCtrl.back();
   }
 
-  scanQRCode() {
-    console.log('scanQRCode');
+  async scanQRCode(): Promise<void> {
+    try {
+      const result = await BarcodeScanner.scan();
+
+      if (result.barcodes && result.barcodes.length > 0) {
+        const barcode = result.barcodes[0];
+        const scannedValue = barcode.displayValue || barcode.rawValue || '';
+
+        if (scannedValue) {
+          await this.handleQRCodeScanned(scannedValue);
+        } else {
+          this.toasterService.showError('No QR code data found');
+        }
+      } else {
+        this.toasterService.showError('No QR code detected');
+      }
+    } catch (error: any) {
+      if (error.message && (error.message.includes('cancel') || error.message.includes('dismiss'))) {
+        // User cancelled, no need to show error
+        return;
+      }
+      console.error('Error scanning QR code:', error);
+      this.toasterService.showError('Failed to scan QR code');
+    }
   }
 
-  addSuggestion(id: string) {
-    const user = this.networkSuggestions().find((item) => item.id === id);
-    if (!user) return;
-
-    user.requested = true;
-    user.networked = false;
-  }
-
-  removeSuggestion(id: string) {
-    this.networkSuggestions().find((item) => item.id === id)!.networked = false;
-  }
-
-  messageUser(id: string) {
-    this.navCtrl.navigateForward(['/chat-room', id]);
-  }
-
-  constructor() {
-    afterEveryRender(() => this.initSwiper());
+  private async handleQRCodeScanned(decodedText: string): Promise<void> {
+    try {
+      const username = decodedText;
+      if (username) {
+        this.navigationService.navigateForward(`/${username}`);
+      } else {
+        this.toasterService.showError('Invalid QR code. Please scan a valid profile QR code.');
+      }
+    } catch (error) {
+      console.error('Error parsing QR code:', error);
+      this.toasterService.showError('Invalid QR code format.');
+    }
   }
 
   private initSwiper(): void {
@@ -188,15 +215,70 @@ export class AddNetwork {
     });
   }
 
-  acceptNetwork(id: string) {
-    this.networkSuggestions.update((list) => list.filter((item) => item.id !== id));
+  async loadNetworkRequests(): Promise<void> {
+    try {
+      this.isLoadingRequests.set(true);
+      const result = await this.networkService.getNetworkRequests({ page: 1, limit: 10 });
+      this.networkRequests.set(result.data || []);
+    } catch (error) {
+      console.error('Error loading network requests:', error);
+      this.toasterService.showError('Failed to load network requests');
+    } finally {
+      this.isLoadingRequests.set(false);
+    }
   }
 
-  rejectNetwork(id: string) {
-    this.networkSuggestions.update((list) => list.filter((item) => item.id !== id));
+  async acceptNetwork(userId: string): Promise<void> {
+    try {
+      await this.networkService.acceptNetworkRequest(userId);
+      // Remove from list after successful accept
+      this.networkRequests.update((list) => list.filter((user) => user.id !== userId));
+      this.toasterService.showSuccess('Network request accepted');
+    } catch (error) {
+      console.error('Error accepting network request:', error);
+      this.toasterService.showError('Failed to accept network request');
+    }
+  }
+
+  async rejectNetwork(userId: string): Promise<void> {
+    try {
+      await this.networkService.rejectNetworkRequest(userId);
+      // Remove from list after successful reject
+      this.networkRequests.update((list) => list.filter((user) => user.id !== userId));
+      this.toasterService.showSuccess('Network request rejected');
+    } catch (error) {
+      console.error('Error rejecting network request:', error);
+      this.toasterService.showError('Failed to reject network request');
+    }
   }
 
   toggleView() {
     this.showAll.update((v) => !v);
+  }
+
+  private setupNetworkConnectionListener(): void {
+    // Set up listener after socket is registered, or immediately if already registered
+    this.socketService.onAfterRegistration(() => {
+      this.socketService.on('network:connection:update', this.networkConnectionHandler);
+    });
+  }
+
+  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+    console.log('Network connection update event received in add-network:', payload);
+    if (!payload || !payload.id) return;
+
+    const userId = payload.id;
+    const newStatus = payload.connection_status;
+
+    // Update search results if the user is in the search results
+    this.searchResults.update((results) => results.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
+
+    // Update network requests if the user is in the requests list
+    this.networkRequests.update((requests) => requests.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
+  };
+
+  ngOnDestroy(): void {
+    // Clean up socket listener
+    this.socketService.off('network:connection:update', this.networkConnectionHandler);
   }
 }

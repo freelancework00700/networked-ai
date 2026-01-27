@@ -1,23 +1,36 @@
-<ion-content [fullscreen]="true">
+<ion-content fullscreen="true">
   <div class="h-full pt-safe">
     <div class="w-full px-4 py-6 max-w-[672px] mx-auto">
       <!-- logo and title -->
-      <div class="flex flex-col gap-5">
-        <div class="text-center">
-          <div class="flex justify-center">
-            <ion-icon src="assets/svg/logo.svg" class="w-[63px] h-[28px]" />
+      @if (!isRsvpModal) {
+        <div class="flex flex-col gap-5">
+          <div class="text-center">
+            <div class="flex justify-center">
+              <ion-icon src="assets/svg/logo.svg" class="w-[63px] h-[28px]" />
+            </div>
+            <div class="text-[10px] font-semibold pt-1">Networked AI</div>
           </div>
-          <div class="text-[10px] font-semibold pt-1">Networked AI</div>
-        </div>
 
-        <div class="text-center heading-h1 neutral-01">
-          <div class="">Get out,</div>
-          <div>
-            Get
-            <span class="bg-[linear-gradient(170deg,rgba(245,188,97,1)_0%,rgba(158,102,10,1)_94%)] bg-clip-text text-transparent">Networked.</span>
+          <div class="text-center heading-h1 neutral-01">
+            <div class="">Get out,</div>
+            <div>
+              Get
+              <span class="bg-[linear-gradient(170deg,rgba(245,188,97,1)_0%,rgba(158,102,10,1)_94%)] bg-clip-text text-transparent">Networked.</span>
+            </div>
           </div>
         </div>
-      </div>
+      } @else {
+        <div class="flex flex-col gap-3">
+          <div>
+            <ion-icon src="assets/svg/logo.svg" class="w-[63px] h-[28px]" />
+            <div class="text-[10px] font-semibold pt-1">Networked AI</div>
+          </div>
+          <div>
+            <div class="heading-h1 neutral-01">Get Started</div>
+            <div class="body-16SB font-semibold neutral-03">Create an account to start hosting events and expand your network with Networked AI.</div>
+          </div>
+        </div>
+      }
 
       <!-- social login buttons -->
       <social-login-buttons />
@@ -30,10 +43,11 @@
       </div>
 
       <!-- sign in header -->
-      <div class="text-center mb-6">
-        <h2 class="body-16SB neutral-01">Create an account to continue.</h2>
-      </div>
-
+      @if (!isRsvpModal) {
+        <div class="text-center mb-6">
+          <h2 class="body-16SB neutral-01">Create an account to continue.</h2>
+        </div>
+      }
       <!-- email/mobile tabs -->
       <div class="flex items-center justify-center mb-6">
         <!-- Email tab -->
@@ -84,7 +98,13 @@
               </div>
             } @else {
               <!-- otp input section -->
-              <otp-input [isInvalidOtp]="isInvalidOtp()" [email]="email()" [isLoading]="isLoading()" (resendOtp)="resendOtp()" (emailOtpChange)="otp.set($event)" />
+              <otp-input
+                [isInvalidOtp]="isInvalidOtp()"
+                [email]="email()"
+                [isLoading]="isLoading()"
+                (resendOtp)="resendOtp()"
+                (emailOtpChange)="otp.set($event)"
+              />
             }
           </div>
         } @else {
@@ -94,7 +114,13 @@
               <mobile-input label="Mobile" [checkIfTaken]="true" [isSubmitted]="isSubmitted()" />
             } @else {
               <!-- otp input section -->
-              <otp-input [isInvalidOtp]="isInvalidOtp()" [mobile]="phoneNumber()" [isLoading]="isLoading()" (resendOtp)="resendOtp()" (mobileOtpChange)="otp.set($event)" />
+              <otp-input
+                [isInvalidOtp]="isInvalidOtp()"
+                [mobile]="phoneNumber()"
+                [isLoading]="isLoading()"
+                (resendOtp)="resendOtp()"
+                (mobileOtpChange)="otp.set($event)"
+              />
             }
           </div>
         }
@@ -119,14 +145,14 @@
         <!-- create account link -->
         <div class="text-center text-sm p-3">
           <span class="neutral-03 body-14M">Already have an account? </span>
-          <a (click)="navigationService.navigateForward('/login')" class="body-14SB brand-02 cursor-pointer"> Sign in here   </a>
+          <a (click)="goToLogin()" class="body-14SB brand-02 cursor-pointer"> Sign in here </a>
         </div>
 
         <!-- terms and privacy policy -->
         <div class="text-center text-sm">
           <span class="neutral-03 body-14R">By continuing, I agree to the </span>
-          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navigationService.navigateForward('/terms')"> terms of service </a>and
-          <a class="body-14SB neutral-02 !underline cursor-pointer" (click)="navigationService.navigateForward('/policy')"> privacy policy. </a>
+          <a (click)="goToTerms()" class="body-14SB neutral-02 !underline cursor-pointer"> terms of service </a>and
+          <a (click)="goToPrivacyPolicy()" class="body-14SB neutral-02 !underline cursor-pointer"> privacy policy. </a>
         </div>
       </div>
     </div>

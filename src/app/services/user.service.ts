@@ -2,8 +2,10 @@ import { of, Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { map, catchError } from 'rxjs/operators';
 import { inject, Injectable } from '@angular/core';
+import { HttpParams } from '@angular/common/http';
 import { BaseApiService } from '@/services/base-api.service';
-import { IUser, VibeItem, IUserResponse } from '@/interfaces/IUser';
+import { IUser, VibeItem, IUserResponse, UserSearchResponse, UserSearchApiResponse } from '@/interfaces/IUser';
+import { UserGamificationResponse, LeaderboardResponse } from '@/interfaces/IGamification';
 
 @Injectable({ providedIn: 'root' })
 export class UserService extends BaseApiService {
@@ -67,7 +69,7 @@ export class UserService extends BaseApiService {
 
   async getCurrentUser(force = false): Promise<IUser> {
     const currentUser = this.authService.currentUser();
-    
+
     // if no current user exists, throw error
     if (!currentUser?.id) {
       throw new Error('No active user account found.');
@@ -79,7 +81,7 @@ export class UserService extends BaseApiService {
         const user = await this.getUser(currentUser.id);
 
         // merge fetched user data with existing token to preserve authentication
-        const updatedUser = {...user, token: currentUser.token};
+        const updatedUser = { ...user, token: currentUser.token };
 
         // update localStorage and signals
         this.authService.setActiveAccount(updatedUser);
@@ -121,7 +123,7 @@ export class UserService extends BaseApiService {
 
     // convert user data to payload format and merge with new preferences
     const payload = this.generateUserPayload(currentUser);
-    
+
     // update with new preferences
     payload['vibe_ids'] = vibes;
     payload['hobby_ids'] = hobbies;
@@ -174,6 +176,98 @@ export class UserService extends BaseApiService {
       return response?.data || [];
     } catch (error) {
       console.error('Error fetching interests:', error);
+      throw error;
+    }
+  }
+
+  // search users
+  async searchUsers(value: string, page: number = 1, limit: number = 10): Promise<UserSearchResponse> {
+    try {
+      let params = new HttpParams();
+
+      if (value && value.trim()) {
+        params = params.set('value', value.trim());
+      }
+      if (page) {
+        params = params.set('page', page.toString());
+      }
+      if (limit) {
+        params = params.set('limit', limit.toString());
+      }
+
+      const response = await this.get<UserSearchApiResponse>('/users/search/', { params });
+
+      const users = response?.data?.data || [];
+      const pagination = response?.data?.pagination || { totalCount: 0, currentPage: 1, totalPages: 0 };
+
+      return { users, pagination };
+    } catch (error) {
+      console.error('Error searching users:', error);
+      throw error;
+    }
+  }
+
+  // Get user gamification badges
+  async getUserGamificationBadges(userId?: string): Promise<UserGamificationResponse> {
+    try {
+      const url = `/gamification/user/${userId}`;
+      const response = await this.get<UserGamificationResponse>(url);
+      return response;
+    } catch (error) {
+      console.error('Error fetching user gamification badges:', error);
+      throw error;
+    }
+  }
+
+  // Get leaderboard
+  async getLeaderboard(): Promise<LeaderboardResponse> {
+    try {
+      const response = await this.get<LeaderboardResponse>('/gamification/leaderboard');
+      return response;
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      throw error;
+    }
+  }
+
+  // Update FCM token and location
+  async updateFcmTokenAndLocation(fcmToken: string | null, latitude?: string, longitude?: string): Promise<void> {
+    try {
+      const payload: {
+        latitude?: string;
+        longitude?: string;
+        fcm_token: string | null;
+      } = {
+        fcm_token: fcmToken || null
+      };
+
+      if (latitude && longitude) {
+        payload.latitude = latitude;
+        payload.longitude = longitude;
+      }
+
+      await this.put('/users/fcm-token-location', payload);
+    } catch (error) {
+      console.error('Error updating FCM token and location:', error);
+    }
+  }
+
+  // search users
+  async paymentHistory(page: number = 1, limit: number = 20): Promise<any> {
+    try {
+      let params = new HttpParams();
+      if (page) {
+        params = params.set('page', page.toString());
+      }
+      if (limit) {
+        params = params.set('limit', limit.toString());
+      }
+
+      const response = await this.get<UserSearchApiResponse>('/transaction', { params });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error searching users:', error);
       throw error;
     }
   }

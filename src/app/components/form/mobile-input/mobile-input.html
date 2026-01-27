@@ -13,8 +13,8 @@
     (input)="onInput($event)"
     [attr.inputmode]="'numeric'"
     [formControlName]="controlName()"
-    [invalid]="!!getErrorMessage  && isSubmitted()"
-    [class.ng-invalid]="!!getErrorMessage && isSubmitted()"
+    [invalid]="!!getErrorMessage && isSubmitted() && required()"
+    [class.ng-invalid]="!!getErrorMessage && isSubmitted() && required()"
   />
 
   <!-- loader when checking mobile -->
@@ -31,6 +31,6 @@
 
 <!-- validation -->
 
-@if (!!getErrorMessage && isSubmitted()) {
+@if (!!getErrorMessage && isSubmitted() && required()) {
   <div class="accent-red pt-2 body-12M">{{ getErrorMessage }}</div>
 }

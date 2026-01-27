@@ -6,6 +6,7 @@
 @use './styles/popovers.scss';
 @use './styles/toasters.scss';
 @use 'primeicons/primeicons.css';
+@use "node_modules/@ctrl/ngx-emoji-mart/picker.css";
 @use 'node_modules/@maptiler/sdk/dist/maptiler-sdk.css';
 
 /*
@@ -71,7 +72,7 @@ ion-content {
 ion-header {
   box-shadow: none !important;
 
-  ion-toolbar {
+  .ion-page ion-toolbar {
     padding: 0px !important;
     --background: var(--neutral-07);
     padding-top: env(safe-area-inset-top) !important;
@@ -170,11 +171,24 @@ ion-footer {
 .tier-overview-card.ticket-type-standard-paid {
   border: 2px solid #dbdbdb;
 }
+
+.tier-overview-card.ticket-type {
+  border: 2px solid var(--brand-05);
+}
 .swiper-event-detail .swiper-pagination-bullet {
   background: var(--neutral-04) !important;
   opacity: 1 !important;
 }
 .swiper-event-detail .swiper-pagination-bullet-active {
+  width: 32px;
+  border-radius: 32px;
+  background: var(--neutral-07) !important;
+}
+.swiper-post-card .swiper-pagination-bullet {
+  background: var(--neutral-04) !important;
+  opacity: 1 !important;
+}
+.swiper-post-card .swiper-pagination-bullet-active {
   width: 32px;
   border-radius: 32px;
   background: var(--neutral-07) !important;
@@ -194,4 +208,13 @@ ion-footer {
 
 .pt-safe {
   padding-top: env(safe-area-inset-top) !important;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

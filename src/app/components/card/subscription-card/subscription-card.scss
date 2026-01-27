@@ -1,7 +1,6 @@
 .subscription-card {
   padding: 10px;
   border-radius: 16px;
-  background: var(--neutral-07);
 
   &.card-event {
     border: 1px solid var(--event-plan-border);
@@ -9,6 +8,29 @@
 
   &.card-sponsor {
     border: 1px solid var(--gold-flat);
+  }
+
+  &.card-select {
+    padding: 16px;
+    border-radius: 12px;
+
+    background: white;
+    border: 1px solid var(--neutral-05);
+
+    &.card-event.selected {
+      background: #eff6ff;
+      border: 1px solid var(--event-plan-border);
+    }
+
+    &.card-sponsor.selected {
+      background: #fffbeb;
+      border: 1px solid var(--gold-flat);
+    }
+
+    &.unselected {
+      background: white;
+      border: 1px solid var(--neutral-05);
+    }
   }
 }
 

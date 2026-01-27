@@ -1,0 +1,35 @@
+.ngx-selectable-list {
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 4px 0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  margin: 0;
+  list-style: none;
+  width: 264px;
+}
+
+.ngx-selectable-list-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.ngx-selectable-list-item:hover,
+.ngx-selectable-list-item.active {
+  background-color: #f3f4f6;
+}
+
+.ngx-selectable-list.loader-only {
+  .ngx-selectable-list-item {
+    text-align: center;
+    color: #666;
+  }
+}
+
+::ng-deep {
+  .cdk-overlay-pane {
+    z-index: 9999 !important;
+  }
+}

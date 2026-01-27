@@ -23,32 +23,28 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
+    path: 'terms',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'policy',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'notification',
+    renderMode: RenderMode.Server
+  },
+  {
     path: 'not-found',
     renderMode: RenderMode.Prerender
   },
   // dynamic routes with params - must use server-side rendering
   {
-    path: 'event-qr/:id',
+    path: 'chat-room',
     renderMode: RenderMode.Server
   },
   {
-    path: 'event-analytics/:id',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'guest-list/:id',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'user-list/:id',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'chat-room/:id',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'chat-info/:id',
+    path: 'chat-info',
     renderMode: RenderMode.Server
   },
   {
@@ -56,20 +52,60 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
+    path: 'comments/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/:slug',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/guests/:id',
+    renderMode: RenderMode.Server
+  },
+  {
     path: 'group-invitation/:id',
     renderMode: RenderMode.Server
   },
   {
-    path: 'questionnaire-response/:id',
+    path: 'event/questionnaire-response/:id',
     renderMode: RenderMode.Server
   },
   {
-    path: 'questionnaire-response/user-list/:id',
+    path: 'event/questionnaire-response/guests/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/analytics/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/analytics/guests/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/rsvp-approval/:eventId',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/guests/:eventId/:section',
     renderMode: RenderMode.Server
   },
   // routes without params - can be server-rendered
   {
-    path: 'create-event',
+    path: 'event',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/edit/:id',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/city',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'event/all',
     renderMode: RenderMode.Server
   },
   {
@@ -90,14 +126,6 @@ export const serverRoutes: ServerRoute[] = [
   },
   {
     path: 'add-network',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'comments/:id',
-    renderMode: RenderMode.Server
-  },
-  {
-    path: 'event/detail',
     renderMode: RenderMode.Server
   },
   {
@@ -129,11 +157,35 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
-    path: 'subscription-plans',
-    renderMode: RenderMode.Client
+    path: 'subscription/plans',
+    renderMode: RenderMode.Server
   },
   {
-    path: 'subscriptions',
+    path: 'subscription/create',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'subscription/manage/:planId',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'subscription/user/:userId',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'subscription/:planId',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'subscription/:planId/events',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'subscription/:planId/subscribers',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: ':username',
     renderMode: RenderMode.Client
   },
   // catch-all for any other routes

@@ -1,8 +1,13 @@
-<div
-  (click)="openMenu()"
-  [style.background-image]="'url(' + event().image + ')'"
-  class="relative w-full h-[320px] shrink-0 rounded-[16px] overflow-hidden bg-cover bg-center"
->
+<div (click)="viewEvent()" class="relative w-full h-[320px] shrink-0 rounded-[16px] overflow-hidden">
+  <img
+    fill
+    placeholder
+    [alt]="currentEvent().title || 'Event image'"
+    class="object-cover"
+    (error)="onImageError($event)"
+    [ngSrc]="eventImage()"
+    [loaderParams]="{ thumbnail: currentEvent().thumbnail_url }"
+  />
   <!-- dark overlay at bottom -->
   <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
 
@@ -11,7 +16,7 @@
     <div
       class="flex p-2 justify-center items-center gap-2 rounded-full border border-white/10 bg-black/20 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
     >
-      <div class="body-12 neutral-07">{{ event().views }} views</div>
+      <div class="body-12 neutral-07">{{ currentEvent().total_views || 0 }} views</div>
     </div>
   </div>
 
@@ -20,13 +25,19 @@
     <div
       class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
     >
-      <div class="pi pi-upload text-white !text-[14px]"></div>
+      <div (click)="shareEvent(); $event.stopPropagation()" class="pi pi-upload text-white !text-[14px]"></div>
     </div>
 
     <div
-      class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
+      class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
+      (click)="likeEvent($event)"
     >
-      <div class="pi pi-heart text-white !text-[14px]"></div>
+      <div
+        class="pi !text-[14px] text-white"
+        [class.pi-heart-fill]="isEventLiked()"
+        [class.pi-heart]="!isEventLiked()"
+        [class.accent-red]="isEventLiked()"
+      ></div>
     </div>
   </div>
 
@@ -36,8 +47,8 @@
       class="flex flex-col p-2 px-3 pb-3 items-start gap-2 self-stretch rounded-xl border border-white/10 bg-[rgba(25,25,25,0.40)] backdrop-blur-sm"
     >
       <div class="flex flex-col gap-0.5">
-        <div class="body-16SB neutral-07">{{ event().title }}</div>
-        <div class="body-12 neutral-05">{{ event().organization }}</div>
+        <div class="body-16SB neutral-07 line-clamp-2">{{ currentEvent().title || 'Untitled Event' }}</div>
+        <div class="body-12 neutral-05">{{ eventOrganization() }}</div>
       </div>
 
       <div class="h-[1px] w-full bg-white/10"></div>
@@ -45,24 +56,24 @@
         <div class="flex items-center gap-4 w-full">
           <div class="flex items-center gap-1.5">
             <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
-            <span class="body-12 neutral-05">{{ event().date }}</span>
+            <span class="body-12 neutral-05">{{ formattedDate() }}</span>
           </div>
 
-          <div class="flex items-center gap-1.5">
-            <div class="pi pi-map-marker neutral-07 !text-[12px]"></div>
-            <span class="body-12 neutral-05">{{ event().location }}</span>
+          <div class="flex items-center gap-1.5 min-w-0 flex-1 max-w-full">
+            <div class="pi pi-map-marker neutral-07 !text-[12px] shrink-0"></div>
+            <span class="body-12 neutral-05 truncate flex-1 min-w-0 max-w-full">{{ formattedLocation() }}</span>
           </div>
         </div>
       } @else {
-        <div class="flex items-start gap-1 flex-col">
+        <div class="flex items-start gap-1 flex-col max-w-full">
           <div class="flex items-center gap-1.5">
             <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
-            <span class="body-12 neutral-05">{{ event().date }}</span>
+            <span class="body-12 neutral-05">{{ formattedDate() }}</span>
           </div>
 
-          <div class="flex items-center gap-1.5">
-            <div class="pi pi-map-marker neutral-07 !text-[12px]"></div>
-            <span class="body-12 neutral-05">{{ event().location }}</span>
+          <div class="flex items-center gap-1.5 min-w-0 w-full max-w-full">
+            <div class="pi pi-map-marker neutral-07 !text-[12px] shrink-0"></div>
+            <span class="body-12 neutral-05 truncate flex-1 min-w-0 max-w-full">{{ formattedLocation() }}</span>
           </div>
         </div>
       }
