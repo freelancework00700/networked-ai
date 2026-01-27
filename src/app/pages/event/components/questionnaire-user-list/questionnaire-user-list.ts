@@ -3,9 +3,10 @@ import { AuthService } from '@/services/auth.service';
 import { EventService } from '@/services/event.service';
 import { SocketService } from '@/services/socket.service';
 import { UserCardList } from '@/components/card/user-card-list';
+import { NavigationService } from '@/services/navigation.service';
 import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 import { Component, effect, inject, signal, ChangeDetectionStrategy, computed } from '@angular/core';
-import { IonContent, IonToolbar, IonHeader, NavController, IonInfiniteScrollContent, IonInfiniteScroll } from '@ionic/angular/standalone';
+import { IonContent, IonToolbar, IonHeader, IonInfiniteScrollContent, IonInfiniteScroll } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'questionnaire-user-list',
@@ -15,7 +16,7 @@ import { IonContent, IonToolbar, IonHeader, NavController, IonInfiniteScrollCont
   imports: [IonInfiniteScroll, IonInfiniteScrollContent, IonHeader, IonToolbar, IonContent, UserCardList]
 })
 export class QuestionnaireUserList {
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   eventService = inject(EventService);
   private authService = inject(AuthService);
   private socketService = inject(SocketService);
@@ -89,11 +90,9 @@ export class QuestionnaireUserList {
     const currentUserId = this.authService.currentUser()?.id;
 
     if (currentUserId && id) {
-      this.navCtrl.navigateForward('/chat-room', {
-        state: {
-          user_ids: [currentUserId, id],
-          is_personal: true
-        }
+      this.navigationService.navigateForward('/chat-room', false, {
+        user_ids: [currentUserId, id],
+        is_personal: true
       });
     }
   }

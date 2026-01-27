@@ -18,7 +18,17 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { RsvpDetailsModal } from '@/components/modal/rsvp-details-modal';
-import { IonContent, IonFooter, IonToolbar, IonHeader, IonIcon, IonSkeletonText } from '@ionic/angular/standalone';
+import {
+  IonContent,
+  IonFooter,
+  IonToolbar,
+  IonHeader,
+  IonIcon,
+  IonSkeletonText,
+  IonRefresher,
+  IonRefresherContent,
+  RefresherCustomEvent
+} from '@ionic/angular/standalone';
 import { OnInit, inject, signal, computed, effect, Component, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
 
 @Component({
@@ -26,7 +36,21 @@ import { OnInit, inject, signal, computed, effect, Component, OnDestroy, ChangeD
   styleUrl: './event.scss',
   templateUrl: './event.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonIcon, IonFooter, IonHeader, IonContent, IonToolbar, IonSkeletonText, MenuModule, EventDisplay, NgOptimizedImage, EmptyState]
+  imports: [
+    Button,
+    IonIcon,
+    IonFooter,
+    IonHeader,
+    IonContent,
+    IonToolbar,
+    IonSkeletonText,
+    IonRefresher,
+    IonRefresherContent,
+    MenuModule,
+    EventDisplay,
+    NgOptimizedImage,
+    EmptyState
+  ]
 })
 export class Event implements OnInit, OnDestroy {
   route = inject(ActivatedRoute);
@@ -116,6 +140,7 @@ export class Event implements OnInit, OnDestroy {
 
     const isHost = displayData.isCurrentUserHost;
     const isCoHost = displayData.isCurrentUserCoHost;
+    const hasQuestionnaire = displayData.questionnaire && displayData.questionnaire.length > 0;
 
     let baseItems: MenuItem[] = [
       { label: 'Edit', icon: 'assets/svg/manage-event/edit.svg', iconType: 'svg', action: 'editEvent' },
@@ -128,19 +153,17 @@ export class Event implements OnInit, OnDestroy {
       { label: 'Cancel Event', icon: 'assets/svg/manage-event/calendar-x.svg', iconType: 'svg', danger: true, action: 'cancelEvent' }
     ];
 
+    // 👉 NEW: questionnaire condition
+    if (!hasQuestionnaire) {
+      baseItems = baseItems.filter((item) => item.action !== 'viewQuestionnaireResponses');
+    }
+
     if (isCoHost && !isHost) {
-      const allowedActions = [
-        'viewEventAnalytics',
-        // 'viewQuestionnaireResponses',
-        'viewGuestList',
-        'viewEventPageQr',
-        'shareEvent'
-      ];
+      const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent'];
 
       return baseItems.filter((item) => allowedActions.includes(item.action || ''));
     }
 
-    // Hide Edit & Manage Roles if event completed
     if (isCompleted) {
       baseItems = baseItems.filter((item) => !['editEvent', 'manageRoles'].includes(item.action || ''));
     }
@@ -160,7 +183,7 @@ export class Event implements OnInit, OnDestroy {
       }
     }
 
-    // Ticket Scanner (host + native)
+    // Ticket Scanner
     if (isHost && this.isNativePlatform()) {
       const scannerItem: MenuItem = {
         label: 'Ticket Scanner',
@@ -399,6 +422,16 @@ export class Event implements OnInit, OnDestroy {
       this.toasterService.showError('Failed to load event');
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  async onRefresh(event: RefresherCustomEvent): Promise<void> {
+    try {
+      await this.loadEvent();
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      event.target.complete();
     }
   }
 

@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { UserCardList } from '@/components/card/user-card-list';
 import { NavigationService } from '@/services/navigation.service';
 import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
-import { IonContent, IonHeader, IonToolbar, NavController } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonToolbar } from '@ionic/angular/standalone';
 import { Component, inject, signal, ChangeDetectionStrategy, computed, OnInit, OnDestroy } from '@angular/core';
 
 @Component({
@@ -18,7 +18,6 @@ import { Component, inject, signal, ChangeDetectionStrategy, computed, OnInit, O
   imports: [IonToolbar, IonHeader, IonContent, CommonModule, Searchbar, EmptyState, UserCardList]
 })
 export class EventUserList implements OnInit, OnDestroy {
-  navCtrl = inject(NavController);
   navigationService = inject(NavigationService);
   router = inject(Router);
   route = inject(ActivatedRoute);

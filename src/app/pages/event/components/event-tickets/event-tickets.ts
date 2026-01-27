@@ -310,10 +310,6 @@ export class EventTickets implements OnInit {
     }
   }
 
-  navigateToSubscriptionPlans(): void {
-    this.navCtrl.navigateForward('/subscription-plans');
-  }
-
   async openPromoCodeModal(initialData?: Partial<PromoCodeFormModalData>): Promise<void> {
     const result = await this.modalService.openPromoCodeModal(initialData);
 

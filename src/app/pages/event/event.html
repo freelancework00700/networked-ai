@@ -21,6 +21,10 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" mode="md">
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
+    <ion-refresher-content mode="md"></ion-refresher-content>
+  </ion-refresher>
+
   @if (isLoading()) {
     <!-- Loading State - Skeleton -->
     <div class="w-full max-w-[672px] mx-auto bg-neutral-0">
@@ -137,12 +141,12 @@
     <app-empty-state [title]="'No Events Found'" [message]="''" [showClearButton]="false" />
   }
 </ion-content>
-<ion-footer class="ion-padding-horizontal">
-  @if (!isLoading() && event()) {
-    <ion-toolbar class="ion-no-padding" style="--background: transparent">
-      <div class="pb-4 max-w-[672px] mx-auto">
-        @if (!isEventCompleted()) {
-          @if (!eventDisplayData().isCurrentUserHost && !eventDisplayData().isCurrentUserAttendee && !eventDisplayData().isCurrentUserCoHost) {
+@if (!isLoading() && event()) {
+  @if (!isEventCompleted()) {
+    @if (!eventDisplayData().isCurrentUserHost && !eventDisplayData().isCurrentUserAttendee && !eventDisplayData().isCurrentUserCoHost) {
+      <ion-footer class="ion-padding-horizontal">
+        <ion-toolbar class="ion-no-padding" style="--background: transparent">
+          <div class="pb-4 max-w-[672px] mx-auto">
             @if (eventDisplayData().is_subscriber_exclusive && !eventDisplayData().has_subscribed) {
               <app-button label="Subscribe Now" icon="/assets/svg/crown-black.svg" height="40px" (click)="navigateToSubscriptionPlans()" />
             } @else if (eventDisplayData().isRsvpApprovalRequired) {
@@ -170,11 +174,12 @@
                 height="40px"
                 [customColor]="eventDisplayData().has_subscribed ? '#2B5BDE' : ''"
                 (click)="openRsvpModal()"
+                [icon]="eventDisplayData().has_subscribed ? '/assets/svg/crown-white.svg' : ''"
               />
             }
-          }
-        }
-      </div>
-    </ion-toolbar>
+          </div>
+        </ion-toolbar>
+      </ion-footer>
+    }
   }
-</ion-footer>
+}

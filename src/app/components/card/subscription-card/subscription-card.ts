@@ -1,10 +1,11 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, NgOptimizedImage } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { IonIcon } from '@ionic/angular/standalone';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
 import { FormControl } from '@angular/forms';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 
 export type SubscriptionCardType = 'event' | 'sponsor';
 
@@ -19,7 +20,9 @@ export interface ISubscription {
   planName?: string;
   creatorName?: string;
   renewDate?: Date;
+  cancelDate?: Date;
   price?: string;
+  thumbnail_url?: string;
 }
 
 export type SubscriptionCardMode = 'plan' | 'subscription' | 'select';
@@ -29,7 +32,7 @@ export type SubscriptionCardMode = 'plan' | 'subscription' | 'select';
   templateUrl: './subscription-card.html',
   styleUrl: './subscription-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Button, IonIcon, CheckboxModule, FormsModule]
+  imports: [DatePipe, Button, IonIcon, CheckboxModule, FormsModule, NgOptimizedImage, CommonModule]
 })
 export class SubscriptionCard {
   data = input.required<ISubscription>();
@@ -91,5 +94,13 @@ export class SubscriptionCard {
 
   isSelectMode(): boolean {
     return this.mode() === 'select';
+  }
+
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
+  }
+
+  onImageError(event: any): void {
+    onImageError(event);
   }
 }

@@ -41,10 +41,15 @@
           }
         </div>
       </div>
-      <div #scrollContainer class="thumbnail-container" cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="drop($event)">
+      <div
+        #scrollContainer
+        class="thumbnail-container scrollbar-hide"
+        cdkDropList
+        cdkDropListOrientation="horizontal"
+        (cdkDropListDropped)="drop($event)"
+      >
         @for (item of mediaItems(); track item.id) {
-          <div class="thumbnail relative" cdkDrag [cdkDragBoundary]="scrollContainer" (click)="goToSlide($index)">
-            <!-- IMAGE -->
+          <div class="thumbnail relative" cdkDrag cdkDragLockAxis="x" [cdkDragStartDelay]="150" (click)="goToSlide($index)">
             @if (item.type === 'image' || item.type === 'gif') {
               @if (isBlobUrl(item.url)) {
                 <img [src]="item.url || ''" class="object-cover rounded" (error)="onImageError($event)" />
@@ -60,11 +65,10 @@
               }
             }
 
-            <!-- VIDEO -->
             @if (item.type === 'video') {
               <video [src]="item.url" muted loop></video>
             }
-            <!-- DELETE -->
+
             <div class="delete-btn" (click)="deleteMedia($index)">×</div>
           </div>
         }
@@ -203,7 +207,7 @@
     >
       <div class="flex flex-wrap items-center gap-2 min-h-[28px]">
         @if (selectedMetaTags().size === 0) {
-          <span class="text-surface-500 text-sm">Select up to 5</span>
+          <span class="text-surface-500 text-sm">Networked Meta Tag</span>
         } @else {
           @for (tagValue of getSelectedTagValues(); track tagValue) {
             @if (getTagByName(tagValue); as tag) {

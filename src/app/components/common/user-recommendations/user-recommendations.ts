@@ -21,23 +21,22 @@ export class UserRecommendations {
   peopleCards = this.recommendationsService.peopleCards;
 
   @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
-  
+
   constructor() {
     this.recommendationsService.loadRecommendations();
-  
+
     afterEveryRender(() => {
       const count = this.peopleCards().length;
-  
+
       // 🔥 went from filled → empty
       if (count === 0) {
         this.destroySwiper();
       }
-  
+
       // 🔥 went from empty → filled
-      if ( count > 0) {
+      if (count > 0) {
         this.initSwiperIfPossible();
       }
-  
     });
   }
 
@@ -45,16 +44,16 @@ export class UserRecommendations {
     if (!this.swiperEl) return;
     if (!isPlatformBrowser(this.platformId)) return;
     if (this.swiper) return;
-  
+
     this.swiper = new Swiper(this.swiperEl.nativeElement, {
       spaceBetween: 8,
       slidesPerView: 2.2,
       slidesOffsetBefore: 16,
       slidesOffsetAfter: 16,
-      allowTouchMove: true,
+      allowTouchMove: true
     });
   }
-  
+
   private destroySwiper(): void {
     this.swiper?.destroy(true, true);
     this.swiper = undefined;
@@ -63,5 +62,4 @@ export class UserRecommendations {
   onUserAdded(userId: string): void {
     this.recommendationsService.removeUser(userId);
   }
-
 }

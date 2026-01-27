@@ -2,7 +2,7 @@
   <div class="flex m-6">
     <div class="flex flex-col flex-1">
       <div class="body-14M neutral-03">Total Sales</div>
-      <div class="heading-h2">${{ summary()?.total_sales }}</div>
+      <div class="heading-h2">${{ summary()?.total_sales.toFixed(2) }}</div>
     </div>
     <div class="flex flex-col flex-1">
       <div class="body-14M neutral-03">Tickets Sold</div>
@@ -70,7 +70,7 @@
 
           @if (ticket.total_sold > 0) {
             <div class="flex items-center justify-between gap-2 bg-surface-200 p-3 rounded-lg mt-4" (click)="openUserList(ticket)">
-              <div class="body-16SB neutral-01">${{ ticket.total_sales }}</div>
+              <div class="body-16SB neutral-01">${{ ticket.total_sales.toFixed(2) }}</div>
               <i class="pi pi-chevron-right"></i>
             </div>
           }

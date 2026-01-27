@@ -279,6 +279,8 @@ export class CreateEvent implements OnInit, OnDestroy {
       city: selectedEvent?.city || form.get('city')?.value || '',
       state: selectedEvent?.state || form.get('state')?.value || '',
       country: selectedEvent?.country || form.get('country')?.value || '',
+      is_subscriber_exclusive: selectedEvent?.is_subscriber_exclusive || form.get('is_subscriber_exclusive')?.value || '',
+      plan_ids:selectedEvent?.plan_ids || form.get('plan_ids')?.value || '',
       participants: this.participants()
     };
 
@@ -363,7 +365,7 @@ export class CreateEvent implements OnInit, OnDestroy {
 
       form.patchValue({
         date: this.getTodayDate(),
-        start_time: this.getCurrentTime(),
+        start_time: this.addMinutesToTime(this.eventService.getCurrentTime(), 30),
         is_public: true,
         participants: defaultParticipants
       });
@@ -442,10 +444,6 @@ export class CreateEvent implements OnInit, OnDestroy {
 
   getTodayDate(): string {
     return this.eventService.getTodayDate();
-  }
-
-  getCurrentTime(): string {
-    return this.eventService.getCurrentTime();
   }
 
   addMinutesToTime(time: string, minutes: number): string {

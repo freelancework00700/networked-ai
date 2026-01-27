@@ -595,6 +595,6 @@ export class ChatRoom implements OnInit, OnDestroy {
 
   navigateToNetwork() {
     const room = this.chatRoom();
-    this.navCtrl.navigateForward(`/event/questionnaire-response/${room.event_id}?Host=false`);
+    this.navCtrl.navigateForward(`/event/questionnaire-response/${room.event_id}`);
   }
 }

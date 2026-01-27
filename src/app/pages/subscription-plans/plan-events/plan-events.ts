@@ -7,20 +7,12 @@ import { ModalService } from '@/services/modal.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ToasterService } from '@/services/toaster.service';
 import { EmptyState } from '@/components/common/empty-state';
+import { NavigationService } from '@/services/navigation.service';
 import { SubscriptionService } from '@/services/subscription.service';
 import { SubscriptionEventCard } from '@/components/card/subscription-event-card';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import {
-  IonHeader,
-  IonToolbar,
-  IonContent,
-  IonIcon,
-  NavController,
-  IonInfiniteScroll,
-  IonInfiniteScrollContent,
-  IonFooter
-} from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonFooter } from '@ionic/angular/standalone';
 
 interface Event {
   id: string;
@@ -61,7 +53,7 @@ export class PlanEvents implements OnInit, OnDestroy {
     'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
 
   private route = inject(ActivatedRoute);
-  private navCtrl = inject(NavController);
+  private navigationService = inject(NavigationService);
   private eventService = inject(EventService);
   private subscriptionService = inject(SubscriptionService);
   private toasterService = inject(ToasterService);
@@ -290,9 +282,6 @@ export class PlanEvents implements OnInit, OnDestroy {
       if (planData) {
         this.planData.set(planData);
         this.planName.set(planData.name || '');
-
-        console.log('planData', planData);
-
         // Load included events - check if events are already in planData or use event_ids
         if (planData.events && planData.events.length > 0) {
           // Events are already included in the response
@@ -308,7 +297,7 @@ export class PlanEvents implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error loading plan data:', error);
       this.toasterService.showError('Failed to load plan data');
-      this.navCtrl.back();
+      this.navigationService.back();
     } finally {
       this.isLoading.set(false);
     }
@@ -609,7 +598,7 @@ export class PlanEvents implements OnInit, OnDestroy {
   }
 
   back(): void {
-    this.navCtrl.back();
+    this.navigationService.back();
   }
 
   private groupEventsByMonth(events: Event[]): { [key: string]: Event[] } {

@@ -14,13 +14,16 @@ import {
 import { IUser } from '@/interfaces/IUser';
 import { DatePipe } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
-import { Injectable, signal } from '@angular/core';
+import { AuthService } from './auth.service';
+import { Injectable, signal, inject } from '@angular/core';
 import { ICity } from '@/components/card/city-card';
 import { BaseApiService } from '@/services/base-api.service';
 import { SegmentButtonItem } from '@/components/common/segment-button';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
+  private authService = inject(AuthService);
+
   datePipe = new DatePipe('en-US');
   recommendedEvents = signal<IEvent[]>([]);
   publicEvents = signal<IEvent[]>([]);
@@ -687,7 +690,9 @@ export class EventService extends BaseApiService {
       tickets: eventData?.tickets || [],
       questionnaire: eventData?.questionnaire || eventData?.questions || [],
       promo_codes: eventData?.promo_codes || [],
-      total_views: eventData?.total_views || 0
+      total_views: eventData?.total_views || 0,
+      has_plans: eventData?.plan_ids.length > 0 || false,
+      is_subscriber_exclusive: eventData?.is_subscriber_exclusive || false
     };
   }
 
@@ -1363,5 +1368,30 @@ export class EventService extends BaseApiService {
       console.error('Error sharing feed:', error);
       throw error;
     }
+  }
+
+  checkHostOrCoHostAccess(eventData: any): boolean {
+    const currentUser = this.authService?.currentUser();
+
+    if (!currentUser?.id || !eventData?.participants) {
+      return false;
+    }
+
+    const participants = eventData.participants || [];
+    const isHost = participants.some((p: any) => {
+      const userId = p.user?.id;
+      const role = (p.role || '').toLowerCase();
+      return userId === currentUser.id && role === 'host';
+    });
+
+    const isCoHost = participants.some((p: any) => {
+      const userId = p.user?.id;
+      const role = (p.role || '').toLowerCase();
+      return userId === currentUser.id && role === 'cohost';
+    });
+
+    console.log('isHost', isHost);
+
+    return isHost || isCoHost;
   }
 }

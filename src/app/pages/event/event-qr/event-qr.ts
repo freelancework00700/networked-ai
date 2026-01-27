@@ -10,8 +10,8 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { environment } from 'src/environments/environment';
 import { ToasterService } from '@/services/toaster.service';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { IonHeader, IonToolbar, IonContent, IonSkeletonText, ModalController } from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy, signal, computed, ViewChild, ElementRef, Input } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, NavController, IonSkeletonText, ModalController } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'event-qr',
@@ -24,7 +24,6 @@ export class EventQr {
   @ViewChild('downloadableSection', { static: false, read: ElementRef }) downloadableSection?: ElementRef<HTMLDivElement>;
   modalCtrl = inject(ModalController);
   route = inject(ActivatedRoute);
-  navCtrl = inject(NavController);
   authService = inject(AuthService);
   toasterService = inject(ToasterService);
 

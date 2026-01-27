@@ -309,10 +309,24 @@ export class EventDetails implements OnInit {
     return Array.isArray(value) ? value : [value];
   }
 
+  private getTodayDate(): string {
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`; // LOCAL YYYY-MM-DD
+  }
+
   async openDateModal(): Promise<void> {
     const form = this.eventForm();
     const currentDate = form.get('date')?.value || '';
-    const date = await this.modalService.openDateTimeModal('date', currentDate);
+
+    const minDate = this.getTodayDate();
+
+    const date = await this.modalService.openDateTimeModal('date', currentDate, minDate);
+
     if (date) {
       form.patchValue({ date });
     }

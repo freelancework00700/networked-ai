@@ -2,22 +2,23 @@ import { Button } from '@/components/form/button';
 import { SubscriptionPlan } from '@/interfaces/event';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
+import { NavigationService } from '@/services/navigation.service';
 import { SubscriptionService } from '@/services/subscription.service';
 import { SubscriptionCard, ISubscription } from '@/components/card/subscription-card';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit } from '@angular/core';
-import { NavController, IonHeader, IonToolbar, IonContent, IonFooter, IonIcon, ViewWillEnter } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, IonFooter, IonIcon, ViewWillEnter, RefresherCustomEvent, IonRefresherContent, IonRefresher } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'subscription-plans',
   templateUrl: './subscription-plans.html',
   styleUrl: './subscription-plans.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonHeader, IonToolbar, IonContent, IonFooter, IonIcon, Button, SubscriptionCard, SegmentButton]
+  imports: [IonRefresher, IonRefresherContent, IonHeader, IonToolbar, IonContent, IonFooter, IonIcon, Button, SubscriptionCard, SegmentButton]
 })
 export class SubscriptionPlans implements OnInit, ViewWillEnter {
   // services
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   subscriptionService = inject(SubscriptionService);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
@@ -109,7 +110,7 @@ export class SubscriptionPlans implements OnInit, ViewWillEnter {
   }
 
   back(): void {
-    this.navCtrl.back();
+    this.navigationService.back();
   }
 
   onSegmentChange(value: string): void {
@@ -122,14 +123,14 @@ export class SubscriptionPlans implements OnInit, ViewWillEnter {
     // Navigate to manage page with plan ID
     if (plan.id) {
       const isSponsor = plan.type === 'sponsor';
-      this.navCtrl.navigateForward(`/subscription/manage/${plan.id}?is_sponsor=${isSponsor ? 'true' : 'false'}`);
+      this.navigationService.navigateForward(`/subscription/manage/${plan.id}?is_sponsor=${isSponsor ? 'true' : 'false'}`);
     }
   }
 
   onEvents(plan: ISubscription): void {
     if (plan.id) {
       const isSponsor = plan.type === 'sponsor';
-      this.navCtrl.navigateForward(`/subscription/${plan.id}/events?is_sponsor=${isSponsor ? 'true' : 'false'}`);
+      this.navigationService.navigateForward(`/subscription/${plan.id}/events?is_sponsor=${isSponsor ? 'true' : 'false'}`);
     }
   }
 
@@ -162,6 +163,16 @@ export class SubscriptionPlans implements OnInit, ViewWillEnter {
 
   onCreatePlan(planType: 'event' | 'sponsor'): void {
     const isSponsor = planType === 'sponsor';
-    this.navCtrl.navigateForward(`/subscription/create?is_sponsor=${isSponsor ? 'true' : 'false'}`);
+    this.navigationService.navigateForward(`/subscription/create?is_sponsor=${isSponsor ? 'true' : 'false'}`);
+  }
+
+  async onRefresh(event: RefresherCustomEvent): Promise<void> {
+    try {
+      await this.loadPlans();
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      event.target.complete();
+    }
   }
 }

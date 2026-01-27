@@ -14,21 +14,31 @@ import { EmptyState } from '@/components/common/empty-state';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
 import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
-import { NavController, IonIcon, IonSpinner } from '@ionic/angular/standalone';
 import { IonContent, IonToolbar, IonHeader } from '@ionic/angular/standalone';
 import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from '@angular/core';
+import { IonIcon, IonSpinner, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'guest-list',
   styleUrl: './guest-list.scss',
   templateUrl: './guest-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonSpinner, IonHeader, IonToolbar, IonContent, Searchbar, IonIcon, ButtonModule, EmptyState, NgOptimizedImage]
+  imports: [
+    IonSpinner,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    IonRefresher,
+    IonRefresherContent,
+    Searchbar,
+    IonIcon,
+    ButtonModule,
+    EmptyState,
+    NgOptimizedImage
+  ]
 })
 export class GuestList implements OnInit {
   private popoverService = inject(PopoverService);
-
-  navCtrl = inject(NavController);
   modalService = inject(ModalService);
   route = inject(ActivatedRoute);
   eventService = inject(EventService);
@@ -37,6 +47,8 @@ export class GuestList implements OnInit {
   networkService = inject(NetworkService);
   navigationService = inject(NavigationService);
   private socketService = inject(SocketService);
+
+  isLoggedIn = computed(() => !!this.authService.currentUser());
 
   selectedGuestId = signal<string>('');
   selectedGuest = signal<any>('');
@@ -185,11 +197,9 @@ export class GuestList implements OnInit {
     if (!guestId) return;
     const currentUserId = this.authService.currentUser()?.id;
     if (currentUserId && guestId) {
-      this.navCtrl.navigateForward('/chat-room', {
-        state: {
-          user_ids: [currentUserId, guestId],
-          is_personal: true
-        }
+      this.navigationService.navigateForward('/chat-room', false, {
+        user_ids: [currentUserId, guestId],
+        is_personal: true
       });
     }
   }
@@ -220,11 +230,19 @@ export class GuestList implements OnInit {
     return guests.filter((s) => s.name.toLowerCase().includes(search));
   });
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    if (!this.isLoggedIn()) {
+      const result = await this.modalService.openLoginModal();
+      if (!result?.success) {
+        this.navigationService.back();
+        return;
+      }
+    }
+
     const eventId = this.route.snapshot.paramMap.get('id');
     if (eventId) {
       this.eventId.set(eventId);
-      this.loadAttendees();
+      await this.loadAttendees();
     }
     this.setupNetworkConnectionListener();
   }
@@ -237,6 +255,13 @@ export class GuestList implements OnInit {
       this.isLoading.set(true);
       const eventData = await this.eventService.getEventById(eventId);
       if (eventData) {
+        // Check if user is host or cohost
+        if (!this.eventService.checkHostOrCoHostAccess(eventData)) {
+          this.toasterService.showError('You do not have permission to view this page');
+          this.navigationService.navigateForward(`/event/${eventId}`, true);
+          return;
+        }
+
         this.eventData.set(eventData);
         if (eventData.attendees) {
           this.attendees.set(eventData.attendees);
@@ -244,7 +269,7 @@ export class GuestList implements OnInit {
       }
     } catch (error) {
       console.error('Error loading attendees:', error);
-      this.toasterService.showError('Failed to load guest list.');
+      this.navigationService.navigateForward(`/event/${eventId}`, true);
     } finally {
       this.isLoading.set(false);
     }
@@ -277,7 +302,7 @@ export class GuestList implements OnInit {
   }
 
   back() {
-    this.navCtrl.back();
+    this.navigationService.back();
   }
 
   downloadGuestList() {
@@ -380,5 +405,15 @@ export class GuestList implements OnInit {
 
   closePopover(): void {
     this.popoverService.close();
+  }
+
+  async onRefresh(event: RefresherCustomEvent): Promise<void> {
+    try {
+      await this.loadAttendees();
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      event.target.complete();
+    }
   }
 }

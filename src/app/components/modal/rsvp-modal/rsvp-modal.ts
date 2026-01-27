@@ -493,6 +493,9 @@ export class RsvpModal implements OnInit, OnDestroy {
   }
 
   canIncrement(ticket: TicketDisplay): boolean {
+    if (this.isSubscriberExclusive && (ticket.selectedQuantity ?? 0) >= 1) {
+      return false;
+    }
     if (ticket.available_quantity !== undefined) {
       if ((ticket.selectedQuantity ?? 0) >= ticket.available_quantity) {
         return false;
@@ -545,20 +548,28 @@ export class RsvpModal implements OnInit, OnDestroy {
   }
 
   incrementQuantity(ticket: TicketDisplay): void {
+    // 🚫 Allow only 1 quantity for subscriber exclusive tickets
+    if (this.isSubscriberExclusive && (ticket.selectedQuantity ?? 0) >= 1) {
+      return;
+    }
+
     if (!this.canIncrement(ticket)) return;
+
     const tickets = this.ticketsData();
     const index = tickets.findIndex((t) => t.id === ticket.id);
+
     if (index !== -1) {
       const updatedTickets = [...tickets];
       const previousQuantity = updatedTickets[index].selectedQuantity ?? 0;
+
       updatedTickets[index] = {
         ...updatedTickets[index],
         selectedQuantity: previousQuantity + 1
       };
+
       this.ticketsData.set(updatedTickets);
 
-      // Track the first paid ticket selected (ignore free tickets with price = 0)
-      // Only set if this is the first time selecting this paid ticket (quantity was 0)
+      // Track first paid ticket
       if (ticket.price > 0 && previousQuantity === 0 && !this.firstSelectedPaidTicketId()) {
         this.firstSelectedPaidTicketId.set(String(ticket.id));
       }

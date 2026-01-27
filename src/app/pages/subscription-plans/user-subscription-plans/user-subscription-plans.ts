@@ -1,5 +1,6 @@
 import { Button } from '@/components/form/button';
 import { ActivatedRoute } from '@angular/router';
+import { PlanData } from '@/interfaces/ISubscripton';
 import { ModalService } from '@/services/modal.service';
 import { EventService } from '@/services/event.service';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -7,10 +8,10 @@ import { ToasterService } from '@/services/toaster.service';
 import { NavigationService } from '@/services/navigation.service';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ISubscription } from '@/components/card/subscription-card';
-import { PlanData, SubscriptionService } from '@/services/subscription.service';
+import { SubscriptionService } from '@/services/subscription.service';
 import { PlanPreview } from '@/pages/subscription-plans/plan-preview/plan-preview';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
-import { IonHeader, IonToolbar, IonContent, IonIcon, NavController } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, IonIcon, RefresherCustomEvent, IonRefresher, IonRefresherContent } from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy } from '@angular/core';
 
 @Component({
@@ -18,14 +19,13 @@ import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, O
   templateUrl: './user-subscription-plans.html',
   styleUrl: './user-subscription-plans.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonIcon, IonHeader, IonToolbar, IonContent, CommonModule, PlanPreview, SegmentButton, ReactiveFormsModule]
+  imports: [IonRefresherContent, IonRefresher, Button, IonIcon, IonHeader, IonToolbar, IonContent, CommonModule, PlanPreview, SegmentButton, ReactiveFormsModule]
 })
 export class UserSubscriptionPlans implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private subscriptionService = inject(SubscriptionService);
   private eventService = inject(EventService);
   private toasterService = inject(ToasterService);
-  private navCtrl = inject(NavController);
   private route = inject(ActivatedRoute);
   private modalService = inject(ModalService);
   private navigationService = inject(NavigationService);
@@ -248,15 +248,12 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     const priceDisplay = `$${parseFloat(price.amount).toFixed(2)} /${interval === 'year' ? 'y' : 'm'}`;
     const endDate = subscription.end_date ? new Date(subscription.end_date) : null;
 
-    // For creator name, we'll use a placeholder since owner info isn't in plan data
-    // In a real scenario, you might want to fetch owner details by owner_id
-    const creatorName = 'Plan Creator'; // TODO: Fetch owner name from owner_id if needed
-
     return {
       id: subscription.id,
       type: plan.is_sponsor ? 'sponsor' : 'event',
       planName: plan.name || 'Unknown Plan',
-      creatorName: creatorName,
+      creatorName: plan?.user?.name,
+      thumbnail_url: plan?.user?.thumbnail_url,
       renewDate: endDate,
       price: priceDisplay
     } as ISubscription;
@@ -317,27 +314,32 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   });
 
   async ngOnInit(): Promise<void> {
-    // Check if coming from my-subscriptions page using navigation state
     const state = window.history.state;
     const fromValue = state?.from;
     this.isFromMySubscriptions.set(fromValue === 'my-subscriptions');
+  
+    await this.loadPlanOrPlansBasedOnState();
+  
+    // Close dropdown when clicking outside
+    document.addEventListener('click', this.handleClickOutside.bind(this));
+  }
+  
+
+  private async loadPlanOrPlansBasedOnState(): Promise<void> {
     const planId = this.route.snapshot.paramMap.get('planId');
     if (planId) {
-      // Load plan by ID using API
       await this.loadPlanById(planId);
     } else {
       const userId = this.route.snapshot.paramMap.get('userId');
       if (!userId) {
         this.toasterService.showError('User ID or Plan ID is required');
-        this.navCtrl.back();
+        this.navigationService.back();
         return;
       }
       await this.loadPlans(userId);
     }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', this.handleClickOutside.bind(this));
   }
+  
 
   private handleClickOutside = (event: MouseEvent): void => {
     const target = event.target as HTMLElement;
@@ -356,37 +358,17 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
       const planData = await this.subscriptionService.getPlanById(planId);
       if (!planData) {
         this.toasterService.showError('Subscription plan not found');
-        this.navCtrl.back();
+        this.navigationService.back();
         return;
       }
 
-      // Transform to PlanData format
-      const transformedPlan: PlanData = {
-        id: planData.id || '',
-        name: planData.name || '',
-        description: planData.description || '',
-        plan_benefits: planData.plan_benefits || [],
-        is_sponsor: planData.is_sponsor || false,
-        active: planData.active !== false,
-        prices: (planData.prices || []).map((price: any) => ({
-          id: price.id || '',
-          amount: price.amount || '0.00',
-          interval: price.interval || 'month',
-          active: price.active !== false,
-          subscriptions: price.subscriptions || []
-        })),
-        events: planData.events || [],
-        total_subscribers: planData.total_subscribers || 0,
-        event_ids: planData.event_ids || []
-      };
-
-      this.plans.set([transformedPlan]);
+      this.plans.set([planData]);
       this.selectedPlanIndex.set(0);
-      this.planTypeFilter.set(transformedPlan.is_sponsor ? 'sponsor' : 'event');
+      this.planTypeFilter.set(planData.is_sponsor ? 'sponsor' : 'event');
     } catch (error) {
       console.error('Error loading subscription plan by ID:', error);
       this.toasterService.showError('Failed to load subscription plan');
-      this.navCtrl.back();
+      this.navigationService.back();
     } finally {
       this.isLoading.set(false);
     }
@@ -400,7 +382,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
 
       if (!plansData || plansData.length === 0) {
         this.toasterService.showError('No subscription plans found');
-        this.navCtrl.back();
+        this.navigationService.back();
         return;
       }
 
@@ -408,7 +390,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error loading subscription plans:', error);
       this.toasterService.showError('Failed to load subscription plans');
-      this.navCtrl.back();
+      this.navigationService.back();
     } finally {
       this.isLoading.set(false);
     }
@@ -617,6 +599,17 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   }
 
   back(): void {
-    this.navCtrl.back();
+    this.navigationService.back();
   }
+
+  async onRefresh(event: RefresherCustomEvent): Promise<void> {
+    try {
+      await this.loadPlanOrPlansBasedOnState();
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      event.target.complete();
+    }
+  }
+  
 }

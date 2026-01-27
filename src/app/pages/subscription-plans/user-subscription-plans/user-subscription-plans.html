@@ -68,6 +68,9 @@
 
 <ion-content [fullscreen]="true" mode="md">
   <div class="w-full max-w-[672px] mx-auto h-full p-4">
+    <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
+      <ion-refresher-content mode="md"></ion-refresher-content>
+    </ion-refresher>
     @if (currentPlan()) {
       <div class="flex flex-col gap-6">
         <!-- Plan Preview (subscription card shown inside when subscription data is provided) -->

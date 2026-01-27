@@ -1,8 +1,9 @@
 import { ToasterService } from '@/services/toaster.service';
+import { NavigationService } from '@/services/navigation.service';
 import { SubscriptionService } from '@/services/subscription.service';
 import { ISubscription, SubscriptionCard } from '@/components/card/subscription-card';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
-import { NavController, IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, RefresherCustomEvent, IonRefresherContent, IonRefresher } from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit } from '@angular/core';
 
 @Component({
@@ -10,11 +11,11 @@ import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit } 
   templateUrl: './my-subscriptions.html',
   styleUrl: './my-subscriptions.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonHeader, IonToolbar, IonContent, SubscriptionCard, SegmentButton]
+  imports: [IonRefresher, IonRefresherContent, IonHeader, IonToolbar, IonContent, SubscriptionCard, SegmentButton]
 })
 export class MySubscriptions implements OnInit {
   // services
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   subscriptionService = inject(SubscriptionService);
   toasterService = inject(ToasterService);
 
@@ -89,13 +90,16 @@ export class MySubscriptions implements OnInit {
 
         // Get end date for renew date
         const endDate = sub.end_date ? new Date(sub.end_date) : null;
+        const cancelDate = sub.canceled_at ? new Date(sub.canceled_at) : null;
 
         return {
           id: sub.id,
           type: plan.is_sponsor ? 'sponsor' : 'event',
           planName: plan.name || 'Unknown Plan',
           creatorName: creatorName,
+          thumbnail_url: sub?.owner?.thumbnail_url,
           renewDate: endDate,
+          cancelDate: sub?.product?.is_deleted ? cancelDate : null,
           price: priceDisplay
         } as ISubscription;
       });
@@ -111,7 +115,7 @@ export class MySubscriptions implements OnInit {
   }
 
   back(): void {
-    this.navCtrl.back();
+    this.navigationService.back();
   }
 
   onSegmentChange(value: string): void {
@@ -121,8 +125,14 @@ export class MySubscriptions implements OnInit {
   onSubscriptionClick(subscription: ISubscription): void {
     // Find the raw subscription data
     const rawData = this.rawSubscriptionsData().find((sub) => sub.id === subscription.id);
+
     if (!rawData) {
       console.error('Raw subscription data not found');
+      return;
+    }
+
+    if (rawData?.product?.is_deleted) {
+      this.toasterService.showError('Subscriptions plan is deleted by owner.');
       return;
     }
 
@@ -135,8 +145,18 @@ export class MySubscriptions implements OnInit {
       return;
     }
 
-    this.navCtrl.navigateForward(`/subscription/${planId}`, {
-      state: { from: 'my-subscriptions' }
+    this.navigationService.navigateForward(`/subscription/${planId}`, false, {
+      from: 'my-subscriptions'
     });
+  }
+
+  async onRefresh(event: RefresherCustomEvent): Promise<void> {
+    try {
+      await this.loadSubscriptions();
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      event.target.complete();
+    }
   }
 }

@@ -25,6 +25,7 @@ import { DescriptionGeneratorService } from '@/services/description-generator.se
 import { PlanDetailsForm } from '@/pages/subscription-plans/components/plan-details-form';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, ChangeDetectorRef, Input } from '@angular/core';
+import { NavigationService } from '@/services/navigation.service';
 
 interface Event {
   id: string;
@@ -66,7 +67,7 @@ export class CreatePlan implements OnInit {
     'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
 
   fb = inject(FormBuilder);
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   cdr = inject(ChangeDetectorRef);
   modalService = inject(ModalService);
   subscriptionService = inject(SubscriptionService);
@@ -488,7 +489,7 @@ export class CreatePlan implements OnInit {
     if (this.currentStep() > 1) {
       this.currentStep.set(this.currentStep() - 1);
     } else {
-      this.navCtrl.back();
+      this.navigationService.back();
     }
   }
 
@@ -694,7 +695,7 @@ export class CreatePlan implements OnInit {
         customColor: color
       });
 
-      this.navCtrl.back();
+      this.navigationService.back();
     } catch (error: any) {
       console.error('Error launching plan:', error);
       const errorMessage = error?.message || (this.planId ? 'Failed to update plan. Please try again.' : 'Failed to create plan. Please try again.');
