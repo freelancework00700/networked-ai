@@ -1,3 +1,4 @@
+import { OgService } from '@/services/og.service';
 import { Subscription } from 'rxjs';
 import { MenuModule } from 'primeng/menu';
 import { IUser } from '@/interfaces/IUser';
@@ -60,7 +61,7 @@ export class Event implements OnInit, OnDestroy {
   toasterService = inject(ToasterService);
   navigationService = inject(NavigationService);
   platformId = inject(PLATFORM_ID);
-
+  ogService = inject(OgService);
   // subscriptions
   routeParamsSubscription?: Subscription;
   timerInterval?: any;
@@ -403,6 +404,7 @@ export class Event implements OnInit, OnDestroy {
       const eventData = await this.eventService.getEventById(eventId);
       if (eventData) {
         this.event.set(eventData);
+        this.ogService.setOgTagInEvent(eventData);
 
         if (eventData.subscription_id) {
           this.subscriptionId.set(eventData.subscription_id);

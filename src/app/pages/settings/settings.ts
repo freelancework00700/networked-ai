@@ -229,7 +229,7 @@ export class Settings implements OnInit {
       url = 'https://play.google.com/store/apps/details?id=app.networked.ai';
     } else {
       // Web fallback
-      url = 'https://play.google.com/store/apps/details?id=app.networked.ai';
+      url = 'https://apps.apple.com/us/app/networked-ai-invites/id6471849642';
     }
 
     await Browser.open({

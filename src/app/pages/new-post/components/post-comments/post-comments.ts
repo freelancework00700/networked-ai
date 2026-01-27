@@ -29,6 +29,7 @@ import { NavigationService } from '@/services/navigation.service';
 import { Mentions } from '@/components/common/mentions';
 import { IUser } from '@/interfaces/IUser';
 import { OverlayModule } from '@angular/cdk/overlay';
+import { OgService } from '@/services/og.service';
 
 @Component({
   selector: 'post-comments',
@@ -65,6 +66,7 @@ export class PostComments implements OnInit, OnDestroy {
   navigationService = inject(NavigationService);
   router = inject(Router);
   route = inject(ActivatedRoute);
+  ogService = inject(OgService);
 
   currentUser = this.authService.currentUser;
 
@@ -173,6 +175,7 @@ export class PostComments implements OnInit, OnDestroy {
         if (postData) {
           // Set the post in FeedService for real-time socket updates
           this.feedService.setCurrentViewedPost(postData);
+          this.ogService.setOgTagInPost(postData);
           this.loadComments(postId);
         }
       } catch (error) {

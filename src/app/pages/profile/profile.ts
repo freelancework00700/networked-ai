@@ -31,6 +31,7 @@ import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 import { StripeService } from '@/services/stripe.service';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { OgService } from '@/services/og.service';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
@@ -83,6 +84,7 @@ export class Profile implements OnDestroy {
   private socketService = inject(SocketService);
   private stripeService = inject(StripeService);
   private route = inject(ActivatedRoute);
+  ogService = inject(OgService);
 
   private routeParamSubscription?: Subscription;
 
@@ -172,6 +174,7 @@ export class Profile implements OnDestroy {
     const user = this.currentUser();
     return user?.thumbnail_url || '/assets/images/profile.jpeg';
   });
+
   eventsCount = computed(() => {
     const user = this.currentUser();
     return (user?.total_events_hosted || 0) + (user?.total_events_cohosted || 0) + (user?.total_events_sponsored || 0);
@@ -220,11 +223,24 @@ export class Profile implements OnDestroy {
   });
 
   constructor() {
-    const routeParamSubscription = this.route.params.subscribe(() => this.handleProfileLoad());
+    const routeParamSubscription = this.route.params.subscribe(() => {
+      this.handleProfileLoad();
+    });
 
     effect(() => {
-      const currentUserId = this.authService.currentUser()?.id;
-      if (currentUserId) this.handleProfileLoad();
+      // const currentUserId = this.authService.currentUser()?.id;
+      // if (currentUserId) this.handleProfileLoad();
+      this.handleProfileLoad();
+    });
+
+    // ✅ SSR-safe OG tags
+    effect(() => {
+      const user = this.currentUser();
+      const loading = this.isLoading();
+
+      if (!loading && user) {
+        this.ogService.setOgTagInProfile(user);
+      }
     });
 
     effect(() => {

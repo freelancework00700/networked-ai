@@ -1394,4 +1394,25 @@ export class EventService extends BaseApiService {
 
     return isHost || isCoHost;
   }
+
+  sanitizeOgDescription(html: string): string {
+    if (!html) return '';
+
+    const text = html
+      // Remove script & style tags
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      // Remove all remaining HTML tags
+      .replace(/<\/?[^>]+(>|$)/g, '')
+      // Decode common HTML entities
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      // Normalize spaces
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return text;
+  }
 }
