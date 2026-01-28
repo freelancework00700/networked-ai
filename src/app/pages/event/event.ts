@@ -298,6 +298,7 @@ export class Event implements OnInit, OnDestroy {
     const eventData = this.currentEventData();
     if (!eventData) {
       return {
+        id: '',
         thumbnail_url: '',
         title: '',
         description: '',

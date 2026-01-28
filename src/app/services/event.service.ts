@@ -670,6 +670,7 @@ export class EventService extends BaseApiService {
     const isRsvpApprovalRequired = eventData?.settings?.is_rsvp_approval_required ?? false;
 
     return {
+      id: eventData?.id,
       thumbnail_url: eventData?.thumbnail_url || thumbnailUrl,
       title: eventData?.title || '',
       description: eventData?.description || '',
@@ -680,8 +681,11 @@ export class EventService extends BaseApiService {
       mapCenter,
       admission,
       formattedDateTime,
+      slug: eventData?.slug || '',
       userSections,
       isRepeatingEvent,
+      start_date: eventData?.start_date,
+      end_date: eventData?.end_date,
       dateItems,
       rsvpButtonLabel,
       isCurrentUserHost,

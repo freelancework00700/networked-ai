@@ -126,6 +126,7 @@ export interface UserSection {
 }
 
 export interface EventDisplayData {
+  id: string;
   thumbnail_url: string;
   title: string;
   description: string;
@@ -137,6 +138,9 @@ export interface EventDisplayData {
   mapCenter: [number, number] | null;
   admission: string;
   formattedDateTime: string;
+  start_date: string;
+  slug: string;
+  end_date: string;
   userSections: UserSection[];
   isRepeatingEvent: boolean;
   dateItems: SegmentButtonItem[];
@@ -169,6 +173,7 @@ export interface IEvent {
   city?: string;
   state?: string;
   country?: string;
+  description?: string;
   attendees?: EventAttendee[];
   participants?: Array<{
     role?: string;

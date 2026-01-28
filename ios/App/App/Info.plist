@@ -111,5 +111,9 @@
 	<!-- disable encryption -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+
+	<key>NSCalendarsUsageDescription</key>
+    <string>We need calendar access to add events</string>
+
 </dict>
 </plist>

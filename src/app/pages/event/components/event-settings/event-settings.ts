@@ -67,6 +67,10 @@ export class EventSettings {
 
     effect(() => {
       const form = this.eventForm();
+      const formIsPublic = form.get('is_public')?.value;
+      if (formIsPublic !== null && formIsPublic !== undefined) {
+        this.isPublic.set(formIsPublic);
+      }
       const currentParticipants = form.get('participants')?.value || [];
 
       const existingHosts = currentParticipants.filter((p: any) => {
@@ -119,14 +123,6 @@ export class EventSettings {
     effect(() => {
       const isPublic = this.isPublic();
       this.eventForm().get('is_public')?.setValue(isPublic);
-    });
-
-    effect(() => {
-      const form = this.eventForm();
-      const formIsPublic = form.get('is_public')?.value;
-      if (formIsPublic !== null && formIsPublic !== undefined) {
-        this.isPublic.set(formIsPublic);
-      }
     });
 
     effect(() => {

@@ -56,6 +56,7 @@ import { QuestionnairePreviewModal } from '@/components/modal/questionnaire-prev
 import { StripePaymentComponent } from '@/components/common/stripe-payment/stripe-payment';
 import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
 import { ChatRoom } from '@/interfaces/IChat';
+import { AddToCalendarModal } from '@/components/modal/add-to-calendar-modal';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -1058,6 +1059,23 @@ export class ModalService {
       component: TicketsListModal,
       cssClass: 'modal-600px-height',
       componentProps: { tickets }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    return data || null;
+  }
+
+  async openAddToCalendarModal(eventData: any): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: AddToCalendarModal,
+      cssClass: 'auto-hight-modal',
+      componentProps: { eventData }
     });
 
     await modal.present();
