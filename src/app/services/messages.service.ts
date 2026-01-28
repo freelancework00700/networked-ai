@@ -31,9 +31,11 @@ export class MessagesService extends BaseApiService {
       search?: string; // when provided as '' it clears search
       filter?: 'all' | 'unread' | 'group' | 'event' | 'network';
       append?: boolean;
+      skipClear?: boolean;
     } = {}
   ): Promise<{ rooms: ChatRoom[]; pagination: ChatRoomsPagination }> {
     try {
+      if(!params.append && !params.skipClear) this.chatRooms.set([]);
       this.isLoading.set(true);
       const currentUser = this.authService.currentUser();
       if (!currentUser?.id) {
@@ -308,7 +310,10 @@ export class MessagesService extends BaseApiService {
       this.applyRoomUpdated(room);
       return;
     }
-    this.chatRooms.update((current) => [room, ...current]);
+    this.chatRooms.update((current) => {
+      const updated = [room, ...current];
+      return this.sortChatRoomsByLastMessage(updated);
+    });
   }
 
   applyRoomUpdated(room: ChatRoom): void {
@@ -322,7 +327,8 @@ export class MessagesService extends BaseApiService {
 
       if (roomIndex === -1) {
         if (isUserInRoom) {
-          return [room, ...current];
+          const updated = [room, ...current];
+          return this.sortChatRoomsByLastMessage(updated);
         }
         return current;
       }
@@ -333,7 +339,7 @@ export class MessagesService extends BaseApiService {
 
       const updated = [...current];
       updated[roomIndex] = room;
-      return updated;
+      return this.sortChatRoomsByLastMessage(updated);
     });
   }
 
@@ -342,6 +348,15 @@ export class MessagesService extends BaseApiService {
       await this.put(`/messages/mark-read/${roomId}`, {});
     } catch (error) {
       console.error('Error marking room as read:', error);
+    }
+  }
+
+  async updateRoom(roomId: string, payload: any): Promise<void> {
+    try {
+      await this.put(`/chat-rooms/${roomId}`, payload);
+    } catch (error) {
+      console.error('Error updating room:', error);
+      throw error;
     }
   }
 
@@ -369,6 +384,28 @@ export class MessagesService extends BaseApiService {
       await this.delete<{ success: boolean; message: string }>(`/chat-rooms/${roomId}/user/${userId}`);
     } catch (error) {
       console.error('Error leaving room:', error);
+      throw error;
+    }
+  }
+
+  private sortChatRoomsByLastMessage(rooms: ChatRoom[]): ChatRoom[] {
+    return [...rooms].sort((a, b) => {
+      const timeA = a.lastMessageTime || a.updated_at || a.created_at;
+      const timeB = b.lastMessageTime || b.updated_at || b.created_at;
+      
+      const dateA = new Date(timeA).getTime();
+      const dateB = new Date(timeB).getTime();
+      
+      return dateB - dateA;
+    });
+  }
+
+  async shareInChat(payload: { event_id?: string; peer_ids?: string[]; send_entire_network?: boolean; type?: string; feed_id?: string; message?: string }): Promise<any> {
+    try {
+      const response = await this.post<any>('/chat-rooms/share', payload);
+      return response;
+    } catch (error) {
+      console.error('Error sharing feed:', error);
       throw error;
     }
   }

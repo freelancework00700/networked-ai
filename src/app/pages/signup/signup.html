@@ -85,7 +85,7 @@
       </div>
 
       <!-- login form -->
-      <form [formGroup]="signupForm()" (ngSubmit)="signup()">
+      <form [formGroup]="signupForm()" (ngSubmit)="signup()" (keydown.enter)="signup()">
         @if (activeTab() === 'email') {
           <div class="min-h-[224px]">
             @if (!otpSent()) {

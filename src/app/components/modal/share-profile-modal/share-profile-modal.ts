@@ -13,6 +13,8 @@ import { IUser } from '@/interfaces/IUser';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { environment } from 'src/environments/environment';
 import { CommonShareFooter } from '@/components/common/common-share-footer';
+import { MessagesService } from '@/services/messages.service';
+import { ModalService } from '@/services/modal.service';
 
 @Component({
   selector: 'share-profile-modal',
@@ -26,6 +28,8 @@ export class ShareProfileModal {
 
   private modalCtrl = inject(ModalController);
   private toasterService = inject(ToasterService);
+  private messagesService = inject(MessagesService);
+  private modalService = inject(ModalService);
 
   @Input() user?: IUser;
 
@@ -136,5 +140,119 @@ export class ShareProfileModal {
 
   getImageUrl(url: string | undefined | null): string {
     return getImageUrlOrDefault(url || '');
+  }
+
+  onContact(): void {
+    const link = this.profileLink();
+    if (!link) {
+      this.toasterService.showError('Profile link not available');
+      return;
+    }
+
+    const message = encodeURIComponent(`Check out my profile: ${link}`);
+    window.open(`sms:?body=${message}`, '_self');
+  }
+
+  onCopyLink(): Promise<void> {
+    return this.copyLink();
+  }
+
+  async onShareTo(): Promise<void> {
+    const link = this.profileLink();
+    if (!link) {
+      this.toasterService.showError('Profile link not available');
+      return;
+    }
+    try {
+      await Share.share({
+        text: link
+      });
+    } catch (error: any) {
+      if (error.message && !error.message.includes('cancel')) {
+        console.error('Error sharing:', error);
+      }
+    }
+  }
+
+  async onChat(): Promise<void> {
+    const result = await this.modalService.openConfirmModal({
+      title: 'Please Confirm',
+      description: 'It will send a message to your entire network. Are you sure you want to proceed?',
+      confirmButtonLabel: 'Send Message',
+      cancelButtonLabel: 'Close',
+      confirmButtonColor: 'primary',
+      onConfirm: async () => {
+        const link = this.profileLink();
+        
+        if (!link) {
+          this.toasterService.showError('Profile link not available');
+          return;
+        }
+
+        if (!this.user?.id) {
+          this.toasterService.showError('User information not available');
+          return;
+        }
+
+        try {
+          const profileMessage = `Check out ${this.user.name || this.user.username}'s profile: ${link}`;
+          
+          const payload = {
+            type: 'Text',
+            message: profileMessage,
+            send_entire_network: true
+          };
+
+          await this.messagesService.shareInChat(payload);
+          this.toasterService.showSuccess('Profile shared to your network successfully');
+        } catch (error: any) {
+          console.error('Error sharing profile in chat:', error);
+          this.toasterService.showError(error?.message || 'Failed to share profile');
+          throw error;
+        }
+      }
+    });
+  }
+
+  onEmail(): void {
+    const link = this.profileLink();
+    if (!link) {
+      this.toasterService.showError('Profile link not available');
+      return;
+    }
+
+    const subject = encodeURIComponent(`Check out my profile - ${this.user?.name || this.user?.username || 'Profile'}`);
+    const body = encodeURIComponent(`Hi,\n\nCheck out my profile: ${link}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+  }
+
+  onWhatsapp(): void {
+    const link = this.profileLink();
+    if (!link) {
+      this.toasterService.showError('Profile link not available');
+      return;
+    }
+
+    const message = encodeURIComponent(`Check out my profile: ${link}`);
+    const whatsappUrl = `https://wa.me/?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+  }
+
+  onShareToX(): void {
+    const link = this.profileLink();
+    if (!link) return;
+
+    const text = encodeURIComponent(link);
+    const twitterUrl = `https://x.com/intent/tweet?text=${text}`;
+    window.open(twitterUrl, '_blank');
+  }
+
+  onShareToThreads(): void {
+    const link = this.profileLink();
+    if (!link) return;
+
+    const text = encodeURIComponent(link);
+    const threadsUrl = `https://threads.net/intent/post?text=${text}`;
+    window.open(threadsUrl, '_blank');
   }
 }

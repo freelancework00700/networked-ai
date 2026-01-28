@@ -118,6 +118,7 @@ export class ModalService {
     buttonLabel?: string;
     navigateBack?: boolean;
     navigateTo?: string;
+    onClose?: () => void | Promise<void>;
   }): Promise<void> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -131,6 +132,10 @@ export class ModalService {
     });
 
     await modal.present();
+
+    if (config.onClose) {
+      modal.onDidDismiss().then(() => config.onClose!());
+    }
   }
 
   async openDeleteAccountModal(): Promise<void> {

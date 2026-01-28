@@ -13,10 +13,10 @@ import { ToasterService } from '@/services/toaster.service';
 import { EmptyState } from '@/components/common/empty-state';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
-import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 import { IonContent, IonToolbar, IonHeader } from '@ionic/angular/standalone';
 import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from '@angular/core';
 import { IonIcon, IonSpinner, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/angular/standalone';
+import { IUser } from '@/interfaces/IUser';
 
 @Component({
   selector: 'guest-list',
@@ -378,7 +378,7 @@ export class GuestList implements OnInit {
     });
   }
 
-  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+  private networkConnectionHandler = (payload: IUser) => {
     if (!payload?.id) return;
 
     const userId = payload.id;

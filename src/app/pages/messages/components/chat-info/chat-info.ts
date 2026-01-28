@@ -6,26 +6,30 @@ import { ChatRoom, ChatRoomUser } from '@/interfaces/IChat';
 import { MenuItem } from '@/components/modal/menu-modal';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy, computed } from '@angular/core';
-import { IonToggle, IonContent, IonHeader, IonToolbar, IonFooter, NavController, ViewWillEnter } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonToolbar, IonFooter, NavController, ViewWillEnter } from '@ionic/angular/standalone';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NgOptimizedImage } from '@angular/common';
 import { AuthService } from '@/services/auth.service';
 import { NavigationService } from '@/services/navigation.service';
 import { SocketService } from '@/services/socket.service';
+import { ToasterService } from '@/services/toaster.service';
 import { environment } from 'src/environments/environment';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'chat-info',
   styleUrl: './chat-info.scss',
   templateUrl: './chat-info.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonFooter, IonToolbar, IonHeader, IonContent, IonToggle, Button, InputTextModule, NgOptimizedImage]
+  imports: [IonFooter, IonToolbar, IonHeader, IonContent, Button, InputTextModule, NgOptimizedImage, ToggleSwitchModule, FormsModule]
 })
 export class ChatInfo implements ViewWillEnter, OnDestroy {
   private router = inject(Router);
   private navCtrl = inject(NavController);
   private messagesService = inject(MessagesService);
   private socketService = inject(SocketService);
+  private toasterService = inject(ToasterService);
   authService = inject(AuthService);
   navigationService = inject(NavigationService);
 
@@ -33,7 +37,8 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   private roomUpdatedHandler?: (payload: ChatRoom) => void;
 
   isEditingName = signal(false);
-  notificationsOn = signal(true);
+  isSavingGroupName = signal(false);
+  notificationsOn = true;
   groupName = signal<string>('Group');
   createdDate = signal<string>('');
   private route = inject(ActivatedRoute);
@@ -43,6 +48,7 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   roomId = signal<string | null>(null);
   chatRoom = signal<ChatRoom | null>(null);
   members = signal<ChatRoomUser[]>([]);
+  fromGroupCreation = signal<boolean>(false);
   menuItems: MenuItem[] = [
     { label: 'Add Members', icon: 'assets/svg/addUserIcon.svg', iconType: 'svg', action: 'addMembers' },
     { label: 'Change Group Name', icon: 'assets/svg/editIconBlack.svg', iconType: 'svg', action: 'changeGroupName' },
@@ -52,17 +58,21 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
 
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
-  async initializePage(): Promise<void> {
+  async initializePage(forceRefresh: boolean = false): Promise<void> {
     const routePath = this.router.url;
     const groupId = this.route.snapshot.paramMap.get('id');
+    const currentRoomId = this.roomId();
 
     if (!this.isLoggedIn()) return;
 
-    if (groupId) {
-      this.roomId.set(groupId);
+    const roomIdToUse = groupId || currentRoomId;
+    if (roomIdToUse) {
+      if (groupId) {
+        this.roomId.set(groupId);
+      }
 
-      if (!this.chatRoom()) {
-        const room = await this.messagesService.getChatRoomById(groupId);
+      if (!this.chatRoom() || forceRefresh) {
+        const room = await this.messagesService.getChatRoomById(roomIdToUse);
         this.applyRoom(room);
       }
     }
@@ -73,23 +83,15 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   }
   async ngOnInit() {
     const navigation = this.router.currentNavigation();
-    const state: any = navigation?.extras?.state || {};
+    const state: any = navigation?.extras?.state || history.state || {};
     const stateRoom = state?.chatRoom as ChatRoom | undefined;
+    if (state?.from === 'new-group') {
+      this.fromGroupCreation.set(true);
+    }
 
     if (stateRoom) {
       this.applyRoom(stateRoom);
     }
-
-    if (!this.isLoggedIn()) {
-      const result = await this.modalService.openLoginModal();
-
-      if (result?.success) {
-        await this.initializePage();
-      }
-      return;
-    }
-
-    await this.initializePage();
   }
 
   private setupRoomUpdateListener(): void {
@@ -122,9 +124,17 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   }
 
   async ionViewWillEnter() {
-    if (!this.roomUpdatedHandler) {
-      this.setupRoomUpdateListener();
+    if (!this.isLoggedIn()) {
+      const result = await this.modalService.openLoginModal();
+
+      if (result?.success) {
+        this.setupRoomUpdateListener();
+        await this.initializePage(true);
+      }
+      return;
     }
+    this.setupRoomUpdateListener();
+    await this.initializePage(true);
   }
 
   private applyRoom(room: ChatRoom): void {
@@ -184,21 +194,40 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
     this.isEditingName.set(false);
   }
 
-  saveGroupName() {
+  async saveGroupName(): Promise<void> {
     const name = this.tempGroupName().trim();
     if (!name) return;
 
-    this.groupName.set(name);
-    this.isEditingName.set(false);
+    const roomId = this.roomId();
+    if (!roomId) {
+      this.toasterService.showError('Group not found.');
+      return;
+    }
+
+    try {
+      this.isSavingGroupName.set(true);
+      await this.messagesService.updateRoom(roomId, { name });
+
+      this.groupName.set(name);
+      this.tempGroupName.set(name);
+      this.isEditingName.set(false);
+
+      const room = await this.messagesService.getChatRoomById(roomId);
+      this.applyRoom(room);
+
+      this.toasterService.showSuccess('Group name updated');
+    } catch (error: any) {
+      console.error('Error updating group name:', error);
+      this.toasterService.showError(error?.message || 'Failed to update group name');
+    } finally {
+      this.isSavingGroupName.set(false);
+    }
   }
 
   handleBack() {
-    const navigation = this.router.currentNavigation();
-    const state: any = navigation?.extras?.state;
-
     // If this screen was opened right after creating a new group,
     // back should always go to messages list.
-    if (state?.from === 'new-group') {
+    if (this.fromGroupCreation()) {
       this.navCtrl.navigateRoot('/messages');
       return;
     }
@@ -207,8 +236,8 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
     this.navCtrl.back();
   }
 
-  toggleNotifications() {
-    this.notificationsOn.update((v) => !v);
+  toggleNotifications(): void {
+    this.notificationsOn = !this.notificationsOn;
   }
 
   async openMenu() {
@@ -235,12 +264,7 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   }
 
   async addMembers() {
-    this.navCtrl.navigateForward(`/create-group`, {
-      state: {
-        roomId: this.roomId(),
-        from: 'chat-info'
-      }
-    });
+    this.navCtrl.navigateForward(`/create-group?roomId=${this.roomId()}&from=chat-info`);
   }
 
   async changeGroupName() {

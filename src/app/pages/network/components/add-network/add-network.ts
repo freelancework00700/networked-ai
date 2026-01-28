@@ -15,7 +15,6 @@ import { inject, signal, computed, Component, afterEveryRender, ChangeDetectionS
 import { Subject, debounceTime, distinctUntilChanged, switchMap, from, map, catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IUser } from '@/interfaces/IUser';
-import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { NavigationService } from '@/services/navigation.service';
 import { Capacitor } from '@capacitor/core';
@@ -263,7 +262,7 @@ export class AddNetwork implements OnDestroy {
     });
   }
 
-  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+  private networkConnectionHandler = (payload: IUser) => {
     console.log('Network connection update event received in add-network:', payload);
     if (!payload || !payload.id) return;
 
@@ -273,8 +272,30 @@ export class AddNetwork implements OnDestroy {
     // Update search results if the user is in the search results
     this.searchResults.update((results) => results.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
 
-    // Update network requests if the user is in the requests list
-    this.networkRequests.update((requests) => requests.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
+    // Handle network requests list (Added You section)
+    this.networkRequests.update((requests) => {
+      const existingUserIndex = requests.findIndex((user) => user.id === userId);
+
+      if (newStatus === 'NotConnected') {
+        if (existingUserIndex !== -1) {
+          return requests.filter((user) => user.id !== userId);
+        }
+        return requests;
+      }
+
+      if (newStatus === 'RequestReceived') {
+        const userUpdate: Partial<IUser> = {
+          ...payload, connection_status: newStatus
+        };
+
+        if (existingUserIndex !== -1) {
+          return requests.map((user) => (user.id === userId ? { ...user, ...userUpdate } : user));
+        } else {
+          return [{ ...userUpdate } as IUser, ...requests];
+        }
+      }
+      return requests;
+    });
   };
 
   ngOnDestroy(): void {

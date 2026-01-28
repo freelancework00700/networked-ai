@@ -120,19 +120,26 @@ export class EmailInput implements OnInit {
       });
     }
 
-    // Check if control already exists, remove it first to ensure clean state
-    if (this.parentFormGroup.get(this.controlName())) {
+    // Check if control already exists
+    const existingControl = this.parentFormGroup.get(this.controlName());
+    const existingValue = existingControl?.value || '';
+    const isDisabled = existingControl?.disabled || false;
+    
+    // Remove it first to ensure clean state
+    if (existingControl) {
       this.parentFormGroup.removeControl(this.controlName());
     }
 
-    this.parentFormGroup.addControl(
-      this.controlName(),
-      this.fb.control('', {
-        validators,
-        asyncValidators,
-        updateOn: 'change'
-      })
-    );
+    // Create new control, preserving existing value if it exists
+    const newControl = this.fb.control(existingValue, {
+      validators,
+      asyncValidators,
+      updateOn: 'change'
+    });
+    
+    // If the existing control was disabled, disable the new one too
+    if (isDisabled) newControl.disable({ emitEvent: false });
+    this.parentFormGroup.addControl(this.controlName(), newControl);
 
     // check email status
     this.control?.statusChanges?.subscribe((status) => {

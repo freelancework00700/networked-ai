@@ -17,6 +17,9 @@
 
 <ion-content [fullscreen]="true" [scrollEvents]="true">
   @if (isLoggedIn()) {
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)" mode="md">
+      <ion-refresher-content mode="md"></ion-refresher-content>
+    </ion-refresher>
     <div class="w-full pt-0 max-w-[672px] mx-auto">
       <!-- Tabs -->
       <div class="flex gap-2 p-4 overflow-x-auto scrollbar-hide" style="flex-wrap: nowrap">

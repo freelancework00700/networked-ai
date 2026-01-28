@@ -153,19 +153,24 @@ export class MobileInput implements OnInit {
       });
     }
 
-    // Check if control already exists, remove it first to ensure clean state
-    if (this.parentFormGroup.get(this.controlName())) {
+    // Check if control already exists - preserve value and disabled state (like email-input)
+    const existingControl = this.parentFormGroup.get(this.controlName());
+    const existingValue = existingControl?.value || '';
+    const isDisabled = existingControl?.disabled || false;
+
+    if (existingControl) {
       this.parentFormGroup.removeControl(this.controlName());
     }
 
-    this.parentFormGroup.addControl(
-      this.controlName(),
-      this.fb.control('', {
-        validators,
-        asyncValidators,
-        updateOn: 'change'
-      })
-    );
+    const newControl = this.fb.control(existingValue, {
+      validators,
+      asyncValidators,
+      updateOn: 'change'
+    });
+
+    // Restore disabled state if it was disabled
+    if (isDisabled) newControl.disable({ emitEvent: false });
+    this.parentFormGroup.addControl(this.controlName(), newControl);
 
     // check username status
     this.control?.statusChanges?.subscribe((status) => {

@@ -69,15 +69,19 @@
     </div>
   </ion-content>
 } @else {
-  @if (isLoggedIn()) {
+  @if (isLoggedIn() || userName()) {
     <ion-header mode="md">
       <ion-toolbar mode="md">
         <div class="w-full py-6 px-4 max-w-[672px] mx-auto">
-          @if (isViewingOtherProfile()) {
-            <div class="flex items-center justify-between">
+          @if (isViewingOtherProfile() || userName()) {
+            <div class="relative flex items-center justify-between">
               <ion-icon name="arrow-back" class="text-[20px] cursor-pointer neutral-03" (click)="navCtrl.back()"></ion-icon>
-              <div class="body-14SB neutral-01">{{ currentUser()?.username || currentUser()?.name }}</div>
-              <ion-icon src="/assets/svg/menu-dot.svg" (click)="openProfileOptionsPopover($event)" class="text-[20px] cursor-pointer" />
+              <div class="body-14SB neutral-01 absolute left-1/2 -translate-x-1/2">{{ currentUser()?.username || currentUser()?.name }}</div>
+              @if (isLoggedIn()) {
+                <ion-icon src="/assets/svg/menu-dot.svg" (click)="openProfileOptionsPopover($event)" class="text-[20px] cursor-pointer" />
+              } @else {
+                <div class="w-[20px]"></div>
+              }
             </div>
           } @else {
             <!-- Current User Header: Existing toolbar -->
@@ -88,7 +92,9 @@
     </ion-header>
   }
   <ion-content [fullscreen]="true" [scrollEvents]="true">
-    <!-- @if (isLoggedIn()) { -->
+    @if (userNotFound() && userName()) {
+      <app-empty-state [title]="'No User Found'" [message]="''" [icon]="'/assets/svg/noUserIcon.svg'" [showClearButton]="false" />
+    } @else if (isLoggedIn() || userName()) {
     <div class="w-full px-4 max-w-[672px] mx-auto">
       <div class="flex flex-col items-start gap-6 bg-neutral-07">
         <div class="flex flex-col items-start gap-4 bg-neutral-07 w-full">
@@ -107,17 +113,17 @@
 
             <!-- Stats -->
             <div class="flex items-center w-full">
-              <div class="flex flex-col items-center w-full cursor-pointer" (click)="currentUser()?.total_networks > 0 && navigateToNetworks()">
+              <div class="flex flex-col items-center w-full cursor-pointer" (click)="currentUser()?.total_networks > 0 && isLoggedIn() && navigateToNetworks()">
                 <div class="heading-h3 neutral-01">{{ currentUser()?.total_networks || 0 }}</div>
                 <div class="body-12 neutral-03">Networks</div>
               </div>
-              <div class="flex flex-col items-center w-full cursor-pointer" (click)="eventsCount() > 0 && navigateToHostedEvents()">
+              <div class="flex flex-col items-center w-full cursor-pointer" (click)="eventsCount() > 0 && isLoggedIn() && navigateToHostedEvents()">
                 <div class="heading-h3 neutral-01">{{ eventsCount() }}</div>
                 <div class="body-12 neutral-03">Events</div>
               </div>
               <div
                 class="flex flex-col items-center w-full cursor-pointer"
-                (click)="currentUser()?.total_events_attended > 0 && navigateToAttendedEvents()"
+                (click)="currentUser()?.total_events_attended > 0 && isLoggedIn() && navigateToAttendedEvents()"
               >
                 <div class="heading-h3 neutral-01">{{ currentUser()?.total_events_attended || 0 }}</div>
                 <div class="body-12 neutral-03">Attended</div>
@@ -162,98 +168,100 @@
           <profile-link [currentUser]="currentUser()" class="w-full" />
         </div>
 
-        @if (isViewingOtherProfile()) {
-          <!-- Action Buttons for Other User -->
-          <div class="w-full flex items-center gap-3">
-            <!-- Primary Action Button (Message/Add/Accept/Pending) -->
-            @if (getPrimaryActionButton(); as primaryAction) {
-              <app-button
-                [label]="primaryAction.label"
-                [iconName]="primaryAction.iconName"
-                color="primary"
-                [disabled]="primaryAction.disabled"
-                [isLoading]="primaryAction.isLoading"
-                (click)="handlePrimaryAction(primaryAction.action)"
-                class="flex-1"
-              />
-            }
-
-            @if (hasSubscriptionPlan()) {
-              @if (isSubscribedToUser()) {
+        @if (isLoggedIn()) {
+          @if (isViewingOtherProfile()) {
+            <!-- Action Buttons for Other User -->
+            <div class="w-full flex items-center gap-3">
+              <!-- Primary Action Button (Message/Add/Accept/Pending) -->
+              @if (getPrimaryActionButton(); as primaryAction) {
                 <app-button
-                  label="Subscribed"
-                  icon="/assets/svg/crown-black.svg"
-                  color="secondary"
-                  (click)="navigateToUserSubscriptionPlans()"
-                  class="flex-1"
-                />
-              } @else if (shouldShowSubscribe()) {
-                <app-button
-                  label="Subscribe"
-                  icon="/assets/svg/crown-white.svg"
-                  customColor="#2B5BDE"
-                  (click)="navigateToUserSubscriptionPlans()"
+                  [label]="primaryAction.label"
+                  [iconName]="primaryAction.iconName"
+                  color="primary"
+                  [disabled]="primaryAction.disabled"
+                  [isLoading]="primaryAction.isLoading"
+                  (click)="handlePrimaryAction(primaryAction.action)"
                   class="flex-1"
                 />
               }
-            }
-            <!-- Remove Connection Button (only when connected) -->
-            @if (isConnected()) {
+  
+              @if (hasSubscriptionPlan()) {
+                @if (isSubscribedToUser()) {
+                  <app-button
+                    label="Subscribed"
+                    icon="/assets/svg/crown-black.svg"
+                    color="secondary"
+                    (click)="navigateToUserSubscriptionPlans()"
+                    class="flex-1"
+                  />
+                } @else if (shouldShowSubscribe()) {
+                  <app-button
+                    label="Subscribe"
+                    icon="/assets/svg/crown-white.svg"
+                    customColor="#2B5BDE"
+                    (click)="navigateToUserSubscriptionPlans()"
+                    class="flex-1"
+                  />
+                }
+              }
+              <!-- Remove Connection Button (only when connected) -->
+              @if (isConnected()) {
+                <app-button
+                  label=""
+                  iconName="pi-user-minus"
+                  color="secondary"
+                  (click)="showRemoveConnectionAlert()"
+                  [width]="'48px'"
+                  [height]="'47.19px'"
+                  [radius]="'8px'"
+                />
+              }
+            </div>
+          }
+  
+          @if (!isViewingOtherProfile()) {
+            <!-- Action Buttons -->
+            <div class="w-full flex flex-col gap-3">
+              <!-- Top Row: Edit Profile, Share Profile, and Business Card (if has social data) -->
+              <div class="flex items-center gap-3">
+                <app-button
+                  label="Edit Profile"
+                  iconName="pi-pencil"
+                  color="secondary"
+                  (click)="navigationService.navigateForward('/profile/edit')"
+                  class="w-full"
+                />
+                <app-button label="Share Profile" iconName="pi-share-alt" color="secondary" class="w-full" (click)="openShareProfileModal()" />
+                @if (!shouldShowCreateCard()) {
+                  <app-button
+                    type="button"
+                    class="flex items-center justify-center min-w-[48px] h-[44px] !rounded-lg"
+                    color="primary"
+                    (click)="openBusinessCard()"
+                    icon="/assets/svg/profile/business-card-icon.svg"
+                  ></app-button>
+                }
+              </div>
+              <!-- Bottom Row: Set Up Subscription -->
               <app-button
-                label=""
-                iconName="pi-user-minus"
-                color="secondary"
-                (click)="showRemoveConnectionAlert()"
-                [width]="'48px'"
-                [height]="'47.19px'"
-                [radius]="'8px'"
-              />
-            }
-          </div>
-        }
-
-        @if (!isViewingOtherProfile()) {
-          <!-- Action Buttons -->
-          <div class="w-full flex flex-col gap-3">
-            <!-- Top Row: Edit Profile, Share Profile, and Business Card (if has social data) -->
-            <div class="flex items-center gap-3">
-              <app-button
-                label="Edit Profile"
-                iconName="pi-pencil"
-                color="secondary"
-                (click)="navigationService.navigateForward('/profile/edit')"
+                [label]="!hasSubscriptionPlan() ? 'Set Up Subscription' : 'My Subscription Plans'"
+                icon="/assets/svg/crown-white.svg"
+                customColor="#2B5BDE"
+                (click)="navigateToSubscriptionPlans()"
                 class="w-full"
               />
-              <app-button label="Share Profile" iconName="pi-share-alt" color="secondary" class="w-full" (click)="openShareProfileModal()" />
-              @if (!shouldShowCreateCard()) {
-                <app-button
-                  type="button"
-                  class="flex items-center justify-center min-w-[48px] h-[44px] !rounded-lg"
-                  color="primary"
-                  (click)="openBusinessCard()"
-                  icon="/assets/svg/profile/business-card-icon.svg"
-                ></app-button>
-              }
             </div>
-            <!-- Bottom Row: Set Up Subscription -->
-            <app-button
-              [label]="!hasSubscriptionPlan() ? 'Set Up Subscription' : 'My Subscription Plans'"
-              icon="/assets/svg/crown-white.svg"
-              customColor="#2B5BDE"
-              (click)="navigateToSubscriptionPlans()"
-              class="w-full"
-            />
-          </div>
-
-          <!-- Networking Score Card -->
-          <div class="w-full">
-            <networking-score-card [score]="currentUser()?.total_gamification_points || 0" />
-          </div>
-
-          @if (shouldShowCreateCard()) {
+  
+            <!-- Networking Score Card -->
             <div class="w-full">
-              <business-card [user]="currentUser()" />
+              <networking-score-card [score]="currentUser()?.total_gamification_points || 0" />
             </div>
+  
+            @if (shouldShowCreateCard()) {
+              <div class="w-full">
+                <business-card [user]="currentUser()" />
+              </div>
+            }
           }
         }
 
@@ -288,9 +296,9 @@
         </div>
       </div>
     </div>
-    <!-- } @else {
+    } @else {
       <auth-empty-state type="profile" />
-    } -->
+    }
   </ion-content>
 
   <!-- Profile Image Preview Overlay -->

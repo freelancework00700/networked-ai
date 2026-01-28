@@ -29,7 +29,7 @@ import { FeedPost } from '@/interfaces/IFeed';
 import { Router } from '@angular/router';
 import { NetworkService } from '@/services/network.service';
 import { SocketService } from '@/services/socket.service';
-import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
+import { IUser } from '@/interfaces/IUser';
 
 @Component({
   imports: [Button, NgOptimizedImage],
@@ -302,7 +302,7 @@ export class PostCard {
         this.toasterService.showSuccess(response.message);
 
         const currentRoute = this.router.url;
-        const isOnCommentsPage = currentRoute.includes('/comments/');
+        const isOnCommentsPage = currentRoute.includes('/post/');
         const isCurrentUserPost = this.isCurrentUserPost();
         if (isOnCommentsPage && isCurrentUserPost) {
           this.navigationService.back();
@@ -318,7 +318,7 @@ export class PostCard {
 
   private removePostFromUI(): void {
     const currentRoute = this.router.url;
-    const isOnCommentsPage = currentRoute.includes('/comments/');
+    const isOnCommentsPage = currentRoute.includes('/post/');
 
     // Navigate back if on comments page
     if (isOnCommentsPage) {
@@ -453,7 +453,7 @@ export class PostCard {
 
   onComment(): void {
     const postId = this.post().id;
-    this.navCtrl.navigateForward(['/comments', postId!], { state: { post: this.post() } });
+    this.navCtrl.navigateForward(['/post', postId!], { state: { post: this.post() } });
   }
 
   navigateToEvent(slug: string): void {
@@ -471,7 +471,7 @@ export class PostCard {
     });
   }
 
-  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+  private networkConnectionHandler = (payload: IUser) => {
     if (!payload?.id) return;
 
     const current = this.postPreview();

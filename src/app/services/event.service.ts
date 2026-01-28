@@ -1364,12 +1364,25 @@ export class EventService extends BaseApiService {
     }
   }
 
-  async shareEvent(payload: { event_id: string; peer_ids?: string[]; send_entire_network?: boolean }): Promise<any> {
+  async shareEvent(payload: { event_id: string; peer_ids?: string[]; send_entire_network?: boolean; type?: string; message?: string }): Promise<any> {
     try {
       const response = await this.post<any>('/chat-rooms/share', payload);
       return response;
     } catch (error) {
       console.error('Error sharing feed:', error);
+      throw error;
+    }
+  }
+
+  async networkBroadcast(eventId: string, type: 'email' | 'sms'): Promise<any> {
+    try {
+      const response = await this.post<any>('/events/network-broadcast', {
+        event_id: eventId,
+        type: type
+      });
+      return response;
+    } catch (error) {
+      console.error('Error broadcasting event:', error);
       throw error;
     }
   }

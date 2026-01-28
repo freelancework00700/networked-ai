@@ -43,45 +43,46 @@
             />
           </div>
         } @else {
-          <!-- Current Value -->
-          <div class="mb-4">
-            @if (isEmail()) {
-              <email-input
-                [controlName]="'currentValue'"
-                [isSubmitted]="isSubmitted()"
-                [required]="false"
-                [placeholder]="currentValue()"
-                [label]="currentLabel()"
-              />
-            } @else if (isPhone()) {
-              <mobile-input [controlName]="'currentValue'" [isSubmitted]="isSubmitted()" [required]="false" [label]="currentLabel()" />
-            } @else {
-              <text-input
-                [controlName]="'currentValue'"
-                [isSubmitted]="isSubmitted()"
-                [required]="false"
-                [readonly]="true"
-                [label]="currentLabel()"
-              />
-            }
-          </div>
+          <!-- Current Value (only show if value exists) -->
+          @if (showCurrentValue()) {
+            <div class="mb-4">
+              @if (isEmail()) {
+                <email-input
+                  [controlName]="'currentValue'"
+                  [isSubmitted]="isSubmitted()"
+                  [required]="false"
+                  [label]="currentLabel()"
+                />
+              } @else if (isPhone()) {
+                <mobile-input [controlName]="'currentValue'" [isSubmitted]="isSubmitted()" [required]="false" [label]="currentLabel()" />
+              } @else {
+                <text-input
+                  [controlName]="'currentValue'"
+                  [isSubmitted]="isSubmitted()"
+                  [required]="false"
+                  [readonly]="true"
+                  [label]="currentLabel()"
+                />  
+              }
+            </div>
+          }
 
           <!-- New Value -->
           <div class="mb-4">
             @if (isEmail()) {
-              <email-input [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [placeholder]="'Enter new email'" [label]="newLabel()" />
+              <email-input #newEmailInput [checkIfTaken]="true" [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [placeholder]="'Enter new email'" [label]="newLabel()" />
             } @else if (isPhone()) {
-              <mobile-input #newPhoneInput [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [label]="newLabel()" />
+              <mobile-input [checkIfTaken]="true" #newPhoneInput [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [label]="newLabel()" />
             } @else {
-              <username-input [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [label]="newLabel()" [checkIfTaken]="true" />
+              <username-input #newUsernameInput [checkIfTaken]="true" [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [label]="newLabel()" />
             }
-          </div>
+          </div>  
         }
       </div>
 
       <!-- Confirm Button -->
       <div class="mt-auto pb-4">
-        <app-button [label]="confirmButtonLabel()" (click)="onConfirm()" />
+        <app-button [label]="confirmButtonLabel()" (click)="onConfirm()" [isLoading]="isLoading()" />
       </div>
     </form>
   </div>

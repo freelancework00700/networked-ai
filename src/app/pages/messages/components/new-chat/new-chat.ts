@@ -18,6 +18,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { NgOptimizedImage } from '@angular/common';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { Capacitor } from '@capacitor/core';
+import { ToasterService } from '@/services/toaster.service';
+import { UserService } from '@/services/user.service';
+import { ConnectionStatus } from '@/enums/connection-status.enum';
 
 @Component({
   selector: 'new-chat',
@@ -40,6 +45,8 @@ export class NewChat {
   private navCtrl = inject(NavController);
   private authService = inject(AuthService);
   private networkService = inject(NetworkService);
+  private toasterService = inject(ToasterService);
+  private userService = inject(UserService);
   private destroyRef = inject(DestroyRef);
   private isInitialized = false;
 
@@ -56,6 +63,8 @@ export class NewChat {
   isLoadingMore = signal<boolean>(false);
 
   hasMore = computed(() => this.currentPage() < this.totalPages());
+
+  isNativePlatform = computed(() => Capacitor.isNativePlatform());
 
   private searchSubject = new Subject<string>();
 
@@ -184,6 +193,73 @@ export class NewChat {
         is_personal: true
       }
     });
+  }
+
+  async scanQRCodeForContact(): Promise<void> {
+    try {
+      const result = await BarcodeScanner.scan();
+
+      if (result.barcodes && result.barcodes.length > 0) {
+        const barcode = result.barcodes[0];
+        const scannedValue = barcode.displayValue || barcode.rawValue || '';
+
+        if (scannedValue) {
+          await this.handleQRCodeForContact(scannedValue);
+        } else {
+          this.toasterService.showError('No QR code data found');
+        }
+      } else {
+        this.toasterService.showError('No QR code detected');
+      }
+    } catch (error: any) {
+      if (error.message && (error.message.includes('cancel') || error.message.includes('dismiss'))) {
+        // User cancelled, no need to show error
+        return;
+      }
+      console.error('Error scanning QR code:', error);
+      this.toasterService.showError('Failed to scan QR code');
+    }
+  }
+
+  private async handleQRCodeForContact(decodedText: string): Promise<void> {
+    try {
+      const trimmedText = decodedText.trim();
+      if (!trimmedText) {
+        this.toasterService.showError('Invalid QR code. Please scan a valid profile QR code.');
+        return;
+      }
+
+      const user = await this.userService.getUser(trimmedText);
+
+      if (!user || !user.id) {
+        this.toasterService.showError('User not found.');
+        return;
+      }
+
+      if (user.connection_status === ConnectionStatus.CONNECTED) {
+        const currentUserId = this.authService.currentUser()?.id;
+        if (!currentUserId) {
+          this.toasterService.showError('You must be logged in to start a chat.');
+          return;
+        }
+
+        this.navCtrl.navigateForward('/chat-room', {
+          state: {
+            user_ids: [currentUserId, user.id],
+            is_personal: true
+          }
+        });
+      } else {
+        this.toasterService.showError('User is not in your network.');
+      }
+    } catch (error: any) {
+      console.error('Error handling QR code for contact:', error);
+      if (error.message && error.message.includes('not found')) {
+        this.toasterService.showError('User not found.');
+      } else {
+        this.toasterService.showError('Failed to add contact. Please try again.');
+      }
+    }
   }
 
   goToCreateGroup() {

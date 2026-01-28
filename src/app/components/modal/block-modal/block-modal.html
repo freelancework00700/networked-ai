@@ -28,7 +28,7 @@
 <ion-footer mode="md">
   <ion-toolbar mode="md">
     <div class="p-4">
-      <app-button label="Block" (click)="blockUser()" />
+      <app-button label="Block" (click)="blockUser()" [isLoading]="isLoading()" [disabled]="isLoading()" />
     </div>
   </ion-toolbar>
 </ion-footer>

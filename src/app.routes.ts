@@ -83,7 +83,7 @@ export const appRoutes: Routes = [
     loadComponent: () => import('@/pages/network/components/add-network').then((m) => m.AddNetwork)
   },
   {
-    path: 'comments/:id',
+    path: 'post/:id',
     loadComponent: () => import('@/pages/new-post/components/post-comments').then((m) => m.PostComments)
   },
   {

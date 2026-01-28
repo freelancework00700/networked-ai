@@ -5,6 +5,8 @@ import { AuthService } from '@/services/auth.service';
 import { MessagesService } from '@/services/messages.service';
 import { MediaService } from '@/services/media.service';
 import { NetworkService } from '@/services/network.service';
+import { UserService } from '@/services/user.service';
+import { ToasterService } from '@/services/toaster.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
@@ -13,6 +15,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent, IonToolbar, NavController } from '@ionic/angular/standalone';
 import { InputTextModule } from 'primeng/inputtext';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { Capacitor } from '@capacitor/core';
+import { ConnectionStatus } from '@/enums/connection-status.enum';
+import { environment } from 'src/environments/environment';
 @Component({
   selector: 'create-group',
   styleUrl: './create-group.scss',
@@ -39,6 +45,8 @@ export class CreateGroup {
   private networkService = inject(NetworkService);
   private messagesService = inject(MessagesService);
   private mediaService = inject(MediaService);
+  private userService = inject(UserService);
+  private toasterService = inject(ToasterService);
   private router = inject(Router);
 
   // navigation context
@@ -47,6 +55,7 @@ export class CreateGroup {
 
   // auth
   isLoggedIn = computed(() => !!this.authService.currentUser());
+  isNativePlatform = computed(() => Capacitor.isNativePlatform());
 
   // search + pagination
   searchText = signal('');
@@ -107,15 +116,28 @@ export class CreateGroup {
     });
   }
 
+  ionViewWillEnter(): void {
+    this.ngOnInit();
+  }
+
   async ngOnInit(): Promise<void> {
+    const roomIdParam = this.route.snapshot.queryParamMap.get('roomId');
+    const fromParam = this.route.snapshot.queryParamMap.get('from');
+    
     const navigation = this.router.currentNavigation();
     const state: any = navigation?.extras?.state;
-    if (state?.roomId) {
-      this.roomId.set(state.roomId);
-      this.from.set(state.from === 'chat-info' ? 'chat-info' : 'new-chat');
+    
+    const roomId = roomIdParam || state?.roomId;
+    const from = fromParam || state?.from;
+    
+    if (roomId) {
+      this.roomId.set(roomId);
+      this.from.set(from === 'chat-info' ? 'chat-info' : 'new-chat');
 
       // Load existing group members to track who's already added
-      await this.loadExistingGroupMembers(state.roomId);
+      await this.loadExistingGroupMembers(roomId);
+      this.isGroupDetails.set(false);
+      this.selectedMembers.set([]);
     }
   }
 
@@ -312,7 +334,7 @@ export class CreateGroup {
     if (this.from() === 'chat-info') {
       this.navCtrl.back();
       return;
-    }
+  }
 
     this.navCtrl.navigateBack('/messages');
   }
@@ -366,8 +388,95 @@ export class CreateGroup {
     }
   }
 
-  // TODO: backend flow for invite link
-  copyInviteLink(): void {
-    console.log('copyInviteLink');
+  async copyInviteLink(): Promise<void> {
+    const roomId = this.roomId();
+    if (!roomId) {
+      this.toasterService.showError('Group not found. Please create the group first.');
+      return;
+    }
+
+    try {
+      const inviteLink = `${environment.frontendUrl}/group-invitation/${roomId}`;
+      await navigator.clipboard.writeText(inviteLink);
+      this.toasterService.showSuccess('Invite link copied to clipboard');
+    } catch (error) {
+      console.error('Error copying invite link:', error);
+      this.toasterService.showError('Failed to copy invite link');
+    }
+  }
+
+  async scanQRCodeForContact(): Promise<void> {
+    if (!this.isNativePlatform()) {
+      this.toasterService.showError('QR code scanning is only available on mobile devices');
+      return;
+    }
+
+    try {
+      const result = await BarcodeScanner.scan();
+
+      if (result.barcodes && result.barcodes.length > 0) {
+        const barcode = result.barcodes[0];
+        const scannedValue = barcode.displayValue || barcode.rawValue || '';
+
+        if (scannedValue) {
+          await this.handleQRCodeForContact(scannedValue);
+        } else {
+          this.toasterService.showError('No QR code data found');
+        }
+      } else {
+        this.toasterService.showError('No QR code detected');
+      }
+    } catch (error: any) {
+      if (error.message && (error.message.includes('cancel') || error.message.includes('dismiss'))) {
+        // User cancelled, no need to show error
+        return;
+      }
+      console.error('Error scanning QR code:', error);
+      this.toasterService.showError('Failed to scan QR code');
+    }
+  }
+
+  private async handleQRCodeForContact(decodedText: string): Promise<void> {
+    try {
+      const trimmedText = decodedText.trim();
+      if (!trimmedText) {
+        this.toasterService.showError('Invalid QR code. Please scan a valid profile QR code.');
+        return;
+      }
+
+      const user = await this.userService.getUser(trimmedText);
+
+      if (!user || !user.id) {
+        this.toasterService.showError('User not found.');
+        return;
+      }
+
+      if (this.isAlreadyInGroup(user.id)) {
+        this.toasterService.showError('User is already in the group.');
+        return;
+      }
+
+      const isAlreadySelected = this.selectedMembers().some((u) => u.id === user.id);
+      if (isAlreadySelected) {
+        this.toasterService.showError('User is already selected.');
+        return;
+      }
+
+      this.selectedMembers.update((list) => [...list, user]);
+
+      if (user.connection_status === ConnectionStatus.CONNECTED) {
+        const isInUsersList = this.users().some((u) => u.id === user.id);
+        if (!isInUsersList) {
+          this.users.update((list) => [user, ...list]);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error handling QR code for contact:', error);
+      if (error.message && error.message.includes('not found')) {
+        this.toasterService.showError('User not found.');
+      } else {
+        this.toasterService.showError('Failed to add contact. Please try again.');
+      }
+    }
   }
 }

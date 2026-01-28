@@ -16,6 +16,7 @@ import * as Maptiler from '@maptiler/sdk';
 import { Feature, Polygon } from 'geojson';
 import { ModalService } from '@/services/modal.service';
 import { NetworkService } from '@/services/network.service';
+import { ToasterService } from '@/services/toaster.service';
 import { environment } from 'src/environments/environment';
 import { IUser } from '@/interfaces/IUser';
 
@@ -32,6 +33,7 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   radius = input(20);
   latitude = input<string>('');
   longitude = input<string>('');
+  isActive = input(false);
 
   // view child
   mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
@@ -39,6 +41,7 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   // services
   private modalService = inject(ModalService);
   private networkService = inject(NetworkService);
+  private toasterService = inject(ToasterService);
   @Inject(DOCUMENT) private document = inject(DOCUMENT);
 
   // signals
@@ -96,9 +99,10 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
     });
 
     this.map.on('load', () => {
+      this.addOrUpdateRadius(this.radius());
+
       if (this.users().length > 0) {
         this.addOrUpdateMarkers(this.users());
-        this.addOrUpdateRadius(this.radius());
       }
       // Load initial users if we don't have any yet
       if (this.users().length === 0) {
@@ -113,21 +117,23 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
 
       const params: { radius: number; latitude?: string; longitude?: string } = { radius, latitude, longitude };
 
-      const users = await this.networkService.getNetworksWithinRadius(params);
+      const { data: users, message } = await this.networkService.getNetworksWithinRadius(params);
       this.users.set(users);
+
+      if (this.isActive() && users.length === 0 && message) {
+        this.toasterService.showError(message);
+      }
 
       // Update markers immediately if map is ready
       if (this.map) {
         this.addOrUpdateMarkers(users);
       }
 
-      // Update map center and radius circle if we have location and users
-      if (latitude && longitude && users.length > 0 && this.map) {
+      if (latitude && longitude && this.map) {
         const latNum = parseFloat(latitude);
         const lngNum = parseFloat(longitude);
         if (!isNaN(latNum) && !isNaN(lngNum)) {
           this.map.setCenter([lngNum, latNum]);
-          // Update radius circle with new center
           this.addOrUpdateRadius(radius);
         }
       } else if (users.length > 0 && this.map) {
@@ -142,6 +148,8 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
             this.addOrUpdateRadius(radius);
           }
         }
+      } else if (this.map) {
+        this.addOrUpdateRadius(radius);
       }
     } catch (error) {
       console.error('Error loading users for map:', error);

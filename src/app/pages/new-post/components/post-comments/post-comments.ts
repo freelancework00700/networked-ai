@@ -284,8 +284,19 @@ export class PostComments implements OnInit, OnDestroy {
   }
 
   sendMessage(comment: FeedComment) {
-    console.log('Message clicked for:', comment.user?.username);
-    // TODO: Navigate to messages
+    document.body.click();
+    const currentUserId = this.currentUser()?.id;
+    const otherUserId = comment.user?.id;
+    if (currentUserId && otherUserId) {
+      setTimeout(() => {
+        this.navCtrl.navigateForward('/chat-room', {
+          state: {
+            user_ids: [currentUserId, otherUserId],
+            is_personal: true
+          }
+        });
+      });
+    }
   }
 
   async reportComment(comment: FeedComment) {

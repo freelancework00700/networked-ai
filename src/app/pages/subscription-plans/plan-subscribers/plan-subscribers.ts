@@ -6,7 +6,6 @@ import { SocketService } from '@/services/socket.service';
 import { EmptyState } from '@/components/common/empty-state';
 import { UserCardList } from '@/components/card/user-card-list';
 import { NavigationService } from '@/services/navigation.service';
-import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 import { SubscriptionService } from '@/services/subscription.service';
 import { IonContent, IonHeader, IonToolbar } from '@ionic/angular/standalone';
 import { Component, inject, signal, ChangeDetectionStrategy, computed, OnInit, OnDestroy } from '@angular/core';
@@ -75,7 +74,7 @@ export class PlanSubscribers implements OnInit, OnDestroy {
     });
   }
 
-  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+  private networkConnectionHandler = (payload: IUser) => {
     if (!payload || !payload.id) return;
 
     const userId = payload.id;

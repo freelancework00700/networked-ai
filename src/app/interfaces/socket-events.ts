@@ -2,13 +2,7 @@ import { EventAttendee } from './event';
 import { FeedPost, FeedComment } from './IFeed';
 import { ChatRoom, ChatMessage } from './IChat';
 import { INotification } from '@/interfaces/INotification';
-
-// Network Connection Update Payload
-export interface NetworkConnectionUpdate {
-  connection_status: string;
-  id: string;
-  username: string;
-}
+import { IUser } from './IUser';
 
 // Server to Client Events
 export type ServerToClientEvents = {
@@ -25,7 +19,7 @@ export type ServerToClientEvents = {
   'feed:comment:deleted': (payload: { feed_id: string; comment_id: string }) => void;
 
   // Network events
-  'network:connection:update': (payload: NetworkConnectionUpdate) => void;
+  'network:connection:update': (payload: IUser) => void;
 
   // Notification events
   'notification:update': (payload: INotification) => void;

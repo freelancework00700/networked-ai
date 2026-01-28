@@ -56,7 +56,7 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
-    path: 'comments/:id',
+    path: 'post/:id',
     renderMode: RenderMode.Server
   },
   {

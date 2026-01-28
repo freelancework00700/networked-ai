@@ -41,9 +41,26 @@
     </div>
     <div class="flex flex-wrap gap-2 mb-2">
       @for (message of messages; track message) {
-        <chip color="secondary" width="auto" height="20px">{{ message }}</chip>
+        <chip 
+          color="secondary" 
+          width="auto" 
+          height="20px" 
+          (click)="onMessageChipClick(message)" 
+          [class.message-chip]="true"
+          [class.message-chip-sending]="isSending(message)"
+          [class.message-chip-disabled]="sendingMessage() !== null && !isSending(message)"
+        >
+          @if (isSending(message)) {
+            <span class="flex items-center gap-1">
+              <i class="pi pi-spin pi-spinner text-xs"></i>
+              <span>Sending...</span>
+            </span>
+          } @else {
+            {{ message }}
+          }
+        </chip>
       }
     </div>
-    <app-button [label]="'Message'" icon="assets/svg/messageChatIcon.svg" />
+    <app-button [label]="'Message'" icon="assets/svg/messageChatIcon.svg" (click)="messageUser()" [disabled]="sendingMessage() !== null" />
   </div>
 }

@@ -101,9 +101,9 @@
           />
         </div>
 
-        @if (searchText().trim() == '' || users().length == 0) {
+        @if (isNativePlatform() && (searchText().trim() == '' || users().length == 0)) {
           <div class="flex flex-col my-4">
-            <div class="flex items-center justify-between p-2">
+            <div class="flex items-center justify-between p-2 cursor-pointer" (click)="scanQRCodeForContact()">
               <div class="flex items-center gap-3">
                 <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
                   <img src="assets/svg/addUserIcon.svg" class="w-5 h-5" />

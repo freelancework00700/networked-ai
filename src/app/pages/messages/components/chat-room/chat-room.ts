@@ -26,6 +26,8 @@ import { InputIcon } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { ChatFeedCard } from '@/components/card/chat-feed-card';
 import { ChatEventCard } from '@/components/card/chat-event-card';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'chat-room',
@@ -65,6 +67,7 @@ export class ChatRoom implements OnInit, OnDestroy {
   private navigationService = inject(NavigationService);
   private router = inject(Router);
   private datePipe = new DatePipe('en-US');
+  private sanitizer = inject(DomSanitizer);
 
   // Socket event handler references for cleanup
   private messageCreatedHandler?: (payload: { message: ChatMessage }) => void;
@@ -89,6 +92,58 @@ export class ChatRoom implements OnInit, OnDestroy {
   sortedMessages = computed(() => {
     return this.sortMessages(this.messages());
   });
+
+  /**
+   * Check if we should show a date separator before a message
+   */
+  shouldShowDateSeparator(currentIndex: number): boolean {
+    const messages = this.sortedMessages();
+    if (currentIndex === 0) {
+      return true;
+    }
+
+    const currentMessage = messages[currentIndex];
+    const previousMessage = messages[currentIndex - 1];
+
+    const currentDate = new Date(currentMessage.created_at);
+    const previousDate = new Date(previousMessage.created_at);
+
+    return (
+      currentDate.getDate() !== previousDate.getDate() ||
+      currentDate.getMonth() !== previousDate.getMonth() ||
+      currentDate.getFullYear() !== previousDate.getFullYear()
+    );
+  }
+
+  formatDateLabel(isoString: string): string {
+    if (!isoString) return '';
+
+    const messageDate = new Date(isoString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Reset time to compare only dates
+    const messageDateOnly = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+
+    if (messageDateOnly.getTime() === todayOnly.getTime()) {
+      return 'Today';
+    } else if (messageDateOnly.getTime() === yesterdayOnly.getTime()) {
+      return 'Yesterday';
+    } else {
+      // Format as "Mon Jan 28" or "Mon Jan 28, 2026" if not current year
+      const currentYear = today.getFullYear();
+      const messageYear = messageDate.getFullYear();
+
+      if (messageYear === currentYear) {
+        return this.datePipe.transform(messageDate, 'EEE MMM d') || '';
+      } else {
+        return this.datePipe.transform(messageDate, 'EEE MMM d, y') || '';
+      }
+    }
+  }
 
   isLoading = signal<boolean>(false);
   isLoadingMore = signal<boolean>(false);
@@ -161,6 +216,19 @@ export class ChatRoom implements OnInit, OnDestroy {
       await this.initializeChatRoom(state);
     } else {
       console.error('Missing required data for chat room initialization');
+    }
+  }
+
+  async ionViewWillEnter(): Promise<void> {
+    const roomId = this.chatId() || this.chatRoom()?.id;
+    if (!roomId) return;
+
+    try {
+      const room = await this.messagesService.getChatRoomById(roomId);
+      this.chatRoom.set(room as any);
+      this.updateChatRoomInfo(room as any);
+    } catch (error) {
+      console.error('Error refreshing chat room data:', error);
     }
   }
 
@@ -419,10 +487,18 @@ export class ChatRoom implements OnInit, OnDestroy {
   /**
    * Scroll to bottom of content
    */
-  private scrollToBottom() {
-    requestAnimationFrame(() => {
-      this.content()?.scrollToBottom(300);
-    });
+  private async scrollToBottom(): Promise<void> {
+    const content = this.content();
+    if (!content) return;
+   
+    // Wait for Angular + Ionic render
+    await new Promise(requestAnimationFrame);
+   
+    // Wait one more frame for images / cards / fonts
+    await new Promise(requestAnimationFrame);
+   
+    // Small offset ensures last message is fully visible
+    await content.scrollToBottom(0);
   }
 
   /**
@@ -468,7 +544,7 @@ export class ChatRoom implements OnInit, OnDestroy {
     if (this.selectedIndex() === messageId) {
       this.selectedIndex.set(null);
     } else {
-      this.selectedIndex.set(messageId);
+    this.selectedIndex.set(messageId);
     }
   }
 
@@ -479,7 +555,7 @@ export class ChatRoom implements OnInit, OnDestroy {
   async deleteMessage(messageId: string) {
     try {
       await this.messagesService.deleteMessage(messageId);
-      this.selectedIndex.set(null);
+    this.selectedIndex.set(null);
     } catch (error) {
       console.error('Error deleting message:', error);
     }
@@ -501,8 +577,8 @@ export class ChatRoom implements OnInit, OnDestroy {
       }
       try {
         await this.messagesService.updateMessage(editingMessageId, roomId, text);
-        this.editingIndex.set(null);
-        this.newMessage.set('');
+      this.editingIndex.set(null);
+      this.newMessage.set('');
       } catch (error) {
         console.error('Error updating message:', error);
       }
@@ -596,5 +672,56 @@ export class ChatRoom implements OnInit, OnDestroy {
   navigateToNetwork() {
     const room = this.chatRoom();
     this.navCtrl.navigateForward(`/event/questionnaire-response/${room.event_id}`);
+  }
+
+  /**
+   * Render message text with clickable links (internal and external)
+   */
+  renderMessageText(text: string): SafeHtml {
+    if (!text) return '';
+
+    const frontendUrl = environment.frontendUrl || 'https://dev.app.net-worked.ai';
+
+    let modifiedText = text;
+    const processedUrls = new Set<string>();
+
+    // Pattern to match all URLs
+    const urlRegex = /(https?:\/\/[^\s<]+)/gi;
+    
+    modifiedText = modifiedText.replace(urlRegex, (url) => {
+      // Skip if already processed
+      if (processedUrls.has(url.toLowerCase())) {
+        return url;
+      }
+      processedUrls.add(url.toLowerCase());
+
+      // Check if it's an internal link (starts with frontendUrl)
+      if (url.toLowerCase().startsWith(frontendUrl.toLowerCase())) {
+        // Extract the path after the domain
+        const path = url.substring(frontendUrl.length);
+        return `<a href="#" class="internal-link" data-path="${path}" style="color:#1a73e8; text-decoration:underline; cursor:pointer;">${url}</a>`;
+      } else {
+        // External link - open in new tab
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8; text-decoration:underline;">${url}</a>`;
+      }
+    });
+    
+    return this.sanitizer.bypassSecurityTrustHtml(modifiedText);
+  }
+
+  onProfileLinkClick(event: Event): void {
+    const target = event.target as HTMLElement;
+
+    const internalLink = target.closest('.internal-link') as HTMLElement;
+    if (!internalLink) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const path = internalLink.getAttribute('data-path');
+
+    if (path) {
+      this.navigationService.navigateForward(path);
+    }
   }
 }

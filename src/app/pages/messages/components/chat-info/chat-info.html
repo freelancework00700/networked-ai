@@ -62,7 +62,7 @@
           <span class="body-14M neutral-01">Notification Settings</span>
         </div>
 
-        <ion-toggle [checked]="notificationsOn()" (ionChange)="toggleNotifications()"></ion-toggle>
+        <p-toggleSwitch [(ngModel)]="notificationsOn"></p-toggleSwitch>
       </div>
 
       <div>
@@ -108,7 +108,13 @@
   <ion-toolbar>
     <div class="p-4 max-w-[672px] mx-auto">
       @if (isEditingName()) {
-        <app-button label="Save" class="w-full" [disabled]="!tempGroupName().trim()" (click)="saveGroupName()" />
+        <app-button
+          label="Save"
+          class="w-full"
+          [disabled]="!tempGroupName().trim() || isSavingGroupName()"
+          [isLoading]="isSavingGroupName()"
+          (click)="saveGroupName()"
+        />
       }
     </div>
   </ion-toolbar>

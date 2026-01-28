@@ -6,6 +6,7 @@ import { AuthService } from '@/services/auth.service';
 import { BusinessCard } from '@/components/card/business-card';
 import { ProfileLink } from '@/pages/profile/components/profile-link';
 import { AuthEmptyState } from '@/components/common/auth-empty-state';
+import { EmptyState } from '@/components/common/empty-state';
 import { NetworkingScoreCard } from '@/components/card/networking-score-card';
 import { ProfileHeaderToolbar } from '@/components/common/profile-header-toolbar';
 import { ProfileAchievement } from '@/pages/profile/components/profile-achievement';
@@ -27,11 +28,11 @@ import { ScrollHandlerDirective } from '@/directives/scroll-handler.directive';
 import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { ToasterService } from '@/services/toaster.service';
 import { SocketService } from '@/services/socket.service';
-import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 import { StripeService } from '@/services/stripe.service';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { OgService } from '@/services/og.service';
+import { IUser } from '@/interfaces/IUser';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
@@ -56,6 +57,7 @@ interface TabConfig {
     BusinessCard,
     ProfilePosts,
     AuthEmptyState,
+    EmptyState,
     ProfileAchievement,
     NetworkingScoreCard,
     ProfileHostedEvents,
@@ -93,6 +95,8 @@ export class Profile implements OnDestroy {
   isLoggedIn = computed(() => !!this.authService.currentUser());
   currentUser = signal<any>(null);
   isLoading = signal(false);
+  userName = signal<string>('');
+  userNotFound = signal(false);
   isViewingOtherProfile = computed(() => {
     const loggedInUser = this.authService.currentUser();
     const viewedUser = this.currentUser();
@@ -257,9 +261,11 @@ export class Profile implements OnDestroy {
 
   private handleProfileLoad() {
     this.isLoading.set(true);
+    this.userNotFound.set(false);
 
     const username = this.username();
     if (username) {
+      this.userName.set(username);
       this.loadUserByUsername(username);
     } else {
       this.currentUser.set(this.authService.currentUser());
@@ -273,7 +279,7 @@ export class Profile implements OnDestroy {
     });
   }
 
-  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+  private networkConnectionHandler = (payload: IUser) => {
     if (!payload || !payload.id) return;
 
     const currentUser = this.currentUser();
@@ -292,10 +298,13 @@ export class Profile implements OnDestroy {
 
   private async loadUserByUsername(username: string): Promise<void> {
     try {
+      this.userNotFound.set(false);
       const user = await this.userService.getUser(username);
       this.currentUser.set(user);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading user:', error);
+      this.userNotFound.set(true);
+      this.currentUser.set(null);
     } finally {
       this.isLoading.set(false);
     }

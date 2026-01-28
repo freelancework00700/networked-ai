@@ -64,7 +64,7 @@
         />
       </div>
       <div [hidden]="segmentValue() === 'list' || isViewingOtherUser()">
-        <network-map-view [radius]="radius()" [latitude]="latitude()" [longitude]="longitude()" />
+        <network-map-view [radius]="radius()" [latitude]="latitude()" [longitude]="longitude()" [isActive]="segmentValue() === 'map'" />
       </div>
     </div>
   } @else {

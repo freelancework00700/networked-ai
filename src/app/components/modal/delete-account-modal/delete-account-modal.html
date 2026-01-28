@@ -32,18 +32,6 @@
         </li>
       </ul>
     </div>
-
-    <!-- Password Input -->
-    <form [formGroup]="form()" class="mb-4!">
-      <password-input [controlName]="'password'" [isSubmitted]="isSubmitted()" [label]="'Current Password*'" />
-    </form>
-
-    <!-- Instructional Text -->
-    <div class="mb-6 body-12R neutral-03">
-      We require you to enter your password to verify that you are sure you want to permanently delete your account. If you forgot your password, you
-      can
-      <span class="body-12SB accent-blue cursor-pointer" (click)="onForgotPassword()">request a password reset link here</span>.
-    </div>
   </div>
 </div>
 
@@ -58,7 +46,7 @@
           (click)="confirm()"
           class="flex-1"
           [isLoading]="isLoading()"
-          [disabled]="!form().valid || isLoading()"
+          [disabled]="isLoading()"
         />
       </div>
     </div>
