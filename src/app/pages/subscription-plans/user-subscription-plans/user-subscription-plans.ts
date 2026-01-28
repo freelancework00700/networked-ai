@@ -19,7 +19,19 @@ import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, O
   templateUrl: './user-subscription-plans.html',
   styleUrl: './user-subscription-plans.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonRefresherContent, IonRefresher, Button, IonIcon, IonHeader, IonToolbar, IonContent, CommonModule, PlanPreview, SegmentButton, ReactiveFormsModule]
+  imports: [
+    IonRefresherContent,
+    IonRefresher,
+    Button,
+    IonIcon,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    CommonModule,
+    PlanPreview,
+    SegmentButton,
+    ReactiveFormsModule
+  ]
 })
 export class UserSubscriptionPlans implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
@@ -317,13 +329,12 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     const state = window.history.state;
     const fromValue = state?.from;
     this.isFromMySubscriptions.set(fromValue === 'my-subscriptions');
-  
+
     await this.loadPlanOrPlansBasedOnState();
-  
+
     // Close dropdown when clicking outside
     document.addEventListener('click', this.handleClickOutside.bind(this));
   }
-  
 
   private async loadPlanOrPlansBasedOnState(): Promise<void> {
     const planId = this.route.snapshot.paramMap.get('planId');
@@ -339,7 +350,6 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
       await this.loadPlans(userId);
     }
   }
-  
 
   private handleClickOutside = (event: MouseEvent): void => {
     const target = event.target as HTMLElement;
@@ -484,7 +494,6 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   async subscribe(): Promise<void> {
     const plan = this.currentPlan();
     if (!plan) return;
-
     const priceId = this.currentPriceId();
     if (!priceId) {
       this.toasterService.showError('Please select a pricing plan');
@@ -512,7 +521,12 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     const result = await this.modalService.openSubscriptionPaymentModal({
       clientSecret,
       amount: this.displayPriceValue(),
-      description: `Subscription to ${planName}`
+      summary: [
+        {
+          label: planName || 'Subscription',
+          amount: this.displayPriceValue()
+        }
+      ]
     });
 
     if (result?.success) {
@@ -611,5 +625,4 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
       event.target.complete();
     }
   }
-  
 }

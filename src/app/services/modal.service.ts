@@ -1020,7 +1020,7 @@ export class ModalService {
   async openSubscriptionPaymentModal(config: {
     clientSecret: string;
     amount: number;
-    description: string;
+    summary: { label: string; amount: number }[];
   }): Promise<{ success: boolean; subscriptionId?: string } | null> {
     const modal = await this.modalCtrl.create({
       component: StripePaymentComponent,
@@ -1032,7 +1032,7 @@ export class ModalService {
       cssClass: 'auto-hight-modal',
       componentProps: {
         amount: config.amount,
-        description: config.description,
+        summary: config.summary,
         clientSecretInput: config.clientSecret,
         showButtons: true,
         isModalMode: true

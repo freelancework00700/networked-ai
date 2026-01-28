@@ -1,17 +1,21 @@
+import { isPlatform } from '@ionic/core';
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { environment } from 'src/environments/environment';
-import { ModalController } from '@ionic/angular/standalone';
+import { ToasterService } from '@/services/toaster.service';
+import { ModalController, IonIcon } from '@ionic/angular/standalone';
+import { ApplePayEventsEnum, Stripe } from '@capacitor-community/stripe';
 import { StripeElementsOptions, StripePaymentElementOptions } from '@stripe/stripe-js';
 import { StripePaymentSuccessEvent, StripePaymentErrorEvent } from '@/services/stripe.service';
 import { injectStripe, StripePaymentElementComponent, StripeElementsDirective } from 'ngx-stripe';
 import { output, signal, computed, effect, inject, Component, ViewChild, ChangeDetectionStrategy, Input } from '@angular/core';
+
 @Component({
   selector: 'app-stripe-payment',
   styleUrl: './stripe-payment.scss',
   templateUrl: './stripe-payment.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, StripeElementsDirective, StripePaymentElementComponent, Button]
+  imports: [IonIcon, CommonModule, StripeElementsDirective, StripePaymentElementComponent, Button]
 })
 export class StripePaymentComponent {
   @ViewChild(StripePaymentElementComponent)
@@ -19,12 +23,15 @@ export class StripePaymentComponent {
 
   stripe = injectStripe(environment.stripePublishableKey);
   modalCtrl = inject(ModalController);
+  private toasterService = inject(ToasterService);
 
   // Inputs
   @Input() clientSecretInput = '';
   @Input() showButtons = false;
+  @Input() summary: { label: string; amount: number }[] = [];
+  @Input() amount = 0;
+  @Input() validateAllForms = true;
   @Input() isModalMode = false;
-
   paymentSuccess = output<StripePaymentSuccessEvent>();
   paymentError = output<StripePaymentErrorEvent>();
   paymentProcessing = output<boolean>();
@@ -34,6 +41,10 @@ export class StripePaymentComponent {
   clientSecret = signal<string>('');
   stripePaymentIntentId = signal<string>('');
   isProcessingPayment = signal<boolean>(false);
+
+  isNative = isPlatform('capacitor') && isPlatform('ios');
+  isApplePayAvailable = signal<boolean>(false);
+  applePayLogo = 'assets/icon/apple-pay-logo.svg'; // Fallback path
 
   // Computed signal for elementsOptions that updates when clientSecret changes
   elementsOptions = computed<StripeElementsOptions | null>(() => {
@@ -98,6 +109,14 @@ export class StripePaymentComponent {
     }
   };
 
+  async ngOnInit(): Promise<void> {
+    try {
+      await Stripe.initialize({ publishableKey: environment.stripePublishableKey });
+    } catch (error) {
+      console.error('Stripe initialization error:', error);
+    }
+  }
+
   constructor() {
     effect(() => {
       const secret = this.clientSecretInput;
@@ -107,6 +126,25 @@ export class StripePaymentComponent {
         this.clientSecret.set('');
       }
     });
+
+    // Check Apple Pay availability for native iOS
+    if (this.isNative && Stripe) {
+      this.checkApplePayAvailability();
+    }
+  }
+
+  async checkApplePayAvailability(): Promise<void> {
+    if (!Stripe) {
+      this.isApplePayAvailable.set(false);
+      return;
+    }
+
+    try {
+      await Stripe.isApplePayAvailable();
+      this.isApplePayAvailable.set(true);
+    } catch (error) {
+      this.isApplePayAvailable.set(false);
+    }
   }
 
   getPaymentIntentId(): string {
@@ -211,5 +249,77 @@ export class StripePaymentComponent {
 
   async closeModal(): Promise<void> {
     await this.modalCtrl.dismiss(null, 'cancel');
+  }
+
+  async nativeApplePay(): Promise<void> {
+    if (!Stripe) {
+      this.failApplePay('Apple Pay plugin not installed');
+      return;
+    }
+
+    if (!this.clientSecret() || !this.amount || this.amount <= 0) {
+      this.failApplePay('Payment details are missing');
+      return;
+    }
+
+    if (!this.validateAllForms) {
+      this.toasterService.showError('Please fill all details.');
+      return;
+    }
+
+    if (this.isProcessingPayment()) return;
+
+    this.isProcessingPayment.set(true);
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+    this.paymentProcessing.emit(true);
+
+    try {
+      // 1️⃣ Check Apple Pay
+      await Stripe.isApplePayAvailable();
+
+      // 3️⃣ Create Apple Pay sheet
+      await Stripe.createApplePay({
+        paymentIntentClientSecret: this.clientSecret(),
+        paymentSummaryItems: this.summary,
+        merchantIdentifier: 'merchant.ai.networked',
+        countryCode: 'US',
+        currency: 'USD'
+      });
+
+      // 4️⃣ Present Apple Pay
+      const result = await Stripe.presentApplePay();
+
+      // 5️⃣ Handle result
+      this.isLoading.set(false);
+      this.isProcessingPayment.set(false);
+      this.paymentProcessing.emit(false);
+
+      if (result.paymentResult === ApplePayEventsEnum.Completed) {
+        const paymentIntentId = this.clientSecret().split('_secret_')[0];
+
+        this.paymentSuccess.emit({
+          success: true,
+          paymentIntentId,
+          paymentIntent: null
+        });
+
+        if (this.isModalMode) {
+          this.modalCtrl.dismiss({ success: true }, 'success');
+        }
+      } else {
+        this.failApplePay('Apple Pay was cancelled or failed');
+      }
+    } catch (error: any) {
+      this.isLoading.set(false);
+      this.isProcessingPayment.set(false);
+      this.paymentProcessing.emit(false);
+      this.failApplePay(error?.message || 'Apple Pay payment failed');
+    }
+  }
+
+  failApplePay(message: string) {
+    this.errorMessage.set(message);
+    this.paymentError.emit({ success: false, error: message });
   }
 }

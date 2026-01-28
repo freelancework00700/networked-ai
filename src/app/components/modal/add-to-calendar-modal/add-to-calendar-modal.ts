@@ -2,7 +2,7 @@ import { Browser } from '@capacitor/browser';
 import { environment } from 'src/environments/environment';
 import { Calendar } from '@awesome-cordova-plugins/calendar/ngx';
 import { Component, Input, inject, OnInit } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, IonButton, IonIcon, ModalController, isPlatform } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonButton, IonIcon, ModalController, isPlatform } from '@ionic/angular/standalone';
 
 import { Capacitor } from '@capacitor/core';
 import { ToasterService } from '@/services/toaster.service';
@@ -10,8 +10,8 @@ import { ToasterService } from '@/services/toaster.service';
 @Component({
   selector: 'add-to-calendar-modal',
   standalone: true,
-  providers:[Calendar],
-  imports: [IonIcon, IonButton, IonContent, IonToolbar, IonHeader],
+  providers: [Calendar],
+  imports: [IonIcon, IonButton, IonToolbar, IonHeader],
   templateUrl: './add-to-calendar-modal.html',
   styleUrl: './add-to-calendar-modal.scss'
 })
@@ -52,11 +52,13 @@ export class AddToCalendarModal implements OnInit {
     );
     const location = encodeURIComponent(this.eventData?.location || '');
 
-    return `https://www.google.com/calendar/render?action=TEMPLATE` +
+    return (
+      `https://www.google.com/calendar/render?action=TEMPLATE` +
       `&text=${title}` +
       `&dates=${start}/${end}` +
       `&details=${description}` +
-      `&location=${location}`;
+      `&location=${location}`
+    );
   }
 
   async iosCreateEvent() {

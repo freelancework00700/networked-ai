@@ -5,9 +5,10 @@ import { UserService } from '@/services/user.service';
 import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
 import { EmailInput } from '@/components/form/email-input';
+import { ToasterService } from '@/services/toaster.service';
+import { ToggleInput } from '@/components/form/toggle-input';
 import { BaseApiService } from '@/services/base-api.service';
 import { MobileInput } from '@/components/form/mobile-input';
-import { ToggleInput } from '@/components/form/toggle-input';
 import { StripePaymentComponent } from '@/components/common/stripe-payment';
 import { StripePaymentSuccessEvent, StripePaymentErrorEvent, StripeService } from '@/services/stripe.service';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -69,6 +70,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   private userService = inject(UserService);
   private modalService = inject(ModalService);
   private stripeService = inject(StripeService);
+  private toasterService = inject(ToasterService);
 
   form: FormGroup;
   guestForms: FormArray;
@@ -105,6 +107,58 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   }
 
   hostFees = computed(() => this.rsvpDataSignal()?.hostFees ?? 0);
+
+  summary = computed(() => {
+    const rsvp = this.rsvpDataSignal();
+
+    if (!rsvp) {
+      return [];
+    }
+
+    const subtotal = Number(rsvp.subtotal || 0);
+    const total = Number(rsvp.total || 0);
+    const fees = Number(total - subtotal || 0);
+
+    const items: Array<{ label: string; amount: number }> = [
+      {
+        label: `Tickets (${this.totalTicketCount()})`,
+        amount: +subtotal
+      }
+    ];
+
+    if (fees > 0) {
+      items.push({
+        label: 'Fees',
+        amount: fees
+      });
+    }
+
+    items.push({
+      label: this.eventTitle,
+      amount: total
+    });
+    return items;
+  });
+
+  validateAllForms(): boolean {
+    const isGuestFormsValid = Array.from({ length: this.guestForms.length }, (_, i) => {
+      return this.guestForms.at(i)?.valid ?? true;
+    }).every((valid) => valid);
+
+    if (!this.form.valid || !isGuestFormsValid) {
+      Object.keys(this.form.controls).forEach((key) => {
+        this.form.get(key)?.markAsTouched();
+      });
+      for (let i = 0; i < this.guestForms.length; i++) {
+        const guestForm = this.guestForms.at(i) as FormGroup;
+        Object.keys(guestForm.controls).forEach((key) => {
+          guestForm.get(key)?.markAsTouched();
+        });
+      }
+      return false;
+    }
+    return true;
+  }
 
   platformFee = computed(() => this.rsvpDataSignal()?.platformFee ?? 0);
 
@@ -350,22 +404,9 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   getGuestAttendance(index: number): 'going' | 'maybe' {
     return this.guestAttendances().get(index) || 'going';
   }
-
   async dismiss(): Promise<void> {
-    const isGuestFormsValid = Array.from({ length: this.guestForms.length }, (_, i) => {
-      return this.guestForms.at(i)?.valid ?? true;
-    }).every((valid) => valid);
-
-    if (!this.form.valid || !isGuestFormsValid) {
-      Object.keys(this.form.controls).forEach((key) => {
-        this.form.get(key)?.markAsTouched();
-      });
-      for (let i = 0; i < this.guestForms.length; i++) {
-        const guestForm = this.guestForms.at(i) as FormGroup;
-        Object.keys(guestForm.controls).forEach((key) => {
-          guestForm.get(key)?.markAsTouched();
-        });
-      }
+    if (!this.validateAllForms()) {
+      this.toasterService.showError('Please fill all details.');
       return;
     }
 

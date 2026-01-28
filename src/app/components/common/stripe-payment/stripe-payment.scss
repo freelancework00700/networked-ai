@@ -13,3 +13,34 @@
   border: 1px solid var(--danger-03);
   margin-top: 12px;
 }
+
+.apple-pay-container {
+  border: 2px solid #f4b860;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.apple-pay-container.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.apple-pay-pill {
+  background: #f7e1b5;
+  color: #000;
+  border-radius: 10px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.apple-pay-pill ion-icon {
+  font-size: 18px;
+}
