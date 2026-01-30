@@ -460,6 +460,19 @@ export class FeedService extends BaseApiService {
     }
   }
 
+  async networkBroadcast(feedId: string, type: 'email' | 'sms'): Promise<any> {
+    try {
+      const response = await this.post<any>('/feeds/network-broadcast', {
+        feed_id: feedId,
+        type: type
+      });
+      return response;
+    } catch (error) {
+      console.error('Error broadcasting feed:', error);
+      throw error;
+    }
+  }
+
   async getReportReasons(): Promise<ReportReasonsResponse> {
     try {
       const response = await this.get<ReportReasonsResponse>('/report-reasons');

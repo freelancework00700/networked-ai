@@ -29,6 +29,7 @@ import { NavigationService } from '@/services/navigation.service';
 import { Mentions } from '@/components/common/mentions';
 import { IUser } from '@/interfaces/IUser';
 import { OverlayModule } from '@angular/cdk/overlay';
+import { OgService } from '@/services/og.service';
 
 @Component({
   selector: 'post-comments',
@@ -65,6 +66,7 @@ export class PostComments implements OnInit, OnDestroy {
   navigationService = inject(NavigationService);
   router = inject(Router);
   route = inject(ActivatedRoute);
+  ogService = inject(OgService);
 
   currentUser = this.authService.currentUser;
 
@@ -173,6 +175,7 @@ export class PostComments implements OnInit, OnDestroy {
         if (postData) {
           // Set the post in FeedService for real-time socket updates
           this.feedService.setCurrentViewedPost(postData);
+          this.ogService.setOgTagInPost(postData);
           this.loadComments(postId);
         }
       } catch (error) {
@@ -281,8 +284,19 @@ export class PostComments implements OnInit, OnDestroy {
   }
 
   sendMessage(comment: FeedComment) {
-    console.log('Message clicked for:', comment.user?.username);
-    // TODO: Navigate to messages
+    document.body.click();
+    const currentUserId = this.currentUser()?.id;
+    const otherUserId = comment.user?.id;
+    if (currentUserId && otherUserId) {
+      setTimeout(() => {
+        this.navCtrl.navigateForward('/chat-room', {
+          state: {
+            user_ids: [currentUserId, otherUserId],
+            is_personal: true
+          }
+        });
+      });
+    }
   }
 
   async reportComment(comment: FeedComment) {

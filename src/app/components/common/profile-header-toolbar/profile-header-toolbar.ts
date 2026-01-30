@@ -1,5 +1,6 @@
 import { IonIcon } from '@ionic/angular/standalone';
 import { AuthService } from '@/services/auth.service';
+import { NotificationsService } from '@/services/notifications.service';
 import { PopoverService } from '@/services/popover.service';
 import { NavigationService } from '@/services/navigation.service';
 import { input, inject, signal, computed, Component, ChangeDetectionStrategy } from '@angular/core';
@@ -16,6 +17,7 @@ export class ProfileHeaderToolbar {
   private authService = inject(AuthService);
   navigationService = inject(NavigationService);
   private popoverService = inject(PopoverService);
+  notificationsService = inject(NotificationsService);
 
   // inputs
   showMenuIcon = input(false);

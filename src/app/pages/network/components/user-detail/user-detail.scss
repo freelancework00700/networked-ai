@@ -30,4 +30,23 @@
   min-width: 0;
   flex: 1;
 }
+
+// Message chip button styles
+.message-chip {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+  
+  &.message-chip-sending {
+    opacity: 0.7;
+    cursor: wait;
+    pointer-events: none;
+  }
+  
+  &.message-chip-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
   

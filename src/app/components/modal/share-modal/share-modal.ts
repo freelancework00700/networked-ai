@@ -24,6 +24,9 @@ import { IUser } from '@/interfaces/IUser';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { EventService } from '@/services/event.service';
 import { CommonShareFooter } from '@/components/common/common-share-footer';
+import { Share } from '@capacitor/share';
+import { environment } from 'src/environments/environment';
+import { MessagesService } from '@/services/messages.service';
 
 @Component({
   selector: 'share-modal',
@@ -56,11 +59,11 @@ export class ShareModal implements OnInit {
   private destroyRef = inject(DestroyRef);
   private cd = inject(ChangeDetectorRef);
   private eventService = inject(EventService);
+  private messagesService = inject(MessagesService);
 
   // inputs
-  @Input() eventId: any;
-  @Input() feedId?: string; // For Post type
-  @Input() type: 'Event' | 'Post' = 'Event';
+  @Input() id?: string;
+  @Input() type: 'Event' | 'Post' | 'Plan' = 'Event';
 
   // signals
   searchQuery = signal<string>('');
@@ -73,6 +76,7 @@ export class ShareModal implements OnInit {
   currentPage = signal<number>(1);
   totalPages = signal<number>(0);
   sendEntireNetwork = signal<boolean>(false);
+  eventSlug = signal<string | null>(null);
 
   private searchSubject = new Subject<string>();
 
@@ -146,6 +150,16 @@ export class ShareModal implements OnInit {
 
   async ngOnInit() {
     await this.loadNetworkConnections();
+    if (this.type === 'Event' && this.id) {
+      try {
+        const eventData = await this.eventService.getEventById(this.id);
+        if (eventData?.slug) {
+          this.eventSlug.set(eventData.slug);
+        }
+      } catch (error) {
+        console.error('Error fetching event data:', error);
+      }
+    }
   }
 
   async loadNetworkConnections(page: number = 1, append: boolean = false) {
@@ -270,7 +284,7 @@ export class ShareModal implements OnInit {
       this.isSharing.set(true);
 
       if (this.type === 'Post') {
-        if (!this.feedId) {
+        if (!this.id) {
           this.toasterService.showError('Invalid post share request');
           return;
         }
@@ -280,7 +294,7 @@ export class ShareModal implements OnInit {
           peer_ids?: string[];
           send_entire_network?: boolean;
         } = {
-          feed_id: this.feedId
+          feed_id: this.id
         };
 
         sendEntireNetwork ? (payload.send_entire_network = true) : (payload.peer_ids = selectedIds);
@@ -291,18 +305,13 @@ export class ShareModal implements OnInit {
       }
 
       if (this.type === 'Event') {
-        if (!this.eventId) {
+        if (!this.id) {
           this.toasterService.showError('Invalid event share request');
           return;
         }
 
-        const payload: {
-          event_id: string;
-          peer_ids?: string[];
-          type: 'Event';
-          send_entire_network?: boolean;
-        } = {
-          event_id: this.eventId,
+        const payload = {
+          event_id: this.id,
           type: 'Event',
           send_entire_network: false,
           peer_ids: selectedIds
@@ -311,6 +320,27 @@ export class ShareModal implements OnInit {
         const response = await this.eventService.shareEvent(payload);
 
         this.toasterService.showSuccess(response.message || 'Event shared successfully');
+      }
+
+      if (this.type === 'Plan') {
+        const link = this.getContentLink();
+
+        if (!link) {
+          this.toasterService.showError('Plan link not available');
+          return;
+        }
+
+        const planMessage = `Check out this Subscription plan: ${link}`;
+
+        const payload = {
+          type: 'Text',
+          message: planMessage,
+          send_entire_network: false,
+          peer_ids : [...selectedIds]
+        };
+
+        await this.messagesService.shareInChat(payload);
+        this.toasterService.showSuccess('Plan shared successfully');
       }
 
       await this.modalCtrl.dismiss({ success: true });
@@ -324,5 +354,230 @@ export class ShareModal implements OnInit {
 
   async close() {
     await this.modalCtrl.dismiss();
+  }
+
+  getContentLink(): string {
+    if (this.type === 'Event' && this.eventSlug()) {
+      return `${environment.frontendUrl}/event/${this.eventSlug()}`;
+    }
+    if (this.type === 'Post' && this.id) {
+      return `${environment.frontendUrl}/post/${this.id}`;
+    }
+    if (this.type === 'Plan' && this.id) {
+      return `${environment.frontendUrl}/subscription/${this.id}`;
+    }
+    return '';
+  }
+
+  async onContact(): Promise<void> {
+    if (this.type === 'Plan') {
+      const link = this.getContentLink();
+      if (!link) {
+        this.toasterService.showError(`${this.type} link not available`);
+        return;
+      }
+      const message = encodeURIComponent(`Check out this subsciption plan: ${link}`);
+      window.open(`sms:?body=${message}`, '_self');
+      return;
+    }
+    const contentType = this.type === 'Event' ? 'event' : 'post';
+    const result = await this.modalService.openConfirmModal({
+      title: 'Please Confirm',
+      description: `It will send an SMS to your entire network with this ${contentType}. Are you sure you want to proceed?`,
+      confirmButtonLabel: 'Send SMS',
+      cancelButtonLabel: 'Close',
+      confirmButtonColor: 'primary',
+      onConfirm: async () => {
+        try {
+          if (this.type === 'Post') {
+            if (!this.id) {
+              this.toasterService.showError('Post information not available');
+              return;
+            }
+            await this.feedService.networkBroadcast(this.id, 'sms');
+            this.toasterService.showSuccess('Post shared via SMS successfully');
+          } else if (this.type === 'Event') {
+            if (!this.id) {
+              this.toasterService.showError('Event information not available');
+              return;
+            }
+            await this.eventService.networkBroadcast(this.id, 'sms');
+            this.toasterService.showSuccess('Event shared via SMS successfully');
+          }
+        } catch (error: any) {
+          console.error(`Error sharing ${this.type} via SMS:`, error);
+          this.toasterService.showError(error?.message || `Failed to share ${this.type} via SMS`);
+          throw error;
+        }
+      }
+    });
+  }
+
+  async onCopyLink(): Promise<void> {
+    const link = this.getContentLink();
+    if (!link) {
+      this.toasterService.showError(`${this.type} link not available`);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(link);
+      this.toasterService.showSuccess('Link copied to clipboard');
+    } catch (error) {
+      console.error('Error copying link:', error);
+      this.toasterService.showError('Failed to copy link');
+    }
+  }
+
+  async onShareTo(): Promise<void> {
+    const link = this.getContentLink();
+    if (!link) {
+      this.toasterService.showError(`${this.type} link not available`);
+      return;
+    }
+    try {
+      await Share.share({
+        text: link
+      });
+    } catch (error: any) {
+      if (error.message && !error.message.includes('cancel')) {
+        console.error('Error sharing:', error);
+      }
+    }
+  }
+
+  async onChat(): Promise<void> {
+    const contentType = this.type === 'Event' ? 'event' : 'post';
+    const result = await this.modalService.openConfirmModal({
+      title: 'Please Confirm',
+      description: `It will send a message to your entire network. Are you sure you want to proceed?`,
+      confirmButtonLabel: 'Send Message',
+      cancelButtonLabel: 'Close',
+      confirmButtonColor: 'primary',
+      onConfirm: async () => {
+        try {
+          if (this.type === 'Event') {
+            if (!this.id) {
+              this.toasterService.showError('Event information not available');
+              return;
+            }
+            const payload = {
+              event_id: this.id,
+              type: 'Event',
+              send_entire_network: true
+            };
+            await this.eventService.shareEvent(payload);
+            this.toasterService.showSuccess('Event shared to your network successfully');
+          } else if (this.type === 'Post') {
+            if (!this.id) {
+              this.toasterService.showError('Post information not available');
+              return;
+            }
+            const payload = {
+              feed_id: this.id,
+              type: 'Post',
+              send_entire_network: true
+            };
+            await this.messagesService.shareInChat(payload);
+            this.toasterService.showSuccess('Post shared to your network successfully');
+          } else if (this.type === 'Plan') {
+            const link = this.getContentLink();
+
+            if (!link) {
+              this.toasterService.showError('Plan link not available');
+              return;
+            }
+
+            const planMessage = `Check out this Subscription plan: ${link}`;
+
+            const payload = {
+              type: 'Text',
+              message: planMessage,
+              send_entire_network: true
+            };
+
+            await this.messagesService.shareInChat(payload);
+            this.toasterService.showSuccess('Plan shared to your network successfully');
+          }
+        } catch (error: any) {
+          console.error(`Error sharing ${this.type} in chat:`, error);
+          this.toasterService.showError(error?.message || `Failed to share ${this.type}`);
+          throw error;
+        }
+      }
+    });
+  }
+
+  async onEmail(): Promise<void> {
+    const contentType = this.type === 'Event' ? 'event' : 'post';
+    const result = await this.modalService.openConfirmModal({
+      title: 'Please Confirm',
+      description: `It will send an email to your entire network with this ${contentType}. Are you sure you want to proceed?`,
+      confirmButtonLabel: 'Send Email',
+      cancelButtonLabel: 'Close',
+      confirmButtonColor: 'primary',
+      onConfirm: async () => {
+        try {
+          if (this.type === 'Post') {
+            if (!this.id) {
+              this.toasterService.showError('Post information not available');
+              return;
+            }
+            await this.feedService.networkBroadcast(this.id, 'email');
+            this.toasterService.showSuccess('Post shared via Email successfully');
+          } else if (this.type === 'Event') {
+            if (!this.id) {
+              this.toasterService.showError('Event information not available');
+              return;
+            }
+            await this.eventService.networkBroadcast(this.id, 'email');
+            this.toasterService.showSuccess('Event shared via Email successfully');
+          } else if (this.type === 'Plan') {
+            const link = this.getContentLink();
+            if (!link) {
+              this.toasterService.showError('Plan link not available');
+              return;
+            }
+      
+            const subject = encodeURIComponent(`Check out this Subscription plan: ${link}`);
+            const body = encodeURIComponent(`Hi,\n\nCheck out this subscription plan: ${link}`);
+            window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+          }
+        } catch (error: any) {
+          console.error(`Error sharing ${this.type} via Email:`, error);
+          this.toasterService.showError(error?.message || `Failed to share ${this.type} via Email`);
+          throw error;
+        }
+      }
+    });
+  }
+
+  onWhatsapp(): void {
+    const link = this.getContentLink();
+    if (!link) {
+      this.toasterService.showError(`${this.type} link not available`);
+      return;
+    }
+
+    const message = encodeURIComponent(`Check out this ${this.type.toLowerCase()}: ${link}`);
+    const whatsappUrl = `https://wa.me/?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+  }
+
+  onShareToX(): void {
+    const link = this.getContentLink();
+    if (!link) return;
+
+    const text = encodeURIComponent(link);
+    const twitterUrl = `https://x.com/intent/tweet?text=${text}`;
+    window.open(twitterUrl, '_blank');
+  }
+
+  onShareToThreads(): void {
+    const link = this.getContentLink();
+    if (!link) return;
+
+    const text = encodeURIComponent(link);
+    const threadsUrl = `https://threads.net/intent/post?text=${text}`;
+    window.open(threadsUrl, '_blank');
   }
 }

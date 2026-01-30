@@ -14,19 +14,27 @@ import {
 import { IUser } from '@/interfaces/IUser';
 import { DatePipe } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
-import { Injectable, signal } from '@angular/core';
+import { AuthService } from './auth.service';
+import { Injectable, signal, inject, computed } from '@angular/core';
 import { ICity } from '@/components/card/city-card';
 import { BaseApiService } from '@/services/base-api.service';
 import { SegmentButtonItem } from '@/components/common/segment-button';
+import { ModalService } from './modal.service';
+import { NavigationService } from './navigation.service';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
+  private authService = inject(AuthService);
+  private modalService = inject(ModalService);
+  private navigationService = inject(NavigationService);
+
   datePipe = new DatePipe('en-US');
   recommendedEvents = signal<IEvent[]>([]);
   publicEvents = signal<IEvent[]>([]);
   upcomingEvents = signal<IEvent[]>([]);
   cityCards = signal<ICity[]>([]);
   isLoadingCities = signal<boolean>(false);
+  isLoggedIn = computed(() => !!this.authService.currentUser());
 
   async createEvents(eventsPayload: any[]): Promise<EventResponse> {
     try {
@@ -667,6 +675,7 @@ export class EventService extends BaseApiService {
     const isRsvpApprovalRequired = eventData?.settings?.is_rsvp_approval_required ?? false;
 
     return {
+      id: eventData?.id,
       thumbnail_url: eventData?.thumbnail_url || thumbnailUrl,
       title: eventData?.title || '',
       description: eventData?.description || '',
@@ -677,8 +686,11 @@ export class EventService extends BaseApiService {
       mapCenter,
       admission,
       formattedDateTime,
+      slug: eventData?.slug || '',
       userSections,
       isRepeatingEvent,
+      start_date: eventData?.start_date,
+      end_date: eventData?.end_date,
       dateItems,
       rsvpButtonLabel,
       isCurrentUserHost,
@@ -687,7 +699,9 @@ export class EventService extends BaseApiService {
       tickets: eventData?.tickets || [],
       questionnaire: eventData?.questionnaire || eventData?.questions || [],
       promo_codes: eventData?.promo_codes || [],
-      total_views: eventData?.total_views || 0
+      total_views: eventData?.total_views || 0,
+      has_plans: eventData?.plan_ids.length > 0 || false,
+      is_subscriber_exclusive: eventData?.is_subscriber_exclusive || false
     };
   }
 
@@ -722,6 +736,7 @@ export class EventService extends BaseApiService {
       order
     };
 
+    if (q.id != null) formatted.id = q.id;
     if (q.min != null) formatted.min = q.min;
     if (q.max != null) formatted.max = q.max;
     if (q.rating_scale || q.rating) formatted.rating_scale = q.rating_scale || q.rating;
@@ -745,7 +760,9 @@ export class EventService extends BaseApiService {
         return { option: opt, order: index + 1 };
       }
       if (typeof opt === 'object' && opt.option) {
-        return { option: opt.option, order: opt.order ?? index + 1 };
+        const formatted: { option: string; order: number; id?: string } = { option: opt.option, order: opt.order ?? index + 1 };
+        if (opt.id != null) formatted.id = opt.id;
+        return formatted;
       }
       return { option: String(opt), order: index + 1 };
     });
@@ -1277,7 +1294,7 @@ export class EventService extends BaseApiService {
     }
   }
 
-  async getEventQuestionAnalysis(eventId: string, eventPhase: 'PreEvent' | 'PostEvent', page: number = 1, limit: number = 20): Promise<any> {
+  async getEventQuestionAnalysis(eventId: string, eventPhase: 'PreEvent' | 'PostEvent' | '' , page: number = 1, limit: number = 20): Promise<any> {
     try {
       let httpParams = new HttpParams();
       if (eventId) {
@@ -1355,7 +1372,7 @@ export class EventService extends BaseApiService {
     }
   }
 
-  async shareEvent(payload: { event_id: string; peer_ids?: string[]; send_entire_network?: boolean }): Promise<any> {
+  async shareEvent(payload: { event_id: string; peer_ids?: string[]; send_entire_network?: boolean; type?: string; message?: string }): Promise<any> {
     try {
       const response = await this.post<any>('/chat-rooms/share', payload);
       return response;
@@ -1363,5 +1380,97 @@ export class EventService extends BaseApiService {
       console.error('Error sharing feed:', error);
       throw error;
     }
+  }
+
+  async networkBroadcast(eventId: string, type: 'email' | 'sms'): Promise<any> {
+    try {
+      const response = await this.post<any>('/events/network-broadcast', {
+        event_id: eventId,
+        type: type
+      });
+      return response;
+    } catch (error) {
+      console.error('Error broadcasting event:', error);
+      throw error;
+    }
+  }
+
+  checkHostOrCoHostAccess(eventData: any): boolean {
+    const currentUser = this.authService?.currentUser();
+
+    if (!currentUser?.id || !eventData?.participants) {
+      return false;
+    }
+
+    const participants = eventData.participants || [];
+    const isHost = participants.some((p: any) => {
+      const userId = p.user?.id;
+      const role = (p.role || '').toLowerCase();
+      return userId === currentUser.id && role === 'host';
+    });
+
+    const isCoHost = participants.some((p: any) => {
+      const userId = p.user?.id;
+      const role = (p.role || '').toLowerCase();
+      return userId === currentUser.id && role === 'cohost';
+    });
+
+    return isHost || isCoHost;
+  }
+
+  checkSpeakerOrSponsorAccess(eventData: any): boolean {
+    const currentUser = this.authService?.currentUser();
+
+    if (!currentUser?.id || !eventData?.participants) {
+      return false;
+    }
+
+    const participants = eventData.participants || [];
+    const isSpeaker = participants.some((p: any) => {
+      const userId = p.user?.id;
+      const role = (p.role || '').toLowerCase();
+      return userId === currentUser.id && role === 'speaker';
+    });
+
+    const isSponsor = participants.some((p: any) => {
+      const userId = p.user?.id;
+      const role = (p.role || '').toLowerCase();
+      return userId === currentUser.id && role === 'sponsor';
+    });
+
+    return isSpeaker || isSponsor;
+  }
+
+  async checkIsLoggin(): Promise<boolean> {
+    if (!this.isLoggedIn()) {
+      const result = await this.modalService.openLoginModal();
+
+      if (!result?.success) {
+        return false; // login failed or cancelled
+      }
+    }
+
+    return true; // already logged in OR login succeeded
+  }
+
+  sanitizeOgDescription(html: string): string {
+    if (!html) return '';
+
+    const text = html
+      // Remove script & style tags
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      // Remove all remaining HTML tags
+      .replace(/<\/?[^>]+(>|$)/g, '')
+      // Decode common HTML entities
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      // Normalize spaces
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return text;
   }
 }

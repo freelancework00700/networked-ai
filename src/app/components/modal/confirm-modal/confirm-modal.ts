@@ -1,7 +1,7 @@
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { IonFooter, IonToolbar } from '@ionic/angular/standalone';
-import { Input, inject, Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Input, inject, Component, ChangeDetectionStrategy, signal, type Signal } from '@angular/core';
 
 export interface ConfirmModalConfig {
   icon?: string; // SVG path
@@ -34,6 +34,7 @@ export class ConfirmModal {
   @Input() customColor?: string;
   @Input() cancelButtonLabel = '';
   @Input() confirmButtonLabel = 'Confirm';
+  @Input() confirmButtonLabelSignal?: Signal<string>;
   @Input() iconPosition: 'left' | 'center' = 'center';
   @Input() confirmButtonColor: 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' = 'primary';
   @Input() onConfirm?: () => Promise<any>;
@@ -41,6 +42,10 @@ export class ConfirmModal {
   @Input() onShare?: () => void | Promise<void>;
 
   isLoading = signal(false);
+
+  confirmLabel(): string {
+    return this.confirmButtonLabelSignal?.() ?? this.confirmButtonLabel;
+  }
 
   async confirm(): Promise<void> {
     if (!this.onConfirm) {

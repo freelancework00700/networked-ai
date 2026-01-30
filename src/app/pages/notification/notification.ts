@@ -9,6 +9,9 @@ import { NetworkService } from '@/services/network.service';
 import { EmptyState } from '@/components/common/empty-state';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NotificationsService } from '@/services/notifications.service';
+import { AuthService } from '@/services/auth.service';
+import { NavigationService } from '@/services/navigation.service';
+import { ModalService } from '@/services/modal.service';
 import { IonContent, IonHeader, IonIcon, IonToolbar, NavController } from '@ionic/angular/standalone';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { IonRefresher, IonInfiniteScroll, IonRefresherContent, RefresherCustomEvent, IonInfiniteScrollContent } from '@ionic/angular/standalone';
@@ -40,9 +43,13 @@ export class Notification {
   private networkService = inject(NetworkService);
   private toasterService = inject(ToasterService);
   private notificationsService = inject(NotificationsService);
+  private authService = inject(AuthService);
+  private navigationService = inject(NavigationService);
+  private modalService = inject(ModalService);
 
   // signals
   isLoadingMore = signal(false);
+  refreshTick = signal(0);
   notifications = this.notificationsService.notifications;
   notificationFilter = signal<NotificationType>(NotificationType.ALL);
 
@@ -108,6 +115,7 @@ export class Notification {
   async onRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       await this.notificationsService.resetAndLoad(this.notificationFilter(), this.pagination().limit);
+      this.refreshTick.update((t) => t + 1);
     } catch (error) {
       console.error('Error refreshing notifications:', error);
     } finally {
@@ -170,22 +178,165 @@ export class Notification {
   async handleNotificationClick(notification: INotification): Promise<void> {
     this.notificationsService.markNotificationRead(notification.id);
 
-    if (notification.type === NotificationType.NETWORK) {
+    if (notification.type === NotificationType.CHAT_MESSAGE) {
+      const currentUserId = this.authService.currentUser()?.id;
+      const otherUserId = notification.related_user?.id ?? notification.related_user_id;
+      if (currentUserId && otherUserId) {
+        this.navigationService.navigateForward('/chat-room', false, {
+          user_ids: [currentUserId, otherUserId],
+          is_personal: true
+        });
+      }
+    } else if (notification.type === NotificationType.NETWORK) {
       this.navCtrl.navigateForward(`/${notification.related_user?.username}`);
     } else if (notification.type === NotificationType.MY_EVENTS || notification.type === NotificationType.EVENTS) {
       this.navCtrl.navigateForward(`/event/${notification.event?.slug}`);
     } else if (notification.type === NotificationType.RSVP_REQUEST) {
-      this.navCtrl.navigateForward(`/${notification.related_user?.username}`);
+      // this.navCtrl.navigateForward(`/${notification.related_user?.username}`);
+      this.navigationService.navigateForward(`/event/rsvp-approval/${notification.event?.id}`);
+    } else if (notification.type === NotificationType.RSVP_REQUEST_STATUS) {
+      this.navCtrl.navigateForward(`/event/${notification.event?.slug}`);
+    } else if (
+      notification.type === NotificationType.POST_COMMENTED ||
+      notification.type === NotificationType.POST_LIKED ||
+      notification.type === NotificationType.MENTION
+    ) {
+      const postId = notification.post_id ?? (notification.post as { id?: string })?.id;
+      if (postId) {
+        this.navigationService.navigateForward(`/post/${postId}`);
+      }
+    } else if (notification.type === NotificationType.POST_EVENT_QUESTIONNAIRE) {
+      if (notification.event?.slug) {
+        this.navCtrl.navigateForward(`/event/${notification.event.slug}`);
+      }
     }
   }
 
+  async openShareFeedback(notification: INotification): Promise<void> {
+    this.notificationsService.markNotificationRead(notification.id);
+    const eventId = notification.event?.id ?? notification.event_id;
+    if (!eventId) return;
+
+    try {
+      const event = await this.eventService.getEventById(eventId);
+      if (!event) {
+        this.toasterService.showError('Event not found.');
+        return;
+      }
+
+      const rawQuestionnaire = event.questionnaire || event.questions || [];
+      const formattedQuestionnaire = this.eventService.formatQuestionnaire(rawQuestionnaire);
+      const postEventQuestions = formattedQuestionnaire.filter((q: { event_phase?: string }) => q.event_phase === 'PostEvent');
+
+      if (!postEventQuestions.length) {
+        this.toasterService.showError('No feedback questionnaire available for this event.');
+        return;
+      }
+
+      const eventDate = this.eventService.formatDateTime(event.start_date, event.end_date) || '';
+      const eventLocation = event.address ?? '';
+
+      const result = await this.modalService.openQuestionnairePreviewModal(
+        postEventQuestions,
+        false,
+        undefined,
+        event.title ?? '',
+        eventDate,
+        eventLocation,
+        'post-event',
+        undefined
+      );
+
+      if (result?.responses?.length) {
+        const saved = await this.savePostEventFeedback(eventId, result.responses);
+        if (saved) {
+          this.toasterService.showSuccess('Thank you for sharing your feedback!');
+          this.notificationsService.fetchUnreadCount();
+        }
+      }
+    } catch (error) {
+      console.error('Error opening share feedback:', error);
+      this.toasterService.showError('Failed to load feedback form. Please try again.');
+    }
+  }
+
+  private buildFeedbackPayloadFromResponses(responses: any[]): { question_id: string; answer_option_id?: string; answer: string | number | string[] }[] {
+    const feedback: { question_id: string; answer_option_id?: string; answer: string | number | string[] }[] = [];
+
+    responses.forEach((response: any) => {
+      if (!response.question_id) return;
+
+      const questionType = response.type || '';
+
+      if (questionType === 'SingleChoice') {
+        let answerValue = '';
+        let optionId: string | undefined;
+
+        if (typeof response.answer === 'object' && response.answer !== null) {
+          answerValue = response.answer.option || '';
+          optionId = response.answer.id;
+        } else {
+          answerValue = response.answer || '';
+          const selectedOption = response.options?.find((opt: any) => {
+            const optionText = typeof opt === 'object' ? opt.option : opt;
+            return optionText === answerValue;
+          });
+          optionId = selectedOption?.id;
+        }
+
+        feedback.push({ question_id: response.question_id, answer_option_id: optionId, answer: answerValue });
+      } else if (questionType === 'MultipleChoice') {
+        const selectedOptions = Array.isArray(response.answer) ? response.answer : [response.answer];
+        selectedOptions.forEach((selectedAnswer: any) => {
+          let answerValue = '';
+          let optionId: string | undefined;
+
+          if (typeof selectedAnswer === 'object' && selectedAnswer !== null) {
+            answerValue = selectedAnswer.option || '';
+            optionId = selectedAnswer.id;
+          } else {
+            answerValue = selectedAnswer || '';
+            const selectedOption = response.options?.find((opt: any) => {
+              const optionText = typeof opt === 'object' ? opt.option : opt;
+              return optionText === answerValue;
+            });
+            optionId = selectedOption?.id;
+          }
+
+          feedback.push({ question_id: response.question_id, answer_option_id: optionId, answer: answerValue });
+        });
+      } else {
+        const answer = response.answer ?? '';
+        feedback.push({ question_id: response.question_id, answer: String(answer) });
+      }
+    });
+
+    return feedback;
+  }
+
+  private async savePostEventFeedback(eventId: string, responses: any[]): Promise<boolean> {
+    try {
+      const feedback = this.buildFeedbackPayloadFromResponses(responses);
+      if (feedback.length === 0) return true;
+
+      await this.eventService.saveEventFeedback(eventId, { feedback });
+      return true;
+    } catch (error) {
+      console.error('Error saving post-event feedback:', error);
+      this.toasterService.showError('Failed to save feedback. Please try again.');
+      return false;
+    }
+  }
+
+  private readonly defaultEmptyState = {
+    title: 'No Notifications Yet',
+    description: 'Your events, RSVPs, and connections are quiet for now.'
+  };
+
   getEmptyStateMessage(): { title: string; description: string } {
     const filter = this.notificationFilter();
-    const messages: Record<NotificationType, { title: string; description: string }> = {
-      [NotificationType.ALL]: {
-        title: 'No Notifications Yet',
-        description: 'Your events, RSVPs, and connections are quiet for now.'
-      },
+    const messages: Partial<Record<NotificationType, { title: string; description: string }>> = {
+      [NotificationType.ALL]: this.defaultEmptyState,
       [NotificationType.UNREAD]: {
         title: 'No Unread Notifications',
         description: "You're all caught up! No new notifications to read."
@@ -211,7 +362,7 @@ export class Notification {
         description: "You don't have any network activity notifications."
       }
     };
-    return messages[filter];
+    return messages[filter] ?? this.defaultEmptyState;
   }
 
   goBack(): void {

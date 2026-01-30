@@ -133,10 +133,13 @@
           }
         }
 
-        @if (freeTicketDiscount() > 0) {
-          <div class="flex items-center justify-between">
-            <span class="body-14R neutral-02">{{ freeTicketName() }} x1</span>
-            <span class="body-14M accent-red">-${{ formatCurrency(freeTicketDiscount()) }}</span>
+        @if (rsvpDataSignal()?.freeTicketDiscount || 0 > 0) {
+          <div class="flex items-center justify-between accent-blue">
+            <div class="flex items-center gap-1">
+              <div class="pi pi-crown"></div>
+              <span class="body-14R">Subscriber Perk</span>
+            </div>
+            <span class="body-14M">-${{ formatCurrency(rsvpDataSignal()?.freeTicketDiscount || 0) }}</span>
           </div>
         }
 
@@ -165,16 +168,6 @@
           </div>
         }
 
-        @if (subscriptionId && subscriberPerk() > 0) {
-          <div class="flex items-center justify-between accent-blue">
-            <div class="flex items-center gap-1">
-              <div class="pi pi-crown"></div>
-              <span class="body-14R">Subscriber Perk</span>
-            </div>
-            <span class="body-14M">- ${{ formatCurrency(subscriberPerk()) }}</span>
-          </div>
-        }
-
         <div class="border-t border-surface-300 pt-3 flex items-center justify-between">
           <span class="body-16M neutral-01">Total</span>
           <span class="body-16M neutral-01">${{ formattedTotal() }}</span>
@@ -185,13 +178,13 @@
       @if (totalPrice() > 0 && clientSecret()) {
         <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-4">
           <div class="body-16M neutral-01">Payment Details</div>
-
           <app-stripe-payment
+            [summary]="summary()"
+            [amount]="rsvpDataSignal()?.total || 0"
             [clientSecretInput]="clientSecret()"
-            [showButtons]="false"
-            [isModalMode]="false"
-            (paymentSuccess)="onPaymentSuccess($event)"
+            [validateAllForms]="validateAllForms()"
             (paymentError)="onPaymentError($event)"
+            (paymentSuccess)="onPaymentSuccess($event)"
             (paymentProcessing)="onPaymentProcessing($event)"
           />
         </div>

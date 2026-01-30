@@ -1,4 +1,23 @@
 <div class="inner-content" [class.p-4]="isModalMode">
+  @if (isNative && isApplePayAvailable() && clientSecret()) {
+    <!-- Apple Pay Button -->
+    <div class="apple-pay-container" [class.disabled]="isProcessingPayment() || !clientSecret()" (click)="nativeApplePay()">
+      <div class="apple-pay-pill">
+        <ion-icon name="logo-apple"></ion-icon>
+        <span>Pay</span>
+      </div>
+
+      <div class="body-16SB">Apple Pay</div>
+    </div>
+
+    <!-- Divider -->
+    <div class="flex items-center gap-3 my-2">
+      <div class="flex-1 border-t border-surface-300"></div>
+      <div class="text-surface-500 body-14M">Or pay with a card</div>
+      <div class="flex-1 border-t border-surface-300"></div>
+    </div>
+  }
+
   @if (clientSecret() && elementsOptions()) {
     <div class="flex flex-col gap-2">
       <div class="stripe-payment-container">

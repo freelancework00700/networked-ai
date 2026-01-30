@@ -1,0 +1,92 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create production .env file
+        run: |
+          cat > .env << EOF
+          API_URL=${{ secrets.API_URL }}
+          OPEN_AI_API_KEY=${{ secrets.OPEN_AI_API_KEY }}
+          TENOR_API_KEY=${{ secrets.TENOR_API_KEY }}
+          MAPTILER_API_KEY=${{ secrets.MAPTILER_API_KEY }}
+          UNSPLASH_API_KEY=${{ secrets.UNSPLASH_API_KEY }}
+          FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          EOF
+        shell: bash
+
+      - name: Build app
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Create build zip
+        run: |
+          cd dist/browser
+          zip -r ../../build.zip .
+
+      - name: Get version from package.json
+        id: version
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}-${{ github.run_number }}
+          name: Release v${{ steps.version.outputs.VERSION }}-${{ github.run_number }}
+          body: |
+            ## Live Update Release
+
+            This release contains the latest build for live updates.
+
+            **Version:** ${{ steps.version.outputs.VERSION }}-${{ github.run_number }}
+            **Build Date:** ${{ github.event.head_commit.timestamp || github.run_started_at }}
+
+            ### How to use:
+            1. The app will automatically check for updates on startup
+            2. If an update is available, it will be downloaded and applied
+            3. The app will reload with the new version
+          files: build.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean up
+        if: always()
+        run: |
+          rm -f .env
+          rm -f build.zip
+        shell: bash
+

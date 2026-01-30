@@ -100,7 +100,7 @@
             <div class="flex flex-col">
               @for (option of question.options; let oi = $index; track oi) {
                 <div class="flex items-center gap-3 py-1">
-                  <p-radioButton [inputId]="'radio_' + i + '_' + oi" [value]="option" formControlName="question_{{ i }}" />
+                  <p-radioButton [inputId]="'radio_' + i + '_' + oi" [name]="'question_' + i" [value]="option" formControlName="question_{{ i }}" />
                   <label [for]="'radio_' + i + '_' + oi" class="body-14M neutral-01 flex-1 cursor-pointer">
                     {{ typeof option === 'object' && option.option ? option.option : option }}
                   </label>

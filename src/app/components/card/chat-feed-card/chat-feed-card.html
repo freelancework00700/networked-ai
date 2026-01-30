@@ -34,7 +34,8 @@
         <video [src]="firstMedia()?.media_url" controls class="w-full h-full object-cover"></video>
       }
     </div>
-  } @else if (feed()?.events?.length) {
+  } 
+  @if (feed()?.events?.length) {
     <app-chat-event-card [event]="feed()?.events[0]" [inPost]="true" />
   }
 

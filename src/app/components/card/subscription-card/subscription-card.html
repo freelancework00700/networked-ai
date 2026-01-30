@@ -60,45 +60,53 @@
     }
   } @else {
     <!-- Subscription Mode -->
-    <div class="">
-      <!-- Icon -->
-      <div class="flex items-center gap-3 border-b-1 border-neutral-200 pb-3">
-        <div class="bg-white rounded-2xl shadow-md p-2 flex items-center">
-          <div class="plan-icon" [class.icon-event]="data().type === 'event'" [class.icon-sponsor]="data().type === 'sponsor'">
-            @if (data().type === 'sponsor') {
-              <ion-icon src="/assets/svg/subscription/sponsorIcon.svg" class="text-2xl!"></ion-icon>
-            } @else {
-              <i class="pi pi-crown text-xl!"></i>
-            }
-          </div>
-        </div>
-
-        <!-- Subscription Details -->
-        <div class="flex-1">
-          <div class="body-18SB neutral-01 mb-1">{{ getDisplayName() }}</div>
-          <div class="flex items-center gap-2">
-            <div class="w-5 h-5 rounded-full overflow-hidden">
-              <img src="/assets/images/profile.jpeg" alt="Profile" class="w-full h-full object-cover" />
-            </div>
-            <div class="body-12 neutral-02 mb-1">{{ data().creatorName }}</div>
-          </div>
+    <!-- Icon -->
+    <div class="flex items-center gap-3 border-b-1 border-neutral-200 pb-3">
+      <div class="bg-white rounded-2xl shadow-md p-2 flex items-center">
+        <div class="plan-icon" [class.icon-event]="data().type === 'event'" [class.icon-sponsor]="data().type === 'sponsor'">
+          @if (data().type === 'sponsor') {
+            <ion-icon src="/assets/svg/subscription/sponsorIcon.svg" class="text-2xl!"></ion-icon>
+          } @else {
+            <i class="pi pi-crown text-xl!"></i>
+          }
         </div>
       </div>
 
-      <div class="mt-4 flex justify-between">
-        <div class="flex gap-8">
-          <div class="body-12 neutral-03 mb-1">
-            <div>Renews on</div>
-            <div class="mt-1">Billing</div>
+      <!-- Subscription Details -->
+      <div class="flex-1">
+        <div class="body-18SB neutral-01 mb-1">{{ getDisplayName() }}</div>
+        <div class="flex items-center gap-2">
+          <div class="relative w-5 h-5 flex-shrink-0 overflow-hidden rounded-full">
+            <img
+              fill
+              priority
+              placeholder
+              [alt]="data().creatorName || 'avatar'"
+              class="rounded-full object-cover"
+              (error)="onImageError($event)"
+              [ngSrc]="getImageUrl(data().thumbnail_url)"
+            />
           </div>
-          <div class="body-12M neutral-01">
-            <div>{{ data().renewDate | date: 'MMM d, yyyy' }}</div>
-            <div class="mt-1">{{ data().price }}</div>
-          </div>
+          <div class="body-12 neutral-02">{{ data().creatorName }}</div>
         </div>
-
-        <i class="pi pi-arrow-right neutral-03 text-lg flex! items-end pb-1"></i>
       </div>
+    </div>
+
+    <div class="mt-4 flex justify-between">
+      <div class="flex gap-8">
+        <div class="body-12 neutral-03 mb-1">
+          <div>{{ data().cancelDate ? 'Cancel on' : 'Renews on' }}</div>
+          <div class="mt-1">Billing</div>
+        </div>
+        <div class="body-12M neutral-01">
+          <div [ngClass]="data().cancelDate ? 'text-red-500' : 'neutral-01'">
+            {{ data().cancelDate ? (data().cancelDate | date: 'MMM d, yyyy') : (data().renewDate | date: 'MMM d, yyyy') }}
+          </div>
+          <div class="mt-1">{{ data().price }}</div>
+        </div>
+      </div>
+
+      <i class="pi pi-arrow-right neutral-03 text-lg flex items-end pb-1"></i>
     </div>
   }
 </div>

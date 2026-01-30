@@ -1,4 +1,6 @@
 import { onImageError } from '@/utils/helper';
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Button } from '@/components/form/button';
@@ -8,8 +10,10 @@ import { EventService } from '@/services/event.service';
 import { Searchbar } from '@/components/common/searchbar';
 import { EmptyState } from '@/components/common/empty-state';
 import { NavigationService } from '@/services/navigation.service';
-import { IonContent, IonHeader, IonToolbar, NavController, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { IonContent, IonHeader, IonToolbar, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
 import { Component, inject, signal, effect, ChangeDetectionStrategy, computed } from '@angular/core';
+import { ToasterService } from '@/services/toaster.service';
 
 @Component({
   selector: 'analytics-user-list',
@@ -32,8 +36,8 @@ import { Component, inject, signal, effect, ChangeDetectionStrategy, computed } 
 })
 export class AnalyticsUserList {
   route = inject(ActivatedRoute);
-  navCtrl = inject(NavController);
   eventService = inject(EventService);
+  toasterService = inject(ToasterService);
   navigationService = inject(NavigationService);
 
   isLoadingMore = signal<boolean>(false);
@@ -136,27 +140,60 @@ export class AnalyticsUserList {
     }
   }
 
-  async downloadCSV() {
+  private sanitizeFileName(fileName: string): string {
+    return fileName.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+  }
+
+  async downloadCSV(): Promise<void> {
+    this.isDownloading.set(true);
+
     try {
-      this.isDownloading.set(true);
+      const csv = await this.eventService.downloadEventTicketAnalyticsCSV(this.ticket()?.id);
 
-      const response = await this.eventService.downloadEventTicketAnalyticsCSV(this.ticket()?.id);
-
+      // ✅ BOM for Excel
       const BOM = '\uFEFF';
-      const blob = new Blob([BOM + response], {
-        type: 'text/csv;charset=utf-8;'
+      const content = BOM + csv;
+
+      const ticketName = this.ticket()?.name || 'event-ticket';
+      const sanitizedName = this.sanitizeFileName(ticketName);
+      const fileName = `${sanitizedName}-${Date.now()}.csv`;
+
+      // 🌐 WEB
+      if (Capacitor.getPlatform() === 'web') {
+        const blob = new Blob([content], {
+          type: 'text/csv;charset=utf-8;'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      // 📱 MOBILE (Android / iOS)
+      const base64Data = btoa(unescape(encodeURIComponent(content)));
+
+      const savedFile = await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Documents
       });
 
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${this.ticket()?.name}.csv`;
-      a.click();
-
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error downloading event ticket analytics CSV:', error);
+      // iOS → Share sheet
+      if (Capacitor.getPlatform() === 'ios') {
+        await Share.share({
+          title: 'Event ticket analytics',
+          url: savedFile.uri
+        });
+      } else {
+        // Android → Success message (same as image)
+        this.toasterService.showSuccess('CSV saved successfully!');
+      }
+    } catch (err) {
+      console.error('CSV download failed', err);
     } finally {
       this.isDownloading.set(false);
     }

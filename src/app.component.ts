@@ -3,9 +3,12 @@ import * as icons from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
 import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
+import { HapticService } from '@/services/haptic.service';
 import { SocketService } from '@/services/socket.service';
+import { App, URLOpenListenerEvent } from '@capacitor/app';
 import { IonRouterOutlet } from '@ionic/angular/standalone';
 import { NavigationService } from '@/services/navigation.service';
+import { LiveUpdateService } from '@/services/live-update.service';
 import { PermissionsService } from '@/services/permissions.service';
 import { inject, effect, Component, viewChild } from '@angular/core';
 import { PushNotificationService } from '@/services/push-notification.service';
@@ -22,7 +25,9 @@ export class AppComponent {
   // services
   private authService = inject(AuthService);
   private userService = inject(UserService);
+  private hapticService = inject(HapticService);
   private socketService = inject(SocketService);
+  private liveUpdateService = inject(LiveUpdateService);
   private navigationService = inject(NavigationService);
   private permissionsService = inject(PermissionsService);
   private pushNotificationService = inject(PushNotificationService);
@@ -54,6 +59,12 @@ export class AppComponent {
     if (Capacitor.isNativePlatform()) {
       this.pushNotificationService.initialize();
     }
+
+    // initialize live updates (native only)
+    void this.liveUpdateService.init();
+
+    // setup deep linking (native only)
+    this.setupDeepLinking();
   }
 
   private async updateCurrentLocation(): Promise<void> {
@@ -67,5 +78,19 @@ export class AppComponent {
     } catch (error) {
       console.error('Error getting current location:', error);
     }
+  }
+
+  setupDeepLinking() {
+    App.addListener('appUrlOpen', ({ url }: URLOpenListenerEvent) => {
+      if (!url) return;
+
+      try {
+        const parsed = new URL(url);
+        const path = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        setTimeout(() => this.navigationService.navigateForward(path));
+      } catch {
+        this.navigationService.navigateForward(url);
+      }
+    });
   }
 }

@@ -47,6 +47,14 @@ export class UserService extends BaseApiService {
     return payload;
   }
 
+  async deleteAccount(): Promise<void> {
+    const currentUser = this.authService.currentUser();
+    if (!currentUser?.id) {
+      throw new Error('No user logged in');
+    }
+    await this.delete(`/users/${currentUser.id}`);
+  }
+
   generateUserPayload(payload: Record<string, any> & { first_name?: string | null; last_name?: string | null }): Partial<IUser> {
     const { first_name, last_name, ...user } = payload;
 
@@ -268,6 +276,16 @@ export class UserService extends BaseApiService {
       return response.data;
     } catch (error) {
       console.error('Error searching users:', error);
+      throw error;
+    }
+  }
+
+  async blockUser(peerId: string): Promise<any> {
+    try {
+      const response = await this.post<any>(`/blocked-users/${peerId}`);
+      return response;
+    } catch (error) {
+      console.error('Error blocking user:', error);
       throw error;
     }
   }

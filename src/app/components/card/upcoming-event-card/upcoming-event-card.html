@@ -1,4 +1,8 @@
-<div class="rounded-[14px] bg-neutral-07 border border-[#f0f0f0] shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden p-2" (click)="viewEvent()">
+<div
+  class="rounded-[14px] bg-neutral-07 border border-[#f0f0f0] shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden p-2"
+  (click)="viewEvent()"
+  [class.card-disabled]="!allowToview()"
+>
   <div class="flex items-center gap-3 pb-2">
     <!-- image -->
     <div class="relative w-[80px] rounded-[8px] h-[80px] flex-shrink-0 overflow-hidden">

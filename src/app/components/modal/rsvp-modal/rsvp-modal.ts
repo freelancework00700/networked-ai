@@ -5,6 +5,7 @@ import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent } from '@ionic/angular/standalone';
 import { Input, signal, inject, OnInit, effect, computed, Component, OnDestroy, untracked, ChangeDetectionStrategy } from '@angular/core';
+import { NavigationService } from '@/services/navigation.service';
 
 @Component({
   selector: 'rsvp-modal',
@@ -17,9 +18,9 @@ export class RsvpModal implements OnInit, OnDestroy {
   @Input() tickets: TicketDisplay[] = [];
   @Input() eventTitle: string = 'Atlanta Makes Me Laugh';
   @Input() eventId: string = '';
-  @Input() subscriptionId: string = '';
   @Input() questionnaire: any = null;
   @Input() promo_codes: any[] = [];
+  @Input() plans: any[] = [];
   @Input() eventDate: string = '';
   @Input() eventLocation: string = '';
   @Input() hostPaysFees: boolean = false;
@@ -58,7 +59,7 @@ export class RsvpModal implements OnInit, OnDestroy {
   currentTime = signal<Date>(new Date());
   countdownInterval?: any;
   attendees = signal<any[]>([]);
-
+  hasShownSponsorPrompt = signal(false);
   // Tier-specific calculation signals (in cents)
   totalsByTier = signal<{ [key: string]: number }>({});
   platformFeesByTier = signal<{ [key: string]: number }>({});
@@ -66,6 +67,9 @@ export class RsvpModal implements OnInit, OnDestroy {
   ticketPricesByTier = signal<{ [key: string]: number }>({});
   actualPricesByTier = signal<{ [key: string]: number }>({});
   discountAmountsByTier = signal<{ [key: string]: number }>({});
+
+  SPONSOR_GRADIENT =
+  'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
 
   // Track the first paid ticket ID that was selected (for free subscription benefit)
   firstSelectedPaidTicketId = signal<string | null>(null);
@@ -75,8 +79,20 @@ export class RsvpModal implements OnInit, OnDestroy {
     return this.questionnaire !== null && this.questionnaire !== undefined && Array.isArray(this.questionnaire) && this.questionnaire.length > 0;
   });
 
+  hasSponsorPlan = computed(() => {
+    return this.plans.some((plan) => plan.is_sponsor === true);
+  });
+
+  sponsorPlans = computed(() => {
+    return this.plans.filter((plan) => plan.is_sponsor === true);
+  });
+
   hasSubscription = computed(() => {
     return this.hasPlans && this.hasSubscribed;
+  });
+
+  isSelectedSponsorTicket = computed(() => {
+    return this.ticketsData().some((ticket) => (ticket.selectedQuantity ?? 0) > 0 && ticket.ticket_type === 'Sponsor');
   });
 
   // Check if a ticket is eligible for free subscription benefit
@@ -493,6 +509,9 @@ export class RsvpModal implements OnInit, OnDestroy {
   }
 
   canIncrement(ticket: TicketDisplay): boolean {
+    if (this.isSubscriberExclusive && (ticket.selectedQuantity ?? 0) >= 1) {
+      return false;
+    }
     if (ticket.available_quantity !== undefined) {
       if ((ticket.selectedQuantity ?? 0) >= ticket.available_quantity) {
         return false;
@@ -545,20 +564,28 @@ export class RsvpModal implements OnInit, OnDestroy {
   }
 
   incrementQuantity(ticket: TicketDisplay): void {
+    // 🚫 Allow only 1 quantity for subscriber exclusive tickets
+    if (this.isSubscriberExclusive && (ticket.selectedQuantity ?? 0) >= 1) {
+      return;
+    }
+
     if (!this.canIncrement(ticket)) return;
+
     const tickets = this.ticketsData();
     const index = tickets.findIndex((t) => t.id === ticket.id);
+
     if (index !== -1) {
       const updatedTickets = [...tickets];
       const previousQuantity = updatedTickets[index].selectedQuantity ?? 0;
+
       updatedTickets[index] = {
         ...updatedTickets[index],
         selectedQuantity: previousQuantity + 1
       };
+
       this.ticketsData.set(updatedTickets);
 
-      // Track the first paid ticket selected (ignore free tickets with price = 0)
-      // Only set if this is the first time selecting this paid ticket (quantity was 0)
+      // Track first paid ticket
       if (ticket.price > 0 && previousQuantity === 0 && !this.firstSelectedPaidTicketId()) {
         this.firstSelectedPaidTicketId.set(String(ticket.id));
       }
@@ -1024,13 +1051,47 @@ export class RsvpModal implements OnInit, OnDestroy {
     this.attendees.set(attendees);
   }
 
-  async dismiss(): Promise<void> {
-    const selectedTickets = this.ticketsData().filter((t) => (t.selectedQuantity ?? 0) > 0);
+  async openStripePayoutModal(): Promise<void> {
+    return new Promise(async (resolve) => {
+      await this.modalService.openConfirmModal({
+        icon: '/assets/svg/subscription/sponsorIcon.svg',
+        iconBgColor: this.SPONSOR_GRADIENT,
+        title: 'Save 20% by Subscribing as a Sponsor!',
+        description: 'Subscribe to the host’s events as a sponsor and save up to 20% annually.',
+        confirmButtonLabel: 'See Plans',
+        cancelButtonLabel: 'Not Now',
+        confirmButtonColor: 'primary',
+        iconPosition: 'center',
 
+        onConfirm: async () => {
+          await this.navigateToSubscriptionPlans();
+          resolve(); // ✅ allow RSVP flow to continue
+        }
+      });
+    });
+  }
+
+  async navigateToSubscriptionPlans(): Promise<void> {
+    if (this.sponsorPlans()?.length) {
+      const planId = this.sponsorPlans()[0].id;
+
+      await this.modalCtrl.dismiss();
+      await this.modalService.openSubscriptionModal(planId);
+    }
+  }
+
+  async dismiss(): Promise<void> {
     if (!this.isLoggedIn()) {
       await this.modalService.openSignupModal();
       return;
     }
+
+    if (this.hasSponsorPlan() && !this.hasSubscribed && this.isSelectedSponsorTicket() && !this.hasShownSponsorPrompt()) {
+      this.hasShownSponsorPrompt.set(true);
+      await this.openStripePayoutModal(); // ⛔ blocks until closed
+    }
+
+    const selectedTickets = this.ticketsData().filter((t) => (t.selectedQuantity ?? 0) > 0);
     const totalPlatformFeesInCents = Object.values(this.platformFeesByTier()).reduce((sum, fee) => sum + fee, 0);
     const totalPlatformFees = totalPlatformFeesInCents / 100;
 
@@ -1063,8 +1124,7 @@ export class RsvpModal implements OnInit, OnDestroy {
             rsvpData,
             this.eventTitle,
             this.eventDate,
-            this.eventLocation,
-            this.subscriptionId
+            this.eventLocation
           )
         );
 
@@ -1080,7 +1140,6 @@ export class RsvpModal implements OnInit, OnDestroy {
       this.eventLocation,
       this.eventId,
       rsvpData,
-      this.subscriptionId,
       this.hostPaysFees,
       this.additionalFees,
       this.hostName

@@ -1,41 +1,9 @@
 import { HttpParams } from '@angular/common/http';
 import { AuthService } from '@/services/auth.service';
+import { PlanData } from '@/interfaces/ISubscripton';
 import { SubscriptionPlan } from '@/interfaces/event';
 import { Injectable, signal, inject } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
-
-export interface PlanData {
-  id: string;
-  name: string;
-  description?: string;
-  plan_benefits?: string[];
-  is_sponsor: boolean;
-  active: boolean;
-  prices: Array<{
-    id: string;
-    amount: string;
-    interval: 'month' | 'year';
-    active: boolean;
-    discount_percentage?: number | null;
-    banner_display_type?: 'percentage' | 'fixed' | null;
-    subscriptions: Array<{
-      id: string;
-      user_id: string;
-      owner_id: string;
-      product_id: string;
-      price_id: string;
-      status: string;
-      start_date: string;
-      end_date: string;
-      cancel_at_end_date: boolean;
-      canceled_at: string | null;
-      created_at: string;
-    }>;
-  }>;
-  events?: any[];
-  total_subscribers: number;
-  event_ids?: string[];
-}
 
 @Injectable({ providedIn: 'root' })
 export class SubscriptionService extends BaseApiService {

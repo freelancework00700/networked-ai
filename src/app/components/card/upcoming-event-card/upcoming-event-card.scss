@@ -9,3 +9,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.card-disabled {
+  filter: blur(3px);
+  pointer-events: none;
+}

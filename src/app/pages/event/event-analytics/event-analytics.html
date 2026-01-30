@@ -1,7 +1,7 @@
 <ion-header mode="md" [translucent]="true">
   <ion-toolbar class="!pt-0">
     <div class="flex items-center gap-2 px-4 pt-safe">
-      <div class="pi pi-arrow-left text-white" (click)="navCtrl.back()"></div>
+      <div class="pi pi-arrow-left text-white" (click)="navigationService.back()"></div>
       <div class="body-14M text-white text-center w-full">Host Dashboard</div>
       <!-- <div [class]="isDownloading() ? 'pi pi-spinner pi-spin' : 'pi pi-download'" [class.disabled]="isDownloading()"
         (click)="downloadCSV()"></div> -->
@@ -10,6 +10,10 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" mode="md">
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
+    <ion-refresher-content mode="md"></ion-refresher-content>
+  </ion-refresher>
+
   <div class="min-h-full">
     <div class="w-full max-w-[672px] mx-auto">
       <div class="flex flex-col -mt-[65px]">
@@ -66,7 +70,7 @@
               >
                 <ion-icon src="assets/svg/ticket/dollar.svg" class="w-6 h-6" />
                 <div class="body-14M neutral-03">Total Sales</div>
-                <div class="body-16SB">${{ summary()?.total_sales }}</div>
+                <div class="body-16SB">${{ summary()?.total_sales.toFixed(2) }}</div>
               </div>
             </div>
           </div>

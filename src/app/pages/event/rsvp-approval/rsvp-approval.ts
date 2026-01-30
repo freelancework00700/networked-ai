@@ -1,30 +1,46 @@
 import { Button } from '@/components/form/button';
 import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '@/services/auth.service';
+import { ActivatedRoute } from '@angular/router';
 import { Searchbar } from '@/components/common/searchbar';
 import { ToasterService } from '@/services/toaster.service';
 import { EmptyState } from '@/components/common/empty-state';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
-import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 import { Component, inject, signal, ChangeDetectionStrategy, OnInit, computed, effect } from '@angular/core';
+import { IonHeader, IonToolbar, IonContent, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'rsvp-approval',
   styleUrl: './rsvp-approval.scss',
   templateUrl: './rsvp-approval.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonHeader, IonToolbar, IonContent, Button, CommonModule, SegmentButton, EmptyState, Searchbar, NgOptimizedImage]
+  imports: [
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    Button,
+    CommonModule,
+    SegmentButton,
+    EmptyState,
+    Searchbar,
+    NgOptimizedImage,
+    IonRefresher,
+    IonRefresherContent
+  ]
 })
 export class RsvpApproval implements OnInit {
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   private eventService = inject(EventService);
   private toasterService = inject(ToasterService);
   private modalService = inject(ModalService);
+  private authService = inject(AuthService);
+
+  isLoggedIn = computed(() => !!this.authService.currentUser());
 
   pendingRequests = signal<any[]>([]);
   processedRequests = signal<any[]>([]);
@@ -76,11 +92,44 @@ export class RsvpApproval implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    if (!this.isLoggedIn()) {
+      const result = await this.modalService.openLoginModal();
+      if (!result?.success) {
+        this.navigationService.back();
+        return;
+      }
+    }
+
     const eventId = this.route.snapshot.paramMap.get('eventId');
     if (eventId) {
       this.eventId.set(eventId);
+      // Check host/cohost access before loading requests
+      await this.checkAccessAndLoadRequests();
+    }
+  }
+
+  private async checkAccessAndLoadRequests(): Promise<void> {
+    try {
+      if (!this.eventId()) return;
+
+      const eventData = await this.eventService.getEventById(this.eventId());
+      if (!eventData) {
+        this.navigationService.navigateForward(`/event/${this.eventId()}`);
+        return;
+      }
+
+      // Check if user is host or cohost
+      if (!this.eventService.checkHostOrCoHostAccess(eventData)) {
+        this.toasterService.showError('You do not have permission to view this page');
+        this.navigationService.navigateForward(`/event/${this.eventId()}`);
+        return;
+      }
+
       await this.loadRequests('pending');
       this.isInitialLoad = false;
+    } catch (error) {
+      console.error('Error checking access:', error);
+      this.navigationService.navigateForward(`/event/${this.eventId()}`);
     }
   }
 
@@ -111,7 +160,7 @@ export class RsvpApproval implements OnInit {
   }
 
   goBack(): void {
-    this.navCtrl.back();
+    this.navigationService.back();
   }
 
   async approveRequest(requestId: string): Promise<void> {
@@ -172,7 +221,28 @@ export class RsvpApproval implements OnInit {
     return getImageUrlOrDefault(thumbnailUrl || undefined, 'assets/images/profile.jpeg');
   }
 
+  getDiamondPathForPoints(points: number | null | undefined): string {
+    const p = points ?? 0;
+    if (p >= 50000) return '/assets/svg/gamification/diamond-50k.svg';
+    if (p >= 40000) return '/assets/svg/gamification/diamond-40k.svg';
+    if (p >= 30000) return '/assets/svg/gamification/diamond-30k.svg';
+    if (p >= 20000) return '/assets/svg/gamification/diamond-20k.svg';
+    if (p >= 10000) return '/assets/svg/gamification/diamond-10k.svg';
+    if (p >= 5000) return '/assets/svg/gamification/diamond-5k.svg';
+    return '/assets/svg/gamification/diamond-1k.svg';
+  }
+
   onImageError(event: Event): void {
     onImageError(event);
+  }
+
+  async onRefresh(event: RefresherCustomEvent): Promise<void> {
+    try {
+      await this.loadRequests(this.selectedTab());
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      event.target.complete();
+    }
   }
 }

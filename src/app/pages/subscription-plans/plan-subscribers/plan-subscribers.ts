@@ -6,9 +6,8 @@ import { SocketService } from '@/services/socket.service';
 import { EmptyState } from '@/components/common/empty-state';
 import { UserCardList } from '@/components/card/user-card-list';
 import { NavigationService } from '@/services/navigation.service';
-import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 import { SubscriptionService } from '@/services/subscription.service';
-import { IonContent, IonHeader, IonToolbar, NavController } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonToolbar } from '@ionic/angular/standalone';
 import { Component, inject, signal, ChangeDetectionStrategy, computed, OnInit, OnDestroy } from '@angular/core';
 
 @Component({
@@ -19,7 +18,6 @@ import { Component, inject, signal, ChangeDetectionStrategy, computed, OnInit, O
   imports: [IonToolbar, IonHeader, IonContent, CommonModule, Searchbar, EmptyState, UserCardList]
 })
 export class PlanSubscribers implements OnInit, OnDestroy {
-  navCtrl = inject(NavController);
   navigationService = inject(NavigationService);
   route = inject(ActivatedRoute);
   private socketService = inject(SocketService);
@@ -76,7 +74,7 @@ export class PlanSubscribers implements OnInit, OnDestroy {
     });
   }
 
-  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+  private networkConnectionHandler = (payload: IUser) => {
     if (!payload || !payload.id) return;
 
     const userId = payload.id;

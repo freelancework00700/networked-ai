@@ -2,7 +2,6 @@ import Swiper from 'swiper';
 import { DatePipe } from '@angular/common';
 import { QrCodeComponent } from 'ng-qrcode';
 import { Browser } from '@capacitor/browser';
-import { NavController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { EventAttendee } from '@/interfaces/event';
@@ -21,7 +20,6 @@ import { IonContent, IonHeader, IonToolbar, ModalController, IonIcon } from '@io
 export class TicketsModal {
   @ViewChild('swiperEl') swiperEl!: ElementRef<HTMLDivElement>;
   modalCtrl = inject(ModalController);
-  navCtrl = inject(NavController);
   authService = inject(AuthService);
   datePipe = new DatePipe('en-US');
   private socketService = inject(SocketService);

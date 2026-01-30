@@ -1,7 +1,7 @@
 <ion-header mode="md">
   <ion-toolbar>
     <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
-      <div class="pi pi-arrow-left" (click)="navCtrl.back()"></div>
+      <div class="pi pi-arrow-left" (click)="navigationService.back()"></div>
       <div class="body-14M neutral-02 text-center w-full">Sales Details</div>
     </div>
   </ion-toolbar>
@@ -38,13 +38,13 @@
             </div>
             <div class="flex flex-col flex-1">
               <div class="body-14M neutral-03">Sales Generated</div>
-              <div class="heading-h2">${{ ticket()?.total_amount_paid }}</div>
+              <div class="heading-h2">${{ ticket()?.total_amount_paid.toFixed(2) }}</div>
             </div>
           </div>
         </div>
       }
       <!-- User List -->
-      <div class="flex items-center justify-between pt-2">
+      <div class="flex items-center justify-between pt-2 gap-2">
         <searchbar
           [placeholder]="'Search by username'"
           [searchQuery]="searchQuery()"

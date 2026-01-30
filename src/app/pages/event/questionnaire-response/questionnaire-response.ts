@@ -3,15 +3,19 @@ import { Button } from '@/components/form/button';
 import { ActivatedRoute } from '@angular/router';
 import { NgOptimizedImage } from '@angular/common';
 import { EventService } from '@/services/event.service';
+import { AuthService } from '@/services/auth.service';
+import { ModalService } from '@/services/modal.service';
 import { Searchbar } from '@/components/common/searchbar';
 import { ViewResponse } from '../components/view-response';
+import { ToasterService } from '@/services/toaster.service';
 import { EmptyState } from '@/components/common/empty-state';
+import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { SegmentButton } from '@/components/common/segment-button';
 import { IonContent, IonToolbar, IonHeader } from '@ionic/angular/standalone';
 import { QuestionnaireAnalytics } from '../components/questionnaire-analytics';
 import { Component, computed, inject, signal, ChangeDetectionStrategy, effect, OnInit } from '@angular/core';
-import { NavController, IonInfiniteScrollContent, IonInfiniteScroll } from '@ionic/angular/standalone';
+import { IonInfiniteScrollContent, IonInfiniteScroll, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/angular/standalone';
 @Component({
   selector: 'questionnaire-response',
   styleUrl: './questionnaire-response.scss',
@@ -23,6 +27,8 @@ import { NavController, IonInfiniteScrollContent, IonInfiniteScroll } from '@ion
     IonToolbar,
     IonContent,
     IonHeader,
+    IonRefresher,
+    IonRefresherContent,
     Chip,
     Searchbar,
     Button,
@@ -33,10 +39,15 @@ import { NavController, IonInfiniteScrollContent, IonInfiniteScroll } from '@ion
     SegmentButton
   ]
 })
-export class QuestionnaireResponse {
-  navCtrl = inject(NavController);
+export class QuestionnaireResponse implements OnInit {
+  navigationService = inject(NavigationService);
   route = inject(ActivatedRoute);
   eventService = inject(EventService);
+  authService = inject(AuthService);
+  modalService = inject(ModalService);
+  toasterService = inject(ToasterService);
+
+  isLoggedIn = computed(() => !!this.authService.currentUser());
 
   user = signal<any>(null);
   questions = signal<any>(null);
@@ -52,6 +63,7 @@ export class QuestionnaireResponse {
   totalPages = signal<number>(0);
   analytics = signal<any[]>([]);
   eventId = signal<string>('');
+  eventData = signal<any | null>(null);
 
   hasMore = computed(() => this.currentPage() < this.totalPages());
   isResponsesMode = computed(() => (this.segmentValue() === 'pre-event' || this.segmentValue() === 'post-event') && this.filter() === 'responses');
@@ -59,6 +71,7 @@ export class QuestionnaireResponse {
     { value: 'pre-event', label: 'Pre-Event' },
     { value: 'post-event', label: 'Post-Event' }
   ]);
+  
   constructor() {
     effect(() => {
       const segment = this.segmentValue();
@@ -72,17 +85,43 @@ export class QuestionnaireResponse {
     });
   }
 
-  private navEffect = effect(async () => {
-    const eventId = this.route.snapshot.paramMap.get('id');
-    this.eventId.set(eventId || '');
-    const params = this.route.snapshot.queryParamMap;
-    const tabParam = params.get('Host');
-    this.isHost.set(tabParam == 'false' ? false : true);
-    if (!this.isHost()) {
-      this.segmentValue.set('pre-event');
-      this.filter.set('analytics');
+  async ngOnInit(): Promise<void> {
+    if (!this.isLoggedIn()) {
+      const result = await this.modalService.openLoginModal();
+      if (!result?.success) {
+        return;
+      }
     }
-  });
+
+    const eventId = this.route.snapshot.paramMap.get('id');
+    if (eventId) {
+      this.eventId.set(eventId);
+      // Check host/cohost access before loading data
+      await this.checkAccessAndLoadData();
+    }
+  }
+
+  private async checkAccessAndLoadData(): Promise<void> {
+    try {
+      const eventId = this.eventId();
+      if (!eventId) return;
+
+      const eventData = await this.eventService.getEventById(eventId);
+      this.eventData.set(eventData);
+
+      if (!this.eventService.checkHostOrCoHostAccess(eventData)) {
+        this.isHost.set(false);
+      }
+
+      if (!this.isHost()) {
+        this.segmentValue.set('pre-event');
+        this.filter.set('analytics');
+      }
+    } catch (error) {
+      console.error('Error checking access:', error);
+      this.navigationService.navigateForward(`/event/${this.eventId()}`, true);
+    }
+  }
 
   loadData = async () => {
     const eventId = this.eventId() || '';
@@ -98,7 +137,7 @@ export class QuestionnaireResponse {
       this.totalResponses.set(response?.pagination?.totalCount || 0);
       this.totalPages.set(response?.pagination?.totalPages || 0);
     } else {
-      response = await this.eventService.getEventQuestionAnalysis(eventId, phase);
+      response = await this.eventService.getEventQuestionAnalysis(eventId, this.isHost()? phase:'');
 
       this.analytics.set(response?.questions || []);
       this.totalResponses.set(response?.total_responses || 0);
@@ -131,7 +170,7 @@ export class QuestionnaireResponse {
 
         this.totalPages.set(response?.pagination?.totalPages || 0);
       } else {
-        response = await this.eventService.getEventQuestionAnalysis(eventId, phase, nextPage, 20);
+        response = await this.eventService.getEventQuestionAnalysis(eventId, this.isHost()? phase:'', nextPage, 20);
 
         this.analytics.update((current) => [...current, ...(response?.questions || [])]);
 
@@ -147,33 +186,12 @@ export class QuestionnaireResponse {
     }
   };
 
-  filteredSuggestions = computed(() => {
-    const search = this.searchQuery().toLowerCase().trim();
-    const activeFlag = this.segmentValue() === 'pre-event' ? 'pre' : 'post';
-
-    return this.analytics().filter((item) => {
-      const matchesSegment = item.flag === activeFlag;
-      const matchesSearch = !search || item.question?.toLowerCase().includes(search);
-      return matchesSegment && matchesSearch;
-    });
-  });
-
-  filteredAnalytics = computed(() => {
-    const analytics = this.analytics();
-
-    if (!this.isHost()) {
-      return analytics.filter((item) => item.visibility === 'public');
-    }
-
-    const flag = this.segmentValue() === 'pre-event' ? 'pre' : 'post';
-    return analytics.filter((item) => item.flag === flag);
-  });
 
   goBack() {
     if (this.isViewResponse()) {
       this.isViewResponse.set(false);
     } else {
-      this.navCtrl.back();
+      this.navigationService.back();
     }
   }
 
@@ -222,4 +240,15 @@ export class QuestionnaireResponse {
       return '/assets/svg/gamification/diamond-1k.svg';
     }
   });
+
+  async onRefresh(event: RefresherCustomEvent): Promise<void> {
+    try {
+      this.currentPage.set(1);
+      await this.loadData();
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      event.target.complete();
+    }
+  }
 }

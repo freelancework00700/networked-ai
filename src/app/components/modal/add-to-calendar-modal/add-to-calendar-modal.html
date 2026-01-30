@@ -1,0 +1,33 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 text-center heading-h4 neutral-01">Add to Calendar</div>
+  </ion-toolbar>
+</ion-header>
+<div class="inner-content">
+  <div class="p-6 flex flex-col text-center">
+    <!-- Event title -->
+    <div class="heading-h2 neutral-01">
+      {{ eventData?.title }}
+    </div>
+
+    <!-- Date & time -->
+    <div class="body-14M neutral-04">
+      {{ eventData?.formattedDateTime }}
+    </div>
+
+    <!-- Action buttons -->
+    <div class="flex flex-col gap-3 mt-6">
+      <ion-button expand="block" color="dark" (click)="addToGoogleCalendar()">
+        <ion-icon slot="start" name="logo-google" class="pr-2"></ion-icon>
+        Add to Google Calendar
+      </ion-button>
+
+      @if (isNative) {
+        <ion-button expand="block" color="dark" (click)="iosCreateEvent()">
+          <ion-icon slot="start" name="calendar" class="pr-2"></ion-icon>
+          Add to Calendar
+        </ion-button>
+      }
+    </div>
+  </div>
+</div>

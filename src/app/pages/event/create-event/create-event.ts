@@ -19,7 +19,7 @@ import { SegmentButtonItem } from '@/components/common/segment-button';
 import { EventSettings } from '@/pages/event/components/event-settings';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonHeader, IonFooter, IonContent, IonToolbar, ModalController } from '@ionic/angular/standalone';
-import { Ticket, PromoCode, EventForm, EventDisplayData, RepeatingFrequencyType, SubscriptionPlan } from '@/interfaces/event';
+import { Ticket, PromoCode, EventForm, EventDisplayData, RepeatingFrequencyType, SubscriptionPlan, IEvent } from '@/interfaces/event';
 import { Input, signal, inject, computed, Component, ChangeDetectionStrategy, ViewChild, OnInit, OnDestroy, effect } from '@angular/core';
 
 const EVENT_STEPS = {
@@ -279,6 +279,8 @@ export class CreateEvent implements OnInit, OnDestroy {
       city: selectedEvent?.city || form.get('city')?.value || '',
       state: selectedEvent?.state || form.get('state')?.value || '',
       country: selectedEvent?.country || form.get('country')?.value || '',
+      is_subscriber_exclusive: selectedEvent?.is_subscriber_exclusive || form.get('is_subscriber_exclusive')?.value || '',
+      plan_ids: selectedEvent?.plan_ids || form.get('plan_ids')?.value || '',
       participants: this.participants()
     };
 
@@ -363,7 +365,7 @@ export class CreateEvent implements OnInit, OnDestroy {
 
       form.patchValue({
         date: this.getTodayDate(),
-        start_time: this.getCurrentTime(),
+        start_time: this.addMinutesToTime(this.eventService.getCurrentTime(), 30),
         is_public: true,
         participants: defaultParticipants
       });
@@ -442,10 +444,6 @@ export class CreateEvent implements OnInit, OnDestroy {
 
   getTodayDate(): string {
     return this.eventService.getTodayDate();
-  }
-
-  getCurrentTime(): string {
-    return this.eventService.getCurrentTime();
   }
 
   addMinutesToTime(time: string, minutes: number): string {
@@ -640,7 +638,7 @@ export class CreateEvent implements OnInit, OnDestroy {
       });
     }
 
-    form.patchValue({ repeating_events: events });
+    form.patchValue({ repeating_events: events as unknown as IEvent[] });
   }
 
   async uploadAndFormatMedia(mediaItems: Array<{ id: string; type: string; file?: File; url: string }>): Promise<any[]> {
@@ -732,9 +730,19 @@ export class CreateEvent implements OnInit, OnDestroy {
 
   async updateSingleEvent(formData: any): Promise<void> {
     const eventPayload = await this.processEventData(formData);
-    const response = await this.eventService.updateEvent(this.editingEventId()!, eventPayload);
-    this.toasterService.showSuccess('Event updated successfully!');
-
+    const response: any = await this.eventService.updateEvent(this.editingEventId()!, eventPayload);
+    await this.modalService.openConfirmModal({
+      icon: 'assets/svg/launch.svg',
+      title: 'Event Republished!',
+      description: 'Your event has been successfully republished.',
+      confirmButtonLabel: 'Done',
+      confirmButtonColor: 'primary',
+      shareButtonLabel: 'Share',
+      iconBgColor: '#F5BC61',
+      onShare: async () => {
+        await this.modalService.openShareModal(response?.data.id, 'Event');
+      }
+    });
     if (this.isModalMode) {
       this.modalCtrl.dismiss(response, 'updated');
     } else {
@@ -821,14 +829,32 @@ export class CreateEvent implements OnInit, OnDestroy {
   }
 
   async createEvents(eventsToCreate: any[]): Promise<void> {
-    const createResponse = await this.eventService.createEvents(eventsToCreate);
-    const successMessage = eventsToCreate.length > 1 ? 'Events created successfully!' : 'Event created successfully!';
-    this.toasterService.showSuccess(successMessage);
-
+    const createResponse: any = await this.eventService.createEvents(eventsToCreate);
     if (this.isModalMode) {
       this.modalCtrl.dismiss(createResponse, 'created');
     } else {
-      this.navigationService.navigateForward(`/event/${createResponse.data.events[0].slug}`, true);
+      const slug =
+        createResponse?.data && Array.isArray((createResponse.data as any).events) && (createResponse.data as any).events.length > 0
+          ? (createResponse.data as any).events[0].slug
+          : undefined;
+
+      await this.modalService.openConfirmModal({
+        icon: 'assets/svg/launch.svg',
+        title: 'Event Published!',
+        description: 'Your event has been successfully published!',
+        confirmButtonLabel: 'Done',
+        confirmButtonColor: 'primary',
+        shareButtonLabel: 'Share',
+        iconBgColor: '#F5BC61',
+        onShare: async () => {
+          await this.modalService.openShareModal(createResponse?.data?.events[0].id, 'Event');
+        }
+      });
+      if (slug) {
+        this.navigationService.navigateForward(`/event/${slug}`, true);
+      } else {
+        this.navigationService.navigateForward('/event', true);
+      }
     }
   }
 

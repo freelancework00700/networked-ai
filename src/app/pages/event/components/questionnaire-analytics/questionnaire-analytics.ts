@@ -1,19 +1,22 @@
+import { IonIcon } from '@ionic/angular/standalone';
+import { AnalyticsQuestion } from '@/interfaces/event';
 import { Component, inject, input } from '@angular/core';
-import { IonIcon, NavController } from '@ionic/angular/standalone';
-import { AnalyticsQuestion, AnalyticsOption } from '@/interfaces/event';
+import { EmptyState } from "@/components/common/empty-state";
+import { NavigationService } from '@/services/navigation.service';
 
 @Component({
   selector: 'questionnaire-analytics',
-  imports: [IonIcon],
+  imports: [IonIcon, EmptyState],
   templateUrl: './questionnaire-analytics.html',
   styleUrl: './questionnaire-analytics.scss'
 })
 export class QuestionnaireAnalytics {
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   analytics = input<any[]>([]);
 
   navigateToUserList(item: AnalyticsQuestion, opt: any) {
-    this.navCtrl.navigateForward(`/event/questionnaire-response/guests/${opt.option}`, { state: { questionOption: item, option: opt } });
+    if (opt.selected_count <= 0) return;
+    this.navigationService.navigateForward(`/event/questionnaire-response/guests/${opt.option}`, false, { questionOption: item, option: opt });
   }
 
   getMax(options: any[]) {

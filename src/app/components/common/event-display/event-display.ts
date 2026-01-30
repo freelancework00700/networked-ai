@@ -13,6 +13,7 @@ import {
   ChangeDetectionStrategy
 } from '@angular/core';
 import Swiper from 'swiper';
+import { Capacitor } from '@capacitor/core';
 import * as Maptiler from '@maptiler/sdk';
 import { Pagination } from 'swiper/modules';
 import { Button } from '@/components/form/button';
@@ -26,7 +27,6 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { AvatarGroupComponent } from '@/components/common/avatar-group';
 import { HostEventPromoCard } from '@/components/card/host-event-promo-card';
-
 @Component({
   selector: 'event-display',
   imports: [SegmentButton, AvatarGroupComponent, HostEventPromoCard, IonIcon, Button, NgOptimizedImage],
@@ -76,9 +76,31 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     return this.displayMediasForDisplay().length > 1;
   });
 
+  openMapFromLatLng(mapCenter: number[]): void {
+    if (!this.showHostPromo()) return;
+    if (!mapCenter || mapCenter.length !== 2) return;
+
+    const [lng, lat] = mapCenter;
+    const platform = Capacitor.getPlatform();
+
+    let url = '';
+
+    if (platform === 'ios') {
+      url = `https://maps.apple.com/?daddr=${lat},${lng}`;
+    } else {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    }
+    window.open(url, '_system');
+  }
+
   hasMultipleTickets = computed(() => {
     const tickets = this.eventData().tickets || [];
     return tickets.length > 1;
+  });
+
+  canViewAttendees = computed(() => {
+    const d = this.eventData();
+    return !!(d?.isCurrentUserHost || d?.isCurrentUserAttendee || d?.isCurrentUserCoHost);
   });
 
   handleDateChange(date: string): void {
@@ -89,6 +111,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   }
 
   handleUserListClick(title: string, users: any[]): void {
+    if ((title == 'Going' || title == 'Maybe') && !this.canViewAttendees()) return;
     const handler = this.onUserListClick();
     if (handler) {
       handler(title, users);
@@ -209,5 +232,10 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
       const tickets = this.eventData().tickets || [];
       await this.modalService.openTicketsListModal(tickets);
     }
+  }
+
+  async handleCalendarClick(): Promise<void> {
+    if (this.eventData().isCurrentUserHost || this.eventData().isCurrentUserAttendee || this.eventData().isCurrentUserCoHost)
+      await this.modalService.openAddToCalendarModal(this.eventData());
   }
 }

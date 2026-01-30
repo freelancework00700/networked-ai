@@ -5,7 +5,7 @@ import { ModalService } from '@/services/modal.service';
 import { StripeService } from '@/services/stripe.service';
 import { ToasterService } from '@/services/toaster.service';
 import { NavigationService } from '@/services/navigation.service';
-import { IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 import { signal, inject, Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { SettingsProfileHeader } from '@/pages/settings/components/settings-profile-header';
 import { SettingListItem, SettingsListItem } from '@/pages/settings/components/settings-list-item';
@@ -23,6 +23,7 @@ export class Settings implements OnInit {
   private modalService = inject(ModalService);
   private stripeService = inject(StripeService);
   private toasterService = inject(ToasterService);
+  navCtrl = inject(NavController);
 
   // signals
   appVersion = signal<string>('1.2.05');
@@ -229,7 +230,7 @@ export class Settings implements OnInit {
       url = 'https://play.google.com/store/apps/details?id=app.networked.ai';
     } else {
       // Web fallback
-      url = 'https://play.google.com/store/apps/details?id=app.networked.ai';
+      url = 'https://apps.apple.com/us/app/networked-ai-invites/id6471849642';
     }
 
     await Browser.open({

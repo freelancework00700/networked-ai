@@ -3,13 +3,14 @@ import { ActivatedRoute } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
+import { NavigationService } from '@/services/navigation.service';
 import { SubscriptionService } from '@/services/subscription.service';
 import { PlanAnalytics } from '@/pages/subscription-plans/components/plan-analytics';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PlanDetailsForm } from '@/pages/subscription-plans/components/plan-details-form';
 import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, IonFooter, NavController, ItemReorderEventDetail } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, IonFooter, ItemReorderEventDetail } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-manage-plan',
@@ -23,7 +24,7 @@ export class ManagePlan implements OnInit {
     'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
 
   route = inject(ActivatedRoute);
-  navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
   fb = inject(FormBuilder);
   subscriptionService = inject(SubscriptionService);
   toasterService = inject(ToasterService);
@@ -76,8 +77,6 @@ export class ManagePlan implements OnInit {
     try {
       const planData = await this.subscriptionService.getPlanById(planId);
       if (!planData) {
-        this.toasterService.showError('Plan not found');
-        this.navCtrl.back();
         return;
       }
 
@@ -139,6 +138,7 @@ export class ManagePlan implements OnInit {
       }
     } catch (error) {
       console.error('Error loading plan data:', error);
+      this.navigationService.back();
       this.toasterService.showError('Failed to load plan data');
     }
   }
@@ -258,11 +258,11 @@ export class ManagePlan implements OnInit {
         shareButtonLabel: 'Share',
         customColor: !this.isSponsor() ? '#2B5BDE' : undefined,
         onShare: async () => {
-          await this.modalService.openShareModal(planData.id, 'Event');
+          await this.modalService.openShareModal(planData.id, 'Plan');
         }
       });
 
-      this.navCtrl.back();
+      this.navigationService.back();
     } catch (error) {
       console.error('Error updating plan:', error);
       this.toasterService.showError('Failed to update plan. Please try again.');
@@ -271,12 +271,8 @@ export class ManagePlan implements OnInit {
     }
   }
 
-  cancel(): void {
-    this.navCtrl.back();
-  }
-
   back(): void {
-    this.navCtrl.back();
+    this.navigationService.back();
   }
 
   navigateToEvents(): void {
@@ -284,7 +280,7 @@ export class ManagePlan implements OnInit {
     if (planId) {
       const planData = this.planData();
       const isSponsor = planData?.is_sponsor ?? false;
-      this.navCtrl.navigateForward(`/subscription/plan/${planId}/events?is_sponsor=${isSponsor ? 'true' : 'false'}`);
+      this.navigationService.navigateForward(`/subscription/plan/${planId}/events?is_sponsor=${isSponsor ? 'true' : 'false'}`);
     }
   }
 }

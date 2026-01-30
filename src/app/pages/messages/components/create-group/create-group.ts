@@ -4,15 +4,32 @@ import { IUser } from '@/interfaces/IUser';
 import { AuthService } from '@/services/auth.service';
 import { MessagesService } from '@/services/messages.service';
 import { MediaService } from '@/services/media.service';
+import { ModalService } from '@/services/modal.service';
 import { NetworkService } from '@/services/network.service';
+import { UserService } from '@/services/user.service';
+import { ToasterService } from '@/services/toaster.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NgOptimizedImage } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent, IonToolbar, NavController } from '@ionic/angular/standalone';
+import {
+  IonContent,
+  IonFooter,
+  IonHeader,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonToolbar,
+  NavController
+} from '@ionic/angular/standalone';
 import { InputTextModule } from 'primeng/inputtext';
+import { Menu, MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { Capacitor } from '@capacitor/core';
+import { ConnectionStatus } from '@/enums/connection-status.enum';
+import { environment } from 'src/environments/environment';
 @Component({
   selector: 'create-group',
   styleUrl: './create-group.scss',
@@ -28,7 +45,8 @@ import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rx
     InputTextModule,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
-    NgOptimizedImage
+    NgOptimizedImage,
+    MenuModule
   ]
 })
 export class CreateGroup {
@@ -39,7 +57,13 @@ export class CreateGroup {
   private networkService = inject(NetworkService);
   private messagesService = inject(MessagesService);
   private mediaService = inject(MediaService);
+  private modalService = inject(ModalService);
+  private userService = inject(UserService);
+  private toasterService = inject(ToasterService);
   private router = inject(Router);
+
+  @ViewChild('groupImageMenu') groupImageMenuRef?: Menu;
+  @ViewChild('fileInput') fileInputRef?: { nativeElement: HTMLInputElement };
 
   // navigation context
   roomId = signal<string | null>(null);
@@ -47,6 +71,7 @@ export class CreateGroup {
 
   // auth
   isLoggedIn = computed(() => !!this.authService.currentUser());
+  isNativePlatform = computed(() => Capacitor.isNativePlatform());
 
   // search + pagination
   searchText = signal('');
@@ -62,7 +87,19 @@ export class CreateGroup {
   isGroupDetails = signal(false);
   groupImagePreview = signal<string | null>(null);
   groupImageFile = signal<File | null>(null);
+  groupImageUrl = signal<string | null>(null);
   groupName = signal<string>('');
+
+  groupImageMenuItems(): MenuItem[] {
+    return [
+      { label: 'Networked Gallery', icon: 'pi pi-images', command: () => this.selectNetworkedGallery() },
+      { label: 'Browse files', icon: 'pi pi-folder-open', command: () => this.selectBrowseFiles() }
+    ];
+  }
+
+  onGroupImageMenuClick(event: Event): void {
+    this.groupImageMenuRef?.toggle(event);
+  }
 
   // existing group members (when editing)
   existingMemberIds = signal<Set<string>>(new Set());
@@ -107,15 +144,28 @@ export class CreateGroup {
     });
   }
 
+  ionViewWillEnter(): void {
+    this.ngOnInit();
+  }
+
   async ngOnInit(): Promise<void> {
+    const roomIdParam = this.route.snapshot.queryParamMap.get('roomId');
+    const fromParam = this.route.snapshot.queryParamMap.get('from');
+    
     const navigation = this.router.currentNavigation();
     const state: any = navigation?.extras?.state;
-    if (state?.roomId) {
-      this.roomId.set(state.roomId);
-      this.from.set(state.from === 'chat-info' ? 'chat-info' : 'new-chat');
+    
+    const roomId = roomIdParam || state?.roomId;
+    const from = fromParam || state?.from;
+    
+    if (roomId) {
+      this.roomId.set(roomId);
+      this.from.set(from === 'chat-info' ? 'chat-info' : 'new-chat');
 
       // Load existing group members to track who's already added
-      await this.loadExistingGroupMembers(state.roomId);
+      await this.loadExistingGroupMembers(roomId);
+      this.isGroupDetails.set(false);
+      this.selectedMembers.set([]);
     }
   }
 
@@ -271,33 +321,38 @@ export class CreateGroup {
     const user_ids = Array.from(new Set([currentUserId, ...memberIds]));
 
     try {
-      // Upload group image first (API expects URL, not base64)
-      let profileImageUrl: string | null = null;
-      const imageFile = this.groupImageFile();
-      if (imageFile instanceof File) {
-        const response = await this.mediaService.uploadMedia('Other', [imageFile]);
-        const uploadedUrl = response?.data?.[0]?.url;
-        if (typeof uploadedUrl === 'string' && uploadedUrl.trim()) {
-          profileImageUrl = uploadedUrl;
+      let profileImageUrl: string | null = this.groupImageUrl() ?? null;
+      if (!profileImageUrl) {
+        const imageFile = this.groupImageFile();
+        if (imageFile instanceof File) {
+          const response = await this.mediaService.uploadMedia('Other', [imageFile]);
+          const uploadedUrl = response?.data?.[0]?.url;
+          if (typeof uploadedUrl === 'string' && uploadedUrl.trim()) {
+            profileImageUrl = uploadedUrl;
+          }
         }
       }
 
-      const { room_id } = await this.messagesService.createOrGetChatRoom({
+      // const { room_id } = await this.messagesService.createOrGetChatRoom({
+      const result = await this.messagesService.createOrGetChatRoom({
         user_ids,
         name,
         is_personal: false,
         profile_image: profileImageUrl
       });
 
-      const room = await this.messagesService.getChatRoomById(room_id);
+      // const room = await this.messagesService.getChatRoomById(room_id);
 
-      this.navCtrl.navigateForward('/chat-info', {
-        state: {
-          roomId: room_id,
-          chatRoom: room,
-          from: 'new-group'
-        }
-      });
+      // this.navCtrl.navigateForward('/chat-info', {
+      //   state: {
+      //     roomId: room_id,
+      //     chatRoom: room,
+      //     from: 'new-group'
+      //   }
+      // });
+
+      this.toasterService.showSuccess(result.message || 'Chat room created successfully.');
+      this.navCtrl.navigateRoot('/messages');
     } catch (error) {
       console.error('Error creating group:', error);
     }
@@ -309,12 +364,28 @@ export class CreateGroup {
       return;
     }
 
-    if (this.from() === 'chat-info') {
+    // if (this.from() === 'chat-info') {
       this.navCtrl.back();
-      return;
-    }
+  //     return;
+  // }
 
-    this.navCtrl.navigateBack('/messages');
+    // this.navCtrl.navigateBack('/messages');
+  }
+
+  async selectNetworkedGallery(): Promise<void> {
+    const data = await this.modalService.openImageGalleryModal('Select group image', false);
+    if (!data) return;
+
+    const url = Array.isArray(data) ? data[0] : data;
+    if (url && typeof url === 'string') {
+      this.groupImageUrl.set(url);
+      this.groupImageFile.set(null);
+      this.groupImagePreview.set(null);
+    }
+  }
+
+  selectBrowseFiles(): void {
+    this.fileInputRef?.nativeElement?.click();
   }
 
   onGroupImageSelected(event: Event): void {
@@ -325,6 +396,7 @@ export class CreateGroup {
     if (!file.type.startsWith('image/')) return;
 
     this.groupImageFile.set(file);
+    this.groupImageUrl.set(null);
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -366,8 +438,95 @@ export class CreateGroup {
     }
   }
 
-  // TODO: backend flow for invite link
-  copyInviteLink(): void {
-    console.log('copyInviteLink');
+  async copyInviteLink(): Promise<void> {
+    const roomId = this.roomId();
+    if (!roomId) {
+      this.toasterService.showError('Group not found. Please create the group first.');
+      return;
+    }
+
+    try {
+      const inviteLink = `${environment.frontendUrl}/group-invitation/${roomId}`;
+      await navigator.clipboard.writeText(inviteLink);
+      this.toasterService.showSuccess('Invite link copied to clipboard');
+    } catch (error) {
+      console.error('Error copying invite link:', error);
+      this.toasterService.showError('Failed to copy invite link');
+    }
+  }
+
+  async scanQRCodeForContact(): Promise<void> {
+    if (!this.isNativePlatform()) {
+      this.toasterService.showError('QR code scanning is only available on mobile devices');
+      return;
+    }
+
+    try {
+      const result = await BarcodeScanner.scan();
+
+      if (result.barcodes && result.barcodes.length > 0) {
+        const barcode = result.barcodes[0];
+        const scannedValue = barcode.displayValue || barcode.rawValue || '';
+
+        if (scannedValue) {
+          await this.handleQRCodeForContact(scannedValue);
+        } else {
+          this.toasterService.showError('No QR code data found');
+        }
+      } else {
+        this.toasterService.showError('No QR code detected');
+      }
+    } catch (error: any) {
+      if (error.message && (error.message.includes('cancel') || error.message.includes('dismiss'))) {
+        // User cancelled, no need to show error
+        return;
+      }
+      console.error('Error scanning QR code:', error);
+      this.toasterService.showError('Failed to scan QR code');
+    }
+  }
+
+  private async handleQRCodeForContact(decodedText: string): Promise<void> {
+    try {
+      const trimmedText = decodedText.trim();
+      if (!trimmedText) {
+        this.toasterService.showError('Invalid QR code. Please scan a valid profile QR code.');
+        return;
+      }
+
+      const user = await this.userService.getUser(trimmedText);
+
+      if (!user || !user.id) {
+        this.toasterService.showError('User not found.');
+        return;
+      }
+
+      if (this.isAlreadyInGroup(user.id)) {
+        this.toasterService.showError('User is already in the group.');
+        return;
+      }
+
+      const isAlreadySelected = this.selectedMembers().some((u) => u.id === user.id);
+      if (isAlreadySelected) {
+        this.toasterService.showError('User is already selected.');
+        return;
+      }
+
+      this.selectedMembers.update((list) => [...list, user]);
+
+      if (user.connection_status === ConnectionStatus.CONNECTED) {
+        const isInUsersList = this.users().some((u) => u.id === user.id);
+        if (!isInUsersList) {
+          this.users.update((list) => [user, ...list]);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error handling QR code for contact:', error);
+      if (error.message && error.message.includes('not found')) {
+        this.toasterService.showError('User not found.');
+      } else {
+        this.toasterService.showError('Failed to add contact. Please try again.');
+      }
+    }
   }
 }

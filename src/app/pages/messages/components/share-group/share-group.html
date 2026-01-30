@@ -44,6 +44,15 @@
       />
     </div>
 
-    <common-share-footer />
+    <common-share-footer
+      (onContact)="onContact()"
+      (onCopyLink)="onCopyLink()"
+      (onShareTo)="onShareTo()"
+      (onChat)="onChat()"
+      (onEmail)="onEmail()"
+      (onWhatsapp)="onWhatsapp()"
+      (onX)="onShareToX()"
+      (onThread)="onShareToThreads()"
+    />
   </ion-toolbar>
 </ion-footer>

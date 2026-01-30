@@ -4,6 +4,7 @@ import { IonIcon } from '@ionic/angular/standalone';
 import { SubscriptionPlan } from '@/interfaces/event';
 import { ModalService } from '@/services/modal.service';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { NavigationService } from '@/services/navigation.service';
 import { ControlContainer, FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ChangeDetectionStrategy, Component, inject, OnInit, input, computed, signal, ChangeDetectorRef } from '@angular/core';
 
@@ -25,6 +26,7 @@ export class SubscriptionInput implements OnInit {
   private parentContainer = inject(ControlContainer);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
+  private navigationService = inject(NavigationService);
 
   controlName = 'is_subscription';
   subscriptionIdsControlName = 'plan_ids';
@@ -143,9 +145,6 @@ export class SubscriptionInput implements OnInit {
   }
 
   handleCreateSubscription(): void {
-    const onCreate = this.onCreateSubscription();
-    if (onCreate) {
-      onCreate();
-    }
+    this.navigationService.navigateForward('/subscription/plans');
   }
 }

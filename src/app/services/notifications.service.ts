@@ -1,22 +1,49 @@
 import { NotificationType } from '@/enums/enums';
 import { HttpParams } from '@angular/common/http';
-import { Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
 import { INotification, INotificationPagination, INotificationsResponse } from '@/interfaces/INotification';
+import { AuthService } from '@/services/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationsService extends BaseApiService {
+  private authService = inject(AuthService);
+
   currentPage = signal<number>(1);
   unreadCount = signal<number>(0);
   isLoading = signal<boolean>(false);
   notifications = signal<INotification[]>([]);
   currentType = signal<NotificationType>(NotificationType.ALL);
   pagination = signal<INotificationPagination>({
-    limit: 10,
+    limit: 15,
     totalPages: 1,
     totalCount: 0,
     currentPage: 1
   });
+
+  constructor() {
+    super();
+    effect(() => {
+      const currentUserId = this.authService.currentUser()?.id;
+      if (currentUserId) {
+        this.resetNotificationState();
+        this.fetchUnreadCount();
+      }
+    });
+  }
+
+  resetNotificationState(): void {
+    this.notifications.set([]);
+    this.currentPage.set(1);
+    this.currentType.set(NotificationType.ALL);
+    this.pagination.set({
+      limit: 15,
+      totalPages: 1,
+      totalCount: 0,
+      currentPage: 1
+    });
+    this.unreadCount.set(0);
+  }
 
   applyNotificationUpsert(notification: INotification): void {
     this.notifications.update((current) => {
@@ -48,7 +75,7 @@ export class NotificationsService extends BaseApiService {
   ): Promise<{ notifications: INotification[]; pagination: INotificationPagination }> {
     try {
       const page = params.page ?? 1;
-      const limit = params.limit ?? 10;
+      const limit = params.limit ?? 15;
 
       let httpParams = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
       if (params.type) {
@@ -87,7 +114,7 @@ export class NotificationsService extends BaseApiService {
 
       const page = params.page ?? this.currentPage();
       const type = params.type || this.currentType();
-      const limit = params.limit ?? this.pagination().limit ?? 10;
+      const limit = params.limit ?? this.pagination().limit ?? 15;
 
       const response = await this.getNotifications({ page, limit, type });
 

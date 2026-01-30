@@ -18,6 +18,7 @@ export class AvatarGroupComponent {
   shape = input<'square' | 'circle'>('circle');
   maxVisible = input<number>(5);
   showOverflow = input<boolean>(true);
+  disabled = input<boolean>(true);
 
   private navigationService = inject(NavigationService);
 
@@ -59,6 +60,7 @@ export class AvatarGroupComponent {
   }
 
   onUserClick(user: IUser): void {
+    if (this.disabled()) return;
     const username = user?.username;
     if (username) {
       this.navigationService.navigateForward(`/${username}`);

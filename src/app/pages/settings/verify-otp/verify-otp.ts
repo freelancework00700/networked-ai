@@ -1,6 +1,7 @@
 import { Button } from '@/components/form/button';
 import { OtpInput } from '@/components/common/otp-input';
 import { AuthService } from '@/services/auth.service';
+import { UserService } from '@/services/user.service';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
 import { signal, computed, inject, Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
@@ -19,6 +20,7 @@ export class VerifyOtp implements OnInit {
   navCtrl = inject(NavController);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private userService = inject(UserService);
   private modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
 
@@ -31,6 +33,7 @@ export class VerifyOtp implements OnInit {
   isInvalidCode = signal(false);
   successTitle = signal('');
   successDescription = signal('');
+  updateType = signal<'email' | 'phone' | ''>('');
 
   // computed
   hasBoth = computed(() => !!this.email() && !!this.mobile());
@@ -53,15 +56,21 @@ export class VerifyOtp implements OnInit {
       phoneNumber?: string;
       successTitle?: string;
       successDescription?: string;
+      type?: 'email' | 'phone';
     };
 
     if (state) {
-      if (state.email) this.email.set(state.email);
+      if (state.email) {
+        this.email.set(state.email);
+        this.updateType.set('email');
+      }
       if (state.mobile || state.phoneNumber) {
         this.mobile.set(state.mobile || state.phoneNumber || '');
+        this.updateType.set('phone');
       }
       if (state.successTitle) this.successTitle.set(state.successTitle);
       if (state.successDescription) this.successDescription.set(state.successDescription);
+      if (state.type) this.updateType.set(state.type);
     }
   }
 
@@ -107,12 +116,30 @@ export class VerifyOtp implements OnInit {
         await this.authService.verifyOtp({ email: this.email(), mobile: this.mobile(), code });
       }
 
+      // Update user with new email or phone after successful verification
+      if (this.updateType()) {
+        const payload: any = {};
+        if (this.updateType() === 'email' && this.email()) {
+          payload.email = this.email();
+        } else if (this.updateType() === 'phone' && this.mobile()) {
+          payload.mobile = this.mobile();
+        }
+        
+        if (Object.keys(payload).length > 0) {
+          const userPayload = this.userService.generateUserPayload(payload);
+          await this.userService.updateCurrentUser(userPayload);
+        }
+      }
+
       // Show success modal if config is provided
       if (this.successTitle()) {
+        const shouldNavigateToAccount = this.updateType() === 'email' || this.updateType() === 'phone';
+        
         await this.modalService.openSuccessModal({
           title: this.successTitle(),
           description: this.successDescription() || '',
-          buttonLabel: 'Close'
+          buttonLabel: 'Close',
+          navigateTo: shouldNavigateToAccount ? '/settings/account' : undefined
         });
       } else {
         this.navCtrl.back();

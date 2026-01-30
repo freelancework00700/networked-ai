@@ -1,8 +1,8 @@
 import { ChartModule } from 'primeng/chart';
 import { IEvent } from '@/interfaces/event';
 import { CommonModule } from '@angular/common';
-import { NavController } from '@ionic/angular/standalone';
 import { Component, input, computed, ChangeDetectionStrategy, inject } from '@angular/core';
+import { NavigationService } from '@/services/navigation.service';
 
 @Component({
   selector: 'app-plan-analytics',
@@ -12,7 +12,7 @@ import { Component, input, computed, ChangeDetectionStrategy, inject } from '@an
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PlanAnalytics {
-  private navCtrl = inject(NavController);
+  navigationService = inject(NavigationService);
 
   planId = input<string | null>(null);
   isSponsor = input<boolean>(false);
@@ -186,14 +186,14 @@ export class PlanAnalytics {
     const planId = this.planId();
     if (planId) {
       const isSponsor = this.isSponsor();
-      this.navCtrl.navigateForward(`/subscription/${planId}/events?is_sponsor=${isSponsor ? 'true' : 'false'}`);
+      this.navigationService.navigateForward(`/subscription/${planId}/events?is_sponsor=${isSponsor ? 'true' : 'false'}`);
     }
   }
 
   navigateToSubscribers(): void {
     const planId = this.planId();
     if (planId) {
-      this.navCtrl.navigateForward(`/subscription/${planId}/subscribers`);
+      this.navigationService.navigateForward(`/subscription/${planId}/subscribers`);
     }
   }
 }

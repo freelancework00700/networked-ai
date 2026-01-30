@@ -5,9 +5,10 @@ import { UserService } from '@/services/user.service';
 import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
 import { EmailInput } from '@/components/form/email-input';
+import { ToasterService } from '@/services/toaster.service';
+import { ToggleInput } from '@/components/form/toggle-input';
 import { BaseApiService } from '@/services/base-api.service';
 import { MobileInput } from '@/components/form/mobile-input';
-import { ToggleInput } from '@/components/form/toggle-input';
 import { StripePaymentComponent } from '@/components/common/stripe-payment';
 import { StripePaymentSuccessEvent, StripePaymentErrorEvent, StripeService } from '@/services/stripe.service';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -57,7 +58,6 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   @Input() eventLocation: string = '';
   @Input() eventId: string = '';
   @Input() rsvpData: RsvpDetailsData | null = null;
-  @Input() subscriptionId: string = '';
   @Input() hostPaysFees: boolean = false;
   @Input() additionalFees: string | number | null = null;
   @Input() hostName: string = 'Networked AI';
@@ -69,6 +69,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   private userService = inject(UserService);
   private modalService = inject(ModalService);
   private stripeService = inject(StripeService);
+  private toasterService = inject(ToasterService);
 
   form: FormGroup;
   guestForms: FormArray;
@@ -106,63 +107,59 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
 
   hostFees = computed(() => this.rsvpDataSignal()?.hostFees ?? 0);
 
-  platformFee = computed(() => this.rsvpDataSignal()?.platformFee ?? 0);
+  summary = computed(() => {
+    const rsvp = this.rsvpDataSignal();
 
-  freeTicketDiscount = computed(() => {
-    // First, check if freeTicketDiscount is already provided in rsvpData
-    const rsvpData = this.rsvpDataSignal();
-    if (rsvpData?.freeTicketDiscount !== undefined && rsvpData.freeTicketDiscount > 0) {
-      return rsvpData.freeTicketDiscount;
+    if (!rsvp) {
+      return [];
     }
 
-    // Fallback: Calculate it ourselves if not provided
-    // Check if subscription exists (subscriptionId is truthy and not empty)
-    if (!this.subscriptionId || this.subscriptionId.trim() === '') return 0;
+    const subtotal = Number(rsvp.subtotal || 0);
+    const total = Number(rsvp.total || 0);
+    const fees = Number(total - subtotal || 0);
 
-    const tickets = rsvpData?.tickets || [];
-    if (tickets.length === 0) return 0;
+    const items: Array<{ label: string; amount: number }> = [
+      {
+        label: `Tickets (${this.totalTicketCount()})`,
+        amount: +subtotal
+      }
+    ];
 
-    // Filter to get only paid tickets (price > 0) with selected quantity > 0
-    const paidTickets = tickets.filter((ticket) => {
-      const quantity = ticket.selectedQuantity || 0;
-      const price = ticket.price || 0;
-      return price > 0 && quantity > 0;
+    if (fees > 0) {
+      items.push({
+        label: 'Fees',
+        amount: fees
+      });
+    }
+
+    items.push({
+      label: this.eventTitle,
+      amount: total
     });
-
-    if (paidTickets.length === 0) return 0;
-
-    // Get the first paid ticket (matching rsvp-modal logic)
-    const firstPaidTicket = paidTickets[0];
-
-    // Return the price of the first paid ticket as the discount (max 1 free ticket)
-    // The discount is the price of 1 ticket, not the total
-    return firstPaidTicket.price || 0;
+    return items;
   });
 
-  freeTicketName = computed(() => {
-    if (this.freeTicketDiscount() === 0) return '';
+  validateAllForms(): boolean {
+    const isGuestFormsValid = Array.from({ length: this.guestForms.length }, (_, i) => {
+      return this.guestForms.at(i)?.valid ?? true;
+    }).every((valid) => valid);
 
-    const tickets = this.rsvpDataSignal()?.tickets || [];
-    if (tickets.length === 0) return '';
+    if (!this.form.valid || !isGuestFormsValid) {
+      Object.keys(this.form.controls).forEach((key) => {
+        this.form.get(key)?.markAsTouched();
+      });
+      for (let i = 0; i < this.guestForms.length; i++) {
+        const guestForm = this.guestForms.at(i) as FormGroup;
+        Object.keys(guestForm.controls).forEach((key) => {
+          guestForm.get(key)?.markAsTouched();
+        });
+      }
+      return false;
+    }
+    return true;
+  }
 
-    // Filter to get only paid tickets (price > 0) with selected quantity > 0
-    const paidTickets = tickets.filter((ticket) => {
-      const quantity = ticket.selectedQuantity || 0;
-      const price = ticket.price || 0;
-      return price > 0 && quantity > 0;
-    });
-
-    if (paidTickets.length === 0) return '';
-
-    // Get the first paid ticket name
-    const firstPaidTicket = paidTickets[0];
-    return firstPaidTicket.name || 'Free Ticket';
-  });
-
-  subscriberPerk = computed(() => {
-    if (!this.subscriptionId) return 0;
-    return 10.0;
-  });
+  platformFee = computed(() => this.rsvpDataSignal()?.platformFee ?? 0);
 
   promoCodeTicketCount = computed(() => {
     const rsvpData = this.rsvpDataSignal();
@@ -193,9 +190,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
 
   totalPrice = computed(() => {
     const baseTotal = this.rsvpDataSignal()?.total || 0;
-    const perk = this.subscriberPerk();
-
-    return Math.max(0, baseTotal - perk);
+    return baseTotal;
   });
 
   formattedTotal = computed(() => {
@@ -350,22 +345,9 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   getGuestAttendance(index: number): 'going' | 'maybe' {
     return this.guestAttendances().get(index) || 'going';
   }
-
   async dismiss(): Promise<void> {
-    const isGuestFormsValid = Array.from({ length: this.guestForms.length }, (_, i) => {
-      return this.guestForms.at(i)?.valid ?? true;
-    }).every((valid) => valid);
-
-    if (!this.form.valid || !isGuestFormsValid) {
-      Object.keys(this.form.controls).forEach((key) => {
-        this.form.get(key)?.markAsTouched();
-      });
-      for (let i = 0; i < this.guestForms.length; i++) {
-        const guestForm = this.guestForms.at(i) as FormGroup;
-        Object.keys(guestForm.controls).forEach((key) => {
-          guestForm.get(key)?.markAsTouched();
-        });
-      }
+    if (!this.validateAllForms()) {
+      this.toasterService.showError('Please fill all details.');
       return;
     }
 

@@ -5,6 +5,7 @@ import { NotFound } from '@/pages/not-found';
 import { TabLayout } from '@/layout/tab-layout';
 import { Profile } from '@/pages/profile/profile';
 import { Network } from '@/pages/network/network';
+import { authGuard } from '@/guards/auth.guard';
 import { onboardingGuard } from '@/guards/onboarding.guard';
 
 export const appRoutes: Routes = [
@@ -46,48 +47,59 @@ export const appRoutes: Routes = [
   // message routes (lazy loaded)
   {
     path: 'new-chat',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/messages/components/new-chat').then((m) => m.NewChat)
   },
   {
     path: 'chat-room',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/messages/components/chat-room').then((m) => m.ChatRoom)
   },
   {
     path: 'chat-info',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/messages/components/chat-info').then((m) => m.ChatInfo)
   },
   {
     path: 'create-group',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/messages/components/create-group').then((m) => m.CreateGroup)
   },
   {
     path: 'create-group/:id',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/messages/components/create-group').then((m) => m.CreateGroup)
   },
   {
     path: 'group-invitation/:id',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/messages/components/chat-info').then((m) => m.ChatInfo)
   },
   // profile routes (lazy loaded)
   {
     path: 'profile/edit',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/profile/edit-profile').then((m) => m.EditProfile)
   },
   {
     path: 'profile/preferences',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/profile/profile-preferences').then((m) => m.ProfilePreferences)
   },
   // network routes (lazy loaded)
   {
     path: 'add-network',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/network/components/add-network').then((m) => m.AddNetwork)
   },
   {
-    path: 'comments/:id',
+    path: 'post/:id',
+    // canActivate: [authGuard],
     loadComponent: () => import('@/pages/new-post/components/post-comments').then((m) => m.PostComments)
   },
   {
     path: 'new-post',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/new-post').then((m) => m.NewPost)
   },
   {
@@ -104,18 +116,22 @@ export const appRoutes: Routes = [
   },
   {
     path: 'achievements',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/profile/components/profile-achievement').then((m) => m.ProfileAchievement)
   },
   {
     path: 'leaderboard',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/leaderboard').then((m) => m.Leaderboard)
   },
   {
     path: 'notification',
+    canActivate: [authGuard],
     loadComponent: () => import('@/pages/notification').then((m) => m.Notification)
   },
   {
     path: 'settings',
+    canActivate: [authGuard],
     loadChildren: () => import('@/pages/settings/settings.routes').then((m) => m.default)
   },
   { path: 'not-found', component: NotFound },

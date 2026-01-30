@@ -12,7 +12,7 @@
     <ion-refresher-content mode="md"></ion-refresher-content>
   </ion-refresher>
 
-  <div class="w-full max-w-[672px] mx-auto p-4 pt-0 flex flex-col gap-2">
+  <div class="w-full max-w-[672px] mx-auto p-4 pt-0.5 flex flex-col gap-2">
     <div class="flex items-center justify-between gap-2">
       <div class="text-body-14M neutral-01">To:</div>
       <searchbar
@@ -27,25 +27,27 @@
     <!-- CREATE GROUP + ADD NEW CONTACT -->
     @if (searchText().trim() == '' || users().length == 0) {
       <div class="flex flex-col">
-        <div class="flex items-center justify-between p-2">
+        <div class="flex items-center justify-between p-2" (click)="goToCreateGroup()">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
               <img src="assets/svg/users.svg" class="w-5 h-5" />
             </div>
             <div class="body-14M neutral-01">Create New Group</div>
           </div>
-          <i class="pi pi-arrow-right" (click)="goToCreateGroup()"></i>
+          <i class="pi pi-arrow-right"></i>
         </div>
 
-        <div class="flex items-center justify-between p-2">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-              <img src="assets/svg/addUserIcon.svg" class="w-5 h-5" />
+        @if (isNativePlatform()) {
+          <div class="flex items-center justify-between p-2 cursor-pointer" (click)="scanQRCodeForContact()">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+                <img src="assets/svg/addUserIcon.svg" class="w-5 h-5" />
+              </div>
+              <div class="body-14M neutral-01">Scan QR Code</div>
             </div>
-            <div class="body-14M neutral-01">Add New Contact</div>
+            <img src="assets/svg/scanner.svg" class="w-6 h-6" />
           </div>
-          <img src="assets/svg/scanner.svg" class="w-6 h-6" />
-        </div>
+        }
       </div>
     }
 
@@ -55,7 +57,7 @@
         <div class="body-14M neutral-01">Your Network</div>
 
         @for (u of users(); track u.id) {
-          <div class="flex items-center gap-3 py-4 border-b border-gray-200">
+          <div class="flex items-center gap-3 py-4 border-b border-gray-200" (click)="goToChatRoom(u)">
             <!-- Profile -->
             <!-- <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full" /> -->
             <div class="w-12 h-12 rounded-full flex items-center justify-center relative overflow-hidden">
@@ -87,7 +89,7 @@
             </div>
 
             <!-- Add/Added button -->
-            <i class="pi pi-arrow-right pr-2" (click)="goToChatRoom(u)"></i>
+            <i class="pi pi-arrow-right pr-2"></i>
           </div>
         }
 

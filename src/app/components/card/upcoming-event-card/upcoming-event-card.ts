@@ -23,6 +23,7 @@ export class UpcomingEventCard {
 
   event = input.required<IEvent>();
 
+  isLoggedIn = computed(() => !!this.authService.currentUser());
   eventImage = computed(() => {
     const event = this.event();
     const imageUrl =
@@ -31,6 +32,30 @@ export class UpcomingEventCard {
       event?.image ||
       '';
     return getImageUrlOrDefault(imageUrl);
+  });
+
+  
+  isHostOrCoHost = computed(() => {
+    const currentEvent = this.event();
+    const isHostOrCoHost = this.eventService.checkHostOrCoHostAccess(currentEvent);
+    return isHostOrCoHost;
+  });
+
+  isSponsorOrSpeaker = computed(() => {
+    const currentEvent = this.event();
+    const isSponsorOrSpeaker = this.eventService.checkSpeakerOrSponsorAccess(currentEvent);
+    return isSponsorOrSpeaker;
+  });
+
+  isAttendee = computed(() => {
+    const currentEvent = this.event();
+    const isAttendee = currentEvent.attendees && currentEvent.attendees.length > 0;
+    return isAttendee;
+  });
+
+  allowToview = computed(() => {
+    const currentEvent = this.event();
+    return this.isHostOrCoHost() || this.isAttendee() || this.isSponsorOrSpeaker() || currentEvent.is_public;
   });
 
   formattedLocation = computed(() => {

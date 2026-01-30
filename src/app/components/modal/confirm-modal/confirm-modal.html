@@ -20,7 +20,7 @@
       <div class="heading-h3">{{ title }}</div>
 
       @if (description) {
-        <p class="body-12 neutral-03">{{ description }}</p>
+        <p class="body-12 neutral-03" [innerHTML]="description"></p>
       }
     </div>
   </div>
@@ -38,7 +38,7 @@
         }
       }
       <app-button
-        [label]="confirmButtonLabel"
+        [label]="confirmLabel()"
         (click)="confirm()"
         class="flex-1"
         [color]="confirmButtonColor"

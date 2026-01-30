@@ -26,6 +26,7 @@ export class NumberInput {
   required = input(true);
   placeholder = input('');
   isSubmitted = input(true);
+  isSpace = input(false);
   allowDecimal = input(false);
   position = input<'left' | 'right'>('left');
   controlName = input.required<string>();

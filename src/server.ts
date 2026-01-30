@@ -19,6 +19,14 @@ const angularApp = new AngularNodeAppEngine();
  * ```
  */
 
+// Serve files from the .well-known directory with a specific route prefix (optional, but a common practice for clarity)
+app.use(
+  '/.well-known',
+  express.static(join(browserDistFolder, '.well-known'), {
+    maxAge: '1y'
+  })
+);
+
 /**
  * Serve static files from /browser
  */

@@ -85,11 +85,13 @@
 
 	<!-- camera permissions -->
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Used to allow uploading of event listing media.</string>
+	<string>$(APP_DISPLAY_NAME) requires access to your photo library to allow uploading of event listing media.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Used to allow uploading of event listing media.</string>
+	<string>$(APP_DISPLAY_NAME) requires access to your photo library to allow uploading of event listing media.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Used to allow uploading of event listing media and ticket barcode scanning.</string>
+	<string>$(APP_DISPLAY_NAME) requires access to your camera to allow uploading of event listing media and ticket barcode scanning.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>$(APP_DISPLAY_NAME) requires access to the microphone for recording audio while you record video for event.</string>
 
 	<!-- location permissions -->
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -111,5 +113,19 @@
 	<!-- disable encryption -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+
+	<!-- calendar permissions -->
+	<key>NSCalendarsUsageDescription</key>
+    <string>$(APP_DISPLAY_NAME) requires calendar access to add events to your calendar.</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+       <string>en</string>
+		<string>de</string>
+       <string>nl</string>
+       <string>fr</string>
+       <string>it</string>
+       <string>pt-BR</string>
+	</array>
+
 </dict>
 </plist>

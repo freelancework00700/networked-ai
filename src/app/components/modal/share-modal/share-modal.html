@@ -46,9 +46,9 @@
 
                 @if (isSelected(user)) {
                   <div
-                    class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
+                    class="absolute -bottom-1 -right-1 bg-brand-04 shadow-[0_16px_32px_0_rgba(7,40,70,0.10)]! border-2 border-white rounded-[12px]! w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
                   >
-                    <i class="pi pi-check !text-[10px]"></i>
+                    <i class="pi pi-check text-[10px]!"></i>
                   </div>
                 }
               </div>
@@ -80,7 +80,16 @@
           <app-button [label]="shareButtonLabel()" (click)="share()" [isLoading]="isSharing()" [disabled]="isSharing()" iconName="pi-send" />
         </div>
       } @else {
-        <common-share-footer />
+        <common-share-footer
+          (onContact)="onContact()"
+          (onCopyLink)="onCopyLink()"
+          (onShareTo)="onShareTo()"
+          (onChat)="onChat()"
+          (onEmail)="onEmail()"
+          (onWhatsapp)="onWhatsapp()"
+          (onX)="onShareToX()"
+          (onThread)="onShareToThreads()"
+        />
       }
     </div>
   </ion-toolbar>

@@ -37,6 +37,7 @@ export interface INotificationEvent {
   start_date?: string | null;
   thumbnail_url?: string | null;
   rsvp_requests?: IRsvpRequest[];
+  feedbacks?: unknown[];
 }
 
 export interface INotificationPost {

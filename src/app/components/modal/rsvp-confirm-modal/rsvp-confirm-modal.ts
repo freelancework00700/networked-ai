@@ -10,17 +10,17 @@ import { IonToolbar, IonFooter, ModalController } from '@ionic/angular/standalon
   styleUrl: './rsvp-confirm-modal.scss'
 })
 export class RsvpConfirmModal {
-  @Input() rsvpData: any;
+  @Input() eventData: any;
   private modalService = inject(ModalService);
   modalctrl = inject(ModalController);
+
   share(): void {
     this.modalctrl.dismiss();
-    this.modalService.openShareModal(this.rsvpData.eventId, 'Event');
+    this.modalService.openShareModal(this.eventData.id, 'Event');
   }
 
-  addEvent(): void {
-    this.modalctrl.dismiss();
-    this.modalService.close();
+  async addEvent(): Promise<void> {
+    await this.modalService.openAddToCalendarModal(this.eventData);
   }
 
   done(): void {

@@ -88,6 +88,15 @@
       <app-button class="w-full" color="primary" label="Download" iconName="pi-download" (click)="downloadProfile()" [isLoading]="isDownloading()" />
     </div>
 
-    <common-share-footer />
+    <common-share-footer
+      (onContact)="onContact()"
+      (onCopyLink)="onCopyLink()"
+      (onShareTo)="onShareTo()"
+      (onChat)="onChat()"
+      (onEmail)="onEmail()"
+      (onWhatsapp)="onWhatsapp()"
+      (onX)="onShareToX()"
+      (onThread)="onShareToThreads()"
+    />
   </ion-toolbar>
 </ion-footer>

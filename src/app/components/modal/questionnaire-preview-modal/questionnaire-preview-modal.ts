@@ -10,7 +10,7 @@ import { NumberInput } from '@/components/form/number-input';
 import { MobileInput } from '@/components/form/mobile-input';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { IonHeader, IonFooter, IonToolbar, ModalController, IonContent } from '@ionic/angular/standalone';
-import { Input, signal, inject, Component, OnInit, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Input, signal, inject, Component, OnInit, ChangeDetectionStrategy, computed, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 
 interface QuestionnaireQuestionWithPhase {
@@ -58,12 +58,12 @@ export class QuestionnairePreviewModal implements OnInit {
   @Input() eventTitle: string = '';
   @Input() eventDate: string = '';
   @Input() eventLocation: string = '';
-  @Input() subscriptionId: string = '';
   private modalService = inject(ModalService);
   private fb = inject(FormBuilder);
   modalCtrl = inject(ModalController);
   form!: FormGroup;
   selectedPhase = signal<'PreEvent' | 'PostEvent'>('PreEvent');
+  @ViewChild(MobileInput) mobileInput?: MobileInput;
 
   preEventQuestions = computed(() => {
     return this.questions.filter((q) => !q.event_phase || q.event_phase === 'PreEvent');
@@ -209,6 +209,10 @@ export class QuestionnairePreviewModal implements OnInit {
           if (questionType === 'MultipleChoice') {
             const formArray = this.getMultipleChoiceArray(index);
             value = question.options?.filter((_, i) => formArray.at(i).value) || [];
+          }
+
+          if (questionType === 'PhoneNumber') {
+            value = this.mobileInput?.getPhoneNumber();
           }
 
           return {

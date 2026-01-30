@@ -18,6 +18,7 @@ export class AccountSettings implements OnInit {
   private modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
   private authService = inject(AuthService);
+  navCtrl = inject(NavController);
 
   // signals
   currentUser = computed(() => this.authService.currentUser());

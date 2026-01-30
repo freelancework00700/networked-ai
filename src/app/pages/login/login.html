@@ -81,7 +81,7 @@
       </div>
 
       <!-- login form -->
-      <form [formGroup]="loginForm()" (ngSubmit)="login()">
+      <form [formGroup]="loginForm()" (ngSubmit)="login()" (keydown.enter)="login()">
         @if (activeTab() === 'email') {
           <!-- email input -->
           <email-input [checkIfExists]="true" [showIcon]="true" [isSubmitted]="isSubmitted()" />

@@ -20,7 +20,6 @@ import { UserCardList } from '@/components/card/user-card-list';
 import { NetworkService } from '@/services/network.service';
 import { SocketService } from '@/services/socket.service';
 import { IUser } from '@/interfaces/IUser';
-import { NetworkConnectionUpdate } from '@/interfaces/socket-events';
 
 @Component({
   selector: 'network-list-view',
@@ -117,13 +116,38 @@ export class NetworkListView implements OnDestroy {
     });
   }
 
-  private networkConnectionHandler = (payload: NetworkConnectionUpdate) => {
+  private networkConnectionHandler = (payload: IUser) => {
     if (!payload || !payload.id) return;
 
     const userId = payload.id;
     const newStatus = payload.connection_status;
+    const currentUserId = this.currentUser()?.id;
+    if (userId === currentUserId) return;
 
-    this.users.update((users) => users.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
+    this.users.update((users) => {
+      const existingUserIndex = users.findIndex((user) => user.id === userId);
+
+      if (newStatus === 'NotConnected') {
+        if (existingUserIndex !== -1) {
+          return users.filter((user) => user.id !== userId);
+        }
+        return users;
+      }
+
+      const userUpdate: Partial<IUser> = {
+        ...payload,
+        connection_status: newStatus
+      };
+
+      if (existingUserIndex !== -1) {
+        return users.map((user) => (user.id === userId ? { ...user, ...userUpdate } : user));
+      } else {
+        if (newStatus === 'Connected') {
+          return [{ ...userUpdate } as IUser, ...users];
+        }
+      }
+      return users;
+    });
   };
 
   ngOnDestroy(): void {

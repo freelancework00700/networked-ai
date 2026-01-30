@@ -24,7 +24,7 @@ import { Subject, from, distinctUntilChanged, switchMap, debounce, timer, of, ma
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ScrollHandlerDirective } from '@/directives/scroll-handler.directive';
 import { ChatRoom } from '@/interfaces/IChat';
-import { IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
+import { IonSpinner, IonInfiniteScroll, IonInfiniteScrollContent, IonRefresher, IonRefresherContent } from '@ionic/angular/standalone';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
 
@@ -52,7 +52,9 @@ type MessagesTab = 'all' | 'unread' | 'group' | 'event' | 'network';
     ScrollHandlerDirective,
     IonSpinner,
     IonInfiniteScroll,
-    IonInfiniteScrollContent
+    IonInfiniteScrollContent,
+    IonRefresher,
+    IonRefresherContent
   ],
   styleUrl: './messages.scss',
   templateUrl: './messages.html',
@@ -122,6 +124,13 @@ export class Messages implements OnInit, OnDestroy {
         this.reloadSubject.next({ query, tab, immediate: true });
       }
     });
+
+    effect(() => {
+      const currentUserId = this.authService.currentUser()?.id;
+      if (currentUserId) {
+        this.loadChatRooms();
+      }
+    })
   }
 
   async ngOnInit() {
@@ -146,7 +155,7 @@ export class Messages implements OnInit, OnDestroy {
 
       await this.messagesService.getChatRooms({
         page,
-        limit: 10,
+        limit: 15,
         search,
         filter,
         append: !reset
@@ -173,6 +182,27 @@ export class Messages implements OnInit, OnDestroy {
       console.error('Error loading more rooms:', error);
     } finally {
       infiniteScroll.complete();
+    }
+  }
+
+  async handleRefresh(event: Event): Promise<void> {
+    const refresher = (event as CustomEvent).target as HTMLIonRefresherElement;
+
+    try {
+      const filter = this.activeTab();
+      const search = this.searchInput().trim() || undefined;
+      await this.messagesService.getChatRooms({
+        page: 1,
+        limit: 15,
+        search,
+        filter,
+        append: false,
+        skipClear: true
+      });
+    } catch (error) {
+      console.error('Error refreshing chat rooms:', error);
+    } finally {
+      refresher.complete();
     }
   }
 

@@ -11,8 +11,8 @@
           {{ item.question }}
         </div>
 
-        @if (item.visibility === 'private') {
-          <i class="pi pi-eye-slash bg-surface-200 rounded p-2"></i>
+        @if (!item.is_public) {
+          <i class="pi pi-eye-slash bg-surface-200 rounded-full p-2"></i>
         }
       </div>
 
@@ -71,5 +71,8 @@
         }
       </div>
     </div>
+  }
+  @empty{
+    <app-empty-state title="No analytics" message="" />
   }
 </div>

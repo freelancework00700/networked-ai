@@ -33,7 +33,11 @@
   }
 </p-iconField>
 
-<!-- validation -->
-@if (!!getErrorMessage) {
-  <div class="accent-red pt-2 body-12M">{{ getErrorMessage }}</div>
-}
+<!-- Fixed space for validation -->
+<div [class.h-5]="isSpace()">
+  @if (!!getErrorMessage) {
+    <div class="accent-red pt-2 body-12M">
+      {{ getErrorMessage }}
+    </div>
+  }
+</div>

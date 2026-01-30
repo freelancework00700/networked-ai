@@ -4,11 +4,20 @@ export enum NotificationType {
   UNREAD = 'Unread',
 
   // database types
-  EVENTS = 'Events',
+  EVENTS = "Events",
   NETWORK = 'Network',
+  MENTION = 'Mention',
   MY_EVENTS = 'MyEvents',
+  POST_LIKED = 'PostLiked',
   INVITATION = 'Invitation',
-  RSVP_REQUEST = 'RsvpRequest'
+  RSVP_REQUEST = 'RsvpRequest',
+  CHAT_MESSAGE = "ChatMessage",
+  COMMENT_LIKED = 'CommentLiked',
+  COMMENT_REPLY = 'CommentReply',
+  POST_COMMENTED = 'PostCommented',
+  EVENT_REMINDER = 'EventReminder',
+  RSVP_REQUEST_STATUS = 'RsvpRequestStatus',
+  POST_EVENT_QUESTIONNAIRE = 'PostEventQuestionnaire',
 }
 
 export enum RSVPRequestStatus {
