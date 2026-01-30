@@ -3,6 +3,7 @@ import * as icons from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
 import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
+import { HapticService } from '@/services/haptic.service';
 import { SocketService } from '@/services/socket.service';
 import { App, URLOpenListenerEvent } from '@capacitor/app';
 import { IonRouterOutlet } from '@ionic/angular/standalone';
@@ -24,6 +25,7 @@ export class AppComponent {
   // services
   private authService = inject(AuthService);
   private userService = inject(UserService);
+  private hapticService = inject(HapticService);
   private socketService = inject(SocketService);
   private liveUpdateService = inject(LiveUpdateService);
   private navigationService = inject(NavigationService);
