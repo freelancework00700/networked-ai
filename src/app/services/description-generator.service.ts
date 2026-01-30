@@ -280,4 +280,78 @@ export class DescriptionGeneratorService {
       throw new Error(error?.message || 'Failed to generate subscription plan description. Please try again.');
     }
   }
+
+  /**
+   * Generate user profile "About Me" description using OpenAI
+   */
+  async generateUserProfileDescription(data: any): Promise<string> {
+    try {
+      const promptParts: string[] = [];
+
+      const fullName = [data.firstName, data.lastName].filter(Boolean).join(' ');
+      if (fullName) {
+        promptParts.push(`name=${fullName}`);
+      }
+
+      if (data.accountType) {
+        promptParts.push(`accountType=${data.accountType}`);
+      }
+
+      if (data.accountType === 'Business' && data.companyName) {
+        promptParts.push(`companyName=${data.companyName}`);
+      }
+
+      if (data.accountType === 'Individual' && data.collegeUniversity) {
+        promptParts.push(`education=${data.collegeUniversity}`);
+      }
+
+      if (data.city) {
+        promptParts.push(`address=${data.accountType}`);
+      }
+
+      const prompt = `
+Generate a concise and engaging "About Me" profile description based ONLY on the following details:
+${promptParts.join('; ')}.
+
+Rules:
+- Do NOT invent any information
+- If a value is missing, leave it out completely
+- Match tone to account type (professional for Business, friendly for Individual)
+- Use 1–2 relevant emojis
+- Keep it short, clean, and readable
+- Use short paragraphs
+`;
+
+      const headers = new HttpHeaders({
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${environment.openaiKey}`
+      });
+
+      const result = await firstValueFrom(
+        this.http.post<OpenAIResponse>(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model: 'gpt-3.5-turbo',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 400
+          },
+          { headers }
+        )
+      );
+
+      if (result?.choices?.[0]?.message?.content) {
+        return result.choices[0].message.content.trim();
+      }
+
+      throw new Error('No profile description generated');
+    } catch (error: any) {
+      console.error('Error generating user profile description:', error);
+
+      if (error?.error?.error?.message) {
+        throw new Error(error.error.error.message);
+      }
+
+      throw new Error(error?.message || 'Failed to generate profile description');
+    }
+  }
 }

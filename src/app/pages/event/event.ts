@@ -1,24 +1,3 @@
-import { OgService } from '@/services/og.service';
-import { Subscription } from 'rxjs';
-import { MenuModule } from 'primeng/menu';
-import { IUser } from '@/interfaces/IUser';
-import { Device } from '@capacitor/device';
-import { Capacitor } from '@capacitor/core';
-import { ActivatedRoute } from '@angular/router';
-import { Button } from '@/components/form/button';
-import { NgOptimizedImage } from '@angular/common';
-import { AuthService } from '@/services/auth.service';
-import { EventService } from '@/services/event.service';
-import { ModalService } from '@/services/modal.service';
-import { MenuItem as PrimeMenuItem } from 'primeng/api';
-import { ToasterService } from '@/services/toaster.service';
-import { EventDisplay } from '@/components/common/event-display';
-import { EmptyState } from '@/components/common/empty-state';
-import { NavigationService } from '@/services/navigation.service';
-import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
-import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { RsvpDetailsModal } from '@/components/modal/rsvp-details-modal';
 import {
   IonContent,
   IonFooter,
@@ -30,7 +9,27 @@ import {
   IonRefresherContent,
   RefresherCustomEvent
 } from '@ionic/angular/standalone';
-import { OnInit, inject, signal, computed, effect, Component, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { MenuModule } from 'primeng/menu';
+import { IUser } from '@/interfaces/IUser';
+import { Device } from '@capacitor/device';
+import { Capacitor } from '@capacitor/core';
+import { ActivatedRoute } from '@angular/router';
+import { Button } from '@/components/form/button';
+import { NgOptimizedImage } from '@angular/common';
+import { OgService } from '@/services/og.service';
+import { AuthService } from '@/services/auth.service';
+import { EventService } from '@/services/event.service';
+import { ModalService } from '@/services/modal.service';
+import { MenuItem as PrimeMenuItem } from 'primeng/api';
+import { ToasterService } from '@/services/toaster.service';
+import { EmptyState } from '@/components/common/empty-state';
+import { EventDisplay } from '@/components/common/event-display';
+import { NavigationService } from '@/services/navigation.service';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { ManageEventService } from '@/services/manage-event.service';
+import { RsvpDetailsModal } from '@/components/modal/rsvp-details-modal';
+import { OnInit, inject, signal, computed, Component, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'event',
@@ -59,6 +58,7 @@ export class Event implements OnInit, OnDestroy {
   modalService = inject(ModalService);
   eventService = inject(EventService);
   toasterService = inject(ToasterService);
+  manageService = inject(ManageEventService);
   navigationService = inject(NavigationService);
   platformId = inject(PLATFORM_ID);
   ogService = inject(OgService);
@@ -72,7 +72,6 @@ export class Event implements OnInit, OnDestroy {
   selectedDate = signal('');
   eventId = signal<string>('');
   isLoading = signal<boolean>(true);
-  subscriptionId = signal<string>('');
   isLoadingChildEvent = signal<boolean>(false);
   isSendingRsvpRequest = signal<boolean>(false);
   selectedChildEventId = signal<string | null>(null);
@@ -134,82 +133,6 @@ export class Event implements OnInit, OnDestroy {
       child_events: parentEvent.child_events
     };
   });
-
-  menuItems = computed<MenuItem[]>(() => {
-    const isCompleted = this.isEventCompleted();
-    const displayData = this.eventDisplayData();
-
-    const isHost = displayData.isCurrentUserHost;
-    const isCoHost = displayData.isCurrentUserCoHost;
-    const hasQuestionnaire = displayData.questionnaire && displayData.questionnaire.length > 0;
-
-    let baseItems: MenuItem[] = [
-      { label: 'Edit', icon: 'assets/svg/manage-event/edit.svg', iconType: 'svg', action: 'editEvent' },
-      { label: 'Analytics', icon: 'assets/svg/manage-event/analytics.svg', iconType: 'svg', action: 'viewEventAnalytics' },
-      { label: 'Questionnaire Responses', icon: 'assets/svg/manage-event/questionnaire.svg', iconType: 'svg', action: 'viewQuestionnaireResponses' },
-      { label: 'Manage Roles', icon: 'assets/svg/manage-event/settings.svg', iconType: 'svg', action: 'manageRoles' },
-      { label: 'Guest List', icon: 'assets/svg/manage-event/users.svg', iconType: 'svg', action: 'viewGuestList' },
-      { label: 'Event Page QR', icon: 'assets/svg/scanner.svg', iconType: 'svg', action: 'viewEventPageQr' },
-      { label: 'Share Event', icon: 'pi pi-upload', iconType: 'pi', action: 'shareEvent' },
-      { label: 'Cancel Event', icon: 'assets/svg/manage-event/calendar-x.svg', iconType: 'svg', danger: true, action: 'cancelEvent' }
-    ];
-
-    // 👉 NEW: questionnaire condition
-    if (!hasQuestionnaire) {
-      baseItems = baseItems.filter((item) => item.action !== 'viewQuestionnaireResponses');
-    }
-
-    if (isCoHost && !isHost) {
-      const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent'];
-
-      return baseItems.filter((item) => allowedActions.includes(item.action || ''));
-    }
-
-    if (isCompleted) {
-      baseItems = baseItems.filter((item) => !['editEvent', 'manageRoles'].includes(item.action || ''));
-    }
-
-    // RSVP Approval
-    if (displayData.isRsvpApprovalRequired) {
-      const rsvpApprovalItem: MenuItem = {
-        label: 'RSVP Approval',
-        icon: 'pi pi-check-circle',
-        iconType: 'pi',
-        action: 'viewRsvpApproval'
-      };
-
-      const qrIndex = baseItems.findIndex((i) => i.action === 'viewEventPageQr');
-      if (qrIndex !== -1) {
-        baseItems.splice(qrIndex + 1, 0, rsvpApprovalItem);
-      }
-    }
-
-    // Ticket Scanner
-    if (isHost && this.isNativePlatform()) {
-      const scannerItem: MenuItem = {
-        label: 'Ticket Scanner',
-        icon: 'assets/svg/scanner.svg',
-        iconType: 'svg',
-        action: 'scanQRCode'
-      };
-
-      const qrIndex = baseItems.findIndex((i) => i.action === 'viewEventPageQr');
-      if (qrIndex !== -1) {
-        baseItems.splice(qrIndex + 1, 0, scannerItem);
-      }
-    }
-
-    return baseItems;
-  });
-
-  networkSuggestions = [
-    { id: '1', name: 'Kathryn Murphy', role: 'Staff' },
-    { id: '2', name: 'Esther Howard', role: 'CoHost' },
-    { id: '3', name: 'Arlene McCoy' },
-    { id: '4', name: 'Darlene Robertson', role: 'Speaker' },
-    { id: '5', name: 'Ronald Richards', role: 'Sponsor' },
-    { id: '6', name: 'Albert Flores', role: 'CoHost' }
-  ];
 
   eventMenuItems: PrimeMenuItem[] = [
     {
@@ -407,9 +330,6 @@ export class Event implements OnInit, OnDestroy {
         this.event.set(eventData);
         this.ogService.setOgTagInEvent(eventData);
 
-        if (eventData.subscription_id) {
-          this.subscriptionId.set(eventData.subscription_id);
-        }
 
         this.selectedChildEventId.set(null);
         this.childEventData.set(new Map());
@@ -519,13 +439,12 @@ export class Event implements OnInit, OnDestroy {
     const hasPlans = eventData?.has_plans || false;
     const hasSubscribed = eventData?.has_subscribed || false;
     const isSubscriberExclusive = eventData?.settings?.is_subscriber_exclusive ?? false;
-
+    const plans = eventData?.plans || []
     const result = await this.modalService.openRsvpModal(
       displayData.tickets || [],
       displayData.title || '',
       displayData.questionnaire || [],
       displayData.promo_codes || [],
-      this.subscriptionId(),
       hostPaysFees,
       additionalFees,
       maxAttendeesPerUser,
@@ -533,7 +452,8 @@ export class Event implements OnInit, OnDestroy {
       this.eventIdFromData() || '',
       hasPlans,
       hasSubscribed,
-      isSubscriberExclusive
+      isSubscriberExclusive,
+      plans
     );
     if (result) {
       const loadingModal = await this.modalService.openLoadingModal('Processing your RSVP...');
@@ -544,7 +464,7 @@ export class Event implements OnInit, OnDestroy {
           try {
             await this.saveRsvpAttendees(result, result?.stripe_payment_intent_id || '');
             await loadingModal.dismiss();
-            await this.modalService.openRsvpConfirmModal(result as RsvpDetailsModal);
+            await this.modalService.openRsvpConfirmModal(displayData);
             await this.loadEvent();
           } catch (attendeeError) {
             await loadingModal.dismiss();
@@ -708,23 +628,7 @@ export class Event implements OnInit, OnDestroy {
   }
 
   async openMenu() {
-    const result = await this.modalService.openMenuModal(this.menuItems());
-    if (!result?.role) return;
-
-    const actions: Record<string, () => void> = {
-      editEvent: () => this.editEvent(),
-      viewEventAnalytics: () => this.viewEventAnalytics(),
-      viewQuestionnaireResponses: () => this.viewQuestionnaireResponses(),
-      manageRoles: () => this.manageRoles(),
-      viewGuestList: () => this.viewGuestList(),
-      viewEventPageQr: () => this.viewEventPageQr(),
-      viewRsvpApproval: () => this.viewRsvpApproval(),
-      viewTapToPay: () => this.viewTapToPay(),
-      shareEvent: () => this.shareEvent(),
-      cancelEvent: () => this.cancelEvent(),
-      scanQRCode: () => this.scanQRCode()
-    };
-    actions[result.role]?.();
+    this.manageService.openMenu(this.currentEventData());
   }
 
   openEventChat(): void {
@@ -750,92 +654,16 @@ export class Event implements OnInit, OnDestroy {
     }
   }
 
-  editEvent() {
-    const eventId = this.eventIdFromData();
-    if (eventId) {
-      this.navigationService.navigateForward(`/event/edit/${eventId}`);
-    }
-  }
-
-  viewEventAnalytics() {
-    const eventId = this.eventIdFromData();
-    if (eventId) {
-      this.navigationService.navigateForward(`/event/analytics/${eventId}`);
-    }
-  }
-
-  viewQuestionnaireResponses() {
-    const eventId = this.eventIdFromData();
-    if (eventId) {
-      this.navigationService.navigateForward(`/event/questionnaire-response/${eventId}`);
-    }
-  }
-
-  async manageRoles() {
-    const eventId = this.eventIdFromData();
-    if (eventId) {
-      const participants = this.currentEventData()?.participants || [];
-      const result = await this.modalService.openManageRoleModal(participants, eventId);
-      this.loadEvent();
-    }
-  }
-
-  viewGuestList() {
-    const eventId = this.eventIdFromData();
-    if (eventId) {
-      this.navigationService.navigateForward(`/event/guests/${eventId}`);
-    }
-  }
-
-  async viewEventPageQr() {
-    const currentEventData = this.currentEventData();
-    if (currentEventData) {
-      const result = await this.modalService.openEventQrModal(currentEventData);
-    }
-  }
-
-  viewRsvpApproval() {
+  async shareEvent() {
     const eventId = this.eventIdFromData();
     if (!eventId) return;
 
-    this.navigationService.navigateForward(`/event/rsvp-approval/${eventId}`, true);
-  }
+    const isLoggedIn = await this.eventService.checkIsLoggin();
+    if (!isLoggedIn) return;
 
-  viewTapToPay() {}
-
-  async shareEvent() {
-    const eventId = this.eventIdFromData();
-    if (eventId) {
-      const result = await this.modalService.openShareModal(eventId, 'Event');
-      if (result) {
-        this.toasterService.showSuccess('Event shared');
-      }
-    }
-  }
-
-  async cancelEvent() {
-    const result = await this.modalService.openConfirmModal({
-      icon: 'assets/svg/deleteWhiteIcon.svg',
-      iconBgColor: '#C73838',
-      title: 'Cancel This Event',
-      description: "Are you sure you want to cancel this event? We'll notify everyone that have registered, and issue automatic refunds.",
-      confirmButtonLabel: 'Cancel Event',
-      cancelButtonLabel: 'Cancel',
-      confirmButtonColor: 'danger',
-      iconPosition: 'left'
-    });
-    if (result && result.role === 'confirm') {
-      const eventId = this.eventIdFromData();
-      if (!eventId) return;
-
-      try {
-        await this.eventService.deleteEvent(eventId);
-        this.toasterService.showSuccess('Event cancelled');
-        this.navigationService.navigateForward('/', true);
-      } catch (error) {
-        console.error('Error cancelling event:', error);
-        this.toasterService.showError('Failed to cancel event. Please try again.');
-      }
+    const result = await this.modalService.openShareModal(eventId, 'Event');
+    if (result) {
+      this.toasterService.showSuccess('Event shared');
     }
   }
 
@@ -843,6 +671,8 @@ export class Event implements OnInit, OnDestroy {
     const eventId = this.eventIdFromData();
     const currentEventData = this.currentEventData();
     if (!eventId || !currentEventData) return;
+    const isLoggedIn = await this.eventService.checkIsLoggin();
+    if (!isLoggedIn) return;
 
     const currentIsLiked = currentEventData.is_like || false;
     const newIsLiked = !currentIsLiked;
@@ -883,6 +713,9 @@ export class Event implements OnInit, OnDestroy {
   }
 
   async reportEvent() {
+    const isLoggedIn = await this.eventService.checkIsLoggin();
+    if (!isLoggedIn) return;
+
     const result = await this.modalService.openReportModal('Event');
     if (!result || !result.reason_id) return;
 
@@ -914,7 +747,10 @@ export class Event implements OnInit, OnDestroy {
     }
   }
 
-  navigateToSubscriptionPlans(): void {
+  async navigateToSubscriptionPlans(): Promise<void> {
+    const isLoggedIn = await this.eventService.checkIsLoggin();
+    if (!isLoggedIn) return;
+
     const eventData = this.currentEventData();
     const planIds = eventData?.plan_ids;
 
@@ -937,50 +773,5 @@ export class Event implements OnInit, OnDestroy {
 
   onImageError(event: any): void {
     onImageError(event);
-  }
-
-  async scanQRCode(): Promise<void> {
-    try {
-      const result = await BarcodeScanner.scan();
-
-      if (result.barcodes && result.barcodes.length > 0) {
-        const barcode = result.barcodes[0];
-        const scannedValue = barcode.displayValue || barcode.rawValue || '';
-
-        if (scannedValue) {
-          await this.handleQRCodeScanned(scannedValue);
-        } else {
-          this.toasterService.showError('No QR code data found');
-        }
-      } else {
-        this.toasterService.showError('No QR code detected');
-      }
-    } catch (error: any) {
-      if (error.message && (error.message.includes('cancel') || error.message.includes('dismiss'))) {
-        // User cancelled, no need to show error
-        return;
-      }
-      console.error('Error scanning QR code:', error);
-      this.toasterService.showError('Failed to scan QR code');
-    }
-  }
-
-  private async handleQRCodeScanned(decodedText: string): Promise<void> {
-    try {
-      let payload = {
-        event_id: this.currentEventData().id,
-        attendee_id: decodedText,
-        is_checked_in: true
-      };
-      if (decodedText) {
-        await this.eventService.changeCheckInStatus(payload);
-        this.toasterService.showSuccess('Check in successfully');
-      } else {
-        this.toasterService.showError('Invalid QR code. Please scan a valid profile QR code.');
-      }
-    } catch (error) {
-      console.error('Error parsing QR code:', error);
-      this.toasterService.showError('Invalid QR code format.');
-    }
   }
 }

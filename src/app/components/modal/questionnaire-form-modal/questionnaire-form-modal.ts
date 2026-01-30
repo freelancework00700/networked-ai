@@ -30,7 +30,7 @@ export class QuestionnaireFormModal {
   fb = inject(FormBuilder);
   modalService = inject(ModalService);
   modalCtrl = inject(ModalController);
-  @Input() type: 'pre_event' | 'post_event' = 'pre_event';
+  @Input() type: 'pre-event' | 'post-event' = 'pre-event';
   @Input() initialData: any;
 
   showSelectionBox = signal(false);
@@ -72,7 +72,7 @@ export class QuestionnaireFormModal {
 
   get filteredQuestionTypes() {
     return this.questionTypes.filter((q) => {
-      if (this.type === 'pre_event') {
+      if (this.type === 'pre-event') {
         return q.value !== 'Rating';
       }
       return true;
@@ -202,7 +202,7 @@ export class QuestionnaireFormModal {
     const questions = (formValue.questions || []).map((q: any) => {
       const question: any = {
         question: q.question,
-        event_phase: this.type === 'pre_event' ? 'PreEvent' : 'PostEvent',
+        event_phase: this.type === 'pre-event' ? 'PreEvent' : 'PostEvent',
         question_type: q.type,
         is_required: q.required || false,
         is_public: q.visibility === 'public'

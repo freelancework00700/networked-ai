@@ -15,14 +15,18 @@ import { IUser } from '@/interfaces/IUser';
 import { DatePipe } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
 import { AuthService } from './auth.service';
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, computed } from '@angular/core';
 import { ICity } from '@/components/card/city-card';
 import { BaseApiService } from '@/services/base-api.service';
 import { SegmentButtonItem } from '@/components/common/segment-button';
+import { ModalService } from './modal.service';
+import { NavigationService } from './navigation.service';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
   private authService = inject(AuthService);
+  private modalService = inject(ModalService);
+  private navigationService = inject(NavigationService);
 
   datePipe = new DatePipe('en-US');
   recommendedEvents = signal<IEvent[]>([]);
@@ -30,6 +34,7 @@ export class EventService extends BaseApiService {
   upcomingEvents = signal<IEvent[]>([]);
   cityCards = signal<ICity[]>([]);
   isLoadingCities = signal<boolean>(false);
+  isLoggedIn = computed(() => !!this.authService.currentUser());
 
   async createEvents(eventsPayload: any[]): Promise<EventResponse> {
     try {
@@ -731,6 +736,7 @@ export class EventService extends BaseApiService {
       order
     };
 
+    if (q.id != null) formatted.id = q.id;
     if (q.min != null) formatted.min = q.min;
     if (q.max != null) formatted.max = q.max;
     if (q.rating_scale || q.rating) formatted.rating_scale = q.rating_scale || q.rating;
@@ -754,7 +760,9 @@ export class EventService extends BaseApiService {
         return { option: opt, order: index + 1 };
       }
       if (typeof opt === 'object' && opt.option) {
-        return { option: opt.option, order: opt.order ?? index + 1 };
+        const formatted: { option: string; order: number; id?: string } = { option: opt.option, order: opt.order ?? index + 1 };
+        if (opt.id != null) formatted.id = opt.id;
+        return formatted;
       }
       return { option: String(opt), order: index + 1 };
     });
@@ -1286,7 +1294,7 @@ export class EventService extends BaseApiService {
     }
   }
 
-  async getEventQuestionAnalysis(eventId: string, eventPhase: 'PreEvent' | 'PostEvent', page: number = 1, limit: number = 20): Promise<any> {
+  async getEventQuestionAnalysis(eventId: string, eventPhase: 'PreEvent' | 'PostEvent' | '' , page: number = 1, limit: number = 20): Promise<any> {
     try {
       let httpParams = new HttpParams();
       if (eventId) {
@@ -1407,9 +1415,42 @@ export class EventService extends BaseApiService {
       return userId === currentUser.id && role === 'cohost';
     });
 
-    console.log('isHost', isHost);
-
     return isHost || isCoHost;
+  }
+
+  checkSpeakerOrSponsorAccess(eventData: any): boolean {
+    const currentUser = this.authService?.currentUser();
+
+    if (!currentUser?.id || !eventData?.participants) {
+      return false;
+    }
+
+    const participants = eventData.participants || [];
+    const isSpeaker = participants.some((p: any) => {
+      const userId = p.user?.id;
+      const role = (p.role || '').toLowerCase();
+      return userId === currentUser.id && role === 'speaker';
+    });
+
+    const isSponsor = participants.some((p: any) => {
+      const userId = p.user?.id;
+      const role = (p.role || '').toLowerCase();
+      return userId === currentUser.id && role === 'sponsor';
+    });
+
+    return isSpeaker || isSponsor;
+  }
+
+  async checkIsLoggin(): Promise<boolean> {
+    if (!this.isLoggedIn()) {
+      const result = await this.modalService.openLoginModal();
+
+      if (!result?.success) {
+        return false; // login failed or cancelled
+      }
+    }
+
+    return true; // already logged in OR login succeeded
   }
 
   sanitizeOgDescription(html: string): string {

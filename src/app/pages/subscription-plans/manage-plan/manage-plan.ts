@@ -258,7 +258,7 @@ export class ManagePlan implements OnInit {
         shareButtonLabel: 'Share',
         customColor: !this.isSponsor() ? '#2B5BDE' : undefined,
         onShare: async () => {
-          await this.modalService.openShareModal(planData.id, 'Event');
+          await this.modalService.openShareModal(planData.id, 'Plan');
         }
       });
 

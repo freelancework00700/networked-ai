@@ -1,11 +1,12 @@
-import { AnalyticsQuestion } from '@/interfaces/event';
 import { IonIcon } from '@ionic/angular/standalone';
+import { AnalyticsQuestion } from '@/interfaces/event';
 import { Component, inject, input } from '@angular/core';
+import { EmptyState } from "@/components/common/empty-state";
 import { NavigationService } from '@/services/navigation.service';
 
 @Component({
   selector: 'questionnaire-analytics',
-  imports: [IonIcon],
+  imports: [IonIcon, EmptyState],
   templateUrl: './questionnaire-analytics.html',
   styleUrl: './questionnaire-analytics.scss'
 })

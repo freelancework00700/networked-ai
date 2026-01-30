@@ -33,11 +33,11 @@ export class ManageRoleModal implements OnInit {
   selectedRole = signal<string>('');
   filteredUsers = signal<IUser[]>([]);
   isLoading = signal<boolean>(false);
+  isLoadingRoles = signal<boolean>(false);
   isSearching = signal<boolean>(false);
   selectedMembers = signal<IUser[]>([]);
 
   // inputs
-  @Input() participants: any[] = [];
   @Input() eventId: string = '';
 
   // signals
@@ -77,14 +77,15 @@ export class ManageRoleModal implements OnInit {
     return this.isAddMode() ? `Add ${this.selectedRole()}` : 'Manage Roles';
   });
 
-  ngOnInit() {
-    console.log('participants', this.participants);
+  async ngOnInit() {
+    this.isLoadingRoles.set(true);
+    const eventData = await this.eventService.getEventById(this.eventId);
     this.form.set(
       this.fb.group({
         users: this.fb.array(
-          this.participants
-            .filter((user) => user.role !== 'Host')
-            .map((user) =>
+          eventData.participants
+            .filter((user: any) => user.role !== 'Host')
+            .map((user: any) =>
               this.fb.group({
                 id: [user.user_id],
                 name: [user.user.name],
@@ -96,6 +97,7 @@ export class ManageRoleModal implements OnInit {
         )
       })
     );
+    this.isLoadingRoles.set(false);
   }
 
   get usersFormArray(): FormArray {

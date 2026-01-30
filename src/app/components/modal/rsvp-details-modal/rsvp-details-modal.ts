@@ -58,7 +58,6 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   @Input() eventLocation: string = '';
   @Input() eventId: string = '';
   @Input() rsvpData: RsvpDetailsData | null = null;
-  @Input() subscriptionId: string = '';
   @Input() hostPaysFees: boolean = false;
   @Input() additionalFees: string | number | null = null;
   @Input() hostName: string = 'Networked AI';
@@ -162,62 +161,6 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
 
   platformFee = computed(() => this.rsvpDataSignal()?.platformFee ?? 0);
 
-  freeTicketDiscount = computed(() => {
-    // First, check if freeTicketDiscount is already provided in rsvpData
-    const rsvpData = this.rsvpDataSignal();
-    if (rsvpData?.freeTicketDiscount !== undefined && rsvpData.freeTicketDiscount > 0) {
-      return rsvpData.freeTicketDiscount;
-    }
-
-    // Fallback: Calculate it ourselves if not provided
-    // Check if subscription exists (subscriptionId is truthy and not empty)
-    if (!this.subscriptionId || this.subscriptionId.trim() === '') return 0;
-
-    const tickets = rsvpData?.tickets || [];
-    if (tickets.length === 0) return 0;
-
-    // Filter to get only paid tickets (price > 0) with selected quantity > 0
-    const paidTickets = tickets.filter((ticket) => {
-      const quantity = ticket.selectedQuantity || 0;
-      const price = ticket.price || 0;
-      return price > 0 && quantity > 0;
-    });
-
-    if (paidTickets.length === 0) return 0;
-
-    // Get the first paid ticket (matching rsvp-modal logic)
-    const firstPaidTicket = paidTickets[0];
-
-    // Return the price of the first paid ticket as the discount (max 1 free ticket)
-    // The discount is the price of 1 ticket, not the total
-    return firstPaidTicket.price || 0;
-  });
-
-  freeTicketName = computed(() => {
-    if (this.freeTicketDiscount() === 0) return '';
-
-    const tickets = this.rsvpDataSignal()?.tickets || [];
-    if (tickets.length === 0) return '';
-
-    // Filter to get only paid tickets (price > 0) with selected quantity > 0
-    const paidTickets = tickets.filter((ticket) => {
-      const quantity = ticket.selectedQuantity || 0;
-      const price = ticket.price || 0;
-      return price > 0 && quantity > 0;
-    });
-
-    if (paidTickets.length === 0) return '';
-
-    // Get the first paid ticket name
-    const firstPaidTicket = paidTickets[0];
-    return firstPaidTicket.name || 'Free Ticket';
-  });
-
-  subscriberPerk = computed(() => {
-    if (!this.subscriptionId) return 0;
-    return 10.0;
-  });
-
   promoCodeTicketCount = computed(() => {
     const rsvpData = this.rsvpDataSignal();
 
@@ -247,9 +190,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
 
   totalPrice = computed(() => {
     const baseTotal = this.rsvpDataSignal()?.total || 0;
-    const perk = this.subscriberPerk();
-
-    return Math.max(0, baseTotal - perk);
+    return baseTotal;
   });
 
   formattedTotal = computed(() => {

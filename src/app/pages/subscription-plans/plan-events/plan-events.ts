@@ -560,7 +560,7 @@ export class PlanEvents implements OnInit, OnDestroy {
         event_ids: updatedEventIds
       };
 
-      await this.subscriptionService.updatePlan(planData.id, payload);
+      const response = await this.subscriptionService.updatePlan(planData.id, payload);
 
       const isSponsorValue = planData.is_sponsor ?? false;
       const color = !isSponsorValue ? '#2B5BDE' : '';
@@ -578,7 +578,10 @@ export class PlanEvents implements OnInit, OnDestroy {
         icon: icon,
         iconBgColor: iconBgColor,
         customColor: color,
-        iconPosition: 'center'
+        iconPosition: 'center',
+        onShare: async () => {
+          await this.modalService.openShareModal(response?.data?.id, 'Plan');
+        }
       });
 
       this.viewMode.set('included');

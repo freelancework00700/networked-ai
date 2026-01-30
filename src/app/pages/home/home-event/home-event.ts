@@ -13,7 +13,19 @@ import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
 import { UserRecommendations } from '@/components/common/user-recommendations';
 import { IonSkeletonText } from '@ionic/angular/standalone';
-import { signal, computed, Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, ViewChild, ElementRef, PLATFORM_ID } from '@angular/core';
+import {
+  signal,
+  computed,
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  OnInit,
+  OnDestroy,
+  effect,
+  ViewChild,
+  ElementRef,
+  PLATFORM_ID
+} from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 interface FeedPost {
@@ -49,42 +61,67 @@ export class HomeEvent implements OnInit, OnDestroy {
   eventSwiper?: Swiper;
   recommendationSwiper?: Swiper;
   private platformId = inject(PLATFORM_ID);
-  
+
   @ViewChild('swiperEl')
-  set citySwiperEl(el: ElementRef<HTMLDivElement>) {
-    if (!el || !isPlatformBrowser(this.platformId) || this.citySwiper) return;
-  
+  set citySwiperEl(el: ElementRef<HTMLDivElement> | undefined) {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    // When Angular removes the element (skeleton -> real), el becomes undefined
+    if (!el) {
+      this.citySwiper?.destroy(true, true);
+      this.citySwiper = undefined;
+      return;
+    }
+
+    // Re-init swiper for the new DOM
+    this.citySwiper?.destroy(true, true);
+
     this.citySwiper = new Swiper(el.nativeElement, {
       ...this.swiperConfigs['cities'],
       observer: true,
-      observeParents: true,
+      observeParents: true
     });
   }
-  
+
   @ViewChild('swiperPublicEvents')
-  set eventSwiperEl(el: ElementRef<HTMLDivElement>) {
-    if (!el || !isPlatformBrowser(this.platformId) || this.eventSwiper) return;
-  
+  set eventSwiperEl(el: ElementRef<HTMLDivElement> | undefined) {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    // When Angular removes the element
+    if (!el) {
+      this.eventSwiper?.destroy(true, true);
+      this.eventSwiper = undefined;
+      return;
+    }
+
+    // Re-init for new DOM
+    this.eventSwiper?.destroy(true, true);
+
     this.eventSwiper = new Swiper(el.nativeElement, {
       ...this.swiperConfigs['events'],
       observer: true,
-      observeParents: true,
+      observeParents: true
     });
   }
-  
   @ViewChild('swiperEventRecommendation')
-  set recommendationSwiperEl(el: ElementRef<HTMLDivElement>) {
-    if (!el || !isPlatformBrowser(this.platformId) || this.recommendationSwiper)
+  set recommendationSwiperEl(el: ElementRef<HTMLDivElement> | undefined) {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    if (!el) {
+      this.recommendationSwiper?.destroy(true, true);
+      this.recommendationSwiper = undefined;
       return;
-  
+    }
+
+    this.recommendationSwiper?.destroy(true, true);
+
     this.recommendationSwiper = new Swiper(el.nativeElement, {
       ...this.swiperConfigs['events'],
       observer: true,
-      observeParents: true,
+      observeParents: true
     });
   }
-  
-  
+
   navigationService = inject(NavigationService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -108,25 +145,6 @@ export class HomeEvent implements OnInit, OnDestroy {
 
   cityCards = computed(() => this.eventService.cityCards());
   isLoadingCities = computed(() => this.eventService.isLoadingCities());
-
-  feedPosts: FeedPost[] = [
-    {
-      id: '1',
-      primaryUser: {
-        name: 'Ricky James',
-        profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'
-      },
-      otherCount: 3,
-      event: {
-        title: 'Atlanta Makes Me Laugh',
-        organization: 'Networked AI',
-        date: 'Fri 8/30, 7.00AM',
-        location: 'Atlanta, GA',
-        total_views: '12',
-        image: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80'
-      }
-    }
-  ];
 
   networkSuggestions: NetworkSuggestion[] = [
     {
@@ -200,7 +218,7 @@ export class HomeEvent implements OnInit, OnDestroy {
   }
 
   private async loadEventsIfNeeded(): Promise<void> {
-    this.destroySwipers(); 
+    this.destroySwipers();
     const hasRecommendedEvents = this.eventService.recommendedEvents().length > 0;
     const hasPublicEvents = this.eventService.publicEvents().length > 0;
     const hasUpcomingEvents = this.eventService.upcomingEvents().length > 0;
@@ -231,7 +249,7 @@ export class HomeEvent implements OnInit, OnDestroy {
   }
 
   private async handleAccountChangeAndLogin(): Promise<void> {
-    this.destroySwipers(); 
+    this.destroySwipers();
     this.eventService.resetAllEvents();
     this.eventService.cityCards.set([]);
     await this.loadAllEvents(true);
@@ -316,7 +334,7 @@ export class HomeEvent implements OnInit, OnDestroy {
 
   async refresh(): Promise<void> {
     try {
-      this.destroySwipers(); 
+      this.destroySwipers();
       this.eventService.resetAllEvents();
       this.loadAllEvents(true);
       if (this.isLoggedIn()) {
@@ -327,19 +345,19 @@ export class HomeEvent implements OnInit, OnDestroy {
       console.error('Error refreshing events:', error);
     }
   }
-  
+
   private destroySwipers(): void {
     this.citySwiper?.destroy(true, true);
     this.eventSwiper?.destroy(true, true);
     this.recommendationSwiper?.destroy(true, true);
-  
+
     this.citySwiper = undefined;
     this.eventSwiper = undefined;
     this.recommendationSwiper = undefined;
   }
-  
+
   private async loadTopCities(reset: boolean = false): Promise<void> {
-    this.destroySwipers(); 
+    this.destroySwipers();
 
     if (!reset && this.eventService.cityCards().length > 0) return;
 

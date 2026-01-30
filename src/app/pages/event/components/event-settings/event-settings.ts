@@ -51,9 +51,9 @@ export class EventSettings {
     { label: 'Custom', value: 'custom' }
   ]);
 
-  sections = signal<Array<{ type: 'pre_event' | 'post_event'; label: string; placeholder: string }>>([
-    { type: 'pre_event', label: 'Pre-Event', placeholder: 'Displayed when user signs up for the event.' },
-    { type: 'post_event', label: 'Post-Event', placeholder: 'A feedback survey after the event has concluded.' }
+  sections = signal<Array<{ type: 'pre-event' | 'post-event'; label: string; placeholder: string }>>([
+    { type: 'pre-event', label: 'Pre-Event', placeholder: 'Displayed when user signs up for the event.' },
+    { type: 'post-event', label: 'Post-Event', placeholder: 'A feedback survey after the event has concluded.' }
   ]);
 
   // Main event signal from form data (reactive to form changes)
@@ -261,7 +261,7 @@ export class EventSettings {
     const questionnaire = this.getFieldValue<Array<any>>('questionnaire');
     if (!questionnaire || !Array.isArray(questionnaire) || questionnaire.length === 0) return [];
 
-    const eventPhase = type === 'pre_event' ? 'PreEvent' : 'PostEvent';
+    const eventPhase = type === 'pre-event' ? 'PreEvent' : 'PostEvent';
     return questionnaire
       .filter((q: any) => q.event_phase === eventPhase)
       .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
@@ -275,7 +275,7 @@ export class EventSettings {
     const questionnaire = this.getFieldValue<Array<any>>('questionnaire');
     if (!questionnaire || !Array.isArray(questionnaire) || questionnaire.length === 0) return [];
 
-    const eventPhase = type === 'pre_event' ? 'PreEvent' : 'PostEvent';
+    const eventPhase = type === 'pre-event' ? 'PreEvent' : 'PostEvent';
     return questionnaire.filter((q: any) => q.event_phase === eventPhase).sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
   }
 
@@ -345,7 +345,7 @@ export class EventSettings {
     return this.openConfirmModal()(message);
   }
 
-  async openQuestionnaireModal(type: 'pre_event' | 'post_event'): Promise<void> {
+  async openQuestionnaireModal(type: 'pre-event' | 'post-event'): Promise<void> {
     const currentQuestions = this.getSectionQuestionsForEdit(type);
     const result = await this.modalService.openQuestionnaireFormModal(type, currentQuestions.length > 0 ? currentQuestions : undefined);
 
@@ -354,7 +354,7 @@ export class EventSettings {
       const questionnaireControl = form.get('questionnaire');
       const existingQuestions = (questionnaireControl?.value as Array<any>) || [];
 
-      const eventPhase = type === 'pre_event' ? 'PreEvent' : 'PostEvent';
+      const eventPhase = type === 'pre-event' ? 'PreEvent' : 'PostEvent';
       const filteredQuestions = existingQuestions.filter((q: any) => q.event_phase !== eventPhase);
 
       const updatedQuestions = [...filteredQuestions, ...result.questions];
@@ -364,12 +364,12 @@ export class EventSettings {
     }
   }
 
-  deleteEventQuestionnaire(type: 'pre_event' | 'post_event'): void {
+  deleteEventQuestionnaire(type: 'pre-event' | 'post-event'): void {
     const form = this.eventForm();
     const questionnaireControl = form.get('questionnaire');
     const existingQuestions = (questionnaireControl?.value as Array<any>) || [];
 
-    const eventPhase = type === 'pre_event' ? 'PreEvent' : 'PostEvent';
+    const eventPhase = type === 'pre-event' ? 'PreEvent' : 'PostEvent';
     const filteredQuestions = existingQuestions.filter((q: any) => q.event_phase !== eventPhase);
 
     questionnaireControl?.setValue(filteredQuestions);

@@ -23,11 +23,14 @@ import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
-import { InputTextModule } from 'primeng/inputtext';
+import { Capacitor } from '@capacitor/core';
+import { TextareaModule } from 'primeng/textarea';
 import { ChatFeedCard } from '@/components/card/chat-feed-card';
 import { ChatEventCard } from '@/components/card/chat-event-card';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
+import { EventService } from '@/services/event.service';
+import { IEvent } from '@/interfaces/event';
 
 @Component({
   selector: 'chat-room',
@@ -47,7 +50,7 @@ import { environment } from 'src/environments/environment';
     IconField,
     InputIcon,
     CommonModule,
-    InputTextModule,
+    TextareaModule,
     PickerComponent,
     NgOptimizedImage,
     ChatFeedCard,
@@ -68,6 +71,7 @@ export class ChatRoom implements OnInit, OnDestroy {
   private router = inject(Router);
   private datePipe = new DatePipe('en-US');
   private sanitizer = inject(DomSanitizer);
+  private eventService = inject(EventService);
 
   // Socket event handler references for cleanup
   private messageCreatedHandler?: (payload: { message: ChatMessage }) => void;
@@ -79,6 +83,7 @@ export class ChatRoom implements OnInit, OnDestroy {
   chatName = signal('');
   otherUser = signal<ChatRoomUser | null>(null);
   isEvent = signal<boolean>(false);
+  eventData = signal<IEvent | null>(null);
   isGroup = computed(() => this.chatRoom()?.is_personal === false);
   selectedIndex = signal<string | null>(null);
   editingIndex = signal<string | null>(null);
@@ -93,6 +98,20 @@ export class ChatRoom implements OnInit, OnDestroy {
     return this.sortMessages(this.messages());
   });
 
+  showEventAnalytics = computed(() => {
+    const event = this.eventData();
+  
+    if (!event?.questionnaire?.length) {
+      return false;
+    }
+  
+    return event.questionnaire.some(
+      (q: any) =>
+        q.is_public === true &&
+        ['SingleChoice', 'MultipleChoice', 'Rating'].includes(q.question_type)
+    );
+  });
+  
   /**
    * Check if we should show a date separator before a message
    */
@@ -155,7 +174,7 @@ export class ChatRoom implements OnInit, OnDestroy {
 
   currentUser = this.authService.currentUser;
 
-  private updateChatRoomInfo(room: any): void {
+  private async updateChatRoomInfo(room: any): Promise<void> {
     if (room) {
       if (room.event?.title) {
         this.chatName.set(room.event.title);
@@ -169,6 +188,10 @@ export class ChatRoom implements OnInit, OnDestroy {
         this.chatName.set(room.name || 'Chat');
       }
       this.isEvent.set(!!room.event_id);
+      if(room.event_id){
+        const eventData = await this.eventService.getEventById(room.event_id);
+        this.eventData.set(eventData);
+      }
     }
   }
 
@@ -723,5 +746,17 @@ export class ChatRoom implements OnInit, OnDestroy {
     if (path) {
       this.navigationService.navigateForward(path);
     }
+  }
+
+  /**
+ * Web: Enter = send, Shift+Enter = new line.
+ * Native: Enter = new line (default), send via button.
+ */
+  onMessageKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Enter') return;
+    if (Capacitor.isNativePlatform()) return;
+    if (event.shiftKey) return;
+    event.preventDefault();
+    this.sendMessage();
   }
 }

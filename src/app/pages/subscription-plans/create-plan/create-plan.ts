@@ -62,7 +62,6 @@ interface Event {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CreatePlan implements OnInit {
-  @Input() planId?: string;
   SPONSOR_GRADIENT =
     'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
 
@@ -671,34 +670,31 @@ export class CreatePlan implements OnInit {
         event_ids: formValue.event_ids || []
       };
 
-      let response;
-      if (this.planId) {
-        response = await this.subscriptionService.updatePlan(this.planId, payload);
-        this.toasterService.showSuccess(response?.message || 'Plan updated successfully');
-      } else {
-        response = await this.subscriptionService.createPlan(payload);
+        let response = await this.subscriptionService.createPlan(payload);
         this.toasterService.showSuccess(response?.message || 'Plan created successfully');
-      }
 
       const isSponsorValue = this.planForm().get('is_sponsor')?.value ?? true;
       const color = !isSponsorValue ? '#2B5BDE' : '';
       const iconBgColor = isSponsorValue ? this.SPONSOR_GRADIENT : color;
 
       await this.modalService.openConfirmModal({
-        title: this.planId ? 'Subscription Updated!' : 'Subscription Published!',
-        description: this.planId ? 'Your subscription plan has been updated!' : 'Your subscription plan is now live!',
+        title: 'Subscription Published!',
+        description: 'Your subscription plan is now live!',
         confirmButtonLabel: 'Done',
-        cancelButtonLabel: 'Share',
+        shareButtonLabel: 'Share',
         confirmButtonColor: 'primary',
         icon: 'assets/svg/launch.svg',
         iconBgColor: iconBgColor,
-        customColor: color
+        customColor: color,
+        onShare: async () => {
+          await this.modalService.openShareModal(response?.data?.id, 'Plan');
+        }
       });
 
       this.navigationService.back();
     } catch (error: any) {
       console.error('Error launching plan:', error);
-      const errorMessage = error?.message || (this.planId ? 'Failed to update plan. Please try again.' : 'Failed to create plan. Please try again.');
+      const errorMessage = error?.message || 'Failed to create plan. Please try again';
       this.toasterService.showError(errorMessage);
     } finally {
       this.isLaunching.set(false);

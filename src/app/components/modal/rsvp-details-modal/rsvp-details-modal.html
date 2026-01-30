@@ -133,10 +133,13 @@
           }
         }
 
-        @if (freeTicketDiscount() > 0) {
-          <div class="flex items-center justify-between">
-            <span class="body-14R neutral-02">{{ freeTicketName() }} x1</span>
-            <span class="body-14M accent-red">-${{ formatCurrency(freeTicketDiscount()) }}</span>
+        @if (rsvpDataSignal()?.freeTicketDiscount || 0 > 0) {
+          <div class="flex items-center justify-between accent-blue">
+            <div class="flex items-center gap-1">
+              <div class="pi pi-crown"></div>
+              <span class="body-14R">Subscriber Perk</span>
+            </div>
+            <span class="body-14M">-${{ formatCurrency(rsvpDataSignal()?.freeTicketDiscount || 0) }}</span>
           </div>
         }
 
@@ -162,16 +165,6 @@
           <div class="flex items-center justify-between">
             <span class="body-14R neutral-02">Platform Fee</span>
             <span class="body-14M neutral-01">${{ formatCurrency(platformFee()) }}</span>
-          </div>
-        }
-
-        @if (subscriptionId && subscriberPerk() > 0) {
-          <div class="flex items-center justify-between accent-blue">
-            <div class="flex items-center gap-1">
-              <div class="pi pi-crown"></div>
-              <span class="body-14R">Subscriber Perk</span>
-            </div>
-            <span class="body-14M">- ${{ formatCurrency(subscriberPerk()) }}</span>
           </div>
         }
 

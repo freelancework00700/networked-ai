@@ -1,82 +1,135 @@
-<div (click)="viewEvent()" class="relative w-full h-[320px] shrink-0 rounded-[16px] overflow-hidden">
-  <img
-    fill
-    placeholder
-    [alt]="currentEvent().title || 'Event image'"
-    class="object-cover"
-    (error)="onImageError($event)"
-    [ngSrc]="eventImage()"
-    [loaderParams]="{ thumbnail: currentEvent().thumbnail_url }"
-  />
-  <!-- dark overlay at bottom -->
-  <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
-
-  <!-- top left: views -->
-  <div class="absolute top-2 left-2 z-10">
-    <div
-      class="flex p-2 justify-center items-center gap-2 rounded-full border border-white/10 bg-black/20 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
-    >
-      <div class="body-12 neutral-07">{{ currentEvent().total_views || 0 }} views</div>
+<div class="rounded-[16px] overflow-hidden" [class.card-disabled]="!allowToview()">
+  @if (hasPlans()) {
+    <div class="badge py-2" [class.badge-free]="!isSubscriberExclusive()" [class.badge-exclusive]="isSubscriberExclusive()">
+      <ion-icon src="/assets/svg/crown-white.svg" class="text-xl"></ion-icon>
+      {{ isSubscriberExclusive() ? 'Subscribers Exclusive' : 'Free for Subscribers' }}
     </div>
-  </div>
+  }
 
-  <!-- top right: icons -->
-  <div class="absolute top-2 right-2 z-10 flex items-center gap-2">
+  <!-- GRADIENT BORDER -->
+  <div [class.border-free]="hasPlans() && !isSubscriberExclusive()" [class.border-exclusive]="isSubscriberExclusive()">
+    <!-- CARD -->
     <div
-      class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
+      (click)="viewEvent()"
+      class="relative w-full shrink-0 rounded-[16px] overflow-hidden"
+      [class.h-[320px]]="hasPlans()"
+      [class.h-[360px]]="!hasPlans()"
     >
-      <div (click)="shareEvent(); $event.stopPropagation()" class="pi pi-upload text-white !text-[14px]"></div>
-    </div>
+      <img
+        fill
+        placeholder
+        [alt]="currentEvent().title || 'Event image'"
+        class="object-cover"
+        (error)="onImageError($event)"
+        [ngSrc]="eventImage()"
+        [loaderParams]="{ thumbnail: currentEvent().thumbnail_url }"
+      />
+      <!-- gradient overlay -->
+      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
 
-    <div
-      class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
-      (click)="likeEvent($event)"
-    >
-      <div
-        class="pi !text-[14px] text-white"
-        [class.pi-heart-fill]="isEventLiked()"
-        [class.pi-heart]="!isEventLiked()"
-        [class.accent-red]="isEventLiked()"
-      ></div>
-    </div>
-  </div>
-
-  <!-- bottom content -->
-  <div class="absolute bottom-0 left-0 right-0 p-2 z-10">
-    <div
-      class="flex flex-col p-2 px-3 pb-3 items-start gap-2 self-stretch rounded-xl border border-white/10 bg-[rgba(25,25,25,0.40)] backdrop-blur-sm"
-    >
-      <div class="flex flex-col gap-0.5">
-        <div class="body-16SB neutral-07 line-clamp-2">{{ currentEvent().title || 'Untitled Event' }}</div>
-        <div class="body-12 neutral-05">{{ eventOrganization() }}</div>
-      </div>
-
-      <div class="h-[1px] w-full bg-white/10"></div>
-      @if (variant() === 'compact') {
-        <div class="flex items-center gap-4 w-full">
-          <div class="flex items-center gap-1.5">
-            <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
-            <span class="body-12 neutral-05">{{ formattedDate() }}</span>
-          </div>
-
-          <div class="flex items-center gap-1.5 min-w-0 flex-1 max-w-full">
-            <div class="pi pi-map-marker neutral-07 !text-[12px] shrink-0"></div>
-            <span class="body-12 neutral-05 truncate flex-1 min-w-0 max-w-full">{{ formattedLocation() }}</span>
+      @if (!isSubscriberExclusive() || (isSubscriberExclusive() && (currentEvent().has_subscribed || isHost()))) {
+        <!-- top left: views -->
+        <div class="absolute top-2 left-2 z-10">
+          <div
+            class="flex p-2 justify-center items-center gap-2 rounded-full border border-white/10 bg-black/20 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
+          >
+            <div class="body-12 neutral-07">{{ currentEvent().total_views || 0 }} views</div>
           </div>
         </div>
-      } @else {
-        <div class="flex items-start gap-1 flex-col max-w-full">
-          <div class="flex items-center gap-1.5">
-            <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
-            <span class="body-12 neutral-05">{{ formattedDate() }}</span>
+
+        <!-- top right: icons -->
+        <div class="absolute top-2 right-2 z-10 flex items-center gap-2">
+          <div
+            class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
+          >
+            <ion-icon src="/assets/svg/share.svg" class="h-[20px] w-[20px]" (click)="shareEvent(); $event.stopPropagation()"></ion-icon>
           </div>
 
-          <div class="flex items-center gap-1.5 min-w-0 w-full max-w-full">
-            <div class="pi pi-map-marker neutral-07 !text-[12px] shrink-0"></div>
-            <span class="body-12 neutral-05 truncate flex-1 min-w-0 max-w-full">{{ formattedLocation() }}</span>
+          <div
+            class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
+            (click)="likeEvent($event)"
+          >
+            @if (isEventLiked()) {
+              <div class="pi pi-heart-fill !text-[19px] accent-red"></div>
+            } @else {
+              <ion-icon src="/assets/svg/like.svg" class="h-[20px] w-[20px]"></ion-icon>
+            }
           </div>
+          @if ((isHostOrCoHost() || isAttendee()) && isLoggedIn()) {
+              <div
+              class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
+              (click)="openEventChat($event)"
+            >
+              <ion-icon src="assets/svg/manage-event/chat-white.svg" class="h-5 w-5"></ion-icon>
+            </div>
+            @if(isHostOrCoHost()){
+              <div
+                class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
+                (click)="openMenu($event)"
+              >
+                <ion-icon src="assets/svg/manage-event/settings-white.svg" class="h-6 w-6"></ion-icon>
+              </div>
+            }
+          }
         </div>
       }
+      @if (isSubscriberExclusive() && !currentEvent().has_subscribed && !isHost()) {
+        <div class="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center pointer-events-none">
+          <img src="/assets/svg/subscription/unlock-sponsor.svg" class="h-15 w-auto" />
+        </div>
+      }
+
+      <!-- bottom content -->
+      <div class="absolute bottom-0 left-0 right-0 p-2 z-10">
+        <div
+          class="flex flex-col p-2 px-3 pb-3 items-start gap-2 self-stretch rounded-xl backdrop-blur-sm"
+          [ngClass]="{
+            'locked-gradient-border': isSubscriberExclusive() && !currentEvent().has_subscribed && !isHost(),
+            'border border-white/10': !(isSubscriberExclusive() && !currentEvent().has_subscribed && !isHost())
+          }"
+        >
+          <div class="flex flex-col gap-0.5">
+            <div class="body-16SB neutral-07 line-clamp-2">{{ currentEvent().title || 'Untitled Event' }}</div>
+            <div class="flex justify-between items-center py-2">
+              <div class="body-12 neutral-05 absolute left-3 z-10">{{ eventOrganization() }}</div>
+              <div class="body-12 neutral-05 absolute right-2 z-10 flex items-center gap-2">
+                @if (isSubscriberExclusive() && !currentEvent().has_subscribed && !isHost()) {
+                  See event details
+                  <div class="pi pi-arrow-right !text-[12px]"></div>
+                }
+              </div>
+            </div>
+          </div>
+          @if (!isSubscriberExclusive() || (isSubscriberExclusive() && (currentEvent().has_subscribed || isHost()))) {
+            <div class="h-[1px] w-full bg-white/10"></div>
+            @if (variant() === 'compact') {
+              <div class="flex items-center gap-4 w-full">
+                <div class="flex items-center gap-1.5">
+                  <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
+                  <span class="body-12 neutral-05">{{ formattedDate() }}</span>
+                </div>
+
+                <div class="flex items-center gap-1.5 min-w-0 flex-1 max-w-full">
+                  <div class="pi pi-map-marker neutral-07 !text-[12px] shrink-0"></div>
+                  <span class="body-12 neutral-05 truncate flex-1 min-w-0 max-w-full">{{ formattedLocation() }}</span>
+                </div>
+              </div>
+            } @else {
+              <div class="flex items-start gap-1 flex-col max-w-full">
+                <div class="flex items-center gap-1.5">
+                  <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
+                  <span class="body-12 neutral-05">{{ formattedDate() }}</span>
+                </div>
+
+                <div class="flex items-center gap-1.5 min-w-0 w-full max-w-full">
+                  <div class="pi pi-map-marker neutral-07 !text-[12px] shrink-0"></div>
+                  <span class="body-12 neutral-05 truncate flex-1 min-w-0 max-w-full">{{ formattedLocation() }}</span>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
     </div>
   </div>
 </div>

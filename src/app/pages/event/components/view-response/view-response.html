@@ -28,18 +28,18 @@
       </div>
 
       <!-- Text Answer -->
-      @if (item.question_type === 'Text' || item.question_type === 'PhoneNumber') {
-        <div class="rounded-xl border border-surface-300 px-3 py-2 body-14M neutral-02">
+      @if (item.question_type === 'Text' || item.question_type === 'PhoneNumber' || item.question_type === 'Number') {
+        <div class="rounded-xl border border-surface-300 px-3 py-2 body-14M neutral-01">
           {{ item.answer }}
         </div>
       }
 
       <!-- Chips Answer -->
-      @if (item.question_type === 'SingleChoice' || item.question_type === 'MultipleChoice' || item.question_type === 'Number') {
+      @if (item.question_type === 'SingleChoice' || item.question_type === 'MultipleChoice') {
         <div class="flex flex-wrap gap-2">
-          @for (chip of item.answer; track chip) {
-            <span class="rounded-lg border border-surface-300 px-3 py-2 body-14M neutral-02">
-              {{ chip }}
+          @for (chip of item.answer_options; track chip) {
+            <span class="rounded-xl border border-surface-300 px-3 py-1.5 body-14M neutral-01">
+              {{ chip.option }}
             </span>
           }
         </div>
@@ -47,7 +47,7 @@
 
       <!-- Scale Answer -->
       @if (item.question_type === 'Rating') {
-        <div class="rounded-xl border border-surface-300 px-3 py-1 body-14M neutral-02">
+        <div class="rounded-xl border border-surface-300 px-3 py-1 body-14M neutral-01">
           <span class="heading-h3">{{ item.answer }}</span> / {{ item.rating_scale }}
         </div>
       }

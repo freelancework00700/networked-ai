@@ -63,6 +63,7 @@ export class QuestionnaireResponse implements OnInit {
   totalPages = signal<number>(0);
   analytics = signal<any[]>([]);
   eventId = signal<string>('');
+  eventData = signal<any | null>(null);
 
   hasMore = computed(() => this.currentPage() < this.totalPages());
   isResponsesMode = computed(() => (this.segmentValue() === 'pre-event' || this.segmentValue() === 'post-event') && this.filter() === 'responses');
@@ -70,6 +71,7 @@ export class QuestionnaireResponse implements OnInit {
     { value: 'pre-event', label: 'Pre-Event' },
     { value: 'post-event', label: 'Post-Event' }
   ]);
+  
   constructor() {
     effect(() => {
       const segment = this.segmentValue();
@@ -105,6 +107,7 @@ export class QuestionnaireResponse implements OnInit {
       if (!eventId) return;
 
       const eventData = await this.eventService.getEventById(eventId);
+      this.eventData.set(eventData);
 
       if (!this.eventService.checkHostOrCoHostAccess(eventData)) {
         this.isHost.set(false);
@@ -134,7 +137,7 @@ export class QuestionnaireResponse implements OnInit {
       this.totalResponses.set(response?.pagination?.totalCount || 0);
       this.totalPages.set(response?.pagination?.totalPages || 0);
     } else {
-      response = await this.eventService.getEventQuestionAnalysis(eventId, phase);
+      response = await this.eventService.getEventQuestionAnalysis(eventId, this.isHost()? phase:'');
 
       this.analytics.set(response?.questions || []);
       this.totalResponses.set(response?.total_responses || 0);
@@ -167,7 +170,7 @@ export class QuestionnaireResponse implements OnInit {
 
         this.totalPages.set(response?.pagination?.totalPages || 0);
       } else {
-        response = await this.eventService.getEventQuestionAnalysis(eventId, phase, nextPage, 20);
+        response = await this.eventService.getEventQuestionAnalysis(eventId, this.isHost()? phase:'', nextPage, 20);
 
         this.analytics.update((current) => [...current, ...(response?.questions || [])]);
 
@@ -183,27 +186,6 @@ export class QuestionnaireResponse implements OnInit {
     }
   };
 
-  filteredSuggestions = computed(() => {
-    const search = this.searchQuery().toLowerCase().trim();
-    const activeFlag = this.segmentValue() === 'pre-event' ? 'pre' : 'post';
-
-    return this.analytics().filter((item) => {
-      const matchesSegment = item.flag === activeFlag;
-      const matchesSearch = !search || item.question?.toLowerCase().includes(search);
-      return matchesSegment && matchesSearch;
-    });
-  });
-
-  filteredAnalytics = computed(() => {
-    const analytics = this.analytics();
-
-    if (!this.isHost()) {
-      return analytics.filter((item) => item.visibility === 'public');
-    }
-
-    const flag = this.segmentValue() === 'pre-event' ? 'pre' : 'post';
-    return analytics.filter((item) => item.flag === flag);
-  });
 
   goBack() {
     if (this.isViewResponse()) {

@@ -32,7 +32,7 @@ export interface EventForm {
   is_public?: FormControl<boolean | null>;
   repeating_frequency?: FormControl<RepeatingFrequencyType | null>;
   repeat_count?: FormControl<number | 'custom' | null>;
-  repeating_events?: FormControl<any[] | null>;
+  repeating_events?: FormControl<IEvent[] | null>;
   frequency_date?: FormControl<string | null>;
   custom_repeat_count?: FormControl<number | null>;
   questionnaire?: FormControl<any | null>;
@@ -41,6 +41,48 @@ export interface EventForm {
   max_attendees_per_user?: FormControl<number | null>;
   allow_plus_ones?: FormControl<boolean | null>;
   is_repeating_event?: FormControl<boolean | null>;
+}
+
+// Raw form values interface (for patchValue)
+export interface EventFormValues {
+  medias?: any[];
+  title?: string | null;
+  date?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  until_finished?: boolean | null;
+  address?: string | null;
+  latitude?: string | null;
+  longitude?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  category_id?: string | null;
+  category?: string | null;
+  vibes?: string[] | null;
+  description?: string | null;
+  tickets?: Ticket[] | null;
+  promo_codes?: PromoCode[] | null;
+  is_subscriber_exclusive?: boolean | null;
+  is_subscription?: boolean | null;
+  subscription_plan?: string | null;
+  plan_ids?: string[] | null;
+  host_pays_platform_fee?: boolean | null;
+  additional_fees?: string | null;
+  guest_fee_enabled?: boolean | null;
+  participants?: Array<{ user_id: string; role: string; thumbnail_url?: string; name?: string }> | null;
+  is_public?: boolean | null;
+  repeating_frequency?: RepeatingFrequencyType | null;
+  repeat_count?: number | 'custom' | null;
+  repeating_events?: IEvent[] | null;
+  frequency_date?: string | null;
+  custom_repeat_count?: number | null;
+  questionnaire?: QuestionnaireQuestion[] | null;
+  is_rsvp_approval_required?: boolean | null;
+  is_show_timer?: boolean | null;
+  max_attendees_per_user?: number | null;
+  allow_plus_ones?: boolean | null;
+  is_repeating_event?: boolean | null;
 }
 
 export interface TicketFormData {
@@ -94,7 +136,7 @@ export interface PromoCode {
   value: number;
   capped_amount?: number | null;
   quantity?: number | null;
-  max_uses_per_user?: number;
+  max_uses_per_user?: number | null;
 }
 
 export interface SubscriptionPlan {
@@ -131,7 +173,8 @@ export interface EventDisplayData {
   title: string;
   description: string;
   displayMedias: MediaItem[];
-  total_views: string;
+  total_views?: string | number;
+  total_likes?: string | number;
   isPublic: boolean;
   location: string;
   hostName: string;
@@ -154,7 +197,7 @@ export interface EventDisplayData {
   isCurrentUserRequestPending?: boolean;
   isCurrentUserRequestRejected?: boolean;
   tickets: Ticket[];
-  questionnaire: any[];
+  questionnaire: QuestionnaireQuestion[];
   promo_codes: PromoCode[];
   subscriptionPlanType?: 'event' | 'sponsor' | null;
   has_plans?: boolean;
@@ -162,30 +205,133 @@ export interface EventDisplayData {
   has_subscribed?: boolean;
 }
 
-export interface IEvent {
+// Event Settings interface
+export interface EventSettings {
   id?: string;
-  slug?: string;
-  title?: string;
+  is_repeating_event?: boolean;
+  repeating_frequency?: 'Weekly' | 'Monthly';
+  is_rsvp_approval_required?: boolean;
+  is_show_timer?: boolean;
+  max_attendees_per_user?: number;
+  host_pays_platform_fee?: boolean;
+  additional_fees?: number | null;
+  is_subscriber_exclusive?: boolean;
+}
+
+// Event Media interface
+export interface EventMedia {
+  id?: string;
+  media_url?: string;
+  media_type?: 'Image' | 'Video';
+  order?: number;
+  url?: string;
+  file?: File;
+  type?: 'Image' | 'Video' | 'image' | 'video' | 'gif';
+}
+
+// Event Promo Code interface (API response format)
+export interface EventPromoCode {
+  id?: string;
+  promo_code: string;
+  type: 'Percentage' | 'Fixed';
+  value: number;
+  capped_amount?: string | null;
+  available_quantity?: number | null;
+  quantity?: number | null;
+  max_uses_per_user?: number;
+}
+
+// Event Participant interface
+export interface EventParticipant {
+  id?: string;
+  user_id?: string;
+  role?: string;
+  user?: IUser;
+  name?: string;
   thumbnail_url?: string;
-  start_date?: string;
-  end_date?: string;
+}
+
+// Event Plan interface
+export interface EventPlan {
+  id?: string;
+  name: string;
+  description?: string;
+  plan_benefits?: string;
+  is_sponsor?: boolean;
+  active?: boolean;
+  prices?: Array<{
+    id?: string;
+    amount: string;
+    interval: 'year' | 'month';
+    active?: boolean;
+  }>;
+}
+
+// Event Ticket interface (API response format)
+export interface EventTicket {
+  id?: string;
+  name: string;
+  price: number;
+  available_quantity?: number | null;
+  quantity?: number | null;
+  description?: string;
+  ticket_type: TicketType;
+  sales_start_date?: string;
+  sales_end_date?: string;
+  end_at_event_start?: boolean;
+  order?: number;
+}
+
+// RSVP Request interface
+export interface RsvpRequest {
+  id?: string;
+  user_id?: string;
+  event_id?: string;
+  status?: 'Pending' | 'Approved' | 'Rejected' | 'pending' | 'approved' | 'rejected';
+  user?: IUser;
+  value?: number;
+}
+
+// Main Event interface matching API response
+export interface IEvent {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
   address?: string;
+  latitude?: string;
+  longitude?: string;
   city?: string;
   state?: string;
   country?: string;
-  description?: string;
+  category_id?: string;
+  is_paid_event?: boolean;
+  start_date: string;
+  end_date: string;
+  capacity?: number | null;
+  is_public?: boolean;
+  parent_event_id?: string | null;
+  thumbnail_url?: string;
+  image_url?: string;
+  total_views?: string | number;
+  total_likes?: string | number;
+  settings?: EventSettings;
+  medias?: EventMedia[];
+  promo_codes?: EventPromoCode[];
+  vibes?: Vibe[];
+  participants?: EventParticipant[];
   attendees?: EventAttendee[];
-  participants?: Array<{
-    role?: string;
-    user?: {
-      name?: string;
-    };
-  }>;
-  medias?: Array<{
-    media_url?: string;
-    url?: string;
-  }>;
+  parent_event?: IEvent | null;
+  plans?: EventPlan[];
+  tickets?: EventTicket[];
+  questionnaire?: QuestionnaireQuestion[];
+  rsvp_requests?: RsvpRequest[];
+  child_events?: IEvent[];
+  plan_ids?: string[];
   is_like?: boolean;
+  has_plans?: boolean;
+  has_subscribed?: boolean;
+  subscription_id?: string;
   // Legacy fields for backward compatibility
   date?: string;
   day?: string;
@@ -193,9 +339,12 @@ export interface IEvent {
   location?: string;
   dayOfWeek?: string;
   organization?: string;
-  total_views?: string | number;
-  total_likes?: string | number;
-  image_url?: string;
+  start_time?: string;
+  end_time?: string;
+  until_finished?: boolean;
+  questions?: QuestionnaireQuestion[];
+  is_subscriber_exclusive?: boolean;
+  created_by?: string;
 }
 
 export interface QuestionnaireQuestion {
@@ -256,7 +405,7 @@ export interface AnalyticsQuestion {
 export interface EventResponse {
   message?: string;
   success?: boolean;
-  data?: any;
+  data?: IEvent | IEvent[];
 }
 
 export interface EventCategoriesResponse {

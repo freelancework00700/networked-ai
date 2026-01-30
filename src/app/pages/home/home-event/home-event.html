@@ -83,7 +83,7 @@
   <div>
     @if (isLoadingCities()) {
       <!-- Skeleton for cities -->
-      <div class="swiper swiper-city">
+      <div class="swiper swiper-city" #swiperEl>
         <div class="swiper-wrapper">
           @for (i of [1, 2, 3, 4]; track i) {
             <div class="swiper-slide">
@@ -118,7 +118,7 @@
         </div>
       </div>
       <div class="px-4">
-        <div class="swiper swiper-event-recommendation">
+        <div class="swiper swiper-event-recommendation" #swiperEventRecommendation>
           <div class="swiper-wrapper">
             @for (i of [1, 2, 3]; track i) {
               <div class="swiper-slide">
@@ -245,7 +245,7 @@
         </div>
       </div>
       <div class="px-4">
-        <div class="swiper swiper-public-event">
+        <div class="swiper swiper-public-event" #swiperPublicEvents>
           <div class="swiper-wrapper">
             @for (i of [1, 2, 3]; track i) {
               <div class="swiper-slide">

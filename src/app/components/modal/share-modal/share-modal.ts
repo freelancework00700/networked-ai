@@ -62,9 +62,8 @@ export class ShareModal implements OnInit {
   private messagesService = inject(MessagesService);
 
   // inputs
-  @Input() eventId: any;
-  @Input() feedId?: string; // For Post type
-  @Input() type: 'Event' | 'Post' = 'Event';
+  @Input() id?: string;
+  @Input() type: 'Event' | 'Post' | 'Plan' = 'Event';
 
   // signals
   searchQuery = signal<string>('');
@@ -151,9 +150,9 @@ export class ShareModal implements OnInit {
 
   async ngOnInit() {
     await this.loadNetworkConnections();
-    if (this.type === 'Event' && this.eventId) {
+    if (this.type === 'Event' && this.id) {
       try {
-        const eventData = await this.eventService.getEventById(this.eventId);
+        const eventData = await this.eventService.getEventById(this.id);
         if (eventData?.slug) {
           this.eventSlug.set(eventData.slug);
         }
@@ -285,7 +284,7 @@ export class ShareModal implements OnInit {
       this.isSharing.set(true);
 
       if (this.type === 'Post') {
-        if (!this.feedId) {
+        if (!this.id) {
           this.toasterService.showError('Invalid post share request');
           return;
         }
@@ -295,7 +294,7 @@ export class ShareModal implements OnInit {
           peer_ids?: string[];
           send_entire_network?: boolean;
         } = {
-          feed_id: this.feedId
+          feed_id: this.id
         };
 
         sendEntireNetwork ? (payload.send_entire_network = true) : (payload.peer_ids = selectedIds);
@@ -306,13 +305,13 @@ export class ShareModal implements OnInit {
       }
 
       if (this.type === 'Event') {
-        if (!this.eventId) {
+        if (!this.id) {
           this.toasterService.showError('Invalid event share request');
           return;
         }
 
         const payload = {
-          event_id: this.eventId,
+          event_id: this.id,
           type: 'Event',
           send_entire_network: false,
           peer_ids: selectedIds
@@ -321,6 +320,27 @@ export class ShareModal implements OnInit {
         const response = await this.eventService.shareEvent(payload);
 
         this.toasterService.showSuccess(response.message || 'Event shared successfully');
+      }
+
+      if (this.type === 'Plan') {
+        const link = this.getContentLink();
+
+        if (!link) {
+          this.toasterService.showError('Plan link not available');
+          return;
+        }
+
+        const planMessage = `Check out this Subscription plan: ${link}`;
+
+        const payload = {
+          type: 'Text',
+          message: planMessage,
+          send_entire_network: false,
+          peer_ids : [...selectedIds]
+        };
+
+        await this.messagesService.shareInChat(payload);
+        this.toasterService.showSuccess('Plan shared successfully');
       }
 
       await this.modalCtrl.dismiss({ success: true });
@@ -340,13 +360,26 @@ export class ShareModal implements OnInit {
     if (this.type === 'Event' && this.eventSlug()) {
       return `${environment.frontendUrl}/event/${this.eventSlug()}`;
     }
-    if (this.type === 'Post' && this.feedId) {
-      return `${environment.frontendUrl}/post/${this.feedId}`;
+    if (this.type === 'Post' && this.id) {
+      return `${environment.frontendUrl}/post/${this.id}`;
+    }
+    if (this.type === 'Plan' && this.id) {
+      return `${environment.frontendUrl}/subscription/${this.id}`;
     }
     return '';
   }
 
   async onContact(): Promise<void> {
+    if (this.type === 'Plan') {
+      const link = this.getContentLink();
+      if (!link) {
+        this.toasterService.showError(`${this.type} link not available`);
+        return;
+      }
+      const message = encodeURIComponent(`Check out this subsciption plan: ${link}`);
+      window.open(`sms:?body=${message}`, '_self');
+      return;
+    }
     const contentType = this.type === 'Event' ? 'event' : 'post';
     const result = await this.modalService.openConfirmModal({
       title: 'Please Confirm',
@@ -357,18 +390,18 @@ export class ShareModal implements OnInit {
       onConfirm: async () => {
         try {
           if (this.type === 'Post') {
-            if (!this.feedId) {
+            if (!this.id) {
               this.toasterService.showError('Post information not available');
               return;
             }
-            await this.feedService.networkBroadcast(this.feedId, 'sms');
+            await this.feedService.networkBroadcast(this.id, 'sms');
             this.toasterService.showSuccess('Post shared via SMS successfully');
           } else if (this.type === 'Event') {
-            if (!this.eventId) {
+            if (!this.id) {
               this.toasterService.showError('Event information not available');
               return;
             }
-            await this.eventService.networkBroadcast(this.eventId, 'sms');
+            await this.eventService.networkBroadcast(this.id, 'sms');
             this.toasterService.showSuccess('Event shared via SMS successfully');
           }
         } catch (error: any) {
@@ -423,29 +456,47 @@ export class ShareModal implements OnInit {
       onConfirm: async () => {
         try {
           if (this.type === 'Event') {
-            if (!this.eventId) {
+            if (!this.id) {
               this.toasterService.showError('Event information not available');
               return;
             }
             const payload = {
-              event_id: this.eventId,
+              event_id: this.id,
               type: 'Event',
               send_entire_network: true
             };
             await this.eventService.shareEvent(payload);
             this.toasterService.showSuccess('Event shared to your network successfully');
           } else if (this.type === 'Post') {
-            if (!this.feedId) {
+            if (!this.id) {
               this.toasterService.showError('Post information not available');
               return;
             }
             const payload = {
-              feed_id: this.feedId,
+              feed_id: this.id,
               type: 'Post',
               send_entire_network: true
             };
             await this.messagesService.shareInChat(payload);
             this.toasterService.showSuccess('Post shared to your network successfully');
+          } else if (this.type === 'Plan') {
+            const link = this.getContentLink();
+
+            if (!link) {
+              this.toasterService.showError('Plan link not available');
+              return;
+            }
+
+            const planMessage = `Check out this Subscription plan: ${link}`;
+
+            const payload = {
+              type: 'Text',
+              message: planMessage,
+              send_entire_network: true
+            };
+
+            await this.messagesService.shareInChat(payload);
+            this.toasterService.showSuccess('Plan shared to your network successfully');
           }
         } catch (error: any) {
           console.error(`Error sharing ${this.type} in chat:`, error);
@@ -467,19 +518,29 @@ export class ShareModal implements OnInit {
       onConfirm: async () => {
         try {
           if (this.type === 'Post') {
-            if (!this.feedId) {
+            if (!this.id) {
               this.toasterService.showError('Post information not available');
               return;
             }
-            await this.feedService.networkBroadcast(this.feedId, 'email');
+            await this.feedService.networkBroadcast(this.id, 'email');
             this.toasterService.showSuccess('Post shared via Email successfully');
           } else if (this.type === 'Event') {
-            if (!this.eventId) {
+            if (!this.id) {
               this.toasterService.showError('Event information not available');
               return;
             }
-            await this.eventService.networkBroadcast(this.eventId, 'email');
+            await this.eventService.networkBroadcast(this.id, 'email');
             this.toasterService.showSuccess('Event shared via Email successfully');
+          } else if (this.type === 'Plan') {
+            const link = this.getContentLink();
+            if (!link) {
+              this.toasterService.showError('Plan link not available');
+              return;
+            }
+      
+            const subject = encodeURIComponent(`Check out this Subscription plan: ${link}`);
+            const body = encodeURIComponent(`Hi,\n\nCheck out this subscription plan: ${link}`);
+            window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
           }
         } catch (error: any) {
           console.error(`Error sharing ${this.type} via Email:`, error);

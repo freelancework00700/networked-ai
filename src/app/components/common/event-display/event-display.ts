@@ -77,7 +77,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   });
 
   openMapFromLatLng(mapCenter: number[]): void {
-    if(!this.showHostPromo()) return;
+    if (!this.showHostPromo()) return;
     if (!mapCenter || mapCenter.length !== 2) return;
 
     const [lng, lat] = mapCenter;

@@ -7,7 +7,17 @@ import { SubscriptionService } from '@/services/subscription.service';
 import { SubscriptionCard, ISubscription } from '@/components/card/subscription-card';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, IonFooter, IonIcon, ViewWillEnter, RefresherCustomEvent, IonRefresherContent, IonRefresher } from '@ionic/angular/standalone';
+import {
+  IonHeader,
+  IonToolbar,
+  IonContent,
+  IonFooter,
+  IonIcon,
+  ViewWillEnter,
+  RefresherCustomEvent,
+  IonRefresherContent,
+  IonRefresher
+} from '@ionic/angular/standalone';
 
 @Component({
   selector: 'subscription-plans',
