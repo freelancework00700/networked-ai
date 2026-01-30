@@ -243,8 +243,8 @@ export class Notification {
         event.title ?? '',
         eventDate,
         eventLocation,
-        undefined,
-        'post_event'
+        'post-event',
+        undefined
       );
 
       if (result?.responses?.length) {
