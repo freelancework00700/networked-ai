@@ -94,7 +94,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'post/:id',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     loadComponent: () => import('@/pages/new-post/components/post-comments').then((m) => m.PostComments)
   },
   {
