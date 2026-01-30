@@ -11,20 +11,21 @@ import { EventUserList } from '@/pages/event/components/event-user-list';
 import { QuestionnaireResponse } from '@/pages/event/questionnaire-response';
 import { AnalyticsUserList } from '@/pages/event/components/analytics-user-list';
 import { QuestionnaireUserList } from '@/pages/event/components/questionnaire-user-list';
+import { authGuard } from '@/guards/auth.guard';
 
 export default [
-  { path: '', component: CreateEvent },
+  { path: '', component: CreateEvent, canActivate: [authGuard] },
 
   { path: 'all', component: AllEvents },
   { path: 'city', component: CityEvents },
-  { path: 'edit/:id', component: CreateEvent },
-  { path: 'guests/:id', component: GuestList },
-  { path: 'analytics/:id', component: EventAnalytics },
-  { path: 'analytics/guests/:id', component: AnalyticsUserList },
-  { path: 'questionnaire-response/:id', component: QuestionnaireResponse },
-  { path: 'questionnaire-response/guests/:id', component: QuestionnaireUserList },
-  { path: 'rsvp-approval/:eventId', component: RsvpApproval },
-  { path: 'guests/:eventId/:section', component: EventUserList },
+  { path: 'edit/:id', component: CreateEvent, canActivate: [authGuard] },
+  { path: 'guests/:id', component: GuestList, canActivate: [authGuard] },
+  { path: 'analytics/:id', component: EventAnalytics, canActivate: [authGuard] },
+  { path: 'analytics/guests/:id', component: AnalyticsUserList, canActivate: [authGuard] },
+  { path: 'questionnaire-response/:id', component: QuestionnaireResponse, canActivate: [authGuard] },
+  { path: 'questionnaire-response/guests/:id', component: QuestionnaireUserList, canActivate: [authGuard] },
+  { path: 'rsvp-approval/:eventId', component: RsvpApproval, canActivate: [authGuard] },
+  { path: 'guests/:eventId/:section', component: EventUserList, canActivate: [authGuard] },
 
   { path: ':slug', component: Event }
 ] as Routes;

@@ -181,6 +181,12 @@ export class PostCard {
     return this.datePipe.transform(dateString, 'EEE MMM d') || '';
   }
 
+  private async ensureLoggedIn(): Promise<boolean> {
+    if (this.authService.getCurrentToken()) return true;
+    const result = await this.modalService.openLoginModal();
+    return result?.success ?? false;
+  }
+
   getTimeAgo = (timestamp: number, updatedTimestamp?: number) => {
     const now = new Date().getTime();
 
@@ -216,6 +222,7 @@ export class PostCard {
   };
 
   async openMenu() {
+    if (!(await this.ensureLoggedIn())) return;
     // Show different menu items based on whether it's the current user's post
     const menuItems = this.isCurrentUserPost() ? this.currentUserMenuItems : this.getOtherUserMenuItems();
 
@@ -388,6 +395,7 @@ export class PostCard {
   }
 
   async sharePost() {
+    if (!(await this.ensureLoggedIn())) return;
     const postId = this.post().id;
     if (!postId) return;
 
@@ -443,6 +451,7 @@ export class PostCard {
   }
 
   async toggleLike(): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     const postId = this.post().id;
     try {
       await this.feedService.toggleLike(postId!);

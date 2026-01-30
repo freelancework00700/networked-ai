@@ -2,6 +2,7 @@ import { Component, inject, computed, signal } from '@angular/core';
 import { Router, NavigationEnd, RouterLink, RouterLinkActive } from '@angular/router';
 import { IonTabs, IonLabel, IonTabBar, IonTabButton, IonRouterLink, IonIcon } from '@ionic/angular/standalone';
 import { filter } from 'rxjs/operators';
+import { MessagesService } from '@/services/messages.service';
 
 @Component({
   selector: 'tab-layout',
@@ -11,6 +12,7 @@ import { filter } from 'rxjs/operators';
 })
 export class TabLayout {
   private router = inject(Router);
+  messagesService = inject(MessagesService);
   currentUrl = signal<string>('');
 
   constructor() {

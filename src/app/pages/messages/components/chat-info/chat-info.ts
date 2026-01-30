@@ -4,15 +4,18 @@ import { ModalService } from '@/services/modal.service';
 import { MessagesService } from '@/services/messages.service';
 import { ChatRoom, ChatRoomUser } from '@/interfaces/IChat';
 import { MenuItem } from '@/components/modal/menu-modal';
+import { MenuItem as PrimeNGMenuItem } from 'primeng/api';
+import { Menu, MenuModule } from 'primeng/menu';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy, computed } from '@angular/core';
-import { IonContent, IonHeader, IonToolbar, IonFooter, NavController, ViewWillEnter } from '@ionic/angular/standalone';
+import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy, computed, ViewChild } from '@angular/core';
+import { IonContent, IonHeader, IonToolbar, IonFooter, IonSpinner, NavController, ViewWillEnter } from '@ionic/angular/standalone';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NgOptimizedImage } from '@angular/common';
 import { AuthService } from '@/services/auth.service';
 import { NavigationService } from '@/services/navigation.service';
 import { SocketService } from '@/services/socket.service';
 import { ToasterService } from '@/services/toaster.service';
+import { MediaService } from '@/services/media.service';
 import { environment } from 'src/environments/environment';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
@@ -22,7 +25,19 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './chat-info.scss',
   templateUrl: './chat-info.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonFooter, IonToolbar, IonHeader, IonContent, Button, InputTextModule, NgOptimizedImage, ToggleSwitchModule, FormsModule]
+  imports: [
+    IonFooter,
+    IonToolbar,
+    IonHeader,
+    IonContent,
+    Button,
+    InputTextModule,
+    NgOptimizedImage,
+    ToggleSwitchModule,
+    FormsModule,
+    MenuModule,
+    IonSpinner
+  ]
 })
 export class ChatInfo implements ViewWillEnter, OnDestroy {
   private router = inject(Router);
@@ -30,8 +45,12 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   private messagesService = inject(MessagesService);
   private socketService = inject(SocketService);
   private toasterService = inject(ToasterService);
+  private mediaService = inject(MediaService);
   authService = inject(AuthService);
   navigationService = inject(NavigationService);
+
+  @ViewChild('groupImageMenu') groupImageMenuRef?: Menu;
+  @ViewChild('fileInput') fileInputRef?: { nativeElement: HTMLInputElement };
 
   // Socket event handler reference for cleanup
   private roomUpdatedHandler?: (payload: ChatRoom) => void;
@@ -45,6 +64,7 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   tempGroupName = signal(this.groupName());
   private modalService = inject(ModalService);
   groupImage = signal<string | null>('assets/images/profile.jpeg');
+  isSavingGroupImage = signal(false);
   roomId = signal<string | null>(null);
   chatRoom = signal<ChatRoom | null>(null);
   members = signal<ChatRoomUser[]>([]);
@@ -55,6 +75,17 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
     { label: 'Mute Notifications', icon: 'assets/svg/alertOffBlackIcon.svg', iconType: 'svg', action: 'toggleNotifications' },
     { label: 'Leave Group', icon: 'pi pi-sign-out text-6', iconType: 'pi', danger: true, action: 'leaveGroup' }
   ];
+
+  groupImageMenuItems(): PrimeNGMenuItem[] {
+    return [
+      { label: 'Networked Gallery', icon: 'pi pi-images', command: () => this.selectNetworkedGallery() },
+      { label: 'Browse files', icon: 'pi pi-folder-open', command: () => this.selectBrowseFiles() }
+    ];
+  }
+
+  onGroupImageMenuClick(event: Event): void {
+    this.groupImageMenuRef?.toggle(event);
+  }
 
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
@@ -276,22 +307,63 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
     this.tempGroupName.set(value);
   }
 
-  onGroupImageSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
+  async selectNetworkedGallery(): Promise<void> {
+    const data = await this.modalService.openImageGalleryModal('Select group image', false);
+    if (!data) return;
 
-    if (!input.files || !input.files.length) return;
+    const url = Array.isArray(data) ? data[0] : data;
+    if (url && typeof url === 'string') {
+      await this.updateGroupProfileImage(url);
+    }
+  }
+
+  selectBrowseFiles(): void {
+    this.fileInputRef?.nativeElement?.click();
+  }
+
+  async onGroupImageSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
 
     const file = input.files[0];
-
     if (!file.type.startsWith('image/')) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.groupImage.set(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-
     input.value = '';
+
+    try {
+      this.isSavingGroupImage.set(true);
+      const response = await this.mediaService.uploadMedia('Other', [file]);
+      const uploadedUrl = response?.data?.[0]?.url;
+      if (typeof uploadedUrl === 'string' && uploadedUrl.trim()) {
+        await this.updateGroupProfileImage(uploadedUrl);
+      } else {
+        this.toasterService.showError('Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Error uploading group image:', error);
+      this.toasterService.showError('Failed to upload image');
+    } finally {
+      this.isSavingGroupImage.set(false);
+    }
+  }
+
+  private async updateGroupProfileImage(profileImageUrl: string): Promise<void> {
+    const roomId = this.roomId();
+    if (!roomId) return;
+
+    try {
+      this.isSavingGroupImage.set(true);
+      await this.messagesService.updateRoom(roomId, { profile_image: profileImageUrl });
+      this.groupImage.set(profileImageUrl);
+      const room = await this.messagesService.getChatRoomById(roomId);
+      this.applyRoom(room);
+      this.toasterService.showSuccess('Group image updated');
+    } catch (error: unknown) {
+      console.error('Error updating group image:', error);
+      this.toasterService.showError(error instanceof Error ? error.message : 'Failed to update group image');
+    } finally {
+      this.isSavingGroupImage.set(false);
+    }
   }
 
   async leaveGroup() {

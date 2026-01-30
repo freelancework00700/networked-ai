@@ -4,16 +4,27 @@ import { IUser } from '@/interfaces/IUser';
 import { AuthService } from '@/services/auth.service';
 import { MessagesService } from '@/services/messages.service';
 import { MediaService } from '@/services/media.service';
+import { ModalService } from '@/services/modal.service';
 import { NetworkService } from '@/services/network.service';
 import { UserService } from '@/services/user.service';
 import { ToasterService } from '@/services/toaster.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NgOptimizedImage } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent, IonToolbar, NavController } from '@ionic/angular/standalone';
+import {
+  IonContent,
+  IonFooter,
+  IonHeader,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonToolbar,
+  NavController
+} from '@ionic/angular/standalone';
 import { InputTextModule } from 'primeng/inputtext';
+import { Menu, MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
@@ -34,7 +45,8 @@ import { environment } from 'src/environments/environment';
     InputTextModule,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
-    NgOptimizedImage
+    NgOptimizedImage,
+    MenuModule
   ]
 })
 export class CreateGroup {
@@ -45,9 +57,13 @@ export class CreateGroup {
   private networkService = inject(NetworkService);
   private messagesService = inject(MessagesService);
   private mediaService = inject(MediaService);
+  private modalService = inject(ModalService);
   private userService = inject(UserService);
   private toasterService = inject(ToasterService);
   private router = inject(Router);
+
+  @ViewChild('groupImageMenu') groupImageMenuRef?: Menu;
+  @ViewChild('fileInput') fileInputRef?: { nativeElement: HTMLInputElement };
 
   // navigation context
   roomId = signal<string | null>(null);
@@ -71,7 +87,19 @@ export class CreateGroup {
   isGroupDetails = signal(false);
   groupImagePreview = signal<string | null>(null);
   groupImageFile = signal<File | null>(null);
+  groupImageUrl = signal<string | null>(null);
   groupName = signal<string>('');
+
+  groupImageMenuItems(): MenuItem[] {
+    return [
+      { label: 'Networked Gallery', icon: 'pi pi-images', command: () => this.selectNetworkedGallery() },
+      { label: 'Browse files', icon: 'pi pi-folder-open', command: () => this.selectBrowseFiles() }
+    ];
+  }
+
+  onGroupImageMenuClick(event: Event): void {
+    this.groupImageMenuRef?.toggle(event);
+  }
 
   // existing group members (when editing)
   existingMemberIds = signal<Set<string>>(new Set());
@@ -293,33 +321,38 @@ export class CreateGroup {
     const user_ids = Array.from(new Set([currentUserId, ...memberIds]));
 
     try {
-      // Upload group image first (API expects URL, not base64)
-      let profileImageUrl: string | null = null;
-      const imageFile = this.groupImageFile();
-      if (imageFile instanceof File) {
-        const response = await this.mediaService.uploadMedia('Other', [imageFile]);
-        const uploadedUrl = response?.data?.[0]?.url;
-        if (typeof uploadedUrl === 'string' && uploadedUrl.trim()) {
-          profileImageUrl = uploadedUrl;
+      let profileImageUrl: string | null = this.groupImageUrl() ?? null;
+      if (!profileImageUrl) {
+        const imageFile = this.groupImageFile();
+        if (imageFile instanceof File) {
+          const response = await this.mediaService.uploadMedia('Other', [imageFile]);
+          const uploadedUrl = response?.data?.[0]?.url;
+          if (typeof uploadedUrl === 'string' && uploadedUrl.trim()) {
+            profileImageUrl = uploadedUrl;
+          }
         }
       }
 
-      const { room_id } = await this.messagesService.createOrGetChatRoom({
+      // const { room_id } = await this.messagesService.createOrGetChatRoom({
+      const result = await this.messagesService.createOrGetChatRoom({
         user_ids,
         name,
         is_personal: false,
         profile_image: profileImageUrl
       });
 
-      const room = await this.messagesService.getChatRoomById(room_id);
+      // const room = await this.messagesService.getChatRoomById(room_id);
 
-      this.navCtrl.navigateForward('/chat-info', {
-        state: {
-          roomId: room_id,
-          chatRoom: room,
-          from: 'new-group'
-        }
-      });
+      // this.navCtrl.navigateForward('/chat-info', {
+      //   state: {
+      //     roomId: room_id,
+      //     chatRoom: room,
+      //     from: 'new-group'
+      //   }
+      // });
+
+      this.toasterService.showSuccess(result.message || 'Chat room created successfully.');
+      this.navCtrl.navigateRoot('/messages');
     } catch (error) {
       console.error('Error creating group:', error);
     }
@@ -331,12 +364,28 @@ export class CreateGroup {
       return;
     }
 
-    if (this.from() === 'chat-info') {
+    // if (this.from() === 'chat-info') {
       this.navCtrl.back();
-      return;
+  //     return;
+  // }
+
+    // this.navCtrl.navigateBack('/messages');
   }
 
-    this.navCtrl.navigateBack('/messages');
+  async selectNetworkedGallery(): Promise<void> {
+    const data = await this.modalService.openImageGalleryModal('Select group image', false);
+    if (!data) return;
+
+    const url = Array.isArray(data) ? data[0] : data;
+    if (url && typeof url === 'string') {
+      this.groupImageUrl.set(url);
+      this.groupImageFile.set(null);
+      this.groupImagePreview.set(null);
+    }
+  }
+
+  selectBrowseFiles(): void {
+    this.fileInputRef?.nativeElement?.click();
   }
 
   onGroupImageSelected(event: Event): void {
@@ -347,6 +396,7 @@ export class CreateGroup {
     if (!file.type.startsWith('image/')) return;
 
     this.groupImageFile.set(file);
+    this.groupImageUrl.set(null);
 
     const reader = new FileReader();
     reader.onload = () => {

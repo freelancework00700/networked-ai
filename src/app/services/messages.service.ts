@@ -1,9 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { BaseApiService } from '@/services/base-api.service';
 import { ChatRoomsResponse, ChatRoom, ChatRoomsPagination, MessagesResponse, ChatMessage } from '@/interfaces/IChat';
 import { AuthService } from '@/services/auth.service';
-import { inject } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class MessagesService extends BaseApiService {
@@ -12,6 +11,7 @@ export class MessagesService extends BaseApiService {
   // Signal to store chat rooms
   chatRooms = signal<ChatRoom[]>([]);
   isLoading = signal<boolean>(false);
+  unreadCount = signal<number>(0);
   pagination = signal<ChatRoomsPagination>({
     totalCount: 0,
     currentPage: 1,
@@ -20,6 +20,20 @@ export class MessagesService extends BaseApiService {
 
   currentPage = signal<number>(1);
   currentSearch = signal<string>('');
+
+  private currentUserId = computed(() => this.authService.currentUser()?.id ?? null);
+
+  constructor() {
+    super();
+    effect(() => {
+      const currentUserId = this.currentUserId();
+      if (currentUserId) {
+        this.fetchUnreadCount();
+      } else {
+        this.unreadCount.set(0);
+      }
+    });
+  }
 
   /**
    * Get chat rooms for the current user with pagination, search, and filter
@@ -43,7 +57,7 @@ export class MessagesService extends BaseApiService {
       }
 
       const page = params.page ?? this.currentPage();
-      const limit = params.limit ?? 10;
+      const limit = params.limit ?? 15;
       const hasSearchParam = Object.prototype.hasOwnProperty.call(params, 'search');
       const search = hasSearchParam ? (params.search ?? '') : this.currentSearch();
       const filter = params.filter ?? 'all';
@@ -103,6 +117,17 @@ export class MessagesService extends BaseApiService {
     await this.getChatRooms({ page: 1, search: search ?? '', filter: filter || 'all', append: false });
   }
 
+  async fetchUnreadCount(): Promise<void> {
+    try {
+      const response = await this.get<{ data: { count: number; by_room?: { room_id: string; unread_count: number }[] } }>(
+        '/chat-rooms/unread-count'
+      );
+      this.unreadCount.set(response?.data?.count ?? 0);
+    } catch (error) {
+      console.error('Error fetching unread message count:', error);
+    }
+  }
+
   /**
    * Get messages for a specific chat room with pagination
    */
@@ -115,7 +140,7 @@ export class MessagesService extends BaseApiService {
   ): Promise<{ messages: ChatMessage[]; pagination: ChatRoomsPagination }> {
     try {
       const page = params.page || 1;
-      const limit = params.limit || 10;
+      const limit = params.limit || 15;
 
       let httpParams = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
@@ -147,7 +172,7 @@ export class MessagesService extends BaseApiService {
     event_id?: string | null;
     event_image?: string | null;
     profile_image?: string | null;
-  }): Promise<{ room_id: string; room?: ChatRoom }> {
+  }): Promise<{ room_id: string; room?: ChatRoom; message?: string }> {
     try {
       const payload: {
         user_ids: string[];
@@ -185,7 +210,8 @@ export class MessagesService extends BaseApiService {
 
       return {
         room_id: response.data.id || response.data.room_id,
-        room: response.data
+        room: response.data,
+        message: response.message
       };
     } catch (error) {
       console.error('Error creating/getting chat room:', error);
@@ -325,13 +351,13 @@ export class MessagesService extends BaseApiService {
     this.chatRooms.update((current) => {
       const roomIndex = current.findIndex((r) => r.id === room.id);
 
-      if (roomIndex === -1) {
-        if (isUserInRoom) {
-          const updated = [room, ...current];
-          return this.sortChatRoomsByLastMessage(updated);
-        }
-        return current;
-      }
+      // if (roomIndex === -1) {
+      //   if (isUserInRoom) {
+      //     const updated = [room, ...current];
+      //     return this.sortChatRoomsByLastMessage(updated);
+      //   }
+      //   return current;
+      // }
 
       if (!isUserInRoom) {
         return current.filter((r) => r.id !== room.id);
@@ -390,8 +416,8 @@ export class MessagesService extends BaseApiService {
 
   private sortChatRoomsByLastMessage(rooms: ChatRoom[]): ChatRoom[] {
     return [...rooms].sort((a, b) => {
-      const timeA = a.lastMessageTime || a.updated_at || a.created_at;
-      const timeB = b.lastMessageTime || b.updated_at || b.created_at;
+      const timeA = a.lastMessageTime || a.created_at;
+      const timeB = b.lastMessageTime || b.created_at;
       
       const dateA = new Date(timeA).getTime();
       const dateB = new Date(timeB).getTime();

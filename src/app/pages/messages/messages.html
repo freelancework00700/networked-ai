@@ -1,7 +1,7 @@
 @if (isLoggedIn()) {
   <ion-header mode="md">
     <ion-toolbar>
-      <div class="flex items-center gap-4 p-6 max-w-[672px] mx-auto">
+      <div class="flex items-center gap-4 p-6 pb-1! max-w-[672px] mx-auto">
         <searchbar
           class="w-full"
           [searchQuery]="searchInput()"
@@ -36,7 +36,7 @@
           <ion-spinner></ion-spinner>
         </div>
       } @else if (getFilteredChatRooms().length > 0) {
-        <ion-list>
+        <ion-list class="p-0!">
           @for (room of getFilteredChatRooms(); track room.id) {
             <ion-item-sliding>
               <ion-item (click)="goToChat(room)">
@@ -55,7 +55,7 @@
                   <!-- GROUP BADGE -->
                   @if (isGroupChat(room)) {
                     <div
-                      class="absolute -bottom-1 -right-1 bg-[#0A9E57] !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
+                      class="absolute -bottom-1 -right-1 bg-[#0A9E57] shadow-[0_16px_32px_0_rgba(7,40,70,0.10)]! border-2 border-white rounded-[12px]! w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
                     >
                       <img src="assets/svg/users.svg" class="w-3 h-3" />
                     </div>
@@ -64,16 +64,16 @@
                   <!-- EVENT BADGE -->
                   @else if (isEventChat(room)) {
                     <div
-                      class="absolute -bottom-1 -right-1 bg-brand-04 !shadow-[0_16px_32px_0_rgba(7,40,70,0.10)] border-2 border-white !rounded-[12px] w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
+                      class="absolute -bottom-1 -right-1 bg-brand-04 shadow-[0_16px_32px_0_rgba(7,40,70,0.10)]! border-2 border-white rounded-[12px]! w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
                     >
-                      <i class="pi pi-th-large !text-[10px]"></i>
+                      <i class="pi pi-th-large text-[10px]!"></i>
                     </div>
                   }
                 </ion-avatar>
 
                 <ion-label class="pl-3">
                   <div class="body-14M neutral-01 pb-1">{{ getChatName(room) }}</div>
-                  <div class="body-12M neutral-02">
+                  <div class="body-12M neutral-02 line-clamp-2">
                     @if (room.lastMessage) {
                       {{ room.lastMessage }}
                     }

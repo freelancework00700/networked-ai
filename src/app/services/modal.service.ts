@@ -19,7 +19,7 @@ import { UserDetail } from '@/pages/network/components/user-detail';
 import { VerifyOtpModal } from '@/components/modal/verify-otp-modal';
 import { PostEventModal } from '@/components/modal/post-event-modal';
 import { ShareGroup } from '@/pages/messages/components/share-group';
-import { ModalController, Platform } from '@ionic/angular/standalone';
+import { ModalController, NavController, Platform } from '@ionic/angular/standalone';
 import { GifGalleryModal } from '@/components/modal/gif-gallery-modal';
 import { BlockModal } from '@/components/modal/block-modal/block-modal';
 import { TicketTypeModal } from '@/components/modal/ticket-type-modal';
@@ -63,6 +63,7 @@ export class ModalService {
   // services
   private modalCtrl = inject(ModalController);
   platform = inject(Platform);
+  navCtrl = inject(NavController);
 
   async openLoadingModal(message: string): Promise<any> {
     const modal = await this.modalCtrl.create({
@@ -946,26 +947,31 @@ export class ModalService {
     return data || null;
   }
 
-  async openLoginModal(): Promise<any> {
+  async openLoginModal(returnUrl?: string): Promise<{ success: boolean } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-80-percent-height',
       component: Login,
+
       componentProps: {
         isRsvpModal: true,
         onLoginSuccess: () => {
+          if (returnUrl) {
+            this.navCtrl.navigateForward(returnUrl);
+          }
           modal.dismiss({ success: true });
           this.close();
         }
       }
     });
 
+    if (!modal) return null;
     await modal.present();
     const { data } = await modal.onWillDismiss();
-    return data || null;
+    return data ?? null;
   }
 
   async openSignupModal(): Promise<any> {

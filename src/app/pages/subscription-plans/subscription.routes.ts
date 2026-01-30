@@ -6,14 +6,15 @@ import { CreatePlan } from '@/pages/subscription-plans/create-plan/create-plan';
 import { SubscriptionPlans } from '@/pages/subscription-plans/subscription-plans';
 import { UserSubscriptionPlans } from '@/pages/subscription-plans/user-subscription-plans';
 import { MySubscriptions } from '@/pages/subscription-plans/my-subscriptions/my-subscriptions';
+import { authGuard } from '@/guards/auth.guard';
 
 export default [
-  { path: 'create', component: CreatePlan },
-  { path: '', component: MySubscriptions },
-  { path: 'plans', component: SubscriptionPlans },
-  { path: 'manage/:planId', component: ManagePlan },
-  { path: ':planId/events', component: PlanEvents },
-  { path: ':planId/subscribers', component: PlanSubscribers },
-  { path: 'user/:userId', component: UserSubscriptionPlans },
-  { path: ':planId', component: UserSubscriptionPlans }
+  { path: 'create', component: CreatePlan, canActivate: [authGuard] },
+  { path: '', component: MySubscriptions, canActivate: [authGuard] },
+  { path: 'plans', component: SubscriptionPlans, canActivate: [authGuard] },
+  { path: 'manage/:planId', component: ManagePlan, canActivate: [authGuard] },
+  { path: ':planId/events', component: PlanEvents, canActivate: [authGuard] },
+  { path: ':planId/subscribers', component: PlanSubscribers, canActivate: [authGuard] },
+  { path: 'user/:userId', component: UserSubscriptionPlans, canActivate: [authGuard] },
+  { path: ':planId', component: UserSubscriptionPlans, canActivate: [authGuard] }
 ] as Routes;

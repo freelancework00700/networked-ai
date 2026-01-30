@@ -47,8 +47,8 @@ export class OgService {
     const sortMedias = [...medias || []].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     this.setOgTags({
       title: `Post by ${postData?.user?.name || postData?.user?.username}` || '',
-      image: this.getImageUrl(sortMedias[0].media_url),
-      url: `${environment.frontendUrl}/comments/${postData?.id}`,
+      image: this.getImageUrl(sortMedias?.[0]?.media_url),
+      url: `${environment.frontendUrl}/post/${postData?.id}`,
       type: 'article',
       description: postData?.content || ''
     });

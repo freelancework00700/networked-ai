@@ -1,26 +1,18 @@
 import { inject } from '@angular/core';
 import { CanActivateFn } from '@angular/router';
 import { AuthService } from '@/services/auth.service';
-import { NavController } from '@ionic/angular/standalone';
+import { ModalService } from '@/services/modal.service';
 
-export const authGuard: CanActivateFn = async (route, state) => {
-  const navCtrl = inject(NavController);
+export const authGuard: CanActivateFn = async (_route, state) => {
   const authService = inject(AuthService);
-  const token = authService.getCurrentToken();
+  const modalService = inject(ModalService);
 
-  if (token) {
-    return true; // allow access if the user is authenticated
-  } else {
-    // store the attempted url as a query parameter for redirection after login
-    const attemptedUrl = state.url; // capture the attempted url
-
-    // only add redirect if the attempted route is not "/"
-    if (attemptedUrl !== '/' && !attemptedUrl.startsWith('/login') && !attemptedUrl.startsWith('/not-found')) {
-      navCtrl.navigateForward(`/login?redirect=${encodeURIComponent(attemptedUrl)}`);
-    } else {
-      navCtrl.navigateForward('/login');
-    }
-
-    return false; // deny access and redirect to login
+  if (authService.getCurrentToken()) {
+    return true;
   }
+
+  const attemptedUrl = state.url;
+
+  await modalService.openLoginModal(attemptedUrl);
+  return false;
 };

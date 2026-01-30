@@ -221,6 +221,17 @@ export class RsvpApproval implements OnInit {
     return getImageUrlOrDefault(thumbnailUrl || undefined, 'assets/images/profile.jpeg');
   }
 
+  getDiamondPathForPoints(points: number | null | undefined): string {
+    const p = points ?? 0;
+    if (p >= 50000) return '/assets/svg/gamification/diamond-50k.svg';
+    if (p >= 40000) return '/assets/svg/gamification/diamond-40k.svg';
+    if (p >= 30000) return '/assets/svg/gamification/diamond-30k.svg';
+    if (p >= 20000) return '/assets/svg/gamification/diamond-20k.svg';
+    if (p >= 10000) return '/assets/svg/gamification/diamond-10k.svg';
+    if (p >= 5000) return '/assets/svg/gamification/diamond-5k.svg';
+    return '/assets/svg/gamification/diamond-1k.svg';
+  }
+
   onImageError(event: Event): void {
     onImageError(event);
   }
