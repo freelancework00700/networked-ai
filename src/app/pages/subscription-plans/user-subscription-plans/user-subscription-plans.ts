@@ -11,7 +11,16 @@ import { ISubscription } from '@/components/card/subscription-card';
 import { SubscriptionService } from '@/services/subscription.service';
 import { PlanPreview } from '@/pages/subscription-plans/plan-preview/plan-preview';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
-import { IonHeader, IonToolbar, IonContent, IonIcon, RefresherCustomEvent, IonRefresher, IonRefresherContent, ModalController } from '@ionic/angular/standalone';
+import {
+  IonHeader,
+  IonToolbar,
+  IonContent,
+  IonIcon,
+  RefresherCustomEvent,
+  IonRefresher,
+  IonRefresherContent,
+  ModalController
+} from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy, Input } from '@angular/core';
 
 @Component({
@@ -62,6 +71,14 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     return allPlans.filter((plan) => plan.is_sponsor);
   });
 
+  goToTerms() {
+    this.navigationService.navigateForward('/terms');
+  }
+  
+  goToPolicy() {
+    this.navigationService.navigateForward('/policy');
+  }
+  
   currentPlan = computed(() => {
     const plansList = this.filteredPlans();
     const index = this.selectedPlanIndex();
@@ -507,7 +524,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
       const response = await this.subscriptionService.createSubscriptionPaymentIntent(priceId);
 
       if (response?.client_secret) {
-        await this.openPaymentModal(response.client_secret, plan.name, response)
+        await this.openPaymentModal(response.client_secret, plan.name, response);
       } else {
         this.toasterService.showError('Failed to initialize payment');
       }
@@ -532,10 +549,9 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     });
 
     if (result?.success) {
-    
       const plan = this.currentPlan();
       const planId = plan?.id;
-    
+
       await this.modalService.openConfirmModal({
         iconName: 'pi-check',
         iconBgColor: '#F5BC61',
@@ -545,14 +561,14 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
         shareButtonLabel: 'Share',
         confirmButtonColor: 'primary',
         iconPosition: 'center',
-    
+
         onShare: async () => {
           // await this.modalService.close();
           if (planId) {
             await this.modalService.openShareModal(planId, 'Plan');
           }
         },
-    
+
         onConfirm: async () => {
           await this.modalService.close();
           if (this.id) {
@@ -615,9 +631,9 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   }
 
   back(): void {
-    if(this.id){
+    if (this.id) {
       this.modalCtrl.dismiss();
-    }else{
+    } else {
       this.navigationService.back();
     }
   }

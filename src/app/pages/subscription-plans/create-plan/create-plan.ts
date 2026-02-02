@@ -670,8 +670,8 @@ export class CreatePlan implements OnInit {
         event_ids: formValue.event_ids || []
       };
 
-        let response = await this.subscriptionService.createPlan(payload);
-        this.toasterService.showSuccess(response?.message || 'Plan created successfully');
+      let response = await this.subscriptionService.createPlan(payload);
+      this.toasterService.showSuccess(response?.message || 'Plan created successfully');
 
       const isSponsorValue = this.planForm().get('is_sponsor')?.value ?? true;
       const color = !isSponsorValue ? '#2B5BDE' : '';

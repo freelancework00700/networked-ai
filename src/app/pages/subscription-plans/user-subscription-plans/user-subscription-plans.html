@@ -128,10 +128,12 @@
             }
           </p>
           <p class="body-10R neutral-03 mt-2">
-            By continuing, you agree to the <a href="#" class="underline">Terms and Use</a> and <a href="#" class="underline">Privacy Policy</a>.
-            Subscriptions will automatically renew unless auto-renew is turned off 24h prior the renewal date.
+            By continuing, you agree to the <a (click)="goToTerms()" class="underline">Terms and Use</a> and
+              
+              <a (click)="goToPolicy()" class="underline">Privacy Policy</a>. Subscriptions will automatically renew unless auto-renew is turned off 24h prior
+            the renewal date.
           </p>
-          <a href="#" class="body-12R neutral-03 mt-3 block text-center">Restore Purchases</a>
+          
         </div>
       }
     </div>

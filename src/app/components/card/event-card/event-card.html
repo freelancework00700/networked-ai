@@ -88,18 +88,21 @@
             'border border-white/10': !(isSubscriberExclusive() && !currentEvent().has_subscribed && !isHost())
           }"
         >
-          <div class="flex flex-col gap-0.5">
-            <div class="body-16SB neutral-07 line-clamp-2">{{ currentEvent().title || 'Untitled Event' }}</div>
-            <div class="flex justify-between items-center py-2">
-              <div class="body-12 neutral-05 absolute left-3 z-10">{{ eventOrganization() }}</div>
-              <div class="body-12 neutral-05 absolute right-2 z-10 flex items-center gap-2">
-                @if (isSubscriberExclusive() && !currentEvent().has_subscribed && !isHost()) {
+        <div class="flex flex-col gap-0.5">
+          <div class="body-16SB neutral-07 line-clamp-1">{{ currentEvent().title || 'Untitled Event' }}</div>
+          <div class="flex justify-between items-center py-2">
+            <div class="body-12 neutral-05 absolute left-3 z-10">{{ eventOrganization() }}</div>
+            <div class="body-12 neutral-05 absolute right-2 z-10 flex items-center gap-2">
+            @if (isSubscriberExclusive() && !currentEvent().has_subscribed && !isHost()) {
+                <span class="hidden sm:inline">
                   See event details
-                  <div class="pi pi-arrow-right !text-[12px]"></div>
-                }
-              </div>
-            </div>
+                </span>
+        
+                <div class="pi pi-arrow-right !text-[12px]"></div>
+            }
           </div>
+        </div>
+        
           @if (!isSubscriberExclusive() || (isSubscriberExclusive() && (currentEvent().has_subscribed || isHost()))) {
             <div class="h-[1px] w-full bg-white/10"></div>
             @if (variant() === 'compact') {
