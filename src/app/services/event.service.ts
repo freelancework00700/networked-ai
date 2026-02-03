@@ -875,48 +875,6 @@ export class EventService extends BaseApiService {
     return payload;
   }
 
-  async getRecommendedEvents(
-    params: {
-      page?: number;
-      limit?: number;
-      search?: string;
-      start_date?: string;
-      append?: boolean; // If true, append to existing events instead of replacing
-    } = {}
-  ): Promise<EventsResponse> {
-    try {
-      let httpParams = new HttpParams();
-
-      if (params.page) {
-        httpParams = httpParams.set('page', params.page.toString());
-      }
-      if (params.limit) {
-        httpParams = httpParams.set('limit', params.limit.toString());
-      }
-      if (params.search) {
-        httpParams = httpParams.set('search', params.search);
-      }
-      if (params.start_date) {
-        httpParams = httpParams.set('start_date', params.start_date);
-      }
-
-      const response = await this.get<EventsResponse>('/events/recommendations', { params: httpParams });
-      const events = response?.data?.data || [];
-
-      // Store events
-      if (params.append) {
-        this.recommendedEvents.update((current) => [...current, ...events]);
-      } else {
-        this.recommendedEvents.set(events);
-      }
-
-      return response;
-    } catch (error) {
-      console.error('Error fetching recommended events:', error);
-      throw error;
-    }
-  }
-
   async getEvents(
     params: {
       page?: number;
@@ -1015,6 +973,22 @@ export class EventService extends BaseApiService {
           this.publicEvents.update((current) => [...current, ...events]);
         } else {
           this.publicEvents.set(events);
+        }
+      }
+
+      if (params.is_upcoming_event === true) {
+        if (params.append) {
+          this.upcomingEvents.update((current) => [...current, ...events]);
+        } else {
+          this.upcomingEvents.set(events);
+        }
+      }
+
+      if (params.is_recommended === true) {
+        if (params.append) {
+          this.recommendedEvents.update((current) => [...current, ...events]);
+        } else {
+          this.recommendedEvents.set(events);
         }
       }
 
@@ -1137,54 +1111,6 @@ export class EventService extends BaseApiService {
     this.upcomingEvents.set([]);
     this.cityCards.set([]);
     this.isLoadingCities.set(false);
-  }
-
-  async getMyEvents(
-    params: {
-      page?: number;
-      limit?: number;
-      roles?: string;
-      user_id?: string;
-      is_upcoming_event?: boolean;
-      append?: boolean; // If true, append to existing events instead of replacing
-    } = {}
-  ): Promise<EventsResponse> {
-    try {
-      let httpParams = new HttpParams();
-
-      if (params.page) {
-        httpParams = httpParams.set('page', params.page.toString());
-      }
-      if (params.limit) {
-        httpParams = httpParams.set('limit', params.limit.toString());
-      }
-      if (params.roles) {
-        httpParams = httpParams.set('roles', params.roles);
-      }
-      if (params.user_id) {
-        httpParams = httpParams.set('user_id', params.user_id);
-      }
-      if (params.is_upcoming_event !== undefined) {
-        httpParams = httpParams.set('is_upcoming_event', params.is_upcoming_event.toString());
-      }
-
-      const response = await this.get<EventsResponse>('/events/user-events', { params: httpParams });
-      const events = response?.data?.data || [];
-
-      // Store upcoming events if is_upcoming_event is true
-      if (params.is_upcoming_event === true) {
-        if (params.append) {
-          this.upcomingEvents.update((current) => [...current, ...events]);
-        } else {
-          this.upcomingEvents.set(events);
-        }
-      }
-
-      return response;
-    } catch (error) {
-      console.error('Error fetching my events:', error);
-      throw error;
-    }
   }
 
   async getTopCities(): Promise<ICity[]> {

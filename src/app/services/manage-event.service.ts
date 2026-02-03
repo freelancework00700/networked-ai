@@ -246,7 +246,8 @@ export class ManageEventService extends BaseApiService {
       let payload = {
         event_id: this.currentEventData().id,
         attendee_id: decodedText,
-        is_checked_in: true
+        is_checked_in: true,
+        is_scanned: true
       };
       if (decodedText) {
         await this.eventService.changeCheckInStatus(payload);

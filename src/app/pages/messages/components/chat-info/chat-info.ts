@@ -69,14 +69,30 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   chatRoom = signal<ChatRoom | null>(null);
   members = signal<ChatRoomUser[]>([]);
   fromGroupCreation = signal<boolean>(false);
-  menuItems: MenuItem[] = [
+
+  isEventRoom = computed(() => {
+    const room = this.chatRoom();
+    return !!(room?.event_id || room?.event);
+  });
+
+  private readonly fullMenuItems: MenuItem[] = [
     { label: 'Add Members', icon: 'assets/svg/addUserIcon.svg', iconType: 'svg', action: 'addMembers' },
     { label: 'Change Group Name', icon: 'assets/svg/editIconBlack.svg', iconType: 'svg', action: 'changeGroupName' },
     { label: 'Mute Notifications', icon: 'assets/svg/alertOffBlackIcon.svg', iconType: 'svg', action: 'toggleNotifications' },
     { label: 'Leave Group', icon: 'pi pi-sign-out text-6', iconType: 'pi', danger: true, action: 'leaveGroup' }
   ];
 
+  get menuItems(): MenuItem[] {
+    if (this.isEventRoom()) {
+      return this.fullMenuItems.filter(
+        (item) => item.action !== 'addMembers' && item.action !== 'changeGroupName'
+      );
+    }
+    return this.fullMenuItems;
+  }
+
   groupImageMenuItems(): PrimeNGMenuItem[] {
+    if (this.isEventRoom()) return [];
     return [
       { label: 'Networked Gallery', icon: 'pi pi-images', command: () => this.selectNetworkedGallery() },
       { label: 'Browse files', icon: 'pi pi-folder-open', command: () => this.selectBrowseFiles() }
@@ -84,6 +100,7 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   }
 
   onGroupImageMenuClick(event: Event): void {
+    if (this.isEventRoom()) return;
     this.groupImageMenuRef?.toggle(event);
   }
 

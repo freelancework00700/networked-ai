@@ -43,7 +43,7 @@ export class ProfileHostedEvents {
     });
   }
 
-  private async loadHostedEvents(reset: boolean = true): Promise<void> {
+  async loadHostedEvents(reset: boolean = true): Promise<void> {
     const userId = this.userId();
     if (!userId || this.isLoading()) return;
 
@@ -51,7 +51,7 @@ export class ProfileHostedEvents {
     const page = reset ? 1 : this.currentPage();
 
     try {
-      const response = await this.eventService.getMyEvents({
+      const response = await this.eventService.getEvents({
         page,
         limit: this.pageLimit,
         roles: 'Host,CoHost,Sponsor',
@@ -93,7 +93,7 @@ export class ProfileHostedEvents {
       const nextPage = this.currentPage() + 1;
 
       if (userId) {
-        const response = await this.eventService.getMyEvents({
+        const response = await this.eventService.getEvents({
           page: nextPage,
           limit: this.pageLimit,
           roles: 'Host,CoHost,Sponsor',

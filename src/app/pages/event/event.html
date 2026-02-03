@@ -1,5 +1,5 @@
 <ion-header mode="md" [translucent]="true">
-  <ion-toolbar class="!pt-0">
+  <ion-toolbar class="pt-0!">
     <div class="flex justify-between items-center px-4 pt-safe">
       <ion-icon src="/assets/svg/back-arrow.svg" class="h-[20px] w-[20px]" (click)="goBack()"></ion-icon>
       @if (event()) {
@@ -7,7 +7,7 @@
           <ion-icon src="/assets/svg/share.svg" class="h-[20px] w-[20px]" (click)="shareEvent()"></ion-icon>
           <div class="w-[20px] h-[20px] flex items-center justify-center cursor-pointer" (click)="likeEvent()">
             @if (isEventLiked()) {
-              <div class="pi pi-heart-fill !text-[19px] accent-red"></div>
+              <div class="pi pi-heart-fill text-[19px]! accent-red"></div>
             } @else {
               <ion-icon src="/assets/svg/like.svg" class="h-[20px] w-[20px]"></ion-icon>
             }
@@ -109,7 +109,7 @@
       @if (eventDisplayData().isCurrentUserAttendee) {
         <div class="px-4 pt-2" (click)="openTicketsModal()">
           <div
-            class="flex items-center justify-between rounded-[12px] border border-[#DBDBDB] bg-gradient-to-r from-[#fff7ee] to-[#fefaf3] pl-1.5 pr-3 py-1.5 shadow-[2px_16px_19px_0_rgba(0,0,0,0.09)]"
+            class="flex items-center justify-between rounded-[12px] border border-[#DBDBDB] bg-linear-to-r from-[#fff7ee] to-[#fefaf3] pl-1.5 pr-3 py-1.5 shadow-[2px_16px_19px_0_rgba(0,0,0,0.09)]"
           >
             <div class="flex items-center gap-1.5">
               <div class="w-10 h-10 flex items-center justify-center rounded-[8px] bg-brand-06 neutral-01 relative">
@@ -120,7 +120,7 @@
             </div>
             <div class="flex items-center gap-1">
               <div class="body-14M brand-03">My Ticket</div>
-              <div class="pi pi-arrow-right !text-[16px] brand-03"></div>
+              <div class="pi pi-arrow-right text-[16px]! brand-03"></div>
             </div>
           </div>
         </div>
@@ -141,11 +141,11 @@
     <app-empty-state [title]="'No Events Found'" [message]="''" [showClearButton]="false" />
   }
 </ion-content>
-@if (!isLoading() && event()) {
-  @if (!isEventCompleted()) {
-    @if (!eventDisplayData().isCurrentUserHost && !eventDisplayData().isCurrentUserAttendee && !eventDisplayData().isCurrentUserCoHost) {
-      <ion-footer class="ion-padding-horizontal">
-        <ion-toolbar class="ion-no-padding" style="--background: transparent">
+<ion-footer class="ion-padding-horizontal" mode="md">
+  <ion-toolbar class="ion-no-padding" mode="md" [style.--background]="'transparent'">
+    @if (!isLoading() && event()) {
+      @if (!isEventCompleted()) {
+        @if (!eventDisplayData().isCurrentUserHost && !eventDisplayData().isCurrentUserAttendee && !eventDisplayData().isCurrentUserCoHost) {
           <div class="pb-4 max-w-[672px] mx-auto">
             @if (eventDisplayData().is_subscriber_exclusive && !eventDisplayData().has_subscribed) {
               <app-button label="Subscribe Now" icon="/assets/svg/crown-black.svg" height="40px" (click)="navigateToSubscriptionPlans()" />
@@ -178,8 +178,8 @@
               />
             }
           </div>
-        </ion-toolbar>
-      </ion-footer>
+        }
+      }
     }
-  }
-}
+  </ion-toolbar>
+</ion-footer>

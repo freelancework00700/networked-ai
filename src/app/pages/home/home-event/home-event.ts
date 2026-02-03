@@ -265,9 +265,10 @@ export class HomeEvent implements OnInit, OnDestroy {
 
     try {
       this.isLoading.set(true);
-      await this.eventService.getRecommendedEvents({
+      await this.eventService.getEvents({
         limit: 3,
-        append: !reset
+        append: !reset,
+        is_recommended: true
       });
     } catch (error) {
       console.error('Error loading recommended events:', error);
@@ -282,7 +283,8 @@ export class HomeEvent implements OnInit, OnDestroy {
       await this.eventService.getEvents({
         is_public: true,
         limit: 3,
-        append: !reset
+        append: !reset,
+        start_date: new Date().toString()
       });
     } catch (error) {
       console.error('Error loading public events:', error);
@@ -302,14 +304,16 @@ export class HomeEvent implements OnInit, OnDestroy {
       } else {
         // When logged in, load both recommended and public events
         await Promise.all([
-          this.eventService.getRecommendedEvents({
+          this.eventService.getEvents({
             limit: 3,
-            append: !reset
+            append: !reset,
+            is_recommended: true
           }),
           this.eventService.getEvents({
             limit: 3,
             is_public: true,
-            append: !reset
+            append: !reset,
+            start_date: new Date().toString()
           })
         ]);
       }
@@ -386,7 +390,7 @@ export class HomeEvent implements OnInit, OnDestroy {
 
     try {
       this.isLoading.set(true);
-      await this.eventService.getMyEvents({
+      await this.eventService.getEvents({
         page: 1,
         limit: 3,
         roles: 'Host,CoHost,Sponsor,Speaker,Staff,Attendees',

@@ -32,25 +32,28 @@
                   (click)="onUserClick(user.username)"
                 >
                   @if (user.rank === 1) {
-                    <div class="gradient-gold rounded-full p-[3px] mb-[6px]">
-                      <img
-                        [ngSrc]="getUserImage(user)"
-                        [alt]="user.name"
-                        width="60"
-                        height="60"
-                        class="w-15 h-15 rounded-full object-cover bg-white"
-                        (error)="onImageError($event)"
-                      />
+                    <div class="gradient-gold rounded-full w-16.5! h-16.5! flex items-center justify-center">
+                      <div class="w-15 h-15 rounded-full object-cover overflow-hidden relative">
+                        <img
+                          fill
+                          placeholder
+                          [ngSrc]="getUserImage(user)"
+                          [alt]="user.name"
+                          class="rounded-full object-cover"
+                          (error)="onImageError($event)"
+                        />
+                      </div>
                     </div>
                   } @else {
+                    <div class="w-15 h-15 rounded-full object-cover overflow-hidden relative border-2 border-white shadow-md">
                     <img
+                      fill
+                      placeholder
                       [ngSrc]="getUserImage(user)"
                       [alt]="user.name"
-                      width="60"
-                      height="60"
-                      class="w-15 h-15 rounded-full object-cover border-2 border-white shadow-md"
                       (error)="onImageError($event)"
-                    />
+                      />
+                    </div>
                   }
 
                   <div class="mt-2">
@@ -100,7 +103,7 @@
                   placeholder
                   [ngSrc]="getUserImage(entry)"
                   [alt]="entry.name"
-                  class="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                  class="w-10 h-10 rounded-full object-cover shrink-0"
                   (error)="onImageError($event)"
                 />
               </div>
@@ -133,7 +136,7 @@
             placeholder
             [ngSrc]="getUserImage(userRank()!)"
             [alt]="userRank()!.name"
-            class="w-10 h-10 rounded-full object-cover flex-shrink-0"
+            class="w-10 h-10 rounded-full object-cover shrink-0"
             (error)="onImageError($event)"
           />
         </div>

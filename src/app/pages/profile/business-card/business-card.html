@@ -3,7 +3,7 @@
     <div class="w-full py-6 px-4 max-w-[672px] mx-auto">
       <div class="flex items-center justify-between">
         <ion-icon name="arrow-back" class="text-[20px] cursor-pointer neutral-03" (click)="goBack()"></ion-icon>
-        <div class="body-14SB neutral-01">Your Business Card</div>
+        <div class="body-14SB neutral-01">{{ authService.currentUser()?.id === user()?.id ? 'Your Business Card' : 'Business Card' }}</div>
         <div class="w-[20px]"></div>
       </div>
     </div>
@@ -14,7 +14,7 @@
   <div class="w-full px-4 max-w-[672px] mx-auto">
     @if (user()) {
       <!-- Business Card Display -->
-      <div class="relative w-full mt-6 mb-6">
+      <div class="relative w-full">
         <!-- Background with gradient and pattern -->
         <div class="relative w-full min-h-[500px] rounded-4xl overflow-hidden bg-neutral-06" #cardDownloadSection>
           <!-- Background Image -->
@@ -84,7 +84,7 @@
               <div class="flex flex-col gap-3 mb-6 w-full mt-4">
                 @for (link of visibleLinks(); track link.type) {
                   <div class="flex items-center gap-3 p-4 border border-neutral-300 rounded-4xl bg-neutral-07 contact-info-item">
-                    <ion-icon [name]="link.icon" class="text-[20px] neutral-03 flex-shrink-0"></ion-icon>
+                    <ion-icon [name]="link.icon" class="text-[20px] neutral-03 shrink-0"></ion-icon>
                     <a
                       [href]="link.href"
                       [target]="link.type === 'email' || link.type === 'phone' ? '_self' : '_blank'"
@@ -117,7 +117,7 @@
 
 <ion-footer mode="md">
   <ion-toolbar mode="md">
-    <div class="w-full px-4 pb-4 max-w-[672px] mx-auto">
+    <div class="w-full px-4 py-4 max-w-[672px] mx-auto">
       <!-- Download Button -->
       <div class="flex gap-3">
         <app-button color="secondary" label="Download" iconName="pi-download" (click)="onDownload()" class="flex-1" />

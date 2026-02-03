@@ -14,8 +14,18 @@ import { ProfilePosts } from '@/pages/profile/components/profile-posts/profile-p
 import { ProfileHostedEvents } from '@/pages/profile/components/profile-hosted-events';
 import { ProfileUpcomingEvents } from '@/pages/profile/components/profile-upcoming-events';
 import { ProfileAttendedEvents } from '@/pages/profile/components/profile-attended-events';
-import { IonIcon, IonHeader, IonToolbar, IonContent, NavController, IonSkeletonText } from '@ionic/angular/standalone';
-import { inject, Component, OnDestroy, signal, computed, ChangeDetectionStrategy, PLATFORM_ID, effect, input } from '@angular/core';
+import {
+  IonIcon,
+  IonHeader,
+  IonToolbar,
+  IonContent,
+  NavController,
+  IonSkeletonText,
+  IonRefresher,
+  IonRefresherContent,
+  RefresherCustomEvent
+} from '@ionic/angular/standalone';
+import { inject, Component, OnDestroy, signal, computed, ChangeDetectionStrategy, PLATFORM_ID, effect, input, viewChild } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { onImageError } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
@@ -53,6 +63,8 @@ interface TabConfig {
     IonHeader,
     IonContent,
     IonToolbar,
+    IonRefresher,
+    IonRefresherContent,
     ProfileLink,
     BusinessCard,
     ProfilePosts,
@@ -89,6 +101,11 @@ export class Profile implements OnDestroy {
   ogService = inject(OgService);
 
   private routeParamSubscription?: Subscription;
+
+  profileHostedEvents = viewChild(ProfileHostedEvents);
+  profileAttendedEvents = viewChild(ProfileAttendedEvents);
+  profileUpcomingEvents = viewChild(ProfileUpcomingEvents);
+  profilePosts = viewChild(ProfilePosts);
 
   // computed & signals
   currentSlide = signal<ProfileTabs>('hosted-events');
@@ -290,6 +307,29 @@ export class Profile implements OnDestroy {
 
   ngOnDestroy(): void {
     this.socketService.off('network:connection:update', this.networkConnectionHandler);
+  }
+
+  async onRefresh(event: RefresherCustomEvent): Promise<void> {
+    const username = this.username();
+    try {
+      if (username) {
+        await this.loadUserByUsername(username);
+      } else {
+        const currentUserId = this.authService.currentUser()?.id;
+        if (currentUserId) {
+          const user = await this.userService.getUser(currentUserId);
+          this.currentUser.set(user);
+        }
+      }
+      this.profileHostedEvents()?.loadHostedEvents(true);
+      this.profileAttendedEvents()?.loadAttendedEvents(true);
+      this.profileUpcomingEvents()?.loadUpcomingEvents(true);
+      this.profilePosts()?.onRefresh(event);
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+    } finally {
+      (event.target as HTMLIonRefresherElement).complete();
+    }
   }
 
   ionViewDidLeave() {

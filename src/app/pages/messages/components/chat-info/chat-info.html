@@ -25,8 +25,10 @@
         <input type="file" #fileInput accept="image/jpeg,image/png" class="hidden" (change)="onGroupImageSelected($event)" />
 
         <div
-          class="relative w-20 h-20 rounded-full bg-neutral-04 flex items-center justify-center cursor-pointer hover:brightness-90 transition overflow-hidden"
-          [class.pointer-events-none]="isSavingGroupImage()"
+          class="relative w-20 h-20 rounded-full bg-neutral-04 flex items-center justify-center transition overflow-hidden"
+          [class.cursor-pointer]="!isEventRoom()"
+          [class.hover:brightness-90]="!isEventRoom()"
+          [class.pointer-events-none]="isSavingGroupImage() || isEventRoom()"
           [class.opacity-70]="isSavingGroupImage()"
           (click)="onGroupImageMenuClick($event)"
         >
@@ -62,7 +64,9 @@
       <div class="flex gap-3">
         <app-button iconName="pi-upload" label="Share Group" class="flex-1" color="secondary" (click)="openShareGroup()" />
 
-        <app-button icon="assets/svg/addUserIcon.svg" label="Add Members" class="flex-1" (click)="addMembers()" />
+        @if (!isEventRoom()) {
+          <app-button icon="assets/svg/addUserIcon.svg" label="Add Members" class="flex-1" (click)="addMembers()" />
+        }
       </div>
 
       <div class="flex items-center justify-between py-3">

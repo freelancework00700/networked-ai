@@ -34,7 +34,7 @@
             <div class="border-b border-gray-300 px-4 py-2">
               <div class="flex justify-between items-start gap-4">
                 <div class="flex items-start gap-2 cursor-pointer">
-                  <div class="relative w-10 h-10 flex-shrink-0 overflow-hidden rounded-full" (click)="menu.toggle($event)">
+                  <div class="relative w-10 h-10 shrink-0 overflow-hidden rounded-full" (click)="menu.toggle($event)">
                     <img
                       fill
                       placeholder
@@ -65,7 +65,7 @@
 
                   <div class="flex flex-col items-center cursor-pointer select-none" (click)="onLikeComment(comment)">
                     <div
-                      class="pi !text-[12px]"
+                      class="pi text-[12px]!"
                       [class.pi-heart-fill]="comment.is_like"
                       [class.pi-heart]="!comment.is_like"
                       [class.accent-red]="comment.is_like"
@@ -95,7 +95,7 @@
                 @for (reply of comment.replies; track reply.id) {
                   <div class="ml-12 mt-2 body-12 gap-4 flex justify-between items-start">
                     <div class="flex items-start gap-2 my-2 cursor-pointer" (click)="menu.toggle($event)">
-                      <div class="relative w-10 h-10 flex-shrink-0 overflow-hidden rounded-full">
+                      <div class="relative w-10 h-10 shrink-0 overflow-hidden rounded-full">
                         <img
                           fill
                           placeholder
@@ -126,7 +126,7 @@
 
                     <div class="flex flex-col items-center cursor-pointer select-none text-gray-400 my-2" (click)="onLikeComment(reply)">
                       <div
-                        class="pi !text-[12px]"
+                        class="pi text-[12px]!"
                         [class.pi-heart-fill]="reply.is_like"
                         [class.pi-heart]="!reply.is_like"
                         [class.accent-red]="reply.is_like"
@@ -165,7 +165,7 @@
       <div class="pt-6 max-w-[672px] mx-auto">
         @if (replyingTo()) {
           <div class="flex items-center gap-2 px-3 py-2 rounded-lg border-l-[3px] border-primary-500">
-            <div class="relative w-[35px] h-[35px] flex-shrink-0 overflow-hidden rounded-full">
+            <div class="relative w-[35px] h-[35px] shrink-0 overflow-hidden rounded-full">
               <img
                 fill
                 placeholder
@@ -191,38 +191,41 @@
         }
 
         <div class="flex items-center gap-4 mt-0 p-6 pt-0">
-          <div class="flex-1 flex items-center gap-2 border border-gray-300 rounded-lg px-2">
-            <div class="relative w-10 h-10 flex-shrink-0 overflow-hidden rounded-full">
-              <img
-                fill
-                placeholder
-                [alt]="currentUser()?.name || 'avatar'"
-                class="rounded-full object-cover"
-                (error)="onImageError($event)"
-                [ngSrc]="getImageUrl(currentUser()?.thumbnail_url)"
-              />
-            </div>
-
-            <div class="relative-block-container">
-              <div>
-                <textarea
-                  #textareaEl
-                  cdkOverlayOrigin
-                  #textareaOrigin="cdkOverlayOrigin"
-                  class="w-full py-2 px-4 border-none outline-none resize-none"
-                  [formControl]="textCtrl"
-                  [placeholder]="replyingTo() ? 'Reply as ' + currentUser()?.username : 'Reply to this post...'"
-                  wrap="hard"
-                ></textarea>
-                <mentions
-                  [textareaRef]="textareaRef"
-                  [control]="textCtrl"
-                  [overlayOrigin]="textareaOrigin"
-                  [position]="'above'"
-                  (userSelected)="onMentionSelected($event)"
-                />
+          <div class="flex-1 relative">
+            <div class="w-full relative">
+              <div class="absolute left-3 top-1/2 -translate-y-[55%] z-10 pointer-events-none">
+                <div class="relative w-10 h-10 shrink-0 overflow-hidden rounded-full">
+                  <img
+                    fill
+                    placeholder
+                    [alt]="currentUser()?.name || 'avatar'"
+                    class="rounded-full object-cover"
+                    (error)="onImageError($event)"
+                    [ngSrc]="getImageUrl(currentUser()?.thumbnail_url)"
+                  />
+                </div>
               </div>
-            </div>
+              <textarea
+                rows="1"
+                pTextarea
+                [autoResize]="true"
+                #textareaEl
+                cdkOverlayOrigin
+                #textareaOrigin="cdkOverlayOrigin"
+                class="w-full pr-2! max-h-30 overflow-y-auto! resize-none pl-15! py-[17px]! scrollbar-hide"
+                [formControl]="textCtrl"
+                [placeholder]="replyingTo() ? 'Reply as ' + currentUser()?.username : 'Reply to this post...'"
+                wrap="hard"
+                (keydown)="onMessageKeydown($event)"
+              ></textarea>
+              <mentions
+                [textareaRef]="textareaRef"
+                [control]="textCtrl"
+                [overlayOrigin]="textareaOrigin"
+                [position]="'above'"
+                (userSelected)="onMentionSelected($event)"
+              />
+              </div>
           </div>
           <app-button
             (click)="sendComment()"
