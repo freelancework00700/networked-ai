@@ -1,5 +1,5 @@
 import { NavController, RefresherCustomEvent } from '@ionic/angular/standalone';
-import { IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner, IonRefresher, IonRefresherContent } from '@ionic/angular/standalone';
+import { IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner } from '@ionic/angular/standalone';
 import { inject, Component, ChangeDetectionStrategy, signal, computed, input, effect, untracked } from '@angular/core';
 import { PostCard } from '@/components/card/post-card';
 import { FeedService } from '@/services/feed.service';
@@ -11,7 +11,7 @@ import { AuthService } from '@/services/auth.service';
   styleUrl: './profile-posts.scss',
   templateUrl: './profile-posts.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PostCard, IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner, IonRefresher, IonRefresherContent, ProfileEmptyState]
+  imports: [PostCard, IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner, ProfileEmptyState]
 })
 export class ProfilePosts {
   // services

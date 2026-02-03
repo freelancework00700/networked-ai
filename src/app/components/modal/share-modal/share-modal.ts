@@ -206,6 +206,9 @@ export class ShareModal implements OnInit {
     try {
       const nextPage = this.currentPage() + 1;
       await this.loadNetworkConnections(nextPage, true);
+      if (this.sendEntireNetwork()) {
+        this.onSelectAllChange(true);
+      }
     } catch (error) {
       console.error('Error loading more users:', error);
     } finally {

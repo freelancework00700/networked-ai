@@ -25,7 +25,7 @@
         [loaderParams]="{ thumbnail: currentEvent().thumbnail_url }"
       />
       <!-- gradient overlay -->
-      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
+      <div class="absolute inset-0 bg-linear-to-t from-black/90 via-black/50 to-transparent"></div>
 
       @if (!isSubscriberExclusive() || (isSubscriberExclusive() && (currentEvent().has_subscribed || isHost()))) {
         <!-- top left: views -->
@@ -40,31 +40,35 @@
         <!-- top right: icons -->
         <div class="absolute top-2 right-2 z-10 flex items-center gap-2">
           <div
-            class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
+            class="flex w-[32px]! h-[32px]! min-w-[32px]! min-h-[32px]! justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
           >
-            <ion-icon src="/assets/svg/share.svg" class="h-[20px] w-[20px]" (click)="shareEvent(); $event.stopPropagation()"></ion-icon>
+            <ion-icon src="/assets/svg/share.svg" class="h-[18px] w-[18px]" (click)="shareEvent(); $event.stopPropagation()"></ion-icon>
           </div>
 
           <div
-            class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
+            class="flex w-[32px]! h-[32px]! min-w-[32px]! min-h-[32px]! justify-center items-center gap-2 rounded-full shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
+            [ngClass]="{
+              'bg-[linear-gradient(138deg,#f5bc61_8.51%,#9e660a_85.69%)]': isEventLiked(),
+              'bg-black/10': !isEventLiked()
+            }"
             (click)="likeEvent($event)"
           >
             @if (isEventLiked()) {
-              <div class="pi pi-heart-fill !text-[19px] accent-red"></div>
+              <div class="pi pi-heart-fill text-[16px]! text-white"></div>
             } @else {
-              <ion-icon src="/assets/svg/like.svg" class="h-[20px] w-[20px]"></ion-icon>
+              <ion-icon src="/assets/svg/like.svg" class="h-[18px] w-[18px]"></ion-icon>
             }
           </div>
           @if ((isHostOrCoHost() || isAttendee()) && isLoggedIn()) {
               <div
-              class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
+              class="flex w-[32px]! h-[32px]! min-w-[32px]! min-h-[32px]! justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
               (click)="openEventChat($event)"
             >
               <ion-icon src="assets/svg/manage-event/chat-white.svg" class="h-5 w-5"></ion-icon>
             </div>
             @if(isHostOrCoHost()){
               <div
-                class="flex !w-[32px] !h-[32px] !min-w-[32px] !min-h-[32px] justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
+                class="flex w-[32px]! h-[32px]! min-w-[32px]! min-h-[32px]! justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
                 (click)="openMenu($event)"
               >
                 <ion-icon src="assets/svg/manage-event/settings-white.svg" class="h-6 w-6"></ion-icon>
@@ -88,41 +92,44 @@
             'border border-white/10': !(isSubscriberExclusive() && !currentEvent().has_subscribed && !isHost())
           }"
         >
-          <div class="flex flex-col gap-0.5">
-            <div class="body-16SB neutral-07 line-clamp-2">{{ currentEvent().title || 'Untitled Event' }}</div>
-            <div class="flex justify-between items-center py-2">
-              <div class="body-12 neutral-05 absolute left-3 z-10">{{ eventOrganization() }}</div>
-              <div class="body-12 neutral-05 absolute right-2 z-10 flex items-center gap-2">
-                @if (isSubscriberExclusive() && !currentEvent().has_subscribed && !isHost()) {
+        <div class="flex flex-col gap-0.5">
+          <div class="body-16SB neutral-07 line-clamp-1">{{ currentEvent().title || 'Untitled Event' }}</div>
+          <div class="flex justify-between items-center py-2">
+            <div class="body-12 neutral-05 absolute left-3 z-10">{{ eventOrganization() }}</div>
+            <div class="body-12 neutral-05 absolute right-2 z-10 flex items-center gap-2">
+            @if (isSubscriberExclusive() && !currentEvent().has_subscribed && !isHost()) {
+                <span class="hidden sm:inline">
                   See event details
-                  <div class="pi pi-arrow-right !text-[12px]"></div>
-                }
-              </div>
-            </div>
+                </span>
+        
+                <div class="pi pi-arrow-right text-[12px]!"></div>
+            }
           </div>
+        </div>
+        
           @if (!isSubscriberExclusive() || (isSubscriberExclusive() && (currentEvent().has_subscribed || isHost()))) {
-            <div class="h-[1px] w-full bg-white/10"></div>
+            <div class="h-px w-full bg-white/10"></div>
             @if (variant() === 'compact') {
               <div class="flex items-center gap-4 w-full">
                 <div class="flex items-center gap-1.5">
-                  <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
+                  <div class="pi pi-calendar neutral-07 text-[12px]!"></div>
                   <span class="body-12 neutral-05">{{ formattedDate() }}</span>
                 </div>
 
                 <div class="flex items-center gap-1.5 min-w-0 flex-1 max-w-full">
-                  <div class="pi pi-map-marker neutral-07 !text-[12px] shrink-0"></div>
+                  <div class="pi pi-map-marker neutral-07 text-[12px]! shrink-0"></div>
                   <span class="body-12 neutral-05 truncate flex-1 min-w-0 max-w-full">{{ formattedLocation() }}</span>
                 </div>
               </div>
             } @else {
               <div class="flex items-start gap-1 flex-col max-w-full">
                 <div class="flex items-center gap-1.5">
-                  <div class="pi pi-calendar neutral-07 !text-[12px]"></div>
+                  <div class="pi pi-calendar neutral-07 text-[12px]!"></div>
                   <span class="body-12 neutral-05">{{ formattedDate() }}</span>
                 </div>
 
                 <div class="flex items-center gap-1.5 min-w-0 w-full max-w-full">
-                  <div class="pi pi-map-marker neutral-07 !text-[12px] shrink-0"></div>
+                    <div class="pi pi-map-marker neutral-07 text-[12px]! shrink-0"></div>
                   <span class="body-12 neutral-05 truncate flex-1 min-w-0 max-w-full">{{ formattedLocation() }}</span>
                 </div>
               </div>

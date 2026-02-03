@@ -1,13 +1,21 @@
-<div class="bg-neutral-07 w-full max-w-[672px] mx-auto">
-  <div class="flex">
+<div class="bg-neutral-07 w-full max-w-[672px] mx-auto overflow-x-auto scrollbar-hide">
+  <div class="flex flex-nowrap">
     @for (item of items(); track item.value) {
-      <div type="button" class="segment-button" [class.active]="value() === item.value" (click)="valueChange.emit(item.value)">
+      <div
+        type="button"
+        class="segment-button flex items-center gap-2 shrink-0 whitespace-nowrap"
+        [class.active]="value() === item.value"
+        (click)="valueChange.emit(item.value)"
+      >
         @if (item.icon) {
           <ion-icon class="segment-icon" [src]="value() === item.value ? item.activeIcon : item.icon" />
         } @else if (item.iconClass) {
           <div [class]="'pi ' + item.iconClass + ' segment-icon'"></div>
         }
-        <span class="segment-text">{{ item.label }}</span>
+
+        <span class="segment-text truncate max-w-[140px] sm:max-w-[180px] whitespace-nowrap">
+          {{ item.label }}
+        </span>
       </div>
     }
   </div>

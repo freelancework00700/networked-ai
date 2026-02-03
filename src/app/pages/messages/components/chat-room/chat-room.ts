@@ -672,6 +672,13 @@ export class ChatRoom implements OnInit, OnDestroy {
     }
   }
 
+  revertEditMode(): void {
+    if (this.editingIndex() !== null) {
+      this.editingIndex.set(null);
+      this.newMessage.set('');
+    }
+  }
+
   handleBack() {
     this.navCtrl.back();
   }

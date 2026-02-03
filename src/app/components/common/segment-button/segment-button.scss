@@ -16,6 +16,7 @@
   transition: all 0.2s ease;
   text-transform: capitalize;
   border-bottom: 2px solid var(--neutral-05);
+  padding: 0 12px;
 
   .segment-icon {
     width: 20px;
@@ -28,4 +29,13 @@
     border-bottom-width: 2px;
     border-bottom-color: var(--brand-03);
   }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;           
 }

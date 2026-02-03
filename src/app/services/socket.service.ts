@@ -155,6 +155,7 @@ export class SocketService implements OnDestroy {
       console.log('Room updated event received:', payload);
       if (payload) {
         this.messagesService.applyRoomUpdated(payload);
+        this.messagesService.fetchUnreadCount();
       }
     });
   }

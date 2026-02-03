@@ -92,6 +92,9 @@
     </ion-header>
   }
   <ion-content [fullscreen]="true" [scrollEvents]="true">
+    <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
+      <ion-refresher-content mode="md"></ion-refresher-content>
+    </ion-refresher>
     @if (userNotFound() && userName()) {
       <app-empty-state [title]="'No User Found'" [message]="''" [icon]="'/assets/svg/noUserIcon.svg'" [showClearButton]="false" />
     } @else if (isLoggedIn() || userName()) {
@@ -303,6 +306,10 @@
 
   <!-- Profile Image Preview Overlay -->
   @if (showImagePreview()) {
-    <profile-image-preview-overlay [user]="currentUser()" [isViewingOtherProfile]="isViewingOtherProfile()" (closeOverlay)="onCloseImagePreview()" />
+    <profile-image-preview-overlay
+      [user]="currentUser()"
+      [isViewingOtherProfile]="isViewingOtherProfile()"
+      (closeOverlay)="onCloseImagePreview()"
+    />
   }
 }

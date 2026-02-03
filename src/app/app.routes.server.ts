@@ -35,6 +35,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    path: 'leaderboard',
+    renderMode: RenderMode.Client
+  },
+  {
     path: 'notification',
     renderMode: RenderMode.Client
   },

@@ -39,7 +39,7 @@ export class BusinessCardPage implements OnInit {
   @ViewChild('cardDownloadSection', { static: false, read: ElementRef }) cardDownloadSection?: ElementRef<HTMLDivElement>;
 
   private navigationService = inject(NavigationService);
-  private authService = inject(AuthService);
+  authService = inject(AuthService);
   private router = inject(Router);
   private toasterService = inject(ToasterService);
   private modalService = inject(ModalService);

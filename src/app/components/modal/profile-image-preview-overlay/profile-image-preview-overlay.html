@@ -15,11 +15,54 @@
 
   <!-- Action Buttons -->
   <div class="action-buttons" (click)="$event.stopPropagation()">
-    <button type="button" class="action-button" (click)="onCopyLink()">
-      <ion-icon name="link-outline" class="action-icon"></ion-icon>
-      <span class="action-label">Copy Link</span>
-    </button>
-    @if (!isViewingOtherProfile()) {
+    @if (showAddAsNetworkOnly()) {
+      <!-- Other user, not connected: single prominent Add as Network -->
+      <app-button
+        [label]="'Add as Network'"
+        [iconName]="'pi-user-plus'"
+        [disabled]="isAddingToNetwork()"
+        (click)="onAddToNetwork()"
+        [isLoading]="isAddingToNetwork()"
+        color="primary"
+        class="w-full"
+      />
+    } @else if (showRequestSentOnly()) {
+      <app-button
+          [label]="'Pending'"
+          [iconName]="'pi-clock'"
+          [disabled]="isWithdrawingInvitation()"
+          (click)="onWithdrawInvitation()"
+          [isLoading]="isWithdrawingInvitation()"
+          color="primary"
+          class="w-full"
+        />
+    } @else if (isViewingOtherProfile() && isOtherUserConnected()) {
+      <!-- Other user, connected: My Network, Copy Link, Share, Business Card -->
+      <button type="button" class="action-button" (click)="onMyNetwork()">
+        <ion-icon name="people-outline" class="action-icon"></ion-icon>
+        <span class="action-label">My Network</span>
+      </button>
+      <button type="button" class="action-button" (click)="onCopyLink()">
+        <ion-icon name="link-outline" class="action-icon"></ion-icon>
+        <span class="action-label">Copy Link</span>
+      </button>
+      <button type="button" class="action-button" (click)="onShare()">
+        <ion-icon name="share-outline" class="action-icon"></ion-icon>
+        <span class="action-label">Share</span>
+      </button>
+      <button type="button" class="action-button" (click)="onBusinessCard()">
+        <ion-icon name="qr-code-outline" class="action-icon"></ion-icon>
+        <span class="action-label">
+          <span>Business</span>
+          <span>Card</span>
+        </span>
+      </button>
+    } @else {
+      <!-- Own profile: Copy Link, Share, Business Card -->
+      <button type="button" class="action-button" (click)="onCopyLink()">
+        <ion-icon name="link-outline" class="action-icon"></ion-icon>
+        <span class="action-label">Copy Link</span>
+      </button>
       <button type="button" class="action-button" (click)="onShare()">
         <ion-icon name="share-outline" class="action-icon"></ion-icon>
         <span class="action-label">Share</span>

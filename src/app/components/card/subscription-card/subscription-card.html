@@ -23,13 +23,18 @@
       </div>
 
       <!-- Plan Details -->
-      <div class="flex-1">
-        <div class="body-18SB neutral-01 mb-1">{{ getDisplayName() }}</div>
-        <div class="flex items-center gap-2">
-          <div class="body-12R neutral-03 mb-1 pr-2 border-r-1">
+      <div class="flex-1 min-w-0 pr-10">
+        <div class="body-18SB neutral-01 mb-1 truncate">
+          {{ getDisplayName() }}
+        </div>
+
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="body-12R neutral-03 mb-1 pr-2 border-r-1 whitespace-nowrap">
             <b class="neutral-01">{{ data().subscribers }}</b> subscribers
           </div>
-          <div class="body-12R neutral-03">{{ data().priceRange }}</div>
+          <div class="body-12R neutral-03 truncate min-w-0">
+            {{ data().priceRange }}
+          </div>
         </div>
       </div>
 
@@ -73,8 +78,11 @@
       </div>
 
       <!-- Subscription Details -->
-      <div class="flex-1">
-        <div class="body-18SB neutral-01 mb-1">{{ getDisplayName() }}</div>
+      <div class="flex-1 min-w-0">
+        <div class="body-18SB neutral-01 mb-1 truncate">
+          {{ getDisplayName() }}
+        </div>
+
         <div class="flex items-center gap-2">
           <div class="relative w-5 h-5 flex-shrink-0 overflow-hidden rounded-full">
             <img
@@ -87,7 +95,9 @@
               [ngSrc]="getImageUrl(data().thumbnail_url)"
             />
           </div>
-          <div class="body-12 neutral-02">{{ data().creatorName }}</div>
+          <div class="body-12 neutral-02 truncate">
+            {{ data().creatorName }}
+          </div>
         </div>
       </div>
     </div>

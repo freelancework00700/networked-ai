@@ -4,7 +4,7 @@
       <div class="heading-h3 neutral-01">Your Networking Score</div>
     </div>
   } @else {
-    <div class="flex justify-between items-center pb-4">
+    <div class="flex justify-between items-center py-4">
       <div class="heading-h3 neutral-01">Achievements</div>
       @if (showSeeAll()) {
         <div class="brand-02 body-14SB cursor-pointer" (click)="handleSeeAll()">See all</div>
@@ -28,7 +28,7 @@
           <div class="flex items-center gap-2">
             @if (!category.allCompleted) {
               <div class="w-[120px] sm:w-[200px] h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
-                <div class="h-full rounded-full bg-gradient-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]" [style.width.%]="category.progress"></div>
+                <div class="h-full rounded-full bg-linear-to-r from-[#c0781f] via-[#de9e34] to-[#e6b04c]" [style.width.%]="category.progress"></div>
               </div>
             }
             @if (category.allCompleted) {

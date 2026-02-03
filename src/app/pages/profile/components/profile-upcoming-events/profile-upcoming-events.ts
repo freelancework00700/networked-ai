@@ -39,7 +39,7 @@ export class ProfileUpcomingEvents {
     });
   }
 
-  private async loadUpcomingEvents(reset: boolean = true): Promise<void> {
+  async loadUpcomingEvents(reset: boolean = true): Promise<void> {
     const userId = this.userId();
     if (!userId || this.isLoading()) return;
 
@@ -47,7 +47,7 @@ export class ProfileUpcomingEvents {
     const page = reset ? 1 : this.currentPage();
 
     try {
-      const response = await this.eventService.getMyEvents({
+      const response = await this.eventService.getEvents({
         page,
         limit: this.pageLimit,
         roles: 'Host,CoHost,Sponsor,Speaker,Staff,Attendees',
@@ -90,7 +90,7 @@ export class ProfileUpcomingEvents {
       const nextPage = this.currentPage() + 1;
 
       if (userId) {
-        const response = await this.eventService.getMyEvents({
+        const response = await this.eventService.getEvents({
           page: nextPage,
           limit: this.pageLimit,
           roles: 'Host,CoHost,Sponsor,Speaker,Staff,Attendees',

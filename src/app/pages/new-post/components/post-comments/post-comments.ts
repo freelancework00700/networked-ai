@@ -30,6 +30,8 @@ import { Mentions } from '@/components/common/mentions';
 import { IUser } from '@/interfaces/IUser';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { OgService } from '@/services/og.service';
+import { Textarea } from 'primeng/textarea';
+import { Capacitor } from '@capacitor/core';
 
 @Component({
   selector: 'post-comments',
@@ -52,7 +54,8 @@ import { OgService } from '@/services/og.service';
     ReactiveFormsModule,
     NgOptimizedImage,
     Mentions,
-    OverlayModule
+    OverlayModule,
+    Textarea
   ]
 })
 export class PostComments implements OnInit, OnDestroy {
@@ -90,6 +93,12 @@ export class PostComments implements OnInit, OnDestroy {
   // Track mentioned users: username -> user ID
   private mentionedUsers = new Map<string, string>();
 
+  private async ensureLoggedIn(): Promise<boolean> {
+    if (this.authService.getCurrentToken()) return true;
+    const result = await this.modalService.openLoginModal();
+    return result?.success ?? false;
+  }
+
   onMentionSelected(user: IUser): void {
     if (user.username && user.id) {
       this.mentionedUsers.set(user.username.toLowerCase(), user.id);
@@ -118,13 +127,6 @@ export class PostComments implements OnInit, OnDestroy {
 
     const items: MenuItem[] = [];
 
-    // View Profile is available for all comments
-    items.push({
-      label: 'View Profile',
-      icon: 'pi pi-user',
-      command: () => this.viewProfile(comment)
-    });
-
     if (isOwnComment) {
       // Show delete option for own comments
       items.push({
@@ -135,6 +137,11 @@ export class PostComments implements OnInit, OnDestroy {
     } else {
       // Options for other users' comments
       items.push(
+        {
+          label: 'View Profile',
+          icon: 'pi pi-user',
+          command: () => this.viewProfile(comment)
+        },
         {
           label: 'Message',
           icon: 'pi pi-envelope',
@@ -245,6 +252,7 @@ export class PostComments implements OnInit, OnDestroy {
   }
 
   async deleteComment(comment: FeedComment): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     let deleteResponse: CommentResponse | null = null;
 
     const result = await this.modalService.openConfirmModal({
@@ -277,13 +285,15 @@ export class PostComments implements OnInit, OnDestroy {
     }
   }
 
-  viewProfile(comment: FeedComment) {
+  async viewProfile(comment: FeedComment): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     const username = comment.user?.username;
     document.body.click();
     setTimeout(() => this.navigationService.navigateForward(`/${username}`));
   }
 
-  sendMessage(comment: FeedComment) {
+  async sendMessage(comment: FeedComment): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     document.body.click();
     const currentUserId = this.currentUser()?.id;
     const otherUserId = comment.user?.id;
@@ -299,7 +309,8 @@ export class PostComments implements OnInit, OnDestroy {
     }
   }
 
-  async reportComment(comment: FeedComment) {
+  async reportComment(comment: FeedComment): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     const result = await this.modalService.openReportModal('Comment');
     if (!result || !result.reason_id) return;
 
@@ -323,7 +334,8 @@ export class PostComments implements OnInit, OnDestroy {
     }
   }
 
-  async blockUser(comment: FeedComment) {
+  async blockUser(comment: FeedComment): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     if (!comment.user) return;
 
     const result = await this.modalService.openBlockModal(comment.user);
@@ -335,6 +347,7 @@ export class PostComments implements OnInit, OnDestroy {
   }
 
   async onLikeComment(comment: FeedComment): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     const commentId = comment.id;
 
     try {
@@ -346,6 +359,7 @@ export class PostComments implements OnInit, OnDestroy {
   }
 
   async sendComment(): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     if (!this.textCtrl.value?.trim()) return;
 
     const replyTo = this.replyingTo();
@@ -438,11 +452,12 @@ export class PostComments implements OnInit, OnDestroy {
     return this.sanitizer.bypassSecurityTrustHtml(modifiedText);
   }
 
-  onMentionClick(event: Event): void {
+  async onMentionClick(event: Event): Promise<void> {
     const target = event.target as HTMLElement;
     const mentionLink = target.closest('.mention-link') as HTMLElement;
     if (mentionLink) {
       event.preventDefault();
+      if (!(await this.ensureLoggedIn())) return;
       const username = mentionLink.getAttribute('data-username');
       if (username) {
         this.navigationService.navigateForward(`/${username}`);
@@ -450,7 +465,8 @@ export class PostComments implements OnInit, OnDestroy {
     }
   }
 
-  onReplyClick(comment: FeedComment) {
+  async onReplyClick(comment: FeedComment): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     this.replyingTo.set({
       commentId: comment.id,
       userName: comment.user?.name || 'User',
@@ -468,5 +484,13 @@ export class PostComments implements OnInit, OnDestroy {
 
   onImageError(event: Event): void {
     onImageError(event);
+  }
+
+  onMessageKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Enter') return;
+    if (Capacitor.isNativePlatform()) return;
+    if (event.shiftKey) return;
+    event.preventDefault();
+    this.sendComment();
   }
 }
