@@ -9,11 +9,12 @@ import {
   signal,
   OnDestroy,
   ElementRef,
+  PLATFORM_ID,
   AfterViewInit,
   ChangeDetectionStrategy
 } from '@angular/core';
-import * as Maptiler from '@maptiler/sdk';
 import { Feature, Polygon } from 'geojson';
+import { isPlatformBrowser } from '@angular/common';
 import { ModalService } from '@/services/modal.service';
 import { NetworkService } from '@/services/network.service';
 import { ToasterService } from '@/services/toaster.service';
@@ -38,6 +39,10 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   // view child
   mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+
   // services
   private modalService = inject(ModalService);
   private networkService = inject(NetworkService);
@@ -48,9 +53,12 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   users = signal<IUser[]>([]);
   isLoading = signal<boolean>(false);
 
+  // MapTiler (lazy-loaded)
+  private Maptiler!: typeof import('@maptiler/sdk');
+
   // map state
-  private map: Maptiler.Map | null = null;
-  private markers: Maptiler.Marker[] = [];
+  private map: import('@maptiler/sdk').Map | null = null;
+  private markers: import('@maptiler/sdk').Marker[] = [];
 
   // default center coordinates (Atlanta, GA)
   private readonly DEFAULT_ZOOM = 11;
@@ -75,27 +83,31 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
     });
   }
 
-  ngAfterViewInit(): void {
-    this.initializeMap();
+  async ngAfterViewInit(): Promise<void> {
+    if (!this.isBrowser) return;
+    await this.initializeMap();
   }
 
   ngOnDestroy(): void {
     this.cleanup();
   }
 
-  private initializeMap(): void {
-    if (this.map) return;
+  private async initializeMap(): Promise<void> {
+    if (this.map || !this.isBrowser) return;
 
-    Maptiler.config.apiKey = environment.maptilerApiKey;
+    // SSR-safe lazy import
+    this.Maptiler = await import('@maptiler/sdk');
+
+    this.Maptiler.config.apiKey = environment.maptilerApiKey;
 
     const center = this.getMapCenter();
     const container = this.mapContainer().nativeElement;
 
-    this.map = new Maptiler.Map({
+    this.map = new this.Maptiler.Map({
       center,
       container,
       zoom: this.DEFAULT_ZOOM,
-      style: Maptiler.MapStyle.STREETS
+      style: this.Maptiler.MapStyle.STREETS
     });
 
     this.map.on('load', () => {
@@ -112,6 +124,8 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   }
 
   private async loadUsers(radius: number, latitude?: string, longitude?: string): Promise<void> {
+    if (!this.isBrowser) return;
+
     try {
       this.isLoading.set(true);
 
@@ -208,7 +222,7 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
       }
     };
 
-    const source = this.map.getSource('mask') as Maptiler.GeoJSONSource | undefined;
+    const source = this.map.getSource('mask') as import('@maptiler/sdk').GeoJSONSource | undefined;
 
     if (source) {
       source.setData({
@@ -251,7 +265,7 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
 
       const markerElement = this.createMarkerElement(user);
       const position = this.getAdjustedPosition(longitude, latitude);
-      const marker = new Maptiler.Marker({ element: markerElement }).setLngLat(position).addTo(this.map!);
+      const marker = new this.Maptiler.Marker({ element: markerElement }).setLngLat(position).addTo(this.map!);
 
       marker.getElement().addEventListener('click', () => {
         this.modalService.openUserDetailModal(user);

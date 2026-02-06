@@ -15,7 +15,6 @@ import {
 } from '@angular/core';
 import Swiper from 'swiper';
 import { Capacitor } from '@capacitor/core';
-import * as Maptiler from '@maptiler/sdk';
 import { Pagination } from 'swiper/modules';
 import { Button } from '@/components/form/button';
 import { IonIcon } from '@ionic/angular/standalone';
@@ -48,7 +47,10 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   showActionButtons = input(false);
   hideDateSelector = input(false);
 
+  // platform
   private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+
   private destroyRef = inject(DestroyRef);
   private sanitizer = inject(DomSanitizer);
   private modalService = inject(ModalService);
@@ -56,8 +58,12 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   mapContainer = viewChild<ElementRef<HTMLDivElement>>('mapContainer');
   swiperEventDisplayEl = viewChild<ElementRef<HTMLDivElement>>('swiperEl');
 
-  private map: Maptiler.Map | null = null;
-  private marker: Maptiler.Marker | null = null;
+  // MapTiler (lazy loaded)
+  private Maptiler!: typeof import('@maptiler/sdk');
+
+  private map: import('@maptiler/sdk').Map | null = null;
+  private marker: import('@maptiler/sdk').Marker | null = null;
+
   private swiper: Swiper | null = null;
   private readonly DEFAULT_ZOOM = 14;
 
@@ -134,7 +140,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   }
 
   ngAfterViewInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
+    if (this.isBrowser) {
       this.initMap();
     }
   }
@@ -165,7 +171,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
       this.swiper = null;
     }
 
-    if (isPlatformBrowser(this.platformId)) {
+    if (this.isBrowser) {
       const mapCenter = this.eventData().mapCenter;
       if (mapCenter && this.mapContainer() && !this.map) {
         this.initMap();
@@ -183,13 +189,16 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     }
   }
 
-  initMap(): void {
+  private async initMap(): Promise<void> {
     const mapCenter = this.eventData().mapCenter;
     if (!mapCenter || !this.mapContainer() || this.map) return;
 
-    Maptiler.config.apiKey = environment.maptilerApiKey;
+    // SSR-safe lazy import
+    this.Maptiler = await import('@maptiler/sdk');
 
-    const map = new Maptiler.Map({
+    this.Maptiler.config.apiKey = environment.maptilerApiKey;
+
+    const map = new this.Maptiler.Map({
       container: this.mapContainer()!.nativeElement,
       style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${environment.maptilerApiKey}`, // Use newer style URL with API key to avoid deprecation
       center: mapCenter,
@@ -210,7 +219,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     map.on('load', () => {
       map.resize();
       if (!this.marker) {
-        this.marker = new Maptiler.Marker({ color: '#D33' }).setLngLat(mapCenter).addTo(map);
+        this.marker = new this.Maptiler.Marker({ color: '#D33' }).setLngLat(mapCenter).addTo(map);
       }
     });
 
