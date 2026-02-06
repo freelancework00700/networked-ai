@@ -8,5 +8,5 @@
 }
 
 ::ng-deep .maplibregl-ctrl-top-right {
-  bottom: 208px !important;
+  bottom: calc(215px + env(safe-area-inset-bottom)) !important;
 }

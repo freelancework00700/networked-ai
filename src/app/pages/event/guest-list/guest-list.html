@@ -61,16 +61,17 @@
           @for (s of filteredGuestList(); track s.id) {
             <div class="flex items-center gap-3 py-3 px-2 border-b border-gray-200 cursor-pointer" (click)="onCardClick(s)">
               <!-- Avatar -->
-              <div class="relative w-12 h-12 rounded-full overflow-hidden">
-                <img
-                  [ngSrc]="getImageUrl(!s?.parent_user_id ? s?.user?.thumbnail_url : '')"
-                  [alt]="s?.name"
-                  fill
-                  placeholder
-                  (error)="onImageError($event)"
-                  class="object-cover rounded-full"
-                />
-
+              <div class="relative">
+                <div class="relative w-12 h-12 rounded-full overflow-hidden">
+                  <img
+                    [ngSrc]="getImageUrl(!s?.parent_user_id ? s?.user?.thumbnail_url : '')"
+                    [alt]="s?.name"
+                    fill
+                    placeholder
+                    (error)="onImageError($event)"
+                    class="object-cover rounded-full"
+                  />
+                </div>
                 @if (s?.is_checked_in) {
                   <ion-icon src="assets/svg/checkmark-circle.svg" class="w-5.5 h-5.5 absolute -bottom-1 -right-1" />
                 }

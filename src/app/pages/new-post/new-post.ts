@@ -109,7 +109,11 @@ export class NewPost implements OnInit {
 
   ngOnInit() {
     const navigationState: any = this.router.currentNavigation()?.extras?.state;
-    console.log('navigationState:', navigationState);
+    if (navigationState?.defaultVisibility === 'networked') {
+      this.visibility.set('private');
+    } else {
+      this.visibility.set('public');
+    }
     if (navigationState?.postId && navigationState?.post) {
       this.postId.set(navigationState.postId);
       this.loadPostData(navigationState.post);

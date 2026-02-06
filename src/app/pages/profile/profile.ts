@@ -202,6 +202,20 @@ export class Profile implements OnDestroy {
     return (user?.total_events_hosted || 0) + (user?.total_events_cohosted || 0) + (user?.total_events_sponsored || 0);
   });
 
+  private readonly DESCRIPTION_MAX_LENGTH = 220;
+  private readonly DEFAULT_DESCRIPTION = '';
+
+  userDescription = computed(() => this.currentUser()?.description?.toString() ?? this.DEFAULT_DESCRIPTION);
+  isDescriptionExpanded = signal(false);
+  showDescriptionToggle = computed(() => this.userDescription().length > this.DESCRIPTION_MAX_LENGTH);
+  visibleDescription = computed(() => {
+    const desc = this.userDescription();
+    if (!this.showDescriptionToggle() || this.isDescriptionExpanded()) {
+      return desc;
+    }
+    return desc.slice(0, this.DESCRIPTION_MAX_LENGTH).trimEnd() + '...';
+  });
+
   achievementDiamondPath = computed(() => {
     const points = this.currentUser()?.total_gamification_points || 0;
 
@@ -221,6 +235,10 @@ export class Profile implements OnDestroy {
       return '/assets/svg/gamification/diamond-1k.svg';
     }
   });
+
+  toggleDescription(): void {
+    this.isDescriptionExpanded.update((value) => !value);
+  }
 
   shouldShowCreateCard = computed(() => {
     const user = this.currentUser();
