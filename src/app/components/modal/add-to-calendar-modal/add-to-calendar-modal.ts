@@ -43,26 +43,26 @@ export class AddToCalendarModal implements OnInit {
   // 🔹 Build calendar links
   private getCalendarLinks() {
     if (!this.eventData?.start_date || !this.eventData?.end_date) return null;
-  
+
     const start = this.formatGoogleDate(this.eventData.start_date);
     const end = this.formatGoogleDate(this.eventData.end_date);
-  
+
     const title = encodeURIComponent(this.eventData.title || '');
     const description = encodeURIComponent(
       `${this.eventData.description || this.eventData.desc || ''}\n\n${environment.frontendUrl}/event/${this.eventData.slug}`
     );
     const location = encodeURIComponent(this.eventData.location || '');
-  
+
     return {
       Google:
         `https://www.google.com/calendar/render?action=TEMPLATE` +
         `&text=${title}` +
-        `&dates=${start}/${end}` +  
+        `&dates=${start}/${end}` +
         `&details=${description}` +
         `&location=${location}`
     };
   }
-  
+
   async iosCreateEvent() {
     console.log(this.eventData);
     if (Capacitor.getPlatform() !== 'ios') return;

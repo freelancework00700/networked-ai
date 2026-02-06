@@ -182,7 +182,7 @@ export class Notification {
       this.navigationService.navigateForward('/chat-room', false, {
         chatRoom: notification.chat_room,
         user_ids: notification.chat_room?.user_ids,
-        event_id: notification.chat_room?.event_id,
+        event_id: notification.chat_room?.event_id
       });
     } else if (notification.type === NotificationType.NETWORK) {
       this.navCtrl.navigateForward(`/${notification.related_user?.username}`);
@@ -256,7 +256,9 @@ export class Notification {
     }
   }
 
-  private buildFeedbackPayloadFromResponses(responses: any[]): { question_id: string; answer_option_id?: string; answer: string | number | string[] }[] {
+  private buildFeedbackPayloadFromResponses(
+    responses: any[]
+  ): { question_id: string; answer_option_id?: string; answer: string | number | string[] }[] {
     const feedback: { question_id: string; answer_option_id?: string; answer: string | number | string[] }[] = [];
 
     responses.forEach((response: any) => {

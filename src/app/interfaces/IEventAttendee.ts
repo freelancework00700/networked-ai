@@ -58,4 +58,3 @@ export interface IGetEventAttendeesResult {
   pagination: IEventAttendeesPagination;
   counts?: IEventAttendeesCounts;
 }
-

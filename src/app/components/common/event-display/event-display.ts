@@ -101,7 +101,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
       url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     }
 
-    await Browser.open({url});
+    await Browser.open({ url });
   }
 
   hasMultipleTickets = computed(() => {

@@ -64,12 +64,12 @@ export class EventService extends BaseApiService {
     }
   }
 
-  async getEventAttendees(
-    eventId: string,
-    params: IGetEventAttendeesParams = {}
-  ): Promise<IGetEventAttendeesResult> {
+  async getEventAttendees(eventId: string, params: IGetEventAttendeesParams = {}): Promise<IGetEventAttendeesResult> {
     try {
-      let httpParams = new HttpParams().set('event_id', eventId).set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 50));
+      let httpParams = new HttpParams()
+        .set('event_id', eventId)
+        .set('page', String(params.page ?? 1))
+        .set('limit', String(params.limit ?? 50));
       if (params.search?.trim()) httpParams = httpParams.set('search', params.search.trim());
       if (params.rsvp_status) httpParams = httpParams.set('rsvp_status', params.rsvp_status);
       if (params.is_checked_in !== undefined) httpParams = httpParams.set('is_checked_in', params.is_checked_in ? 'true' : 'false');
@@ -1256,7 +1256,7 @@ export class EventService extends BaseApiService {
     }
   }
 
-  async getEventQuestionAnalysis(eventId: string, eventPhase: 'PreEvent' | 'PostEvent' | '' , page: number = 1, limit: number = 20): Promise<any> {
+  async getEventQuestionAnalysis(eventId: string, eventPhase: 'PreEvent' | 'PostEvent' | '', page: number = 1, limit: number = 20): Promise<any> {
     try {
       let httpParams = new HttpParams();
       if (eventId) {

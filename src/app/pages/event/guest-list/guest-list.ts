@@ -15,14 +15,17 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
 import { IonContent, IonToolbar, IonHeader } from '@ionic/angular/standalone';
 import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
-import { IonIcon, IonSpinner, IonRefresher, IonRefresherContent, RefresherCustomEvent, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
-import { IUser } from '@/interfaces/IUser';
 import {
-  IEventAttendee,
-  IEventAttendeesCounts,
-  IEventAttendeesPagination,
-  IGetEventAttendeesParams
-} from '@/interfaces/IEventAttendee';
+  IonIcon,
+  IonSpinner,
+  IonRefresher,
+  IonRefresherContent,
+  RefresherCustomEvent,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent
+} from '@ionic/angular/standalone';
+import { IUser } from '@/interfaces/IUser';
+import { IEventAttendee, IEventAttendeesCounts, IEventAttendeesPagination, IGetEventAttendeesParams } from '@/interfaces/IEventAttendee';
 import { Button } from '@/components/form/button';
 
 type GuestFilter = {
@@ -414,7 +417,9 @@ export class GuestList implements OnInit, OnDestroy {
       };
       await this.eventService.changeCheckInStatus(payload);
       this.attendees.update((list) => list.map((a) => (a.id === id ? { ...a, is_checked_in: true } : a)));
-      this.counts.update((counts: any) => counts ? { ...counts, total_checkedin_guest: counts.total_checkedin_guest + 1 } : { total_checkedin_guest: 1 });
+      this.counts.update((counts: any) =>
+        counts ? { ...counts, total_checkedin_guest: counts.total_checkedin_guest + 1 } : { total_checkedin_guest: 1 }
+      );
       this.toasterService.showSuccess('Check-in successfully');
     } catch (error) {
       console.error(error);
@@ -442,7 +447,9 @@ export class GuestList implements OnInit, OnDestroy {
       };
       await this.eventService.changeCheckInStatus(payload);
       this.attendees.update((list) => list.map((a) => (a.id === guestId ? { ...a, is_checked_in: false } : a)));
-      this.counts.update((counts: any) => counts ? { ...counts, total_checkedin_guest: counts.total_checkedin_guest - 1 } : { total_checkedin_guest: 0 });
+      this.counts.update((counts: any) =>
+        counts ? { ...counts, total_checkedin_guest: counts.total_checkedin_guest - 1 } : { total_checkedin_guest: 0 }
+      );
       this.toasterService.showSuccess('Check-in successfully');
     } catch (error) {
       console.error(error);

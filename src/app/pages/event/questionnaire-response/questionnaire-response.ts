@@ -71,7 +71,7 @@ export class QuestionnaireResponse implements OnInit {
     { value: 'pre-event', label: 'Pre-Event' },
     { value: 'post-event', label: 'Post-Event' }
   ]);
-  
+
   constructor() {
     effect(() => {
       const segment = this.segmentValue();
@@ -137,7 +137,7 @@ export class QuestionnaireResponse implements OnInit {
       this.totalResponses.set(response?.pagination?.totalCount || 0);
       this.totalPages.set(response?.pagination?.totalPages || 0);
     } else {
-      response = await this.eventService.getEventQuestionAnalysis(eventId, this.isHost()? phase:'');
+      response = await this.eventService.getEventQuestionAnalysis(eventId, this.isHost() ? phase : '');
 
       this.analytics.set(response?.questions || []);
       this.totalResponses.set(response?.total_responses || 0);
@@ -170,7 +170,7 @@ export class QuestionnaireResponse implements OnInit {
 
         this.totalPages.set(response?.pagination?.totalPages || 0);
       } else {
-        response = await this.eventService.getEventQuestionAnalysis(eventId, this.isHost()? phase:'', nextPage, 20);
+        response = await this.eventService.getEventQuestionAnalysis(eventId, this.isHost() ? phase : '', nextPage, 20);
 
         this.analytics.update((current) => [...current, ...(response?.questions || [])]);
 
@@ -185,7 +185,6 @@ export class QuestionnaireResponse implements OnInit {
       infiniteScroll.complete();
     }
   };
-
 
   goBack() {
     if (this.isViewResponse()) {

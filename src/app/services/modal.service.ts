@@ -804,7 +804,7 @@ export class ModalService {
     hasPlans?: boolean,
     hasSubscribed?: boolean,
     isSubscriberExclusive?: boolean,
-    plans?:any[]
+    plans?: any[]
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -1144,6 +1144,4 @@ export class ModalService {
     const { data } = await modal.onWillDismiss();
     return data || null;
   }
-
-  
 }

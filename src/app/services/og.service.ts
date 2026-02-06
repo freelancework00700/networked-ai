@@ -44,7 +44,7 @@ export class OgService {
 
   setOgTagInPost(postData: FeedPost) {
     const medias = postData?.medias;
-    const sortMedias = [...medias || []].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const sortMedias = [...(medias || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     this.setOgTags({
       title: `Post by ${postData?.user?.name || postData?.user?.username}` || '',
       image: this.getImageUrl(sortMedias?.[0]?.media_url),

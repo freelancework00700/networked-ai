@@ -47,7 +47,6 @@ export class BusinessCardPage implements OnInit {
   private readonly document = inject(DOCUMENT);
   private messagesService = inject(MessagesService);
 
-
   // platform
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
@@ -341,7 +340,7 @@ export class BusinessCardPage implements OnInit {
       onConfirm: async () => {
         const user = this.user();
         const link = this.profileLink();
-        
+
         if (!link) {
           this.toasterService.showError('Profile link not available');
           return;
@@ -354,7 +353,7 @@ export class BusinessCardPage implements OnInit {
 
         try {
           const profileMessage = `Check out ${user.name || user.username}'s profile: ${link}`;
-          
+
           const payload = {
             type: 'Text',
             message: profileMessage,

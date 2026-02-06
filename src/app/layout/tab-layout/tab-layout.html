@@ -42,7 +42,11 @@
           <div class="relative">
             <ion-icon src="/assets/svg/tab-message.svg" class="text-[20px] opacity-60"></ion-icon>
             @if (messagesService.unreadCount() > 0) {
-              <div class="absolute top-[-7px] right-[-10px] w-5 h-5 bg-[#F4A600] rounded-full text-black text-[11px] flex items-center justify-center font-semibold">{{ messagesService.unreadCount() }}</div>
+              <div
+                class="absolute top-[-7px] right-[-10px] w-5 h-5 bg-[#F4A600] rounded-full text-black text-[11px] flex items-center justify-center font-semibold"
+              >
+                {{ messagesService.unreadCount() }}
+              </div>
             }
           </div>
           <ion-label>Messages</ion-label>

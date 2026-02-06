@@ -34,7 +34,7 @@ export class ManageEventService extends BaseApiService {
   menuItems = computed<MenuItem[]>(() => {
     const isCompleted = this.isEventCompleted();
     const displayData = this.currentEventData();
-    
+
     const isHost = displayData.participants.some((p: any) => {
       const userId = p.user?.id;
       const role = (p.role || '').toLowerCase();

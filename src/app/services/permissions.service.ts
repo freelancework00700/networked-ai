@@ -74,7 +74,6 @@ export class PermissionsService {
   }
 
   async requestLocationPermission(): Promise<PermissionResult> {
-
     try {
       // First check current permission status
       let currentStatus;
@@ -122,7 +121,6 @@ export class PermissionsService {
   }
 
   async checkLocationPermission(): Promise<PermissionResult> {
-
     try {
       const result = await Geolocation.checkPermissions();
 
@@ -156,11 +154,9 @@ export class PermissionsService {
    * @returns Promise with latitude and longitude, or null if unavailable
    */
   async getCurrentLocation(): Promise<{ latitude: string; longitude: string } | null> {
-
     if (!isPlatformBrowser(this.platformId)) return null;
 
     const defaultOptions = { maximumAge: 0, timeout: 10000, enableHighAccuracy: false };
-
 
     // Native platform
     try {

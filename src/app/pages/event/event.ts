@@ -331,7 +331,6 @@ export class Event implements OnInit, OnDestroy {
         this.event.set(eventData);
         this.ogService.setOgTagInEvent(eventData);
 
-
         this.selectedChildEventId.set(null);
         this.childEventData.set(new Map());
         if (eventData.start_date) {
@@ -440,7 +439,7 @@ export class Event implements OnInit, OnDestroy {
     const hasPlans = eventData?.has_plans || false;
     const hasSubscribed = eventData?.has_subscribed || false;
     const isSubscriberExclusive = eventData?.settings?.is_subscriber_exclusive ?? false;
-    const plans = eventData?.plans || []
+    const plans = eventData?.plans || [];
     const result = await this.modalService.openRsvpModal(
       displayData.tickets || [],
       displayData.title || '',

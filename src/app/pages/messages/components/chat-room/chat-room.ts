@@ -100,18 +100,14 @@ export class ChatRoom implements OnInit, OnDestroy {
 
   showEventAnalytics = computed(() => {
     const event = this.eventData();
-  
+
     if (!event?.questionnaire?.length) {
       return false;
     }
-  
-    return event.questionnaire.some(
-      (q: any) =>
-        q.is_public === true &&
-        ['SingleChoice', 'MultipleChoice', 'Rating'].includes(q.question_type)
-    );
+
+    return event.questionnaire.some((q: any) => q.is_public === true && ['SingleChoice', 'MultipleChoice', 'Rating'].includes(q.question_type));
   });
-  
+
   /**
    * Check if we should show a date separator before a message
    */
@@ -188,7 +184,7 @@ export class ChatRoom implements OnInit, OnDestroy {
         this.chatName.set(room.name || 'Chat');
       }
       this.isEvent.set(!!room.event_id);
-      if(room.event_id){
+      if (room.event_id) {
         const eventData = await this.eventService.getEventById(room.event_id);
         this.eventData.set(eventData);
       }
@@ -513,13 +509,13 @@ export class ChatRoom implements OnInit, OnDestroy {
   private async scrollToBottom(): Promise<void> {
     const content = this.content();
     if (!content) return;
-   
+
     // Wait for Angular + Ionic render
     await new Promise(requestAnimationFrame);
-   
+
     // Wait one more frame for images / cards / fonts
     await new Promise(requestAnimationFrame);
-   
+
     // Small offset ensures last message is fully visible
     await content.scrollToBottom(0);
   }
@@ -567,7 +563,7 @@ export class ChatRoom implements OnInit, OnDestroy {
     if (this.selectedIndex() === messageId) {
       this.selectedIndex.set(null);
     } else {
-    this.selectedIndex.set(messageId);
+      this.selectedIndex.set(messageId);
     }
   }
 
@@ -578,7 +574,7 @@ export class ChatRoom implements OnInit, OnDestroy {
   async deleteMessage(messageId: string) {
     try {
       await this.messagesService.deleteMessage(messageId);
-    this.selectedIndex.set(null);
+      this.selectedIndex.set(null);
     } catch (error) {
       console.error('Error deleting message:', error);
     }
@@ -600,8 +596,8 @@ export class ChatRoom implements OnInit, OnDestroy {
       }
       try {
         await this.messagesService.updateMessage(editingMessageId, roomId, text);
-      this.editingIndex.set(null);
-      this.newMessage.set('');
+        this.editingIndex.set(null);
+        this.newMessage.set('');
       } catch (error) {
         console.error('Error updating message:', error);
       }
@@ -717,7 +713,7 @@ export class ChatRoom implements OnInit, OnDestroy {
 
     // Pattern to match all URLs
     const urlRegex = /(https?:\/\/[^\s<]+)/gi;
-    
+
     modifiedText = modifiedText.replace(urlRegex, (url) => {
       // Skip if already processed
       if (processedUrls.has(url.toLowerCase())) {
@@ -735,7 +731,7 @@ export class ChatRoom implements OnInit, OnDestroy {
         return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8; text-decoration:underline;">${url}</a>`;
       }
     });
-    
+
     return this.sanitizer.bypassSecurityTrustHtml(modifiedText);
   }
 
@@ -756,9 +752,9 @@ export class ChatRoom implements OnInit, OnDestroy {
   }
 
   /**
- * Web: Enter = send, Shift+Enter = new line.
- * Native: Enter = new line (default), send via button.
- */
+   * Web: Enter = send, Shift+Enter = new line.
+   * Native: Enter = new line (default), send via button.
+   */
   onMessageKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Enter') return;
     if (Capacitor.isNativePlatform()) return;

@@ -40,14 +40,7 @@
     <div class="p-6 max-w-[672px] mx-auto">
       <div class="flex gap-3">
         <app-button label="Cancel" color="secondary" (click)="cancel()" class="flex-1" [disabled]="isLoading()" />
-        <app-button
-          label="Delete Account"
-          color="danger"
-          (click)="confirm()"
-          class="flex-1"
-          [isLoading]="isLoading()"
-          [disabled]="isLoading()"
-        />
+        <app-button label="Delete Account" color="danger" (click)="confirm()" class="flex-1" [isLoading]="isLoading()" [disabled]="isLoading()" />
       </div>
     </div>
   </ion-toolbar>

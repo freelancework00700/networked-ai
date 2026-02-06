@@ -285,7 +285,8 @@ export class AddNetwork implements OnDestroy {
 
       if (newStatus === 'RequestReceived') {
         const userUpdate: Partial<IUser> = {
-          ...payload, connection_status: newStatus
+          ...payload,
+          connection_status: newStatus
         };
 
         if (existingUserIndex !== -1) {

@@ -156,13 +156,13 @@ export class CreateGroup {
   async ngOnInit(): Promise<void> {
     const roomIdParam = this.route.snapshot.queryParamMap.get('roomId');
     const fromParam = this.route.snapshot.queryParamMap.get('from');
-    
+
     const navigation = this.router.currentNavigation();
     const state: any = navigation?.extras?.state;
-    
+
     const roomId = roomIdParam || state?.roomId;
     const from = fromParam || state?.from;
-    
+
     if (roomId) {
       this.roomId.set(roomId);
       this.from.set(from === 'chat-info' ? 'chat-info' : 'new-chat');
@@ -373,9 +373,9 @@ export class CreateGroup {
     }
 
     // if (this.from() === 'chat-info') {
-      this.navCtrl.back();
-  //     return;
-  // }
+    this.navCtrl.back();
+    //     return;
+    // }
 
     // this.navCtrl.navigateBack('/messages');
   }

@@ -154,7 +154,7 @@ export class ShareGroup {
       confirmButtonColor: 'primary',
       onConfirm: async () => {
         const link = this.getInviteLink();
-        
+
         if (!link) {
           this.toasterService.showError('Group invite link not available');
           return;
@@ -190,7 +190,7 @@ export class ShareGroup {
 
     const subject = encodeURIComponent(`Join my group - ${this.getGroupName()}`);
     const body = encodeURIComponent(`Hi,\n\nJoin my group "${this.getGroupName()}": ${link}`);
-    
+
     if (this.isBrowser) window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
   }
 

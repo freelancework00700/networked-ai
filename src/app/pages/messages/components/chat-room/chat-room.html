@@ -103,7 +103,12 @@
                   <app-chat-event-card [event]="msg.event" />
                 }
                 @if (msg.message) {
-                  <div class="px-4 py-2 whitespace-pre-line" [class.pt-2]="msg.media_url" [innerHTML]="renderMessageText(msg.message)" (click)="onProfileLinkClick($event)"></div>
+                  <div
+                    class="px-4 py-2 whitespace-pre-line"
+                    [class.pt-2]="msg.media_url"
+                    [innerHTML]="renderMessageText(msg.message)"
+                    (click)="onProfileLinkClick($event)"
+                  ></div>
                 }
                 @if (msg.is_edited && !msg.is_deleted) {
                   <div class="px-4 pb-2 text-xs opacity-70">(edited)</div>
@@ -192,7 +197,12 @@
                   }
                   <!-- Text (with or without media) -->
                   @if (msg.message) {
-                    <div class="px-4 py-2" [class.pt-2]="msg.media_url" [innerHTML]="renderMessageText(msg.message)" (click)="onProfileLinkClick($event)"></div>
+                    <div
+                      class="px-4 py-2"
+                      [class.pt-2]="msg.media_url"
+                      [innerHTML]="renderMessageText(msg.message)"
+                      (click)="onProfileLinkClick($event)"
+                    ></div>
                   }
                   @if (msg.is_edited && !msg.is_deleted) {
                     <div class="px-4 pb-2 text-xs opacity-70">(edited)</div>

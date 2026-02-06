@@ -90,11 +90,11 @@
           </div>
           <div class="swiper-pagination"></div>
         </div>
-        <div 
-          #scrollContainer 
-          class="thumbnail-container scrollbar-hide" 
-          cdkDropList 
-          cdkDropListOrientation="horizontal" 
+        <div
+          #scrollContainer
+          class="thumbnail-container scrollbar-hide"
+          cdkDropList
+          cdkDropListOrientation="horizontal"
           (cdkDropListDropped)="drop($event)"
         >
           @for (item of mediaItems(); track item.id) {

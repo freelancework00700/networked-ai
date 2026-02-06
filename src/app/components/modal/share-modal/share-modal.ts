@@ -17,7 +17,19 @@ import {
   IonSpinner,
   ModalController
 } from '@ionic/angular/standalone';
-import { Input, inject, signal, computed, Component, ChangeDetectionStrategy, OnInit, DestroyRef, ChangeDetectorRef, effect, PLATFORM_ID } from '@angular/core';
+import {
+  Input,
+  inject,
+  signal,
+  computed,
+  Component,
+  ChangeDetectionStrategy,
+  OnInit,
+  DestroyRef,
+  ChangeDetectorRef,
+  effect,
+  PLATFORM_ID
+} from '@angular/core';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, from, catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IUser } from '@/interfaces/IUser';
@@ -344,7 +356,7 @@ export class ShareModal implements OnInit {
           type: 'Text',
           message: planMessage,
           send_entire_network: false,
-          peer_ids : [...selectedIds]
+          peer_ids: [...selectedIds]
         };
 
         await this.messagesService.shareInChat(payload);
@@ -545,7 +557,7 @@ export class ShareModal implements OnInit {
               this.toasterService.showError('Plan link not available');
               return;
             }
-      
+
             const subject = encodeURIComponent(`Check out this Subscription plan: ${link}`);
             const body = encodeURIComponent(`Hi,\n\nCheck out this subscription plan: ${link}`);
             if (this.isBrowser) window.open(`mailto:?subject=${subject}&body=${body}`, '_self');

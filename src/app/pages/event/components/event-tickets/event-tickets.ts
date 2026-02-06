@@ -369,7 +369,7 @@ export class EventTickets implements OnInit {
     try {
       const accountResponse = await this.stripeService.createStripeAccount();
       if (accountResponse?.url) {
-        await Browser.open({url: accountResponse.url})
+        await Browser.open({ url: accountResponse.url });
       } else {
         this.toasterService.showError('Failed to get Stripe account URL. Please try again.');
       }

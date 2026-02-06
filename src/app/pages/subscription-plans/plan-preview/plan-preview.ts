@@ -1,4 +1,16 @@
-import { input, output, OnInit, signal, computed, OnDestroy, Component, ChangeDetectionStrategy, afterEveryRender, DOCUMENT, inject } from '@angular/core';
+import {
+  input,
+  output,
+  OnInit,
+  signal,
+  computed,
+  OnDestroy,
+  Component,
+  ChangeDetectionStrategy,
+  afterEveryRender,
+  DOCUMENT,
+  inject
+} from '@angular/core';
 import { Swiper } from 'swiper';
 import { SwiperOptions } from 'swiper/types';
 import { CommonModule } from '@angular/common';

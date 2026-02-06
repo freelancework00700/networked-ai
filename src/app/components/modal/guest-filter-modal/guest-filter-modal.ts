@@ -63,7 +63,7 @@ export class GuestFilterModal implements OnInit {
         { control: 'earlyBird', label: 'Early Bird' },
         { control: 'standard', label: 'Standard' },
         { control: 'sponsor', label: 'Sponsor' },
-        { control: 'free', label: 'Free' },
+        { control: 'free', label: 'Free' }
       ]
     }
   ]);

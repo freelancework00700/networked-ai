@@ -95,7 +95,7 @@
         </div>
       </div>
     } @else {
-      <div class="swiper swiper-city" #swiperEl >
+      <div class="swiper swiper-city" #swiperEl>
         <div class="swiper-wrapper">
           @for (city of cityCards(); track city.city) {
             <div class="swiper-slide" (click)="onCityClick(city)">

@@ -79,11 +79,11 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   goToTerms() {
     this.navigationService.navigateForward('/terms');
   }
-  
+
   goToPolicy() {
     this.navigationService.navigateForward('/policy');
   }
-  
+
   currentPlan = computed(() => {
     const plansList = this.filteredPlans();
     const index = this.selectedPlanIndex();
@@ -350,7 +350,6 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   });
 
   async ngOnInit(): Promise<void> {
-
     if (!this.isBrowser) return;
     const state = window.history.state;
     const fromValue = state?.from;

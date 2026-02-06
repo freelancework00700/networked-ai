@@ -42,7 +42,6 @@ export class ChangeAccountInfo implements OnInit {
   router = inject(Router);
   cdr = inject(ChangeDetectorRef);
 
-
   emailInput = viewChild<EmailInput>('newEmailInput');
   mobileInput = viewChild<MobileInput>('newPhoneInput');
   usernameInput = viewChild<UsernameInput>('newUsernameInput');
@@ -57,7 +56,7 @@ export class ChangeAccountInfo implements OnInit {
     this.fb.group<ChangeAccountInfoForm>({
       currentValue: this.fb.control<string | null>(''),
       newValue: this.fb.control<string | null>(''),
-      confirmNewValue: this.fb.control<string | null>(''),
+      confirmNewValue: this.fb.control<string | null>('')
     })
   );
   wrongCurrentPassword = signal(false);
@@ -95,7 +94,6 @@ export class ChangeAccountInfo implements OnInit {
   showCurrentValue = computed(() => {
     return this.hasCurrentValue() && !this.isPassword();
   });
-
 
   async ngOnInit(): Promise<void> {
     // Get type from route params
@@ -136,7 +134,6 @@ export class ChangeAccountInfo implements OnInit {
       form.get('currentValue')?.enable({ emitEvent: false });
     }
   }
-
 
   async onConfirm(): Promise<void> {
     this.isSubmitted.set(true);

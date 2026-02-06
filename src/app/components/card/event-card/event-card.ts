@@ -54,7 +54,7 @@ export class EventCard {
   });
 
   allowToview = computed(() => {
-    if(!this.showBlur()) return true;
+    if (!this.showBlur()) return true;
     const currentEvent = this.currentEvent();
     return this.isHostOrCoHost() || this.isAttendee() || this.isSponsorOrSpeaker() || currentEvent.is_public;
   });
@@ -130,7 +130,7 @@ export class EventCard {
   }
 
   async shareEvent() {
-    if(!this.showBlur()) return ;
+    if (!this.showBlur()) return;
     const eventId = this.event().id;
     if (eventId) {
       const isLoggedIn = await this.eventService.checkIsLoggin();
@@ -144,7 +144,7 @@ export class EventCard {
   }
 
   async likeEvent(event: Event) {
-    if(!this.showBlur()) return ;
+    if (!this.showBlur()) return;
     event.stopPropagation();
     const eventId = this.event().id;
     if (!eventId) return;

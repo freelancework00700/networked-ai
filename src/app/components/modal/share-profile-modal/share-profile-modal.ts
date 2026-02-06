@@ -189,7 +189,7 @@ export class ShareProfileModal {
       confirmButtonColor: 'primary',
       onConfirm: async () => {
         const link = this.profileLink();
-        
+
         if (!link) {
           this.toasterService.showError('Profile link not available');
           return;
@@ -202,7 +202,7 @@ export class ShareProfileModal {
 
         try {
           const profileMessage = `Check out ${this.user.name || this.user.username}'s profile: ${link}`;
-          
+
           const payload = {
             type: 'Text',
             message: profileMessage,

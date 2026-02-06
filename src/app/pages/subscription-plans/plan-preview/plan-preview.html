@@ -48,7 +48,9 @@
                           <!-- Badge -->
                           <div
                             class="max-w-[160px] truncate absolute -top-3 left-1/2 -translate-x-1/2 rounded-lg px-4 py-1 text-sm font-semibold text-white shadow"
-                            [style.background]="'linear-gradient(90deg, #9E8F76 0%, #7A6A50 14.28%, #F6D9AB 24.09%, #9D7F4E 40.5%, #C9A770 60.46%, #796A52 86.52%)'"
+                            [style.background]="
+                              'linear-gradient(90deg, #9E8F76 0%, #7A6A50 14.28%, #F6D9AB 24.09%, #9D7F4E 40.5%, #C9A770 60.46%, #796A52 86.52%)'
+                            "
                           >
                             @if (discountType() === 'percentage') {
                               {{ discountPercentage() }}% OFF!

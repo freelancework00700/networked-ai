@@ -80,7 +80,7 @@ export class UserDetail {
 
     try {
       this.sendingMessage.set(message);
-      
+
       const result = await this.messagesService.createOrGetChatRoom({
         user_ids: [currentUserId, otherUserId],
         is_personal: true

@@ -18,12 +18,9 @@
     <!-- All option - always visible -->
     <div
       class="flex items-center justify-between py-3 border-b border-surface-200 cursor-pointer hover:bg-surface-50 transition-colors"
-      [class.bg-brand-01/10]="isAllSelected()"
       (click)="selectAll()"
     >
-      <div class="body-regular-14" [class.brand-02]="isAllSelected()" [class.neutral-01]="!isAllSelected()">
-        All
-      </div>
+      <div class="body-regular-14" [class.brand-02]="isAllSelected()" [class.neutral-01]="!isAllSelected()">All</div>
     </div>
 
     <!-- City list -->
@@ -31,12 +28,11 @@
     @for (city of filteredCities(); track city.name + city.state) {
       <div
         class="flex items-center justify-between py-3 border-b border-surface-200 cursor-pointer hover:bg-surface-50 transition-colors"
-        [class.bg-brand-01/10]="isSelected()(city)"
         (click)="selectCity(city)"
       >
         <div class="body-regular-14" [class.brand-02]="isSelected()(city)" [class.neutral-01]="!isSelected()(city)">
           @if (city.name.trim()) {
-            <span> {{ city.name }}, </span> 
+            <span> {{ city.name }}, </span>
           }
           @if (city.state.trim()) {
             <span>{{ city.state }}</span>

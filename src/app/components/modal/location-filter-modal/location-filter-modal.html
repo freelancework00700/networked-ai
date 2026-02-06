@@ -33,13 +33,7 @@
     }
   </div>
 
-  <ion-range
-    min="0"
-    max="50"
-    [value]="distance()"
-    (ionInput)="onRangeChange($event)"
-    (ionChange)="onRangeChange($event)"
-  ></ion-range>
+  <ion-range min="0" max="50" [value]="distance()" (ionInput)="onRangeChange($event)" (ionChange)="onRangeChange($event)"></ion-range>
 
   <div class="body-medium-16 mt-2">{{ distance() }} miles</div>
 </div>

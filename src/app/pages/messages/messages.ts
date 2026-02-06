@@ -130,7 +130,7 @@ export class Messages implements OnInit, OnDestroy {
       if (currentUserId) {
         this.loadChatRooms();
       }
-    })
+    });
   }
 
   async ngOnInit() {
@@ -371,7 +371,7 @@ export class Messages implements OnInit, OnDestroy {
     this.navigationService.navigateForward('/chat-room', false, {
       chatRoom: room,
       user_ids: room.user_ids,
-      event_id: room.event_id,
+      event_id: room.event_id
     });
   }
 

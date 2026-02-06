@@ -135,7 +135,7 @@ export class AllEvents implements OnInit, OnDestroy {
       search,
       radius,
       start_date: startDate,
-      end_date: endDate,
+      end_date: endDate
     };
 
     // Only add latitude/longitude if location is selected (not city)
@@ -180,14 +180,14 @@ export class AllEvents implements OnInit, OnDestroy {
       return await this.eventService.getEvents({
         ...baseParams,
         is_recommended: true,
-        start_date: new Date(),
+        start_date: new Date()
       });
     }
 
     return await this.eventService.getEvents({
       ...baseParams,
       is_public: true,
-      start_date: new Date(),
+      start_date: new Date()
     });
   }
 

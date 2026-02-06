@@ -22,13 +22,12 @@ export class UserAdditionalInfo {
   conversation = signal<any[]>([]);
   isGeneratingDescription = signal<boolean>(false);
   showDescriptionEditor = signal<boolean>(false);
-  
+
   isCustomize = computed(() => this.showDescriptionEditor());
 
   private modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
   private descriptionGenerator = inject(DescriptionGeneratorService);
-
 
   handleGenerateClick(): void {
     if (this.showDescriptionEditor()) {

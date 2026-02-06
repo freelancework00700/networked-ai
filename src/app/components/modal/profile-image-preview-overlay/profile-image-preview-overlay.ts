@@ -1,12 +1,4 @@
-import {
-  Component,
-  inject,
-  ChangeDetectionStrategy,
-  input,
-  output,
-  computed,
-  signal
-} from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, input, output, computed, signal } from '@angular/core';
 import { IonIcon } from '@ionic/angular/standalone';
 import { NgOptimizedImage } from '@angular/common';
 import { ToasterService } from '@/services/toaster.service';
@@ -54,21 +46,15 @@ export class ProfileImagePreviewOverlay {
     return this.user()?.connection_status as ConnectionStatus | undefined;
   });
 
-  isOtherUserConnected = computed(
-    () => this.connectionStatus() === ConnectionStatus.CONNECTED
-  );
-  isRequestSent = computed(
-    () => this.connectionStatus() === ConnectionStatus.REQUEST_SENT
-  );
+  isOtherUserConnected = computed(() => this.connectionStatus() === ConnectionStatus.CONNECTED);
+  isRequestSent = computed(() => this.connectionStatus() === ConnectionStatus.REQUEST_SENT);
   showAddAsNetworkOnly = computed(
     () =>
       this.isViewingOtherProfile() &&
       this.connectionStatus() !== ConnectionStatus.CONNECTED &&
       this.connectionStatus() !== ConnectionStatus.REQUEST_SENT
   );
-  showRequestSentOnly = computed(
-    () => this.isViewingOtherProfile() && this.isRequestSent()
-  );
+  showRequestSentOnly = computed(() => this.isViewingOtherProfile() && this.isRequestSent());
 
   close(): void {
     this.closeOverlay.emit();

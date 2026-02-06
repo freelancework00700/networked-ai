@@ -69,7 +69,7 @@ export class RsvpModal implements OnInit, OnDestroy {
   discountAmountsByTier = signal<{ [key: string]: number }>({});
 
   SPONSOR_GRADIENT =
-  'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
+    'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
 
   // Track the first paid ticket ID that was selected (for free subscription benefit)
   firstSelectedPaidTicketId = signal<string | null>(null);

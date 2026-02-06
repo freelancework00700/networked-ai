@@ -327,7 +327,6 @@ Rules:
 - Use short paragraphs
 `;
 
-
       const headers = new HttpHeaders({
         'Content-Type': 'application/json',
         Authorization: `Bearer ${environment.openaiKey}`
