@@ -3,7 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { PlanData } from '@/interfaces/ISubscripton';
 import { ModalService } from '@/services/modal.service';
 import { EventService } from '@/services/event.service';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, isPlatformBrowser } from '@angular/common';
 import { ToasterService } from '@/services/toaster.service';
 import { NavigationService } from '@/services/navigation.service';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -21,7 +21,7 @@ import {
   IonRefresherContent,
   ModalController
 } from '@ionic/angular/standalone';
-import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy, Input, DOCUMENT } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy, Input, DOCUMENT, PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'user-subscription-plans',
@@ -62,6 +62,10 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   planTypeFilter = signal<'event' | 'sponsor'>('event');
   isDropdownOpen = signal<boolean>(false);
   @Input() id = '';
+
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
 
   // Computed properties
   filteredPlans = computed(() => {
@@ -346,6 +350,8 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   });
 
   async ngOnInit(): Promise<void> {
+
+    if (!this.isBrowser) return;
     const state = window.history.state;
     const fromValue = state?.from;
     this.isFromMySubscriptions.set(fromValue === 'my-subscriptions');

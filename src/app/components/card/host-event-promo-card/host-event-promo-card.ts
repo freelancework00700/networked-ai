@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Component, ChangeDetectionStrategy, inject, PLATFORM_ID } from '@angular/core';
 import { NavController } from '@ionic/angular/standalone';
 
 @Component({
@@ -10,11 +11,15 @@ import { NavController } from '@ionic/angular/standalone';
 export class HostEventPromoCard {
   navCtrl = inject(NavController);
 
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+
   openLinkedin(): void {
-    window.open(`https://www.linkedin.com/company/networked-ai`, '_blank');
+    if (this.isBrowser) window.open(`https://www.linkedin.com/company/networked-ai`, '_blank');
   }
 
   openInstagram(): void {
-    window.open(`https://www.instagram.com/networked_ai`, '_blank');
+    if (this.isBrowser) window.open(`https://www.instagram.com/networked_ai`, '_blank');
   }
 }
