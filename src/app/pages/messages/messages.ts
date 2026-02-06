@@ -371,11 +371,7 @@ export class Messages implements OnInit, OnDestroy {
     this.navigationService.navigateForward('/chat-room', false, {
       chatRoom: room,
       user_ids: room.user_ids,
-      is_personal: room.is_personal,
-      name: room.name,
       event_id: room.event_id,
-      event_image: room.event_image,
-      profile_image: room.profile_image
     });
   }
 

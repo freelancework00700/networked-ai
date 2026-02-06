@@ -12,6 +12,7 @@ export enum NotificationType {
   INVITATION = 'Invitation',
   RSVP_REQUEST = 'RsvpRequest',
   CHAT_MESSAGE = "ChatMessage",
+  CHAT_ROOM_CREATED = "ChatRoomCreated",
   COMMENT_LIKED = 'CommentLiked',
   COMMENT_REPLY = 'CommentReply',
   POST_COMMENTED = 'PostCommented',

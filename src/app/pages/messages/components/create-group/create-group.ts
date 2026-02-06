@@ -19,6 +19,7 @@ import {
   IonHeader,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
+  IonSpinner,
   IonToolbar,
   NavController
 } from '@ionic/angular/standalone';
@@ -46,7 +47,8 @@ import { environment } from 'src/environments/environment';
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     NgOptimizedImage,
-    MenuModule
+    MenuModule,
+    IonSpinner
   ]
 })
 export class CreateGroup {
@@ -89,6 +91,8 @@ export class CreateGroup {
   groupImageFile = signal<File | null>(null);
   groupImageUrl = signal<string | null>(null);
   groupName = signal<string>('');
+
+  isCreatingOrJoining = signal<boolean>(false);
 
   groupImageMenuItems(): MenuItem[] {
     return [
@@ -320,6 +324,7 @@ export class CreateGroup {
     const memberIds = this.selectedMembers().map((u) => u.id);
     const user_ids = Array.from(new Set([currentUserId, ...memberIds]));
 
+    this.isCreatingOrJoining.set(true);
     try {
       let profileImageUrl: string | null = this.groupImageUrl() ?? null;
       if (!profileImageUrl) {
@@ -355,6 +360,8 @@ export class CreateGroup {
       this.navCtrl.navigateRoot('/messages');
     } catch (error) {
       console.error('Error creating group:', error);
+    } finally {
+      this.isCreatingOrJoining.set(false);
     }
   }
 
@@ -428,6 +435,8 @@ export class CreateGroup {
       return;
     }
 
+    this.isCreatingOrJoining.set(true);
+
     try {
       await this.messagesService.joinRoom(roomId, selectedIds);
 
@@ -435,6 +444,8 @@ export class CreateGroup {
       this.navCtrl.back();
     } catch (error) {
       console.error('Error adding members to group:', error);
+    } finally {
+      this.isCreatingOrJoining.set(false);
     }
   }
 

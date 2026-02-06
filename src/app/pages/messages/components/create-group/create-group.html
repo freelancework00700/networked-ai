@@ -19,11 +19,7 @@
           (click)="onGroupImageMenuClick($event)"
         >
           @if (groupImagePreview() || groupImageUrl()) {
-            <img
-              [src]="groupImagePreview() || getImageUrl(groupImageUrl() ?? '')"
-              alt="Group"
-              class="w-full h-full rounded-full object-cover"
-            />
+            <img [src]="groupImagePreview() || getImageUrl(groupImageUrl() ?? '')" alt="Group" class="w-full h-full rounded-full object-cover" />
           } @else {
             <i class="pi pi-camera text-white text-[24px]"></i>
           }
@@ -138,61 +134,66 @@
         }
 
         <div>
-          @if (users().length > 0) {
-            <div class="body-14M neutral-01">Your Network</div>
+          @if (isLoading()) {
+            <div class="flex justify-center items-center py-4">
+              <ion-spinner></ion-spinner>
+            </div>
+          } @else {
+            @if (users().length > 0) {
+              <div class="body-14M neutral-01 pt-2">Your Network</div>
 
-            @for (s of users(); track s.id) {
-              <div
-                class="flex items-center gap-3 py-4 border-b border-gray-200"
-                [class.cursor-pointer]="!isAlreadyInGroup(s.id)"
-                [class.cursor-not-allowed]="isAlreadyInGroup(s.id)"
-                [class.opacity-60]="isAlreadyInGroup(s.id)"
-                (click)="toggleMember(s)"
-              >
-              <div class="relative">
-                <div class="relative w-12 h-12 rounded-full overflow-hidden">
-                  <img
-                    fill
-                    placeholder
-                    class="rounded-full object-cover"
-                    (error)="onImageError($event)"
-                    [ngSrc]="getImageUrl(s?.thumbnail_url ?? '')"
-                  />
-
-                </div>
-                @if (isSelected(s.id)) {
-                  <div
-                    class="absolute -bottom-1 -right-1 bg-brand-04 shadow-[0_16px_32px_0_rgba(7,40,70,0.10)]! border-2 border-white rounded-[12px]! w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
-                  >
-                    <i class="pi pi-check text-[10px]!"></i>
-                  </div>
-                }
-              </div>
-
-                <div class="flex-1">
-                  <div class="flex items-center gap-2">
-                    <span class="font-medium truncate">{{ getDisplayName(s) }}</span>
-
-                    <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
-                      <img [src]="getDiamondPath(s)" class="h-4" />
-                      <span class="text-xs font-semibold">{{ s.total_gamification_points || 0 }}</span>
+              @for (s of users(); track s.id) {
+                <div
+                  class="flex items-center gap-3 py-4 border-b border-gray-200"
+                  [class.cursor-pointer]="!isAlreadyInGroup(s.id)"
+                  [class.cursor-not-allowed]="isAlreadyInGroup(s.id)"
+                  [class.opacity-60]="isAlreadyInGroup(s.id)"
+                  (click)="toggleMember(s)"
+                >
+                  <div class="relative">
+                    <div class="relative w-12 h-12 rounded-full overflow-hidden">
+                      <img
+                        fill
+                        placeholder
+                        class="rounded-full object-cover"
+                        (error)="onImageError($event)"
+                        [ngSrc]="getImageUrl(s?.thumbnail_url ?? '')"
+                      />
                     </div>
-                  </div>
-
-                  <div class="text-xs" [class.text-gray-500]="!isAlreadyInGroup(s.id)" [class.text-gray-400]="isAlreadyInGroup(s.id)">
-                    @if (isAlreadyInGroup(s.id)) {
-                      Already added to the group
-                    } @else if (s.company_name) {
-                      {{ s.company_name }}
+                    @if (isSelected(s.id)) {
+                      <div
+                        class="absolute -bottom-1 -right-1 bg-brand-04 shadow-[0_16px_32px_0_rgba(7,40,70,0.10)]! border-2 border-white rounded-[12px]! w-6 h-6 flex items-center justify-center hover:brightness-95 transition-all"
+                      >
+                        <i class="pi pi-check text-[10px]!"></i>
+                      </div>
                     }
                   </div>
-                </div>
-              </div>
-            }
 
-            <ion-infinite-scroll [disabled]="!hasMore()" (ionInfinite)="loadMoreUsers($event)">
-              <ion-infinite-scroll-content loadingSpinner="lines" />
-            </ion-infinite-scroll>
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium truncate">{{ getDisplayName(s) }}</span>
+
+                      <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
+                        <img [src]="getDiamondPath(s)" class="h-4" />
+                        <span class="text-xs font-semibold">{{ s.total_gamification_points || 0 }}</span>
+                      </div>
+                    </div>
+
+                    <div class="text-xs" [class.text-gray-500]="!isAlreadyInGroup(s.id)" [class.text-gray-400]="isAlreadyInGroup(s.id)">
+                      @if (isAlreadyInGroup(s.id)) {
+                        Already added to the group
+                      } @else if (s.company_name) {
+                        {{ s.company_name }}
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <ion-infinite-scroll [disabled]="!hasMore()" (ionInfinite)="loadMoreUsers($event)">
+                <ion-infinite-scroll-content loadingSpinner="lines" />
+              </ion-infinite-scroll>
+            }
           }
         </div>
       </div>
@@ -204,7 +205,13 @@
   <ion-toolbar class="bg-white border-t border-gray-200">
     <div class="flex items-center gap-2 p-4 max-w-[672px] mx-auto w-full">
       @if (roomId() && selectedMembers().length > 0 && !isGroupDetails()) {
-        <app-button label="Add to Group" (click)="addMembersToGroup()" class="flex-1" />
+        <app-button
+          label="Add to Group"
+          (click)="addMembersToGroup()"
+          class="flex-1"
+          [disabled]="isCreatingOrJoining()"
+          [isLoading]="isCreatingOrJoining()"
+        />
       }
 
       @if (!roomId() && selectedMembers().length > 0 && !isGroupDetails()) {
@@ -213,7 +220,14 @@
 
       @if (isGroupDetails()) {
         <div class="ml-auto">
-          <app-button iconName="pi pi-check" (click)="createGroup()" [disabled]="groupName() === ''" width="48px" height="48px" />
+          <app-button
+            iconName="pi pi-check"
+            (click)="createGroup()"
+            [disabled]="groupName() === '' || isCreatingOrJoining()"
+            [isLoading]="isCreatingOrJoining()"
+            width="48px"
+            height="48px"
+          />
         </div>
       }
     </div>

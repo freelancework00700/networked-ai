@@ -3,7 +3,7 @@ import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { inject, signal, Component, ChangeDetectionStrategy, Input } from '@angular/core';
-import { IonIcon, IonRange, IonFooter, IonHeader, IonToolbar } from '@ionic/angular/standalone';
+import { IonRange, IonFooter, IonHeader, IonToolbar } from '@ionic/angular/standalone';
 
 interface LocationFilterValues {
   location?: string;
@@ -17,12 +17,16 @@ interface LocationFilterValues {
   styleUrl: './location-filter-modal.scss',
   templateUrl: './location-filter-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonIcon, IonRange, TextInput, IonHeader, IonFooter, IonToolbar, ReactiveFormsModule]
+  imports: [Button, IonRange, TextInput, IonHeader, IonFooter, IonToolbar, ReactiveFormsModule]
 })
 export class LocationFilterModal {
   // services
   private fb = inject(FormBuilder);
   modalService = inject(ModalService);
+
+  readonly barHeights = [12.5, 25, 25, 37.5, 37.5, 50, 62.5, 87.5, 100, 75, 100, 75, 87.5, 100, 87.5, 75, 50, 37.5, 25, 25, 25];
+  readonly totalBars = 21;
+  readonly maxDistance = 50;
 
   // signals
   distance = signal(20);
@@ -60,6 +64,13 @@ export class LocationFilterModal {
 
   onRangeChange(event: any) {
     this.distance.set(event.detail.value);
+  }
+
+  isBarActive(barIndex: number): boolean {
+    const dist = this.distance();
+    const progress = dist / this.maxDistance;
+    const activeCount = progress * this.totalBars;
+    return barIndex < activeCount;
   }
 
   async openLocationModal() {

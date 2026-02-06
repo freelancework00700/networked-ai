@@ -12,7 +12,7 @@
   @if (badge().is_locked) {
     <span class="neutral-04 body-10">Locked</span>
   } @else if (badge().completed_date) {
-    <span class="neutral-04 body-10">{{ badge().completed_date | date: 'dd/MM/yy' }}</span>
+    <span class="neutral-04 body-10">{{ badge().completed_date | date: 'MM/dd/yy' }}</span>
   } @else {
     <span class="neutral-04 body-10">Unlocked</span>
   }

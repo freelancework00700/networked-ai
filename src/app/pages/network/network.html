@@ -50,7 +50,7 @@
   </ion-header>
 }
 
-<ion-content fullscreen="true" [scrollEvents]="true">
+<ion-content fullscreen="true" [scrollEvents]="true" [scrollY]="segmentValue() === 'list'">
   @if (isLoggedIn()) {
     <div class="w-full max-w-[672px] mx-auto p-4 pt-0 relative h-full">
       <div [hidden]="segmentValue() === 'map'">

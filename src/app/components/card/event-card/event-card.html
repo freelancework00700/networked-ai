@@ -1,4 +1,4 @@
-<div class="rounded-[16px] overflow-hidden" [class.card-disabled]="!allowToview()">
+<div class="rounded-[16px] overflow-hidden" [class.card-disabled]="!allowToview()" [class.event-card-past]="isPastEvent()">
   @if (hasPlans()) {
     <div class="badge py-2" [class.badge-free]="!isSubscriberExclusive()" [class.badge-exclusive]="isSubscriberExclusive()">
       <ion-icon src="/assets/svg/crown-white.svg" class="text-xl"></ion-icon>

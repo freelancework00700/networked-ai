@@ -268,7 +268,8 @@ export class HomeEvent implements OnInit, OnDestroy {
       await this.eventService.getEvents({
         limit: 3,
         append: !reset,
-        is_recommended: true
+        is_recommended: true,
+        start_date: new Date().toString()
       });
     } catch (error) {
       console.error('Error loading recommended events:', error);
@@ -307,7 +308,8 @@ export class HomeEvent implements OnInit, OnDestroy {
           this.eventService.getEvents({
             limit: 3,
             append: !reset,
-            is_recommended: true
+            is_recommended: true,
+            start_date: new Date().toString()
           }),
           this.eventService.getEvents({
             limit: 3,

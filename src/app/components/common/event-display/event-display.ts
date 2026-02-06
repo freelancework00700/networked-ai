@@ -10,7 +10,8 @@ import {
   PLATFORM_ID,
   AfterViewInit,
   AfterViewChecked,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  effect
 } from '@angular/core';
 import Swiper from 'swiper';
 import { Capacitor } from '@capacitor/core';
@@ -20,6 +21,7 @@ import { Button } from '@/components/form/button';
 import { IonIcon } from '@ionic/angular/standalone';
 import { EventDisplayData } from '@/interfaces/event';
 import { ModalService } from '@/services/modal.service';
+import { NavigationService } from '@/services/navigation.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
 import { SegmentButton } from '@/components/common/segment-button';
@@ -50,6 +52,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   private destroyRef = inject(DestroyRef);
   private sanitizer = inject(DomSanitizer);
   private modalService = inject(ModalService);
+  private navigationService = inject(NavigationService);
   mapContainer = viewChild<ElementRef<HTMLDivElement>>('mapContainer');
   swiperEventDisplayEl = viewChild<ElementRef<HTMLDivElement>>('swiperEl');
 
@@ -102,6 +105,18 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     const d = this.eventData();
     return !!(d?.isCurrentUserHost || d?.isCurrentUserAttendee || d?.isCurrentUserCoHost);
   });
+
+  hostUsername = computed(() => {
+    const participants = (this.eventData() as any)?.participants;
+    if (!Array.isArray(participants)) return null;
+    const host = participants.find((p: any) => p?.role === 'Host');
+    return host?.user?.username ?? null;
+  });
+
+  onHostClick(): void {
+    const username = this.hostUsername();
+    if (username) this.navigationService.navigateForward(`/${username}`);
+  }
 
   handleDateChange(date: string): void {
     const handler = this.onDateChange();

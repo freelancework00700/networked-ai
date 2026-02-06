@@ -657,7 +657,7 @@ export class ModalService {
       initialBreakpoint: 1,
       component: GuestFilterModal,
       cssClass: 'auto-hight-modal',
-      componentProps: { filter }
+      componentProps: { initialFilter: filter }
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();

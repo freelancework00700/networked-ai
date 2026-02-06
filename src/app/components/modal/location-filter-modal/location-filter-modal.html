@@ -22,11 +22,26 @@
 
   <div class="body-regular-14 mt-3">Show networks that are within:</div>
 
-  <ion-icon src="assets/svg/mapFilterChart.svg" class="h-32 w-full" />
+  <div class="distance-chart">
+    @for (bar of barHeights; track $index) {
+      <div
+        class="distance-chart-bar"
+        [style.height.%]="bar"
+        [class.distance-chart-bar-active]="isBarActive($index)"
+        [class.distance-chart-bar-inactive]="!isBarActive($index)"
+      ></div>
+    }
+  </div>
 
-  <ion-range min="0" max="50" (ionChange)="onRangeChange($event)" [value]="distance()"></ion-range>
+  <ion-range
+    min="0"
+    max="50"
+    [value]="distance()"
+    (ionInput)="onRangeChange($event)"
+    (ionChange)="onRangeChange($event)"
+  ></ion-range>
 
-  <div class="body-medium-16">{{ distance() }} miles</div>
+  <div class="body-medium-16 mt-2">{{ distance() }} miles</div>
 </div>
 
 <ion-footer mode="md">

@@ -21,6 +21,13 @@ import { BaseApiService } from '@/services/base-api.service';
 import { SegmentButtonItem } from '@/components/common/segment-button';
 import { ModalService } from './modal.service';
 import { NavigationService } from './navigation.service';
+import {
+  IEventAttendee,
+  IEventAttendeesCounts,
+  IEventAttendeesPagination,
+  IGetEventAttendeesParams,
+  IGetEventAttendeesResult
+} from '@/interfaces/IEventAttendee';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
@@ -53,6 +60,31 @@ export class EventService extends BaseApiService {
       return response?.data || [];
     } catch (error) {
       console.error('Error fetching event categories:', error);
+      throw error;
+    }
+  }
+
+  async getEventAttendees(
+    eventId: string,
+    params: IGetEventAttendeesParams = {}
+  ): Promise<IGetEventAttendeesResult> {
+    try {
+      let httpParams = new HttpParams().set('event_id', eventId).set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 50));
+      if (params.search?.trim()) httpParams = httpParams.set('search', params.search.trim());
+      if (params.rsvp_status) httpParams = httpParams.set('rsvp_status', params.rsvp_status);
+      if (params.is_checked_in !== undefined) httpParams = httpParams.set('is_checked_in', params.is_checked_in ? 'true' : 'false');
+      if (params.ticket_type) httpParams = httpParams.set('ticket_type', params.ticket_type);
+      if (params.is_connected !== undefined) httpParams = httpParams.set('is_connected', params.is_connected ? 'true' : 'false');
+
+      const response = await this.get<any>('/event-attendees', { params: httpParams });
+      const payload = response?.data ?? response;
+      return {
+        data: (payload?.data ?? []) as IEventAttendee[],
+        pagination: (payload?.pagination ?? { totalCount: 0, currentPage: 1, totalPages: 0 }) as IEventAttendeesPagination,
+        counts: payload?.counts as IEventAttendeesCounts | undefined
+      };
+    } catch (error) {
+      console.error('Error fetching event attendees:', error);
       throw error;
     }
   }
@@ -892,6 +924,7 @@ export class EventService extends BaseApiService {
       radius?: number;
       is_public?: boolean;
       start_date?: string;
+      end_date?: string;
       roles?: string;
       user_id?: string;
       is_liked?: boolean;
@@ -947,6 +980,9 @@ export class EventService extends BaseApiService {
       }
       if (params.start_date) {
         httpParams = httpParams.set('start_date', params.start_date);
+      }
+      if (params.end_date) {
+        httpParams = httpParams.set('end_date', params.end_date);
       }
       if (params.roles) {
         httpParams = httpParams.set('roles', params.roles);

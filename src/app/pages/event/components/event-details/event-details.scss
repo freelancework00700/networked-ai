@@ -100,6 +100,12 @@
   object-fit: contain;
 }
 
+.swiper-post-card {
+  .swiper-pagination {
+    bottom: 55px !important;
+  }
+}
+
 .slide-image img[ng-reflect-fill] {
   position: absolute;
   inset: 0;

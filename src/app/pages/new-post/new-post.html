@@ -11,7 +11,7 @@
     <div class="w-full max-w-[672px] mx-auto p-4 flex flex-col gap-4">
       <!-- caption-input -->
       <div class="flex items-start gap-3 py-3 pb-0 bg-neutral-07 px-4">
-        <div class="relative w-[60px] h-[60px] flex-shrink-0 overflow-hidden rounded-full">
+        <div class="relative w-[60px] h-[60px] shrink-0 overflow-hidden rounded-full">
           <img
             fill
             priority
@@ -90,9 +90,15 @@
           </div>
           <div class="swiper-pagination"></div>
         </div>
-        <div #scrollContainer class="thumbnail-container" cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="drop($event)">
+        <div 
+          #scrollContainer 
+          class="thumbnail-container scrollbar-hide" 
+          cdkDropList 
+          cdkDropListOrientation="horizontal" 
+          (cdkDropListDropped)="drop($event)"
+        >
           @for (item of mediaItems(); track item.id) {
-            <div class="thumbnail" cdkDrag [cdkDragBoundary]="scrollContainer" (click)="goToSlide($index)">
+            <div class="thumbnail relative" cdkDrag cdkDragLockAxis="x" [cdkDragStartDelay]="150" (click)="goToSlide($index)">
               <!-- IMAGE -->
               @if (item.type === 'image' || item.type === 'gif') {
                 @if (isBlobUrl(item.url)) {

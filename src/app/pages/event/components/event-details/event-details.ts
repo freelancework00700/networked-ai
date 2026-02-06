@@ -28,6 +28,7 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { CommonModule, DOCUMENT, NgOptimizedImage } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { DescriptionGeneratorService } from '@/services/description-generator.service';
+import { Pagination } from 'swiper/modules';
 
 @Component({
   selector: 'event-details',
@@ -170,10 +171,15 @@ export class EventDetails implements OnInit {
     if (!this.mediaItems().length) return;
 
     this.swiper = new Swiper(this.swiperEl.nativeElement, {
+      modules: [Pagination],
       slidesPerView: 1,
       spaceBetween: 0,
       allowTouchMove: true,
       observer: true,
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true
+      },
       on: {
         slideChange: (swiper) => {
           this.currentSlide.set(swiper.activeIndex);

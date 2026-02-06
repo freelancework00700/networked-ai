@@ -80,7 +80,6 @@
         <div class="bg-blur-image relative w-full h-full">
           <img
             fill
-            placeholder
             priority
             [alt]="eventDisplayData().title || 'Event image'"
             class="object-cover"
@@ -88,13 +87,12 @@
             [ngSrc]="getImageUrl(eventDisplayData().thumbnail_url || '')"
           />
         </div>
-        <div class="bg-image relative w-[80%] h-[300px]">
+        <div class="min-h-[inherit] h-[315px] relative w-full">
           <img
             fill
-            placeholder
             priority
             [alt]="eventDisplayData().title || 'Event image'"
-            class="object-cover"
+            class="object-contain"
             (error)="onImageError($event)"
             [ngSrc]="getImageUrl(mainImageUrl() || '')"
           />

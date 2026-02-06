@@ -6,7 +6,24 @@
   <text-input controlName="company_name" label="Company" [required]="false" />
 
   <!-- about input -->
-  <text-area-input label="About Me" controlName="description" [required]="false" placeholder="Write description here" />
+  <div>
+    <text-area-input label="About Me" controlName="description" [required]="false" placeholder="Write description here" />
+    <div class="flex justify-end">
+      <button
+        type="button"
+        class="flex items-center gap-1.5 brand-02 body-14M"
+        (click)="handleGenerateClick()"
+        [disabled]="isGeneratingDescription()"
+      >
+        @if (isGeneratingDescription()) {
+          <ion-spinner name="crescent" class="w-5 h-5"></ion-spinner>
+        } @else {
+          {{ isCustomize() ? 'Customize' : 'Generate' }}
+          <img src="assets/svg/generateIcon.svg" alt="Generate" class="w-5 h-5" />
+        }
+      </button>
+    </div>
+  </div>
 
   <!-- sites & socials -->
   <social-input />

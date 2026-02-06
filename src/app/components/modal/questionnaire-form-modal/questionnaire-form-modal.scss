@@ -1,4 +1,23 @@
 .p-select {
     border: none !important;
   }
+
+::ng-deep {
+  .p-select .p-select-label {
+    padding-right: 0 !important;
+    padding-left: 6px !important;
+    max-width: fit-content !important;
+  }
+
+  .p-select .p-select-overlay {
+    border-radius: 16px !important
+  }
   
+  .p-select-list-container {
+    border-radius: 16px !important;
+  }
+
+  .p-select-option {
+    border-radius: 10px !important;
+  }
+}

@@ -178,21 +178,17 @@ export class Notification {
   async handleNotificationClick(notification: INotification): Promise<void> {
     this.notificationsService.markNotificationRead(notification.id);
 
-    if (notification.type === NotificationType.CHAT_MESSAGE) {
-      const currentUserId = this.authService.currentUser()?.id;
-      const otherUserId = notification.related_user?.id ?? notification.related_user_id;
-      if (currentUserId && otherUserId) {
-        this.navigationService.navigateForward('/chat-room', false, {
-          user_ids: [currentUserId, otherUserId],
-          is_personal: true
-        });
-      }
+    if (notification.type === NotificationType.CHAT_MESSAGE || notification.type === NotificationType.CHAT_ROOM_CREATED) {
+      this.navigationService.navigateForward('/chat-room', false, {
+        chatRoom: notification.chat_room,
+        user_ids: notification.chat_room?.user_ids,
+        event_id: notification.chat_room?.event_id,
+      });
     } else if (notification.type === NotificationType.NETWORK) {
       this.navCtrl.navigateForward(`/${notification.related_user?.username}`);
     } else if (notification.type === NotificationType.MY_EVENTS || notification.type === NotificationType.EVENTS) {
       this.navCtrl.navigateForward(`/event/${notification.event?.slug}`);
     } else if (notification.type === NotificationType.RSVP_REQUEST) {
-      // this.navCtrl.navigateForward(`/${notification.related_user?.username}`);
       this.navigationService.navigateForward(`/event/rsvp-approval/${notification.event?.id}`);
     } else if (notification.type === NotificationType.RSVP_REQUEST_STATUS) {
       this.navCtrl.navigateForward(`/event/${notification.event?.slug}`);

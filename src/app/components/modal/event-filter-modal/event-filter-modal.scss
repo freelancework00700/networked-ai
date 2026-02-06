@@ -1,0 +1,23 @@
+.distance-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 64px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.distance-chart-bar {
+  flex: 1;
+  min-width: 0;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.distance-chart-bar-active {
+  background-color: var(--brand-04);
+}
+
+.distance-chart-bar-inactive {
+  background-color: #e6e6e6;
+}

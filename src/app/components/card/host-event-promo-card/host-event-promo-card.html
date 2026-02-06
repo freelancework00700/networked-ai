@@ -9,17 +9,17 @@
 
       <div class="flex flex-col gap-1">
         <div class="body-14R text-white">Host Your Event with</div>
-        <div class="body-16SB text-[var(--brand-04)] flex items-center justify-center gap-1">
+        <div class="body-16SB text-(--brand-04) flex items-center justify-center gap-1" (click)="navCtrl.navigateForward('/event');">
           <span>Networked AI!</span>
-          <i class="pi pi-arrow-up-right !text-[14px] text-[var(--brand-04)]"></i>
+          <i class="pi pi-arrow-up-right text-[14px]! text-(--brand-04)"></i>
         </div>
       </div>
 
       <div class="flex items-center justify-center gap-3 text-white text-[20px]">
-        <i class="pi pi-twitter"></i>
-        <i class="pi pi-facebook"></i>
-        <i class="pi pi-linkedin"></i>
-        <i class="pi pi-instagram"></i>
+        <!-- <i class="pi pi-twitter"></i>
+        <i class="pi pi-facebook"></i> -->
+        <i class="pi pi-linkedin" (click)="openLinkedin()"></i>
+        <i class="pi pi-instagram" (click)="openInstagram()"></i>
       </div>
     </div>
 

@@ -6,3 +6,7 @@
   position: absolute;
   transition: filter 0.3s ease;
 }
+
+::ng-deep .maplibregl-ctrl-top-right {
+  bottom: 208px !important;
+}

@@ -297,30 +297,36 @@ export class DescriptionGeneratorService {
         promptParts.push(`accountType=${data.accountType}`);
       }
 
-      if (data.accountType === 'Business' && data.companyName) {
+      if (data.companyName) {
         promptParts.push(`companyName=${data.companyName}`);
       }
 
-      if (data.accountType === 'Individual' && data.collegeUniversity) {
+      if (data.collegeUniversity) {
         promptParts.push(`education=${data.collegeUniversity}`);
       }
 
-      if (data.city) {
-        promptParts.push(`address=${data.accountType}`);
+      if (data.address) {
+        promptParts.push(`address=${data.address}`);
       }
 
       const prompt = `
-Generate a concise and engaging "About Me" profile description based ONLY on the following details:
+Generate a concise and engaging "About Me" profile description written STRICTLY in FIRST PERSON.
+
+The description must sound like the user is talking about themselves.
+
+Use ONLY the following details:
 ${promptParts.join('; ')}.
 
 Rules:
+- ALWAYS use first-person language (I, I am, I'm, my)
+- NEVER use third-person words (he, she, they, his, her)
 - Do NOT invent any information
 - If a value is missing, leave it out completely
-- Match tone to account type (professional for Business, friendly for Individual)
 - Use 1–2 relevant emojis
 - Keep it short, clean, and readable
 - Use short paragraphs
 `;
+
 
       const headers = new HttpHeaders({
         'Content-Type': 'application/json',

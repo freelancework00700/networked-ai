@@ -2,7 +2,7 @@
   <!-- Media Upload Section -->
   <div>
     @if (mediaItems().length) {
-      <div #swiperEl class="swiper">
+      <div #swiperEl class="swiper swiper-post-card">
         <div class="swiper-wrapper">
           @for (item of mediaItems(); track item.id) {
             <div class="swiper-slide">
@@ -40,6 +40,7 @@
             </div>
           }
         </div>
+        <div class="swiper-pagination"></div>
       </div>
       <div
         #scrollContainer
