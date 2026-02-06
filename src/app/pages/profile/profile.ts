@@ -43,6 +43,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { OgService } from '@/services/og.service';
 import { IUser } from '@/interfaces/IUser';
+import { Browser } from '@capacitor/browser';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
@@ -434,7 +435,7 @@ export class Profile implements OnDestroy {
     try {
       const accountResponse = await this.stripeService.createStripeAccount();
       if (accountResponse?.url) {
-        window.location.href = accountResponse.url;
+        await Browser.open({url: accountResponse.url});
       } else {
         this.toasterService.showError('Failed to get Stripe account URL. Please try again.');
       }

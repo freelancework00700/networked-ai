@@ -21,7 +21,7 @@ import {
   IonRefresherContent,
   ModalController
 } from '@ionic/angular/standalone';
-import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy, Input, DOCUMENT } from '@angular/core';
 
 @Component({
   selector: 'user-subscription-plans',
@@ -50,6 +50,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private modalService = inject(ModalService);
   modalCtrl = inject(ModalController);
+  private document = inject(DOCUMENT);
   private navigationService = inject(NavigationService);
   private datePipe = new DatePipe('en-US');
   isFromMySubscriptions = signal<boolean>(false);
@@ -352,7 +353,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     await this.loadPlanOrPlansBasedOnState();
 
     // Close dropdown when clicking outside
-    document.addEventListener('click', this.handleClickOutside.bind(this));
+    this.document.addEventListener('click', this.handleClickOutside.bind(this));
   }
 
   private async loadPlanOrPlansBasedOnState(): Promise<void> {
@@ -378,7 +379,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   };
 
   ngOnDestroy(): void {
-    document.removeEventListener('click', this.handleClickOutside);
+    this.document.removeEventListener('click', this.handleClickOutside);
   }
 
   async loadPlanById(planId: string): Promise<void> {

@@ -16,6 +16,7 @@ import {
 import Swiper from 'swiper';
 import { Capacitor } from '@capacitor/core';
 import { Pagination } from 'swiper/modules';
+import { Browser } from '@capacitor/browser';
 import { Button } from '@/components/form/button';
 import { IonIcon } from '@ionic/angular/standalone';
 import { EventDisplayData } from '@/interfaces/event';
@@ -85,7 +86,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     return this.displayMediasForDisplay().length > 1;
   });
 
-  openMapFromLatLng(mapCenter: number[]): void {
+  async openMapFromLatLng(mapCenter: number[]): Promise<void> {
     if (!this.showHostPromo()) return;
     if (!mapCenter || mapCenter.length !== 2) return;
 
@@ -99,7 +100,8 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     } else {
       url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     }
-    window.open(url, '_system');
+
+    await Browser.open({url});
   }
 
   hasMultipleTickets = computed(() => {

@@ -1,4 +1,4 @@
-import { input, output, OnInit, signal, computed, OnDestroy, Component, ChangeDetectionStrategy, afterEveryRender } from '@angular/core';
+import { input, output, OnInit, signal, computed, OnDestroy, Component, ChangeDetectionStrategy, afterEveryRender, DOCUMENT, inject } from '@angular/core';
 import { Swiper } from 'swiper';
 import { SwiperOptions } from 'swiper/types';
 import { CommonModule } from '@angular/common';
@@ -15,6 +15,8 @@ import { ISubscription, SubscriptionCard } from '@/components/card/subscription-
   imports: [CommonModule, EventCard, RadioButtonModule, ReactiveFormsModule, SubscriptionCard]
 })
 export class PlanPreview implements OnDestroy, OnInit {
+  private readonly document = inject(DOCUMENT);
+
   planForm = input.required<FormGroup>();
   benefits = input.required<any[]>();
   selectedEvents = input.required<string[]>();
@@ -170,7 +172,7 @@ export class PlanPreview implements OnDestroy, OnInit {
   }
 
   private initializeSwiper(selector: string, config: SwiperOptions): Swiper | undefined {
-    const element = document.querySelector(selector) as HTMLElement;
+    const element = this.document.querySelector(selector) as HTMLElement;
     if (!element) return undefined;
 
     if (this.swiper) {

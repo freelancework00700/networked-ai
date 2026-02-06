@@ -1,5 +1,5 @@
 import { Checkbox } from 'primeng/checkbox';
-import { NgOptimizedImage } from '@angular/common';
+import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { Searchbar } from '@/components/common/searchbar';
@@ -17,7 +17,7 @@ import {
   IonSpinner,
   ModalController
 } from '@ionic/angular/standalone';
-import { Input, inject, signal, computed, Component, ChangeDetectionStrategy, OnInit, DestroyRef, ChangeDetectorRef, effect } from '@angular/core';
+import { Input, inject, signal, computed, Component, ChangeDetectionStrategy, OnInit, DestroyRef, ChangeDetectorRef, effect, PLATFORM_ID } from '@angular/core';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, from, catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IUser } from '@/interfaces/IUser';
@@ -25,6 +25,7 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { EventService } from '@/services/event.service';
 import { CommonShareFooter } from '@/components/common/common-share-footer';
 import { Share } from '@capacitor/share';
+import { Clipboard } from '@capacitor/clipboard';
 import { environment } from 'src/environments/environment';
 import { MessagesService } from '@/services/messages.service';
 
@@ -60,6 +61,10 @@ export class ShareModal implements OnInit {
   private cd = inject(ChangeDetectorRef);
   private eventService = inject(EventService);
   private messagesService = inject(MessagesService);
+
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
 
   // inputs
   @Input() id?: string;
@@ -380,7 +385,7 @@ export class ShareModal implements OnInit {
         return;
       }
       const message = encodeURIComponent(`Check out this subsciption plan: ${link}`);
-      window.open(`sms:?body=${message}`, '_self');
+      if (this.isBrowser) window.open(`sms:?body=${message}`, '_self');
       return;
     }
     const contentType = this.type === 'Event' ? 'event' : 'post';
@@ -423,7 +428,7 @@ export class ShareModal implements OnInit {
       return;
     }
     try {
-      await navigator.clipboard.writeText(link);
+      await Clipboard.write({ string: link });
       this.toasterService.showSuccess('Link copied to clipboard');
     } catch (error) {
       console.error('Error copying link:', error);
@@ -543,7 +548,7 @@ export class ShareModal implements OnInit {
       
             const subject = encodeURIComponent(`Check out this Subscription plan: ${link}`);
             const body = encodeURIComponent(`Hi,\n\nCheck out this subscription plan: ${link}`);
-            window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+            if (this.isBrowser) window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
           }
         } catch (error: any) {
           console.error(`Error sharing ${this.type} via Email:`, error);
@@ -563,7 +568,7 @@ export class ShareModal implements OnInit {
 
     const message = encodeURIComponent(`Check out this ${this.type.toLowerCase()}: ${link}`);
     const whatsappUrl = `https://wa.me/?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+    if (this.isBrowser) window.open(whatsappUrl, '_blank');
   }
 
   onShareToX(): void {
@@ -572,7 +577,7 @@ export class ShareModal implements OnInit {
 
     const text = encodeURIComponent(link);
     const twitterUrl = `https://x.com/intent/tweet?text=${text}`;
-    window.open(twitterUrl, '_blank');
+    if (this.isBrowser) window.open(twitterUrl, '_blank');
   }
 
   onShareToThreads(): void {
@@ -581,6 +586,6 @@ export class ShareModal implements OnInit {
 
     const text = encodeURIComponent(link);
     const threadsUrl = `https://threads.net/intent/post?text=${text}`;
-    window.open(threadsUrl, '_blank');
+    if (this.isBrowser) window.open(threadsUrl, '_blank');
   }
 }

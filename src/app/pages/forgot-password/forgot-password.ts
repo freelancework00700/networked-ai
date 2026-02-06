@@ -1,9 +1,10 @@
 import { maskEmail } from '@/utils/helper';
 import { Button } from '@/components/form/button';
+import { isPlatformBrowser } from '@angular/common';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { validateFields } from '@/utils/form-validation';
-import { inject, signal, Component, viewChild } from '@angular/core';
+import { inject, signal, Component, viewChild, PLATFORM_ID } from '@angular/core';
 import { EmailInput } from '@/components/form/email-input';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
@@ -31,6 +32,10 @@ export class ForgotPassword {
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
   navigationService = inject(NavigationService);
+
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
 
   // signals
   isLoading = signal(false);
@@ -85,6 +90,7 @@ export class ForgotPassword {
   }
 
   openEmailApp() {
+    if (!this.isBrowser) return;
     window.open('https://mail.google.com/mail/u/0/#search/do-not-reply%40net-worked.ai', '_blank');
   }
 }

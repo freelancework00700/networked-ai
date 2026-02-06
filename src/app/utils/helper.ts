@@ -56,6 +56,8 @@ export function getImageUrlOrDefault(imageUrl = '', defaultSvgPath = 'assets/ima
 }
 
 export function onImageError(event: Event, defaultImagePath = 'assets/images/profile.jpeg'): void {
+  if(typeof window === 'undefined' || typeof document === 'undefined') return;
+
   const img = event.target as HTMLImageElement;
 
   // hide the failed image

@@ -1,5 +1,5 @@
 import { IUser } from '@/interfaces/IUser';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Searchbar } from '@/components/common/searchbar';
 import { SocketService } from '@/services/socket.service';
@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { UserCardList } from '@/components/card/user-card-list';
 import { NavigationService } from '@/services/navigation.service';
 import { IonContent, IonHeader, IonToolbar } from '@ionic/angular/standalone';
-import { Component, inject, signal, ChangeDetectionStrategy, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, computed, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'event-user-list',
@@ -21,6 +21,11 @@ export class EventUserList implements OnInit, OnDestroy {
   router = inject(Router);
   route = inject(ActivatedRoute);
   private socketService = inject(SocketService);
+
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+
   title = signal<string>('Host(s)');
   searchQuery = signal<string>('');
   eventTitle = signal<string>('');
@@ -50,11 +55,7 @@ export class EventUserList implements OnInit, OnDestroy {
 
     let state: any = null;
 
-    if (typeof window !== 'undefined' && window.history?.state) {
-      state = window.history.state;
-    } else if (typeof history !== 'undefined' && history.state) {
-      state = history.state;
-    }
+    if (this.isBrowser) state = window.history.state;
 
     if (!state) {
       state = this.router.currentNavigation()?.extras?.state;

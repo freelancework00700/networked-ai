@@ -1,5 +1,5 @@
 import Swiper from 'swiper';
-import { DatePipe } from '@angular/common';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { QrCodeComponent } from 'ng-qrcode';
 import { Browser } from '@capacitor/browser';
 import { CommonModule } from '@angular/common';
@@ -8,7 +8,7 @@ import { EventAttendee } from '@/interfaces/event';
 import { getImageUrlOrDefault } from '@/utils/helper';
 import { AuthService } from '@/services/auth.service';
 import { SocketService } from '@/services/socket.service';
-import { Component, Input, ViewChild, ElementRef, computed, inject, signal } from '@angular/core';
+import { Component, Input, ViewChild, ElementRef, computed, inject, signal, PLATFORM_ID } from '@angular/core';
 import { IonContent, IonHeader, IonToolbar, ModalController, IonIcon } from '@ionic/angular/standalone';
 
 @Component({
@@ -19,8 +19,15 @@ import { IonContent, IonHeader, IonToolbar, ModalController, IonIcon } from '@io
 })
 export class TicketsModal {
   @ViewChild('swiperEl') swiperEl!: ElementRef<HTMLDivElement>;
+
+  // services
   modalCtrl = inject(ModalController);
   authService = inject(AuthService);
+
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+
   datePipe = new DatePipe('en-US');
   private socketService = inject(SocketService);
   event = signal<any>(null);
@@ -105,7 +112,7 @@ export class TicketsModal {
 
     const mailtoUrl = `mailto:${email}?subject=${subject}&body=${body}`;
 
-    window.open(mailtoUrl, '_self');
+    if (this.isBrowser) window.open(mailtoUrl, '_self');
   }
 
   async addToWallet() {

@@ -18,6 +18,7 @@ import { NavigationService } from '@/services/navigation.service';
 import { NetworkService } from '@/services/network.service';
 import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { Button } from '@/components/form/button';
+import { Clipboard } from '@capacitor/clipboard';
 
 const DEFAULT_FRONTEND_URL = 'https://dev.app.net-worked.ai';
 const CONFIRM_DANGER_OPTIONS = {
@@ -78,7 +79,7 @@ export class ProfileImagePreviewOverlay {
     if (!user) return;
     try {
       const url = environment.frontendUrl ?? DEFAULT_FRONTEND_URL;
-      await navigator.clipboard.writeText(`${url}/${user.username ?? ''}`);
+      await Clipboard.write({ string: `${url}/${user.username ?? ''}` });
       this.toasterService.showSuccess('Link copied to clipboard');
     } catch (error) {
       console.error('Error copying link:', error);

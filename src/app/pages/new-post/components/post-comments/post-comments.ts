@@ -9,7 +9,7 @@ import { FeedService } from '@/services/feed.service';
 import { EmptyState } from '@/components/common/empty-state';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { Component, inject, signal, ChangeDetectionStrategy, OnInit, OnDestroy, ViewChild, ElementRef, computed } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit, OnDestroy, ViewChild, ElementRef, computed, DOCUMENT } from '@angular/core';
 import {
   IonToolbar,
   IonHeader,
@@ -70,6 +70,7 @@ export class PostComments implements OnInit, OnDestroy {
   router = inject(Router);
   route = inject(ActivatedRoute);
   ogService = inject(OgService);
+  private document = inject(DOCUMENT);
 
   currentUser = this.authService.currentUser;
 
@@ -288,13 +289,13 @@ export class PostComments implements OnInit, OnDestroy {
   async viewProfile(comment: FeedComment): Promise<void> {
     if (!(await this.ensureLoggedIn())) return;
     const username = comment.user?.username;
-    document.body.click();
+    this.document.body.click();
     setTimeout(() => this.navigationService.navigateForward(`/${username}`));
   }
 
   async sendMessage(comment: FeedComment): Promise<void> {
     if (!(await this.ensureLoggedIn())) return;
-    document.body.click();
+    this.document.body.click();
     const currentUserId = this.currentUser()?.id;
     const otherUserId = comment.user?.id;
     if (currentUserId && otherUserId) {

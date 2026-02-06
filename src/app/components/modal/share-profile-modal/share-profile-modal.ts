@@ -2,14 +2,15 @@ import { Button } from '@/components/form/button';
 import { IonIcon } from '@ionic/angular/standalone';
 import { IonToolbar, IonFooter, ModalController } from '@ionic/angular/standalone';
 import { ToasterService } from '@/services/toaster.service';
-import { NgOptimizedImage } from '@angular/common';
+import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import * as htmlToImage from 'html-to-image';
 import { QrCodeComponent } from 'ng-qrcode';
-import { Component, inject, ChangeDetectionStrategy, signal, computed, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, Input, ViewChild, ElementRef, DOCUMENT, PLATFORM_ID } from '@angular/core';
 import { IUser } from '@/interfaces/IUser';
+import { Clipboard } from '@capacitor/clipboard';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { environment } from 'src/environments/environment';
 import { CommonShareFooter } from '@/components/common/common-share-footer';
@@ -25,11 +26,16 @@ import { ModalService } from '@/services/modal.service';
 })
 export class ShareProfileModal {
   @ViewChild('downloadableSection', { static: false, read: ElementRef }) downloadableSection?: ElementRef<HTMLDivElement>;
-
+  // services
+  private document = inject(DOCUMENT);
   private modalCtrl = inject(ModalController);
   private toasterService = inject(ToasterService);
   private messagesService = inject(MessagesService);
   private modalService = inject(ModalService);
+
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
 
   @Input() user?: IUser;
 
@@ -65,7 +71,7 @@ export class ShareProfileModal {
     }
 
     try {
-      await navigator.clipboard.writeText(link);
+      await Clipboard.write({ string: link });
       this.toasterService.showSuccess('Link copied to clipboard');
     } catch (error) {
       console.error('Error copying link:', error);
@@ -97,7 +103,7 @@ export class ShareProfileModal {
 
       // WEB
       if (Capacitor.getPlatform() === 'web') {
-        const link = document.createElement('a');
+        const link = this.document.createElement('a');
         link.href = dataUrl;
         link.download = fileName;
         link.click();
@@ -150,7 +156,7 @@ export class ShareProfileModal {
     }
 
     const message = encodeURIComponent(`Check out my profile: ${link}`);
-    window.open(`sms:?body=${message}`, '_self');
+    if (this.isBrowser) window.open(`sms:?body=${message}`, '_self');
   }
 
   onCopyLink(): Promise<void> {
@@ -223,7 +229,7 @@ export class ShareProfileModal {
 
     const subject = encodeURIComponent(`Check out my profile - ${this.user?.name || this.user?.username || 'Profile'}`);
     const body = encodeURIComponent(`Hi,\n\nCheck out my profile: ${link}`);
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+    if (this.isBrowser) window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
   }
 
   onWhatsapp(): void {
@@ -235,7 +241,7 @@ export class ShareProfileModal {
 
     const message = encodeURIComponent(`Check out my profile: ${link}`);
     const whatsappUrl = `https://wa.me/?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+    if (this.isBrowser) window.open(whatsappUrl, '_blank');
   }
 
   onShareToX(): void {
@@ -244,7 +250,7 @@ export class ShareProfileModal {
 
     const text = encodeURIComponent(link);
     const twitterUrl = `https://x.com/intent/tweet?text=${text}`;
-    window.open(twitterUrl, '_blank');
+    if (this.isBrowser) window.open(twitterUrl, '_blank');
   }
 
   onShareToThreads(): void {
@@ -253,6 +259,6 @@ export class ShareProfileModal {
 
     const text = encodeURIComponent(link);
     const threadsUrl = `https://threads.net/intent/post?text=${text}`;
-    window.open(threadsUrl, '_blank');
+    if (this.isBrowser) window.open(threadsUrl, '_blank');
   }
 }

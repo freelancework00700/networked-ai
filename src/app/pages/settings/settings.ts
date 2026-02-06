@@ -1,12 +1,13 @@
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
+import { isPlatformBrowser } from '@angular/common';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { StripeService } from '@/services/stripe.service';
 import { ToasterService } from '@/services/toaster.service';
 import { NavigationService } from '@/services/navigation.service';
 import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
-import { signal, inject, Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { signal, inject, Component, ChangeDetectionStrategy, OnInit, PLATFORM_ID } from '@angular/core';
 import { SettingsProfileHeader } from '@/pages/settings/components/settings-profile-header';
 import { SettingListItem, SettingsListItem } from '@/pages/settings/components/settings-list-item';
 @Component({
@@ -24,6 +25,10 @@ export class Settings implements OnInit {
   private stripeService = inject(StripeService);
   private toasterService = inject(ToasterService);
   navCtrl = inject(NavController);
+
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
 
   // signals
   appVersion = signal<string>('1.2.05');
@@ -174,7 +179,7 @@ export class Settings implements OnInit {
     try {
       const accountResponse = await this.stripeService.createStripeAccount();
       if (accountResponse?.url) {
-        window.location.href = accountResponse.url;
+        await Browser.open({url: accountResponse.url});
       } else {
         this.toasterService.showError('Failed to get Stripe account URL. Please try again.');
       }
@@ -193,7 +198,7 @@ export class Settings implements OnInit {
         await this.navigateToSubscriptionPlans();
         break;
       case 'send-mail':
-        window.open('mailto:admin&#64;net-worked.ai', '_self');
+        if (this.isBrowser) window.open('mailto:admin&#64;net-worked.ai', '_self');
         break;
     }
   }

@@ -11,7 +11,7 @@ import { environment } from 'src/environments/environment';
 import { ToasterService } from '@/services/toaster.service';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { IonHeader, IonToolbar, IonContent, IonSkeletonText, ModalController } from '@ionic/angular/standalone';
-import { Component, inject, ChangeDetectionStrategy, signal, computed, ViewChild, ElementRef, Input } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, ViewChild, ElementRef, Input, DOCUMENT } from '@angular/core';
 
 @Component({
   selector: 'event-qr',
@@ -26,6 +26,7 @@ export class EventQr {
   route = inject(ActivatedRoute);
   authService = inject(AuthService);
   toasterService = inject(ToasterService);
+  private readonly document = inject(DOCUMENT);
 
   datePipe = new DatePipe('en-US');
   @Input() event: any;
@@ -89,26 +90,6 @@ export class EventQr {
   }
 
   async shareQR(): Promise<void> {
-    if (Capacitor.getPlatform() === 'web') {
-      // For web, use Web Share API if available
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: this.event?.title || 'Event',
-            text: this.eventLink()
-          });
-          return;
-        } catch (error: any) {
-          if (error.name !== 'AbortError') {
-            console.error('Error sharing:', error);
-          }
-          return;
-        }
-      }
-      this.toasterService.showError('Share to is only available on mobile devices');
-      return;
-    }
-
     const link = this.eventLink();
     if (!link) {
       this.toasterService.showError('Profile link not available');
@@ -149,7 +130,7 @@ export class EventQr {
 
       // WEB
       if (Capacitor.getPlatform() === 'web') {
-        const link = document.createElement('a');
+        const link = this.document.createElement('a');
         link.href = dataUrl;
         link.download = fileName;
         link.click();

@@ -29,6 +29,7 @@ import { MenuItem } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
+import { Clipboard } from '@capacitor/clipboard';
 import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { environment } from 'src/environments/environment';
 @Component({
@@ -458,7 +459,7 @@ export class CreateGroup {
 
     try {
       const inviteLink = `${environment.frontendUrl}/group-invitation/${roomId}`;
-      await navigator.clipboard.writeText(inviteLink);
+      await Clipboard.write({ string: inviteLink });
       this.toasterService.showSuccess('Invite link copied to clipboard');
     } catch (error) {
       console.error('Error copying invite link:', error);

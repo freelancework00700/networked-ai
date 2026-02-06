@@ -4,19 +4,19 @@ import { IonHeader, IonToolbar, IonContent, IonFooter } from '@ionic/angular/sta
 import { NavigationService } from '@/services/navigation.service';
 import { AuthService } from '@/services/auth.service';
 import { ToasterService } from '@/services/toaster.service';
-import { PermissionsService } from '@/services/permissions.service';
 import { Router } from '@angular/router';
-import { NgOptimizedImage } from '@angular/common';
+import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import * as htmlToImage from 'html-to-image';
 import { QrCodeComponent } from 'ng-qrcode';
-import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, ViewChild, ElementRef, DOCUMENT, PLATFORM_ID } from '@angular/core';
 import { IUser } from '@/interfaces/IUser';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { environment } from 'src/environments/environment';
 import { CommonShareFooter } from '@/components/common/common-share-footer/common-share-footer';
+import { Clipboard } from '@capacitor/clipboard';
 import { ModalService } from '@/services/modal.service';
 import { MessagesService } from '@/services/messages.service';
 
@@ -38,12 +38,19 @@ interface SocialLink {
 export class BusinessCardPage implements OnInit {
   @ViewChild('cardDownloadSection', { static: false, read: ElementRef }) cardDownloadSection?: ElementRef<HTMLDivElement>;
 
+  // services
   private navigationService = inject(NavigationService);
   authService = inject(AuthService);
   private router = inject(Router);
   private toasterService = inject(ToasterService);
   private modalService = inject(ModalService);
+  private readonly document = inject(DOCUMENT);
   private messagesService = inject(MessagesService);
+
+
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
 
   user = signal<IUser | null>(null);
   showMoreLinks = signal(false);
@@ -230,7 +237,7 @@ export class BusinessCardPage implements OnInit {
 
       // WEB
       if (Capacitor.getPlatform() === 'web') {
-        const link = document.createElement('a');
+        const link = this.document.createElement('a');
         link.href = dataUrl;
         link.download = fileName;
         link.click();
@@ -271,7 +278,7 @@ export class BusinessCardPage implements OnInit {
     }
 
     try {
-      await navigator.clipboard.writeText(link);
+      await Clipboard.write({ string: link });
       this.toasterService.showSuccess('Link copied to clipboard');
     } catch (error) {
       console.error('Error copying link:', error);
@@ -301,7 +308,7 @@ export class BusinessCardPage implements OnInit {
 
     const text = encodeURIComponent(link);
     const threadsUrl = `https://threads.net/intent/post?text=${text}`;
-    window.open(threadsUrl, '_blank');
+    if (this.isBrowser) window.open(threadsUrl, '_blank');
   }
 
   onShareToX(): void {
@@ -310,7 +317,7 @@ export class BusinessCardPage implements OnInit {
 
     const text = encodeURIComponent(link);
     const twitterUrl = `https://x.com/intent/tweet?text=${text}`;
-    window.open(twitterUrl, '_blank');
+    if (this.isBrowser) window.open(twitterUrl, '_blank');
   }
 
   onContact(): void {
@@ -321,7 +328,7 @@ export class BusinessCardPage implements OnInit {
     }
 
     const message = encodeURIComponent(`Check out my profile: ${link}`);
-    window.open(`sms:?body=${message}`, '_self');
+    if (this.isBrowser) window.open(`sms:?body=${message}`, '_self');
   }
 
   async onChat(): Promise<void> {
@@ -375,7 +382,7 @@ export class BusinessCardPage implements OnInit {
 
     const subject = encodeURIComponent(`Check out my profile - ${user?.name || user?.username || 'Profile'}`);
     const body = encodeURIComponent(`Hi,\n\nCheck out my profile: ${link}`);
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+    if (this.isBrowser) window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
   }
 
   onWhatsapp(): void {
@@ -387,7 +394,7 @@ export class BusinessCardPage implements OnInit {
 
     const message = encodeURIComponent(`Check out my profile: ${link}`);
     const whatsappUrl = `https://wa.me/?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+    if (this.isBrowser) window.open(whatsappUrl, '_blank');
   }
 
   onImageError(event: Event): void {

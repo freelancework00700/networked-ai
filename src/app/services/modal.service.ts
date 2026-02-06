@@ -7,7 +7,7 @@ import { MenuItem } from '@/components/modal/menu-modal';
 import { CreateEvent } from '@/pages/event/create-event';
 import { RsvpModal } from '@/components/modal/rsvp-modal';
 import { MenuModal } from '@/components/modal/menu-modal';
-import { inject, Injectable, Signal } from '@angular/core';
+import { DOCUMENT, inject, Injectable, Signal } from '@angular/core';
 import { TitleModal } from '@/components/modal/title-modal';
 import { TicketsModal } from '@/components/modal/tickets-modal';
 import { LoadingModal } from '@/components/modal/loading-modal';
@@ -65,6 +65,7 @@ export class ModalService {
   private modalCtrl = inject(ModalController);
   platform = inject(Platform);
   navCtrl = inject(NavController);
+  private document = inject(DOCUMENT);
 
   async openLoadingModal(message: string): Promise<any> {
     const modal = await this.modalCtrl.create({
@@ -691,7 +692,7 @@ export class ModalService {
     });
     await modal.present();
     const height = this.platform.height() - 180;
-    const innerContent = document.getElementsByClassName('inner-content')[0];
+    const innerContent = this.document.getElementsByClassName('inner-content')[0];
     if (innerContent && innerContent instanceof HTMLElement) {
       innerContent.style.maxHeight = `${height}px`;
     }

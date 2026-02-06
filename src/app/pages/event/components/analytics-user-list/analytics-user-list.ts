@@ -10,9 +10,9 @@ import { EventService } from '@/services/event.service';
 import { Searchbar } from '@/components/common/searchbar';
 import { EmptyState } from '@/components/common/empty-state';
 import { NavigationService } from '@/services/navigation.service';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import { IonContent, IonHeader, IonToolbar, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
-import { Component, inject, signal, effect, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, inject, signal, effect, ChangeDetectionStrategy, computed, DOCUMENT } from '@angular/core';
 import { ToasterService } from '@/services/toaster.service';
 
 @Component({
@@ -38,6 +38,7 @@ export class AnalyticsUserList {
   route = inject(ActivatedRoute);
   eventService = inject(EventService);
   toasterService = inject(ToasterService);
+  private readonly document = inject(DOCUMENT);
   navigationService = inject(NavigationService);
 
   isLoadingMore = signal<boolean>(false);
@@ -165,7 +166,7 @@ export class AnalyticsUserList {
         });
 
         const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = this.document.createElement('a');
         link.href = url;
         link.download = fileName;
         link.click();

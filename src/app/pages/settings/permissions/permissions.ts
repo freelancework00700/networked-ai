@@ -3,7 +3,7 @@ import { NavController, IonHeader, IonToolbar, IonContent, IonToggle } from '@io
 import { PermissionsService } from '@/services/permissions.service';
 import { NativeSettings, AndroidSettings, IOSSettings } from 'capacitor-native-settings';
 import { App } from '@capacitor/app';
-import type { PluginListenerHandle } from '@capacitor/core';
+import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import { FormsModule } from '@angular/forms';
 
 export interface Permission {
@@ -64,6 +64,7 @@ export class Permissions implements OnInit, OnDestroy {
   }
 
   private async setupAppResumeListener(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
     this.appResumeListener = await App.addListener('resume', () => {
       this.loadPermissionStates();
     });
