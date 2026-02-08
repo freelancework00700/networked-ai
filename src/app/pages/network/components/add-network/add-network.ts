@@ -1,6 +1,4 @@
-import { Swiper } from 'swiper';
 import { Button } from '@/components/form/button';
-import { UserCard } from '@/components/card/user-card';
 import { Searchbar } from '@/components/common/searchbar';
 import { UserCardList } from '@/components/card/user-card-list';
 import { SearchEmptyState } from '@/components/common/search-empty-state';
@@ -75,8 +73,6 @@ export class AddNetwork implements OnDestroy {
   isNativePlatform = computed(() => Capacitor.isNativePlatform());
 
   constructor() {
-    afterEveryRender(() => this.initSwiper());
-
     // Load network requests on init
     this.loadNetworkRequests();
 
@@ -202,16 +198,6 @@ export class AddNetwork implements OnDestroy {
       console.error('Error parsing QR code:', error);
       this.toasterService.showError('Invalid QR code format.');
     }
-  }
-
-  private initSwiper(): void {
-    new Swiper('.swiper-user-recommendation', {
-      spaceBetween: 8,
-      slidesPerView: 2.2,
-      allowTouchMove: true,
-      slidesOffsetAfter: 16,
-      slidesOffsetBefore: 16
-    });
   }
 
   async loadNetworkRequests(): Promise<void> {

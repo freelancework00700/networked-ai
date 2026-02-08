@@ -1,0 +1,6 @@
+.gpu-accelerate {
+  /* promotes the element to its own layer on the GPU */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform; /* optional: hints the browser */
+}

@@ -1,13 +1,10 @@
-::ng-deep .swiper-scrollbar-drag {
-  background: var(--brand-03) !important;
+swiper-container {
+  --swiper-scrollbar-top: 0;
+  --swiper-scrollbar-size: 1px;
+  --swiper-scrollbar-bg-color: var(--neutral-05);
+  --swiper-scrollbar-drag-bg-color: var(--brand-03);
 }
 
-::ng-deep .swiper-scrollbar {
-  top: 0 !important;
-  height: 1px !important;
-  background: var(--neutral-05) !important;
-}
-
-.swiper-slide {
+swiper-slide {
   min-height: 400px;
 }

@@ -1,8 +1,12 @@
 import { appConfig } from './app.config';
 import { initializeApp } from 'firebase/app';
 import { AppComponent } from './app.component';
+import { register } from 'swiper/element/bundle';
 import { environment } from './environments/environment';
 import { bootstrapApplication } from '@angular/platform-browser';
+
+// register swiper
+register();
 
 // initialize firebase before bootstrapping the app
 initializeApp(environment.firebaseConfig);

@@ -1,24 +1,25 @@
-import Swiper from 'swiper';
 import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { QrCodeComponent } from 'ng-qrcode';
 import { Browser } from '@capacitor/browser';
 import { CommonModule } from '@angular/common';
+import { SwiperContainer } from 'swiper/element';
 import { Button } from '@/components/form/button';
 import { EventAttendee } from '@/interfaces/event';
 import { getImageUrlOrDefault } from '@/utils/helper';
 import { AuthService } from '@/services/auth.service';
 import { SocketService } from '@/services/socket.service';
-import { Component, Input, ViewChild, ElementRef, computed, inject, signal, PLATFORM_ID } from '@angular/core';
-import { IonContent, IonHeader, IonToolbar, ModalController, IonIcon } from '@ionic/angular/standalone';
+import { Component, Input, ElementRef, computed, inject, signal, PLATFORM_ID, CUSTOM_ELEMENTS_SCHEMA, viewChild } from '@angular/core';
+import { IonContent, IonHeader, IonToolbar, ModalController, IonIcon, IonicSlides } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-tickets-modal',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [IonIcon, IonToolbar, IonHeader, IonContent, Button, QrCodeComponent, CommonModule],
   templateUrl: './tickets-modal.html',
   styleUrl: './tickets-modal.scss'
 })
 export class TicketsModal {
-  @ViewChild('swiperEl') swiperEl!: ElementRef<HTMLDivElement>;
+  ticketsSwiperEl = viewChild<ElementRef<SwiperContainer>>('ticketsSwiper');
 
   // services
   modalCtrl = inject(ModalController);
@@ -36,7 +37,8 @@ export class TicketsModal {
     this.event.set(value);
   }
 
-  swiper!: Swiper;
+  // variables
+  swiperModules = [IonicSlides];
   activeIndex = signal(0);
 
   host = computed(() => {
@@ -128,19 +130,17 @@ export class TicketsModal {
     this.modalCtrl.dismiss();
   }
 
-  ngAfterViewInit() {
-    if (this.userTickets().length > 1) {
-      this.swiper = new Swiper(this.swiperEl.nativeElement, {
-        slidesPerView: 1,
-        spaceBetween: 16,
-        resistanceRatio: 0,
-        on: {
-          slideChange: (swiper) => {
-            this.activeIndex.set(swiper.activeIndex);
-          }
-        }
-      });
-    }
+  onSlideChange(event: Event) {
+    const { activeIndex } = (event.target as SwiperContainer).swiper;
+    this.activeIndex.set(activeIndex);
+  }
+
+  slidePrev() {
+    this.ticketsSwiperEl()?.nativeElement?.swiper?.slidePrev(300);
+  }
+
+  slideNext() {
+    this.ticketsSwiperEl()?.nativeElement?.swiper?.slideNext(300);
   }
 
   private setupCheckInStatusListner(): void {

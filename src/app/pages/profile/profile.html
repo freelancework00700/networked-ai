@@ -284,26 +284,45 @@
                 </div>
               }
             </div>
-            <div class="swiper swiper-profile">
-              <div class="swiper-wrapper">
-                <div class="swiper-slide">
-                  <profile-hosted-events [userId]="currentUser()?.id || null" />
-                </div>
-                <div class="swiper-slide">
-                  <profile-attended-events [userId]="currentUser()?.id || null" />
-                </div>
-                <div class="swiper-slide">
-                  <profile-upcoming-events [userId]="currentUser()?.id || null" />
-                </div>
-                <div class="swiper-slide">
-                  <profile-posts [userId]="currentUser()?.id || null" />
-                </div>
-                <div class="swiper-slide">
-                  <profile-achievement [user]="currentUser()" />
-                </div>
-              </div>
-              <div class="swiper-scrollbar"></div>
-            </div>
+
+            <!-- profile swiper -->
+            <swiper-container
+              #profileSwiper
+              scrollbar="true"
+              space-between="0"
+              auto-height="true"
+              slides-per-view="1"
+              scrollbar-hide="false"
+              allow-touch-move="true"
+              [modules]="swiperModules"
+              scrollbar-draggable="true"
+              (swiperslidechange)="onSlideChange($event)"
+            >
+              <!-- hosted events slide -->
+              <swiper-slide>
+                <profile-hosted-events [userId]="currentUser()?.id || null" />
+              </swiper-slide>
+
+              <!-- attended events slide -->
+              <swiper-slide>
+                <profile-attended-events [userId]="currentUser()?.id || null" />
+              </swiper-slide>
+
+              <!-- upcomming events slide -->
+              <swiper-slide>
+                <profile-upcoming-events [userId]="currentUser()?.id || null" />
+              </swiper-slide>
+
+              <!-- profile posts slide -->
+              <swiper-slide>
+                <profile-posts [userId]="currentUser()?.id || null" />
+              </swiper-slide>
+
+              <!-- profile gamification achivement -->
+              <swiper-slide>
+                <profile-achievement [user]="currentUser()" />
+              </swiper-slide>
+            </swiper-container>
           </div>
         </div>
       </div>
