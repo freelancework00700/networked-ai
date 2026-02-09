@@ -201,35 +201,37 @@
   </div>
 </ion-content>
 
-<ion-footer mode="md">
-  <ion-toolbar class="bg-white border-t border-gray-200">
-    <div class="flex items-center gap-2 p-4 max-w-[672px] mx-auto w-full">
-      @if (roomId() && selectedMembers().length > 0 && !isGroupDetails()) {
-        <app-button
-          label="Add to Group"
-          (click)="addMembersToGroup()"
-          class="flex-1"
-          [disabled]="isCreatingOrJoining()"
-          [isLoading]="isCreatingOrJoining()"
-        />
-      }
-
-      @if (!roomId() && selectedMembers().length > 0 && !isGroupDetails()) {
-        <app-button label="Proceed" (click)="nextStep()" class="flex-1" />
-      }
-
-      @if (isGroupDetails()) {
-        <div class="ml-auto">
+@if (isGroupDetails() || selectedMembers().length > 0) {
+  <ion-footer mode="md">
+    <ion-toolbar class="bg-white border-t border-gray-200">
+      <div class="flex items-center gap-2 p-4 max-w-[672px] mx-auto w-full">
+        @if (roomId() && selectedMembers().length > 0 && !isGroupDetails()) {
           <app-button
-            iconName="pi pi-check"
-            (click)="createGroup()"
-            [disabled]="groupName() === '' || isCreatingOrJoining()"
+            label="Add to Group"
+            (click)="addMembersToGroup()"
+            class="flex-1"
+            [disabled]="isCreatingOrJoining()"
             [isLoading]="isCreatingOrJoining()"
-            width="48px"
-            height="48px"
           />
-        </div>
-      }
-    </div>
-  </ion-toolbar>
-</ion-footer>
+        }
+
+        @if (!roomId() && selectedMembers().length > 0 && !isGroupDetails()) {
+          <app-button label="Proceed" (click)="nextStep()" class="flex-1" />
+        }
+
+        @if (isGroupDetails()) {
+          <div class="ml-auto">
+            <app-button
+              iconName="pi pi-check"
+              (click)="createGroup()"
+              [disabled]="groupName() === '' || isCreatingOrJoining()"
+              [isLoading]="isCreatingOrJoining()"
+              width="48px"
+              height="48px"
+            />
+          </div>
+        }
+      </div>
+    </ion-toolbar>
+  </ion-footer>
+}
