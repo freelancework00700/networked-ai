@@ -307,6 +307,11 @@
           </div>
         </div>
       </div>
+      @if (showFabButton()) {
+        <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="fab">
+          <app-button (click)="onCreatePost()" [icon]="'assets/svg/editIconBlack.svg'" radius="50%" />
+        </ion-fab>
+      }
     } @else {
       <auth-empty-state type="profile" />
     }

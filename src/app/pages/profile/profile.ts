@@ -15,6 +15,7 @@ import { ProfileHostedEvents } from '@/pages/profile/components/profile-hosted-e
 import { ProfileUpcomingEvents } from '@/pages/profile/components/profile-upcoming-events';
 import { ProfileAttendedEvents } from '@/pages/profile/components/profile-attended-events';
 import {
+  IonFab,
   IonIcon,
   IonHeader,
   IonToolbar,
@@ -34,7 +35,7 @@ import { NetworkService } from '@/services/network.service';
 import { ProfileImagePreviewOverlay } from '@/components/modal/profile-image-preview-overlay';
 import { PopoverService } from '@/services/popover.service';
 import { ModalService } from '@/services/modal.service';
-import { ScrollHandlerDirective } from '@/directives/scroll-handler.directive';
+import { ScrollHandlerDirective, showFooter } from '@/directives/scroll-handler.directive';
 import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { ToasterService } from '@/services/toaster.service';
 import { SocketService } from '@/services/socket.service';
@@ -59,6 +60,7 @@ interface TabConfig {
   templateUrl: './profile.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    IonFab, 
     Button,
     IonIcon,
     IonHeader,
@@ -154,7 +156,10 @@ export class Profile implements OnDestroy {
   isAddingToNetwork = signal<boolean>(false);
   isAcceptingRequest = signal<boolean>(false);
   isWithdrawingInvitation = signal<boolean>(false);
-
+  showFab = showFooter;
+  showFabButton(): boolean {
+    return this.currentSlide() === 'user-posts' && this.showFab() && !this.isViewingOtherProfile();
+  }
   // Get primary action button config based on connection status
   getPrimaryActionButton = computed(() => {
     if (this.isConnected()) {
@@ -660,5 +665,9 @@ export class Profile implements OnDestroy {
         }
       }
     });
+  }
+
+  onCreatePost(){
+    this.navigationService.navigateForward('/new-post')
   }
 }
