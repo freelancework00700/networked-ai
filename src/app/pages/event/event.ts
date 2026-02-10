@@ -435,11 +435,14 @@ export class Event implements OnInit, OnDestroy {
     const hostPaysFees = eventData?.settings?.host_pays_platform_fee ?? false;
     const additionalFees = eventData?.settings?.additional_fees ?? null;
     const maxAttendeesPerUser = eventData?.settings?.max_attendees_per_user ?? 0;
+    const date = displayData.formattedDateTime;
+    const location = eventData?.address || '';
     const hostName = eventData?.participants?.find((p: any) => p.role === 'Host')?.user?.name || 'Networked AI';
     const hasPlans = eventData?.has_plans || false;
     const hasSubscribed = eventData?.has_subscribed || false;
     const isSubscriberExclusive = eventData?.settings?.is_subscriber_exclusive ?? false;
     const plans = eventData?.plans || [];
+    
     const result = await this.modalService.openRsvpModal(
       displayData.tickets || [],
       displayData.title || '',
@@ -453,7 +456,9 @@ export class Event implements OnInit, OnDestroy {
       hasPlans,
       hasSubscribed,
       isSubscriberExclusive,
-      plans
+      plans,
+      date,
+      location
     );
     if (result) {
       const loadingModal = await this.modalService.openLoadingModal('Processing your RSVP...');
