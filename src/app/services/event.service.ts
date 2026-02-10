@@ -768,7 +768,7 @@ export class EventService extends BaseApiService {
       order
     };
 
-    if (q.id != null) formatted.id = q.id;
+    // if (q.id != null) formatted.id = q.id;
     if (q.min != null) formatted.min = q.min;
     if (q.max != null) formatted.max = q.max;
     if (q.rating_scale || q.rating) formatted.rating_scale = q.rating_scale || q.rating;
@@ -793,7 +793,7 @@ export class EventService extends BaseApiService {
       }
       if (typeof opt === 'object' && opt.option) {
         const formatted: { option: string; order: number; id?: string } = { option: opt.option, order: opt.order ?? index + 1 };
-        if (opt.id != null) formatted.id = opt.id;
+        // if (opt.id != null) formatted.id = opt.id;
         return formatted;
       }
       return { option: String(opt), order: index + 1 };

@@ -804,7 +804,9 @@ export class ModalService {
     hasPlans?: boolean,
     hasSubscribed?: boolean,
     isSubscriberExclusive?: boolean,
-    plans?: any[]
+    plans?: any[],
+    date?:string,
+    location?:string
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -826,7 +828,9 @@ export class ModalService {
         hasPlans,
         hasSubscribed,
         isSubscriberExclusive,
-        plans
+        plans,
+        date,
+        location
       }
     });
     await modal.present();
@@ -837,12 +841,6 @@ export class ModalService {
   async openQuestionnairePreviewModal(
     questions: any[],
     isPreviewMode: boolean = false,
-    rsvpData?: RsvpDetailsData,
-    eventTitle?: string,
-    eventDate?: string,
-    eventLocation?: string,
-    initialType?: 'pre-event' | 'post-event',
-    allQuestions?: { preEvent: any[]; postEvent: any[] }
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -854,12 +852,6 @@ export class ModalService {
       componentProps: {
         questions,
         isPreviewMode,
-        rsvpData,
-        eventTitle,
-        eventDate,
-        eventLocation,
-        initialType,
-        allQuestions
       }
     });
     await modal.present();
@@ -869,8 +861,8 @@ export class ModalService {
 
   async openRsvpDetailsModal(
     eventTitle: string,
-    eventDate: string,
-    eventLocation: string,
+    date: string,
+    location: string,
     eventId: string,
     rsvpData: RsvpDetailsData,
     hostPaysFees?: boolean,
@@ -884,7 +876,7 @@ export class ModalService {
       initialBreakpoint: 1,
       cssClass: 'modal-600px-height',
       component: RsvpDetailsModal,
-      componentProps: { eventTitle, eventDate, eventLocation, eventId, rsvpData, hostPaysFees, additionalFees, hostName }
+      componentProps: { eventTitle, date, location, eventId, rsvpData, hostPaysFees, additionalFees, hostName }
     });
     await modal.present();
     const { data } = await modal.onDidDismiss();

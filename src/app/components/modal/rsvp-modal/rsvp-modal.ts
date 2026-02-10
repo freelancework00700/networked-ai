@@ -21,8 +21,8 @@ export class RsvpModal implements OnInit, OnDestroy {
   @Input() questionnaire: any = null;
   @Input() promo_codes: any[] = [];
   @Input() plans: any[] = [];
-  @Input() eventDate: string = '';
-  @Input() eventLocation: string = '';
+  @Input() date: string = '';
+  @Input() location: string = '';
   @Input() hostPaysFees: boolean = false;
   @Input() additionalFees: string | number | null = null;
   @Input() maxAttendeesPerUser: number = 0;
@@ -1117,16 +1117,7 @@ export class RsvpModal implements OnInit, OnDestroy {
       const preEventQuestionnaire = this.questionnaire.filter((q: any) => !q.event_phase || q.event_phase === 'PreEvent');
 
       if (preEventQuestionnaire.length > 0) {
-        this.questionnaireResult.set(
-          await this.modalService.openQuestionnairePreviewModal(
-            preEventQuestionnaire,
-            false,
-            rsvpData,
-            this.eventTitle,
-            this.eventDate,
-            this.eventLocation
-          )
-        );
+        this.questionnaireResult.set(await this.modalService.openQuestionnairePreviewModal(preEventQuestionnaire, false));
 
         if (!this.questionnaireResult()) {
           return;
@@ -1136,8 +1127,8 @@ export class RsvpModal implements OnInit, OnDestroy {
 
     const rsvpConfirmData = await this.modalService.openRsvpDetailsModal(
       this.eventTitle,
-      this.eventDate,
-      this.eventLocation,
+      this.date,
+      this.location,
       this.eventId,
       rsvpData,
       this.hostPaysFees,

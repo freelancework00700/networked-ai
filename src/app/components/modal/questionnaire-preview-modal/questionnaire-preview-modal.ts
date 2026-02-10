@@ -54,10 +54,6 @@ interface QuestionnaireQuestionWithPhase {
 export class QuestionnairePreviewModal implements OnInit {
   @Input() questions: QuestionnaireQuestionWithPhase[] = [];
   @Input() isPreviewMode: boolean = false;
-  @Input() rsvpData: RsvpDetailsData | null = null;
-  @Input() eventTitle: string = '';
-  @Input() eventDate: string = '';
-  @Input() eventLocation: string = '';
   private modalService = inject(ModalService);
   private fb = inject(FormBuilder);
   modalCtrl = inject(ModalController);

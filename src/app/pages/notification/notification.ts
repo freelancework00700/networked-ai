@@ -221,26 +221,16 @@ export class Notification {
       }
 
       const rawQuestionnaire = event.questionnaire || event.questions || [];
-      const formattedQuestionnaire = this.eventService.formatQuestionnaire(rawQuestionnaire);
-      const postEventQuestions = formattedQuestionnaire.filter((q: { event_phase?: string }) => q.event_phase === 'PostEvent');
+      const postEventQuestions = rawQuestionnaire.filter((q: { event_phase?: string }) => q.event_phase === 'PostEvent');
 
       if (!postEventQuestions.length) {
         this.toasterService.showError('No feedback questionnaire available for this event.');
         return;
       }
 
-      const eventDate = this.eventService.formatDateTime(event.start_date, event.end_date) || '';
-      const eventLocation = event.address ?? '';
-
       const result = await this.modalService.openQuestionnairePreviewModal(
         postEventQuestions,
         false,
-        undefined,
-        event.title ?? '',
-        eventDate,
-        eventLocation,
-        'post-event',
-        undefined
       );
 
       if (result?.responses?.length) {
