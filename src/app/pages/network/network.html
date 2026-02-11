@@ -2,7 +2,7 @@
   <ion-header mode="md">
     <ion-toolbar mode="md">
       @if (isViewingOtherUser()) {
-        <div class="p-4 max-w-[672px] mx-auto grid grid-cols-[auto_1fr_auto] items-center gap-2">
+        <div class="p-4 mx-auto grid grid-cols-[auto_1fr_auto] items-center gap-2">
           <div class="pi pi-arrow-left cursor-pointer" (click)="goBack()"></div>
           <div class="body-16SB neutral-01 text-center whitespace-nowrap overflow-hidden text-ellipsis min-w-0">{{ headerText() }}</div>
           <div></div>
@@ -10,7 +10,7 @@
       }
 
       <!-- segment buttons -->
-      <div class="bg-neutral-07 w-full max-w-[672px] mx-auto">
+      <div class="bg-neutral-07 w-full mx-auto">
         <div class="flex gap-2 items-center p-4">
           <searchbar
             class="w-full"
@@ -52,7 +52,7 @@
 
 <ion-content fullscreen="true" [scrollEvents]="true" [scrollY]="segmentValue() === 'list'">
   @if (isLoggedIn()) {
-    <div class="w-full max-w-[672px] mx-auto p-4 pt-0 relative h-full">
+    <div class="w-full mx-auto p-4 pt-0 relative h-full" [class]="{'max-w-[672px]': segmentValue() === 'list'}">
       <div [hidden]="segmentValue() === 'map'">
         <network-list-view
           [searchQuery]="searchQuery()"

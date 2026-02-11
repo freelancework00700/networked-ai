@@ -351,9 +351,12 @@ export class PostComments implements OnInit, OnDestroy {
     if (!(await this.ensureLoggedIn())) return;
     const commentId = comment.id;
 
+    this.feedService.optimisticToggleCommentLike(commentId);
+
     try {
       await this.feedService.toggleCommentLike(commentId);
     } catch (error) {
+      this.feedService.optimisticToggleCommentLike(commentId);
       console.error('Error toggling comment like:', error);
       this.toasterService.showError('Failed to like comment. Please try again.');
     }

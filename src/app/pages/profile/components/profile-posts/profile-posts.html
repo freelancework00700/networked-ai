@@ -15,7 +15,7 @@
     } @else {
       @for (post of posts(); track post.id) {
         <div class="px-4">
-          <post-card [post]="post" />
+          <post-card [post]="post" (postLiked)="onLocalToggleLike($event)" />
         </div>
       }
 

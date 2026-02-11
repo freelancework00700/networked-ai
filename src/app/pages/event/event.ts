@@ -297,7 +297,9 @@ export class Event implements OnInit, OnDestroy {
       const eventSlug = params.get('slug');
       if (eventSlug) {
         this.eventId.set(eventSlug);
-        this.loadEvent();
+        if (eventSlug != this.event()?.slug) {
+          this.loadEvent();
+        }
       }
     });
 

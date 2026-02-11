@@ -128,4 +128,20 @@ export class ProfilePosts {
       event.target.complete();
     }
   }
+
+  onLocalToggleLike(postId: string) {
+    this.posts.update(posts =>
+      posts.map(p => {
+        if (p.id !== postId) return p;
+        const isLiked = p.is_like;
+        return {
+          ...p,
+          is_like: !isLiked,
+          total_likes: isLiked
+            ? Math.max((p.total_likes || 1) - 1, 0)
+            : (p.total_likes || 0) + 1
+        };
+      })
+    );
+  }
 }
