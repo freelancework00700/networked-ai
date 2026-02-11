@@ -10,17 +10,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
 import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  input,
-  output,
-  signal,
-  computed,
-  effect,
-  CUSTOM_ELEMENTS_SCHEMA
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal, computed, effect, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { FeedPost } from '@/interfaces/IFeed';
 import { Router } from '@angular/router';
 import { NetworkService } from '@/services/network.service';

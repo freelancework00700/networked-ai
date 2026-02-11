@@ -283,10 +283,10 @@ export class ChatRoom implements OnInit, OnDestroy {
 
       // Create or get existing chat room
       const result = await this.messagesService.createOrGetChatRoom(roomParams);
-      
+
       // Set the room ID
       this.chatId.set(result.room_id);
-      
+
       // Get full room data by ID to load header data and other required details
       try {
         const fullRoomData = await this.messagesService.getChatRoomById(result.room_id);
@@ -342,8 +342,8 @@ export class ChatRoom implements OnInit, OnDestroy {
    */
   async joinRoom(): Promise<void> {
     const userId = this.authService.currentUser()?.id;
-    const roomId = this.chatId(); 
-    
+    const roomId = this.chatId();
+
     if (userId && roomId) {
       await this.messagesService.joinRoom(roomId, [userId]);
 

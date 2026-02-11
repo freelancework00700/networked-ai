@@ -10,7 +10,7 @@ import {
   AfterViewInit,
   AfterViewChecked,
   CUSTOM_ELEMENTS_SCHEMA,
-  ChangeDetectionStrategy,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Pagination } from 'swiper/modules';
@@ -33,7 +33,7 @@ import { HostEventPromoCard } from '@/components/card/host-event-promo-card';
   styleUrl: './event-display.scss',
   templateUrl: './event-display.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SegmentButton, AvatarGroupComponent, HostEventPromoCard, IonIcon, Button, NgOptimizedImage],
+  imports: [SegmentButton, AvatarGroupComponent, HostEventPromoCard, IonIcon, Button, NgOptimizedImage]
 })
 export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy {
   eventData = input.required<Partial<EventDisplayData>>();

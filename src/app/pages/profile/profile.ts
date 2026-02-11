@@ -63,7 +63,7 @@ interface TabConfig {
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    IonFab, 
+    IonFab,
     Button,
     IonIcon,
     IonHeader,
@@ -531,7 +531,7 @@ export class Profile implements OnDestroy {
     }
   }
 
-async addToNetwork(): Promise<void> {
+  async addToNetwork(): Promise<void> {
     if (!(await this.ensureLoggedIn())) return;
     const user = this.currentUser();
     const userId = user?.id;
@@ -637,7 +637,7 @@ async addToNetwork(): Promise<void> {
     });
   }
 
-  onCreatePost(){
-    this.navigationService.navigateForward('/new-post')
+  onCreatePost() {
+    this.navigationService.navigateForward('/new-post');
   }
 }

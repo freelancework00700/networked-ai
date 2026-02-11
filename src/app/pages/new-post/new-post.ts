@@ -13,7 +13,18 @@ import { Mentions } from '@/components/common/mentions';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Component, inject, signal, viewChild, ElementRef, ViewChild, ChangeDetectorRef, computed, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  viewChild,
+  ElementRef,
+  ViewChild,
+  ChangeDetectorRef,
+  computed,
+  OnInit,
+  CUSTOM_ELEMENTS_SCHEMA
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { IonToolbar, IonHeader, IonContent, NavController, IonFooter, IonIcon, IonicSlides } from '@ionic/angular/standalone';
 import { FeedPost } from '@/interfaces/IFeed';
@@ -279,7 +290,7 @@ export class NewPost implements OnInit {
   goToSlide(index: number) {
     const swiper = this.postMediaSwiperEl()?.nativeElement?.swiper;
     if (!swiper || index < 0) return;
-    
+
     this.currentSlide.set(index);
     swiper.slideTo(index, 100);
   }

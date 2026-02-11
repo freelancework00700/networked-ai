@@ -908,7 +908,7 @@ export class EventService extends BaseApiService {
     return payload;
   }
 
-async getEvents(
+  async getEvents(
     params: {
       page?: number;
       limit?: number;

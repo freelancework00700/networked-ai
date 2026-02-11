@@ -131,7 +131,7 @@ export class HomeEvent implements OnInit, OnDestroy {
     });
   }
 
-private async loadEventsIfNeeded(): Promise<void> {
+  private async loadEventsIfNeeded(): Promise<void> {
     const hasRecommendedEvents = this.eventService.recommendedEvents().length > 0;
     const hasPublicEvents = this.eventService.publicEvents().length > 0;
     const hasMyEvents = this.eventService.myEvents().length > 0;
@@ -229,7 +229,7 @@ private async loadEventsIfNeeded(): Promise<void> {
     }
   }
 
-private async loadAllEvents(reset: boolean = true): Promise<void> {
+  private async loadAllEvents(reset: boolean = true): Promise<void> {
     try {
       this.isLoading.set(true);
       const loggedIn = this.isLoggedIn();

@@ -1,13 +1,4 @@
-import {
-  input,
-  output,
-  OnInit,
-  signal,
-  computed,
-  Component,
-  CUSTOM_ELEMENTS_SCHEMA,
-  ChangeDetectionStrategy,
-} from '@angular/core';
+import { input, output, OnInit, signal, computed, Component, CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicSlides } from '@ionic/angular/standalone';
 import { RadioButtonModule } from 'primeng/radiobutton';

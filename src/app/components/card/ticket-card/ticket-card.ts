@@ -71,7 +71,7 @@ export class TicketCard {
       default:
         return 'bg-standard';
     }
-  }); 
+  });
 
   formattedPrice = computed(() => {
     const ticket = this.ticket();

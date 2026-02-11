@@ -176,7 +176,7 @@ export class EventDetails implements OnInit {
   goToSlide(index: number) {
     const swiper = this.eventMediaSwiperEl()?.nativeElement?.swiper;
     if (!swiper || index < 0) return;
-    
+
     this.currentSlide.set(index);
     swiper.slideTo(index, 100);
   }

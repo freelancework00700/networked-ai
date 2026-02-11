@@ -253,7 +253,7 @@ export class FeedService extends BaseApiService {
 
   optimisticToggleLike(feedId: string) {
     const toggle = (list: FeedPost[]) =>
-      list.map(post => {
+      list.map((post) => {
         if (post.id !== feedId) return post;
         const isLiked = post.is_like;
         return {
@@ -262,11 +262,11 @@ export class FeedService extends BaseApiService {
           total_likes: isLiked ? Math.max((post.total_likes || 1) - 1, 0) : (post.total_likes || 0) + 1
         };
       });
-  
+
     this.publicFeeds.update(toggle);
     this.networkedFeeds.update(toggle);
     this.myPosts.update(toggle);
-  
+
     // Also update currently viewed post
     const current = this.currentViewedPost();
     if (current?.id === feedId) {
@@ -454,7 +454,7 @@ export class FeedService extends BaseApiService {
   optimisticToggleCommentLike(commentId: string): void {
     const current = this.currentPostComments();
     if (!current) return;
-  
+
     const toggleInTree = (c: FeedComment): FeedComment => {
       if (c.id === commentId) {
         const isLiked = c.is_like;
@@ -464,7 +464,7 @@ export class FeedService extends BaseApiService {
           total_likes: isLiked ? Math.max((c.total_likes || 1) - 1, 0) : (c.total_likes || 0) + 1
         };
       }
-  
+
       if (c.replies?.length) {
         return {
           ...c,
@@ -473,10 +473,10 @@ export class FeedService extends BaseApiService {
       }
       return c;
     };
-  
-    this.currentPostComments.update(state => {
+
+    this.currentPostComments.update((state) => {
       if (!state) return state;
-  
+
       return {
         ...state,
         comments: state.comments.map(toggleInTree)

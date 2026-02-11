@@ -805,8 +805,8 @@ export class ModalService {
     hasSubscribed?: boolean,
     isSubscriberExclusive?: boolean,
     plans?: any[],
-    date?:string,
-    location?:string
+    date?: string,
+    location?: string
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -838,10 +838,7 @@ export class ModalService {
     return data || null;
   }
 
-  async openQuestionnairePreviewModal(
-    questions: any[],
-    isPreviewMode: boolean = false,
-  ): Promise<any> {
+  async openQuestionnairePreviewModal(questions: any[], isPreviewMode: boolean = false): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -851,7 +848,7 @@ export class ModalService {
       component: QuestionnairePreviewModal,
       componentProps: {
         questions,
-        isPreviewMode,
+        isPreviewMode
       }
     });
     await modal.present();

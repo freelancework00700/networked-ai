@@ -17,7 +17,14 @@
   }
 
   <div class="relative h-22 w-22 shrink-0 overflow-hidden rounded-xl">
-    <img fill placeholder class="rounded-xl object-cover" [ngSrc]="eventImage()" (error)="onImageError($event)" [alt]="event()?.title || 'event image'" />
+    <img
+      fill
+      placeholder
+      class="rounded-xl object-cover"
+      [ngSrc]="eventImage()"
+      (error)="onImageError($event)"
+      [alt]="event()?.title || 'event image'"
+    />
   </div>
 
   <div class="flex flex-col gap-2">

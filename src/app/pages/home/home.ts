@@ -1,6 +1,6 @@
 import { HomeFeed } from '@/pages/home/home-feed';
 import { HomeEvent } from '@/pages/home/home-event';
-import { Button } from "@/components/form/button";
+import { Button } from '@/components/form/button';
 import { AuthService } from '@/services/auth.service';
 import { NavigationService } from '@/services/navigation.service';
 import { ProfileHeaderToolbar } from '@/components/common/profile-header-toolbar';
@@ -35,7 +35,7 @@ type Tab = 'events' | 'feed';
     NgOptimizedImage,
     ScrollHandlerDirective,
     Button
-]
+  ]
 })
 export class Home implements OnDestroy, ViewWillEnter {
   // services
@@ -133,8 +133,8 @@ export class Home implements OnDestroy, ViewWillEnter {
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
   }
- 
-  onCreatePost(){
-    this.navigationService.navigateForward('/new-post')
+
+  onCreatePost() {
+    this.navigationService.navigateForward('/new-post');
   }
 }

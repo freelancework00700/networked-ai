@@ -228,10 +228,7 @@ export class Notification {
         return;
       }
 
-      const result = await this.modalService.openQuestionnairePreviewModal(
-        postEventQuestions,
-        false,
-      );
+      const result = await this.modalService.openQuestionnairePreviewModal(postEventQuestions, false);
 
       if (result?.responses?.length) {
         const saved = await this.savePostEventFeedback(eventId, result.responses);

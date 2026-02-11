@@ -444,7 +444,7 @@ export class Event implements OnInit, OnDestroy {
     const hasSubscribed = eventData?.has_subscribed || false;
     const isSubscriberExclusive = eventData?.settings?.is_subscriber_exclusive ?? false;
     const plans = eventData?.plans || [];
-    
+
     const result = await this.modalService.openRsvpModal(
       displayData.tickets || [],
       displayData.title || '',

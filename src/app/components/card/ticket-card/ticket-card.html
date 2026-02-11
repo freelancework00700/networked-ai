@@ -6,7 +6,7 @@
   [class.ticket-sponsor]="ticket().ticket_type === 'Sponsor'"
 >
   <div class="relative w-full">
-     <div [ngClass]="ticketBackground()" class="h-[32px] flex items-center">
+    <div [ngClass]="ticketBackground()" class="h-[32px] flex items-center">
       <ion-icon [src]="ticketIcon()" class="h-[20px] w-[20px] pl-5 pr-2"></ion-icon>
       <span>{{ ticket().ticket_type }} Ticket</span>
     </div>
