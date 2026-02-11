@@ -47,22 +47,15 @@
   justify-content: center;
   cursor: pointer;
 }
-.swiper {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
 
-.swiper-wrapper {
-  height: 100%;
-}
-
-.swiper-slide {
+swiper-container {
   width: 100%;
   height: 100%;
   display: flex;
+  overflow: hidden;
   align-items: center;
   justify-content: center;
+  --swiper-pagination-bottom: 55px;
 }
 
 .slide-content {
@@ -75,11 +68,12 @@
   padding: 10px;
   justify-content: space-between;
 }
+
 .slide-image {
   width: 100%;
   max-width: 480px;
-  aspect-ratio: 1 / 1;    
-  max-height: 30vh;        
+  aspect-ratio: 1 / 1;
+  max-height: 30vh;
   display: flex;
   margin: 0 auto 40px;
   align-items: center;
@@ -91,33 +85,13 @@
 .slide-image video {
   width: 100%;
   height: 100%;
-  object-fit: contain;     
-}
-
-.swiper-post-card {
-  .swiper-pagination {
-    bottom: 55px !important;
-  }
-}
-.custom-textarea {
-  font-family: Manrope;
-  width: 100%;
-  min-height: 24px;
-  resize: none;
-  border: none;
-  outline: none;
-  font-size: 14px;
-  line-height: 1.4;
-  padding: 0;
-  background-color: transparent;
-  overflow: hidden;
+  object-fit: contain;
 }
 
 .relative-block-container {
   position: relative;
   width: 100%;
 }
-
 
 ::ng-deep .chip-inner {
   padding: 0 8px !important;

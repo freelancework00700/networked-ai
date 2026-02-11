@@ -2,11 +2,7 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh;
   position: absolute;
+  height: calc(100% + 15px);
   transition: filter 0.3s ease;
-}
-
-::ng-deep .maplibregl-ctrl-top-right {
-  bottom: calc(215px + env(safe-area-inset-bottom)) !important;
 }

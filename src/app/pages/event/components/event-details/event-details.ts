@@ -5,19 +5,22 @@ import {
   OnInit,
   signal,
   computed,
-  ViewChild,
   Component,
+  viewChild,
   ElementRef,
   DestroyRef,
   ChangeDetectorRef,
+  CUSTOM_ELEMENTS_SCHEMA,
   ChangeDetectionStrategy
 } from '@angular/core';
-import { Swiper } from 'swiper';
+import { Pagination } from 'swiper/modules';
+import { SwiperContainer } from 'swiper/element';
 import { Button } from '@/components/form/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { UserService } from '@/services/user.service';
 import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
+import { IonicSlides } from '@ionic/angular/standalone';
 import { ToasterService } from '@/services/toaster.service';
 import { EventCategory, Vibe } from '@/interfaces/event';
 import { TextInput } from '@/components/form/text-input';
@@ -28,11 +31,11 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { CommonModule, DOCUMENT, NgOptimizedImage } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { DescriptionGeneratorService } from '@/services/description-generator.service';
-import { Pagination } from 'swiper/modules';
 
 @Component({
   selector: 'event-details',
   styleUrl: './event-details.scss',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './event-details.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Button, TextInput, EditorInput, DragDropModule, CheckboxModule, ReactiveFormsModule, CommonModule, NgOptimizedImage]
@@ -51,9 +54,9 @@ export class EventDetails implements OnInit {
   toasterService = inject(ToasterService);
   private destroyRef = inject(DestroyRef);
 
-  swiper?: Swiper;
   currentSlide = signal(0);
-  @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
+  swiperModules = [IonicSlides, Pagination];
+  eventMediaSwiperEl = viewChild<ElementRef<SwiperContainer>>('eventMediaSwiper');
 
   // Signals
   mediaItems = signal<Array<{ id: string; type: string; file?: File; url: string; order?: number }>>([]);
@@ -165,60 +168,28 @@ export class EventDetails implements OnInit {
     });
   }
 
-  ngAfterViewChecked() {
-    if (this.swiper) return;
-    if (!this.swiperEl?.nativeElement) return;
-    if (!this.mediaItems().length) return;
-
-    this.swiper = new Swiper(this.swiperEl.nativeElement, {
-      modules: [Pagination],
-      slidesPerView: 1,
-      spaceBetween: 0,
-      allowTouchMove: true,
-      observer: true,
-      pagination: {
-        el: '.swiper-pagination',
-        clickable: true
-      },
-      on: {
-        slideChange: (swiper) => {
-          this.currentSlide.set(swiper.activeIndex);
-        }
-      }
-    });
-  }
-
-  refreshSwiper(targetIndex?: number) {
-    if (!this.swiper) return;
-
-    requestAnimationFrame(() => {
-      this.swiper!.update();
-
-      if (targetIndex !== undefined) {
-        const safeIndex = Math.min(targetIndex, this.swiper!.slides.length - 1);
-        this.currentSlide.set(safeIndex);
-        this.swiper!.slideTo(safeIndex, 0);
-      }
-    });
-  }
-
-  refreshSwiperAndGoToLast() {
-    if (!this.swiper) return;
-
-    requestAnimationFrame(() => {
-      this.swiper!.update();
-
-      const lastIndex = this.swiper!.slides.length - 1;
-      if (lastIndex >= 0) {
-        this.currentSlide.set(lastIndex);
-        this.swiper!.slideTo(lastIndex, 0);
-      }
-    });
+  onSlideChange(event: Event) {
+    const { activeIndex } = (event.target as SwiperContainer).swiper;
+    this.currentSlide.set(activeIndex);
   }
 
   goToSlide(index: number) {
-    if (!this.swiper) return;
-    this.refreshSwiper(index);
+    const swiper = this.eventMediaSwiperEl()?.nativeElement?.swiper;
+    if (!swiper || index < 0) return;
+    
+    this.currentSlide.set(index);
+    swiper.slideTo(index, 100);
+  }
+
+  goToLastSlide() {
+    const swiper = this.eventMediaSwiperEl()?.nativeElement?.swiper;
+    if (!swiper) return;
+
+    const lastIndex = swiper.slides.length - 1;
+    if (lastIndex < 0) return;
+
+    this.currentSlide.set(lastIndex);
+    swiper!.slideTo(lastIndex, 0);
   }
 
   deleteMedia(index: number) {
@@ -230,7 +201,7 @@ export class EventDetails implements OnInit {
         order: idx + 1
       }));
     });
-    this.refreshSwiper(index - 1);
+    this.goToSlide(index - 1);
   }
 
   drop(event: CdkDragDrop<Array<{ id: string; type: string; file?: File; url: string; order?: number }>>) {
@@ -242,7 +213,6 @@ export class EventDetails implements OnInit {
         order: index + 1
       }));
     });
-    this.refreshSwiper();
   }
 
   onBrowseFiles(event: Event): void {
@@ -261,7 +231,7 @@ export class EventDetails implements OnInit {
       }));
     });
     input.value = '';
-    this.refreshSwiperAndGoToLast();
+    this.goToLastSlide();
   }
 
   createMediaItem(
@@ -292,7 +262,7 @@ export class EventDetails implements OnInit {
         order: idx + 1
       }));
     });
-    this.refreshSwiperAndGoToLast();
+    this.goToLastSlide();
   }
 
   async openNetworkedGIFs(): Promise<void> {
@@ -308,7 +278,7 @@ export class EventDetails implements OnInit {
         order: idx + 1
       }));
     });
-    this.refreshSwiperAndGoToLast();
+    this.goToLastSlide();
   }
 
   toArray(value: string | string[]): string[] {

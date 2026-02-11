@@ -36,6 +36,7 @@ export class EventService extends BaseApiService {
   private navigationService = inject(NavigationService);
 
   datePipe = new DatePipe('en-US');
+  myEvents = signal<IEvent[]>([]);
   recommendedEvents = signal<IEvent[]>([]);
   publicEvents = signal<IEvent[]>([]);
   upcomingEvents = signal<IEvent[]>([]);
@@ -907,7 +908,7 @@ export class EventService extends BaseApiService {
     return payload;
   }
 
-  async getEvents(
+async getEvents(
     params: {
       page?: number;
       limit?: number;
@@ -953,9 +954,6 @@ export class EventService extends BaseApiService {
       }
       if (params.order_direction) {
         httpParams = httpParams.set('order_direction', params.order_direction);
-      }
-      if (params.is_my_events !== undefined) {
-        httpParams = httpParams.set('is_my_events', params.is_my_events.toString());
       }
       if (params.is_included_me_event !== undefined) {
         httpParams = httpParams.set('is_included_me_event', params.is_included_me_event.toString());
@@ -1025,6 +1023,14 @@ export class EventService extends BaseApiService {
           this.recommendedEvents.update((current) => [...current, ...events]);
         } else {
           this.recommendedEvents.set(events);
+        }
+      }
+
+      if (params.is_my_events === true) {
+        if (params.append) {
+          this.myEvents.update((current) => [...current, ...events]);
+        } else {
+          this.myEvents.set(events);
         }
       }
 

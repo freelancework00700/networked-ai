@@ -80,32 +80,35 @@
     </div>
   }
 
-  <div>
+  <!-- city swiper -->
+  <swiper-container
+    speed="100"
+    space-between="8"
+    slides-per-view="2.2"
+    allow-touch-move="true"
+    slides-offset-after="16"
+    slides-offset-before="16"
+    [modules]="swiperModules"
+    [breakpoints]="{ '768': { slidesPerView: 3 } }"
+  >
     @if (isLoadingCities()) {
       <!-- Skeleton for cities -->
-      <div class="swiper swiper-city" #swiperEl>
-        <div class="swiper-wrapper">
-          @for (i of [1, 2, 3, 4]; track i) {
-            <div class="swiper-slide">
-              <div class="relative h-[120px] shrink-0 rounded-[12px] overflow-hidden">
-                <ion-skeleton-text animated class="w-full h-full"></ion-skeleton-text>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
+      @for (i of [1, 2, 3, 4]; track i) {
+        <swiper-slide>
+          <div class="relative h-[120px] shrink-0 rounded-[12px] overflow-hidden">
+            <ion-skeleton-text animated class="w-full h-full" />
+          </div>
+        </swiper-slide>
+      }
     } @else {
-      <div class="swiper swiper-city" #swiperEl>
-        <div class="swiper-wrapper">
-          @for (city of cityCards(); track city.city) {
-            <div class="swiper-slide" (click)="onCityClick(city)">
-              <city-card [city]="city" />
-            </div>
-          }
-        </div>
-      </div>
+      <!-- cities -->
+      @for (city of cityCards(); track city.city) {
+        <swiper-slide (click)="onCityClick(city)">
+          <city-card [city]="city" />
+        </swiper-slide>
+      }
     }
-  </div>
+  </swiper-container>
 
   <!-- events for you -->
   @if (isLoggedIn()) {
@@ -113,28 +116,35 @@
       <!-- Skeleton for recommended events -->
       <div class="px-4">
         <div class="flex items-center justify-between mb-4">
-          <ion-skeleton-text animated class="w-32 h-5 rounded"></ion-skeleton-text>
-          <ion-skeleton-text animated class="w-16 h-4 rounded"></ion-skeleton-text>
+          <ion-skeleton-text animated class="w-32 h-5 rounded" />
+          <ion-skeleton-text animated class="w-16 h-4 rounded" />
         </div>
       </div>
-      <div class="px-4">
-        <div class="swiper swiper-event-recommendation" #swiperEventRecommendation>
-          <div class="swiper-wrapper">
-            @for (i of [1, 2, 3]; track i) {
-              <div class="swiper-slide">
-                <div class="rounded-xl overflow-hidden">
-                  <ion-skeleton-text animated class="w-full h-48 rounded-t-xl"></ion-skeleton-text>
-                  <div class="p-4 flex flex-col gap-2">
-                    <ion-skeleton-text animated class="w-3/4 h-5 rounded"></ion-skeleton-text>
-                    <ion-skeleton-text animated class="w-1/2 h-4 rounded"></ion-skeleton-text>
-                    <ion-skeleton-text animated class="w-2/3 h-4 rounded"></ion-skeleton-text>
-                  </div>
-                </div>
+
+      <swiper-container
+        speed="100"
+        space-between="8"
+        slides-per-view="1.5"
+        allow-touch-move="true"
+        slides-offset-after="16"
+        slides-offset-before="16"
+        [modules]="swiperModules"
+        [breakpoints]="{ '768': { slidesPerView : 2.2 } }"
+      >
+        @for (i of [1, 2, 3]; track i) {
+          <swiper-slide>
+            <div class="rounded-xl overflow-hidden">
+              <ion-skeleton-text animated class="w-full h-48 rounded-t-xl" />
+
+              <div class="p-4 flex flex-col gap-2">
+                <ion-skeleton-text animated class="w-3/4 h-5 rounded" />
+                <ion-skeleton-text animated class="w-1/2 h-4 rounded" />
+                <ion-skeleton-text animated class="w-2/3 h-4 rounded" />
               </div>
-            }
-          </div>
-        </div>
-      </div>
+            </div>
+          </swiper-slide>
+        }
+      </swiper-container>
     } @else if (recommendedEvents().length > 0) {
       <div class="px-4">
         <div class="flex items-center justify-between">
@@ -145,17 +155,22 @@
         </div>
       </div>
 
-      <div>
-        <div class="swiper swiper-event-recommendation" #swiperEventRecommendation>
-          <div class="swiper-wrapper">
-            @for (event of recommendedEvents(); track event.id || event.title) {
-              <div class="swiper-slide">
-                <event-card [event]="event" />
-              </div>
-            }
-          </div>
-        </div>
-      </div>
+      <swiper-container
+        speed="100"
+        space-between="8"
+        slides-per-view="1.5"
+        allow-touch-move="true"
+        slides-offset-after="16"
+        slides-offset-before="16"
+        [modules]="swiperModules"
+        [breakpoints]="{ '768': { slidesPerView : 2.2 } }"
+      >
+        @for (event of recommendedEvents(); track event.id || event.title) {
+          <swiper-slide>
+            <event-card [event]="event" />
+          </swiper-slide>
+        }
+      </swiper-container>
     }
   }
 
@@ -235,33 +250,104 @@
       }
     </div> -->
 
-    <!-- public events -->
-    @if (isLoading() && publicEvents().length === 0) {
-      <!-- Skeleton for public events -->
+    <!-- my events -->
+    @if (isLoading() && myEvents().length === 0) {
+      <!-- Skeleton for my events -->
       <div class="px-4">
         <div class="flex items-center justify-between mb-4">
           <ion-skeleton-text animated class="w-32 h-5 rounded"></ion-skeleton-text>
           <ion-skeleton-text animated class="w-16 h-4 rounded"></ion-skeleton-text>
         </div>
       </div>
-      <div class="px-4">
-        <div class="swiper swiper-public-event" #swiperPublicEvents>
-          <div class="swiper-wrapper">
-            @for (i of [1, 2, 3]; track i) {
-              <div class="swiper-slide">
-                <div class="rounded-xl overflow-hidden">
-                  <ion-skeleton-text animated class="w-full h-48 rounded-t-xl"></ion-skeleton-text>
-                  <div class="p-4 flex flex-col gap-2">
-                    <ion-skeleton-text animated class="w-3/4 h-5 rounded"></ion-skeleton-text>
-                    <ion-skeleton-text animated class="w-1/2 h-4 rounded"></ion-skeleton-text>
-                    <ion-skeleton-text animated class="w-2/3 h-4 rounded"></ion-skeleton-text>
-                  </div>
-                </div>
+
+      <swiper-container
+        speed="100"
+        space-between="8"
+        slides-per-view="1.5"
+        allow-touch-move="true"
+        slides-offset-after="16"
+        slides-offset-before="16"
+        [modules]="swiperModules"
+        [breakpoints]="{ '768': { slidesPerView: 2.2 } }"
+      >
+        @for (i of [1, 2, 3]; track i) {
+          <swiper-slide>
+            <div class="rounded-xl overflow-hidden">
+              <ion-skeleton-text animated class="w-full h-48 rounded-t-xl" />
+              <div class="p-4 flex flex-col gap-2">
+                <ion-skeleton-text animated class="w-3/4 h-5 rounded" />
+                <ion-skeleton-text animated class="w-1/2 h-4 rounded" />
+                <ion-skeleton-text animated class="w-2/3 h-4 rounded" />
               </div>
-            }
-          </div>
+            </div>
+          </swiper-slide>
+        }
+      </swiper-container>
+    } @else if (myEvents().length > 0) {
+      <div class="px-4">
+        <div class="flex items-center justify-between">
+          <div class="body-16SB neutral-01">My events</div>
+          <button
+            type="button"
+            class="body-14SB brand-02"
+            (click)="navigationService.navigateForward(`/event/all?eventFilter=hosted&userId=${currentUser()?.id}`, false, { user: currentUser() })"
+          >
+            See all
+          </button>
         </div>
       </div>
+
+      <swiper-container
+        speed="100"
+        space-between="8"
+        slides-per-view="1.5"
+        allow-touch-move="true"
+        slides-offset-after="16"
+        slides-offset-before="16"
+        [modules]="swiperModules"
+        [breakpoints]="{ '768': { slidesPerView: 2.2 } }"
+      >
+        @for (event of myEvents(); track event.id || event.title) {
+          <swiper-slide>
+            <event-card [event]="event" />
+          </swiper-slide>
+        }
+      </swiper-container>
+    }
+
+    <!-- public events -->
+    @if (isLoading() && publicEvents().length === 0) {
+      <!-- Skeleton for public events -->
+      <div class="px-4">
+        <div class="flex items-center justify-between mb-4">
+          <ion-skeleton-text animated class="w-32 h-5 rounded" />
+          <ion-skeleton-text animated class="w-16 h-4 rounded" />
+        </div>
+      </div>
+
+      <swiper-container
+        speed="100"
+        space-between="8"
+        slides-per-view="1.5"
+        allow-touch-move="true"
+        slides-offset-after="16"
+        slides-offset-before="16"
+        [modules]="swiperModules"
+        [breakpoints]="{ '768': { slidesPerView : 2.2 } }"
+      >
+        @for (i of [1, 2, 3]; track i) {
+          <swiper-slide>
+            <div class="rounded-xl overflow-hidden">
+              <ion-skeleton-text animated class="w-full h-48 rounded-t-xl" />
+              <div class="p-4 flex flex-col gap-2">
+                <ion-skeleton-text animated class="w-3/4 h-5 rounded" />
+                <ion-skeleton-text animated class="w-1/2 h-4 rounded" />
+                <ion-skeleton-text animated class="w-2/3 h-4 rounded" />
+              </div>
+            </div>
+          </swiper-slide>
+        }
+      </swiper-container>
     } @else if (publicEvents().length > 0) {
       <div class="px-4">
         <div class="flex items-center justify-between">
@@ -272,17 +358,23 @@
         </div>
       </div>
 
-      <div>
-        <div class="swiper swiper-public-event" #swiperPublicEvents>
-          <div class="swiper-wrapper">
-            @for (event of publicEvents(); track event.id || event.title) {
-              <div class="swiper-slide">
-                <event-card [event]="event" />
-              </div>
-            }
-          </div>
-        </div>
-      </div>
+      <!-- <div> -->
+      <swiper-container
+        speed="100"
+        space-between="8"
+        slides-per-view="1.5"
+        allow-touch-move="true"
+        slides-offset-after="16"
+        slides-offset-before="16"
+        [modules]="swiperModules"
+        [breakpoints]="{ '768': { slidesPerView : 2.2 } }"
+      >
+        @for (event of publicEvents(); track event.id || event.title) {
+          <swiper-slide>
+            <event-card [event]="event" />
+          </swiper-slide>
+        }
+      </swiper-container>
     }
   }
 </div>

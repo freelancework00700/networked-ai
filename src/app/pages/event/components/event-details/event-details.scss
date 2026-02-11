@@ -53,16 +53,15 @@
   cursor: pointer;
 }
 
-.swiper {
+swiper-container {
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  --swiper-pagination-bottom: 55px;
 }
 
-.swiper-wrapper {
-  height: 100%;
-}
-
-.swiper-slide {
+swiper-slide {
   width: 100%;
   height: 100%;
   display: flex;
@@ -98,12 +97,6 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-
-.swiper-post-card {
-  .swiper-pagination {
-    bottom: 55px !important;
-  }
 }
 
 .slide-image img[ng-reflect-fill] {

@@ -143,35 +143,41 @@
       <div class="flex flex-col gap-3 px-4">
         <!-- media slider -->
         <div class="relative rounded-[16px] overflow-hidden">
-          <div #swiperEl class="swiper swiper-event-detail">
-            <div class="swiper-wrapper">
-              @for (media of displayMediasForDisplay(); track media.id || $index) {
-                <div class="swiper-slide">
-                  <div class="slide-content">
-                    <div class="slide-image">
-                      @if (media.type === 'Video') {
-                        <video [src]="media.url" class="w-full h-[361px] object-contain bg-black" controls></video>
-                      }
-                      @if (media.type === 'Image') {
-                        <div class="relative w-full h-[361px] bg-black">
-                          <img
-                            fill
-                            placeholder
-                            priority
-                            [alt]="eventData().title + ' image ' + ($index + 1)"
-                            class="object-contain"
-                            (error)="onImageError($event)"
-                            [ngSrc]="getImageUrl(media.url || '')"
-                          />
-                        </div>
-                      }
-                    </div>
+          <swiper-container
+            speed="100"
+            pagination="true"
+            space-between="0"
+            slides-per-view="1"
+            allow-touch-move="true"
+            pagination-type="bullets"
+            [modules]="swiperModules"
+            pagination-clickable="true"
+          >
+            @for (media of displayMediasForDisplay(); track media.id || $index) {
+              <swiper-slide>
+                <div class="slide-content">
+                  <div class="slide-image">
+                    @if (media.type === 'Video') {
+                      <video [src]="media.url" class="w-full h-[361px] object-contain bg-black" controls></video>
+                    }
+                    @if (media.type === 'Image') {
+                      <div class="relative w-full h-[361px] bg-black">
+                        <img
+                          fill
+                          placeholder
+                          priority
+                          [alt]="eventData().title + ' image ' + ($index + 1)"
+                          class="object-contain"
+                          (error)="onImageError($event)"
+                          [ngSrc]="getImageUrl(media.url || '')"
+                        />
+                      </div>
+                    }
                   </div>
                 </div>
-              }
-            </div>
-            <div class="swiper-pagination"></div>
-          </div>
+              </swiper-slide>
+            }
+          </swiper-container>
         </div>
       </div>
     }

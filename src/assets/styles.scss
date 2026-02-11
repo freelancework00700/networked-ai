@@ -1,12 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
 @use './tailwind.css';
-@use 'swiper/css/bundle';
 @use './styles/modals.scss';
 @use './layout/layout.scss';
 @use './styles/popovers.scss';
 @use './styles/toasters.scss';
 @use 'primeicons/primeicons.css';
-@use "node_modules/@ctrl/ngx-emoji-mart/picker.css";
+@use 'node_modules/@ctrl/ngx-emoji-mart/picker.css';
 @use 'node_modules/@maptiler/sdk/dist/maptiler-sdk.css';
 
 /*
@@ -175,24 +174,7 @@ ion-footer {
 .tier-overview-card.ticket-type {
   border: 2px solid var(--brand-05);
 }
-.swiper-event-detail .swiper-pagination-bullet {
-  background: var(--neutral-04) !important;
-  opacity: 1 !important;
-}
-.swiper-event-detail .swiper-pagination-bullet-active {
-  width: 32px;
-  border-radius: 32px;
-  background: var(--neutral-07) !important;
-}
-.swiper-post-card .swiper-pagination-bullet {
-  background: var(--neutral-04) !important;
-  opacity: 1 !important;
-}
-.swiper-post-card .swiper-pagination-bullet-active {
-  width: 32px;
-  border-radius: 32px;
-  background: var(--neutral-07) !important;
-}
+
 @supports ((-webkit-backdrop-filter: blur(0)) or (backdrop-filter: blur(0))) {
   .header-translucent-ios ion-toolbar {
     --opacity: 1;
@@ -225,4 +207,31 @@ ion-footer {
   margin: 0;
   padding: 0;
   transition: all 0.3s ease-in-out;
+}
+
+// ============================================================
+// SWIPER STYLES
+// ============================================================
+
+swiper-container {
+  will-change: transform;
+  --swiper-pagination-color: var(--neutral-07);
+  --swiper-pagination-bullet-inactive-opacity: 1;
+  --swiper-pagination-bullet-inactive-color: var(--neutral-04);
+  --swiper-wrapper-transition-timing-function: linear !important;
+}
+
+swiper-container::part(bullet-active) {
+  width: 32px;
+  border-radius: 32px;
+}
+
+swiper-slide {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+// hide stripe button
+iframe[title='Stripe developer tools frame'] {
+  visibility: hidden !important;
 }

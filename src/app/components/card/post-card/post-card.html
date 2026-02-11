@@ -38,35 +38,40 @@
       </div>
 
       @if (sortedMedias().length > 0) {
-        <div #swiperEl class="swiper relative swiper-post-card">
-          <div class="swiper-wrapper">
-            @for (media of sortedMedias(); track media.id) {
-              <div class="swiper-slide">
-                <div class="slide-content">
-                  <div class="slide-image bg-black">
-                    @if (media.media_type === 'Image') {
-                      <img
-                        fill
-                        placeholder
-                        class="object-cover cursor-pointer"
-                        (error)="onImageError($event)"
-                        [ngSrc]="getImageUrl(media.media_url)"
-                        [loaderParams]="{ thumbnail: media.media_url }"
-                        (click)="$event.stopPropagation(); openFullscreen($index)"
-                      />
-                    }
+        <swiper-container
+          speed="100"
+          pagination="true"
+          space-between="0"
+          slides-per-view="1"
+          allow-touch-move="true"
+          pagination-type="bullets"
+          [modules]="swiperModules"
+          pagination-clickable="true"
+        >
+          @for (media of sortedMedias(); track media.id) {
+            <swiper-slide>
+              <div class="slide-content">
+                <div class="slide-image bg-black">
+                  @if (media.media_type === 'Image') {
+                    <img
+                      fill
+                      placeholder
+                      class="object-cover cursor-pointer"
+                      (error)="onImageError($event)"
+                      [ngSrc]="getImageUrl(media.media_url)"
+                      [loaderParams]="{ thumbnail: media.media_url }"
+                      (click)="$event.stopPropagation(); openFullscreen($index)"
+                    />
+                  }
 
-                    @if (media.media_type === 'Video') {
-                      <video [src]="media.media_url" controls class="w-full h-full object-cover"></video>
-                    }
-                  </div>
+                  @if (media.media_type === 'Video') {
+                    <video [src]="media.media_url" controls class="w-full h-full object-cover"></video>
+                  }
                 </div>
               </div>
-            }
-          </div>
-
-          <div class="swiper-pagination"></div>
-        </div>
+            </swiper-slide>
+          }
+        </swiper-container>
       }
 
       @if (post().events && (post().events?.length ?? 0) > 0) {

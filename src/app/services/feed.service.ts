@@ -22,7 +22,6 @@ export class FeedService extends BaseApiService {
   private authService = inject(AuthService);
 
   myPosts = signal<FeedPost[]>([]);
-  posts = signal<FeedPost[]>([]);
   publicFeeds = signal<FeedPost[]>([]);
   networkedFeeds = signal<FeedPost[]>([]);
 
@@ -199,7 +198,6 @@ export class FeedService extends BaseApiService {
       }
 
       // Also update the general posts signal for backward compatibility
-      this.posts.set(posts);
 
       return {
         posts,
@@ -250,6 +248,34 @@ export class FeedService extends BaseApiService {
     } catch (error) {
       console.error('Error toggling like:', error);
       throw error;
+    }
+  }
+
+  optimisticToggleLike(feedId: string) {
+    const toggle = (list: FeedPost[]) =>
+      list.map(post => {
+        if (post.id !== feedId) return post;
+        const isLiked = post.is_like;
+        return {
+          ...post,
+          is_like: !isLiked,
+          total_likes: isLiked ? Math.max((post.total_likes || 1) - 1, 0) : (post.total_likes || 0) + 1
+        };
+      });
+  
+    this.publicFeeds.update(toggle);
+    this.networkedFeeds.update(toggle);
+    this.myPosts.update(toggle);
+  
+    // Also update currently viewed post
+    const current = this.currentViewedPost();
+    if (current?.id === feedId) {
+      const isLiked = current.is_like;
+      this.currentViewedPost.set({
+        ...current,
+        is_like: !isLiked,
+        total_likes: isLiked ? Math.max((current.total_likes || 1) - 1, 0) : (current.total_likes || 0) + 1
+      });
     }
   }
 
@@ -425,6 +451,39 @@ export class FeedService extends BaseApiService {
     }
   }
 
+  optimisticToggleCommentLike(commentId: string): void {
+    const current = this.currentPostComments();
+    if (!current) return;
+  
+    const toggleInTree = (c: FeedComment): FeedComment => {
+      if (c.id === commentId) {
+        const isLiked = c.is_like;
+        return {
+          ...c,
+          is_like: !isLiked,
+          total_likes: isLiked ? Math.max((c.total_likes || 1) - 1, 0) : (c.total_likes || 0) + 1
+        };
+      }
+  
+      if (c.replies?.length) {
+        return {
+          ...c,
+          replies: c.replies.map(toggleInTree)
+        };
+      }
+      return c;
+    };
+  
+    this.currentPostComments.update(state => {
+      if (!state) return state;
+  
+      return {
+        ...state,
+        comments: state.comments.map(toggleInTree)
+      };
+    });
+  }
+
   async createComment(payload: {
     feed_id: string;
     comment: string;
@@ -537,7 +596,6 @@ export class FeedService extends BaseApiService {
     if (!feed?.id) return;
 
     // Always keep backward-compatible "posts" updated if it’s being used anywhere.
-    this.posts.update((curr) => this.upsertAtEndIfMissing(curr, feed));
 
     // Append to the correct feed list based on is_public
     if (feed.is_public) {
@@ -557,7 +615,6 @@ export class FeedService extends BaseApiService {
   applyFeedUpdated(feed: FeedPost): void {
     if (!feed?.id) return;
 
-    this.posts.update((curr) => this.replaceByIdIfExists(curr, feed));
     this.publicFeeds.update((curr) => this.replaceByIdIfExists(curr, feed));
     this.networkedFeeds.update((curr) => this.replaceByIdIfExists(curr, feed));
     this.myPosts.update((curr) => this.replaceByIdIfExists(curr, feed));
@@ -569,7 +626,6 @@ export class FeedService extends BaseApiService {
   applyFeedDeleted(feedId: string): void {
     if (!feedId) return;
 
-    this.posts.update((curr) => this.removeById(curr, feedId));
     this.publicFeeds.update((curr) => this.removeById(curr, feedId));
     this.networkedFeeds.update((curr) => this.removeById(curr, feedId));
     this.myPosts.update((curr) => this.removeById(curr, feedId));

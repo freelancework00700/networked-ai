@@ -146,17 +146,24 @@
         @if (hasMultipleEvents()) {
           <!-- Swiper for multiple events -->
           <div class="overflow-hidden -mx-5">
-            <div class="swiper swiper-plan-events">
-              <div class="swiper-wrapper">
-                @for (eventId of selectedEvents(); track eventId) {
-                  @if (getEventById(eventId); as event) {
-                    <div class="swiper-slide">
-                      <event-card [event]="event" [variant]="'compact'" [showBlur]="false" />
-                    </div>
-                  }
+            <swiper-container
+              speed="100"
+              space-between="12"
+              slides-per-view="1.5"
+              allow-touch-move="true"
+              slides-offset-after="16"
+              slides-offset-before="16"
+              [modules]="swiperModules"
+              [breakpoints]="{ '768': { slidesPerView : 2.2 } }"
+            >
+              @for (eventId of selectedEvents(); track eventId) {
+                @if (getEventById(eventId); as event) {
+                  <swiper-slide>
+                    <event-card [event]="event" [variant]="'compact'" [showBlur]="false" />
+                  </swiper-slide>
                 }
-              </div>
-            </div>
+              }
+            </swiper-container>
           </div>
         } @else {
           <!-- Full width for single event -->

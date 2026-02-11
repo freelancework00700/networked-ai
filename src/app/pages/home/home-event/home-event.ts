@@ -1,7 +1,5 @@
-import { Swiper } from 'swiper';
 import { Subscription } from 'rxjs';
 import { IEvent } from '@/interfaces/event';
-import { SwiperOptions } from 'swiper/types';
 import { EventService } from '@/services/event.service';
 import { AuthService } from '@/services/auth.service';
 import { EventCard } from '@/components/card/event-card';
@@ -12,31 +10,8 @@ import { UpcomingEventCard } from '@/components/card/upcoming-event-card';
 import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
 import { UserRecommendations } from '@/components/common/user-recommendations';
-import { IonSkeletonText } from '@ionic/angular/standalone';
-import {
-  signal,
-  computed,
-  Component,
-  ChangeDetectionStrategy,
-  inject,
-  OnInit,
-  OnDestroy,
-  effect,
-  ViewChild,
-  ElementRef,
-  PLATFORM_ID
-} from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-
-interface FeedPost {
-  id: string;
-  primaryUser: {
-    name: string;
-    profileImage: string;
-  };
-  otherCount: number;
-  event: IEvent;
-}
+import { IonicSlides, IonSkeletonText } from '@ionic/angular/standalone';
+import { signal, computed, Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 interface NetworkSuggestion {
   id: string;
@@ -52,76 +27,12 @@ interface NetworkSuggestion {
   selector: 'home-event',
   styleUrl: './home-event.scss',
   templateUrl: './home-event.html',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard, UserRecommendations, IonSkeletonText]
 })
 export class HomeEvent implements OnInit, OnDestroy {
-  swiper?: Swiper;
-  citySwiper?: Swiper;
-  eventSwiper?: Swiper;
-  recommendationSwiper?: Swiper;
-  private platformId = inject(PLATFORM_ID);
-
-  @ViewChild('swiperEl')
-  set citySwiperEl(el: ElementRef<HTMLDivElement> | undefined) {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    // When Angular removes the element (skeleton -> real), el becomes undefined
-    if (!el) {
-      this.citySwiper?.destroy(true, true);
-      this.citySwiper = undefined;
-      return;
-    }
-
-    // Re-init swiper for the new DOM
-    this.citySwiper?.destroy(true, true);
-
-    this.citySwiper = new Swiper(el.nativeElement, {
-      ...this.swiperConfigs['cities'],
-      observer: true,
-      observeParents: true
-    });
-  }
-
-  @ViewChild('swiperPublicEvents')
-  set eventSwiperEl(el: ElementRef<HTMLDivElement> | undefined) {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    // When Angular removes the element
-    if (!el) {
-      this.eventSwiper?.destroy(true, true);
-      this.eventSwiper = undefined;
-      return;
-    }
-
-    // Re-init for new DOM
-    this.eventSwiper?.destroy(true, true);
-
-    this.eventSwiper = new Swiper(el.nativeElement, {
-      ...this.swiperConfigs['events'],
-      observer: true,
-      observeParents: true
-    });
-  }
-  @ViewChild('swiperEventRecommendation')
-  set recommendationSwiperEl(el: ElementRef<HTMLDivElement> | undefined) {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    if (!el) {
-      this.recommendationSwiper?.destroy(true, true);
-      this.recommendationSwiper = undefined;
-      return;
-    }
-
-    this.recommendationSwiper?.destroy(true, true);
-
-    this.recommendationSwiper = new Swiper(el.nativeElement, {
-      ...this.swiperConfigs['events'],
-      observer: true,
-      observeParents: true
-    });
-  }
-
+  // services
   navigationService = inject(NavigationService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -131,6 +42,8 @@ export class HomeEvent implements OnInit, OnDestroy {
   filter = signal<'browse' | 'upcoming'>('browse');
   isLoading = signal<boolean>(false);
 
+  // variables
+  swiperModules = [IonicSlides];
   private queryParamsSubscription?: Subscription;
 
   currentUser = this.authService.currentUser;
@@ -139,6 +52,7 @@ export class HomeEvent implements OnInit, OnDestroy {
   private previousUserId: string | null = null;
   private previousLoginState: boolean | null = null;
 
+  myEvents = computed(() => this.eventService.myEvents());
   recommendedEvents = computed(() => this.eventService.recommendedEvents());
   publicEvents = computed(() => this.eventService.publicEvents());
   upcomingEvents = computed(() => this.eventService.upcomingEvents());
@@ -217,14 +131,14 @@ export class HomeEvent implements OnInit, OnDestroy {
     });
   }
 
-  private async loadEventsIfNeeded(): Promise<void> {
-    this.destroySwipers();
+private async loadEventsIfNeeded(): Promise<void> {
     const hasRecommendedEvents = this.eventService.recommendedEvents().length > 0;
     const hasPublicEvents = this.eventService.publicEvents().length > 0;
+    const hasMyEvents = this.eventService.myEvents().length > 0;
     const hasUpcomingEvents = this.eventService.upcomingEvents().length > 0;
     const loggedIn = this.isLoggedIn();
 
-    if (loggedIn && hasRecommendedEvents && hasPublicEvents) return;
+    if (loggedIn && hasRecommendedEvents && hasPublicEvents && hasMyEvents) return;
     if (!loggedIn && hasPublicEvents) return;
 
     // Only load if events don't exist
@@ -233,12 +147,14 @@ export class HomeEvent implements OnInit, OnDestroy {
         await this.loadPublicEvents();
       }
     } else {
-      if (!hasRecommendedEvents && !hasPublicEvents) {
+      if (!hasRecommendedEvents && !hasPublicEvents && !hasMyEvents) {
         await this.loadAllEvents();
       } else if (!hasRecommendedEvents) {
         await this.loadRecommendedEvents();
       } else if (!hasPublicEvents) {
         await this.loadPublicEvents();
+      } else if (!hasMyEvents) {
+        await this.loadMyEvents();
       }
 
       // Load upcoming events if in upcoming mode and not already loaded
@@ -248,8 +164,27 @@ export class HomeEvent implements OnInit, OnDestroy {
     }
   }
 
+  private async loadMyEvents(reset: boolean = true): Promise<void> {
+    if (!this.isLoggedIn()) return;
+
+    try {
+      this.isLoading.set(true);
+      await this.eventService.getEvents({
+        limit: 3,
+        append: !reset,
+        roles: 'Host,CoHost,Sponsor',
+        is_my_events: true,
+        user_id: this.currentUser()?.id,
+        start_date: new Date().toString()
+      });
+    } catch (error) {
+      console.error('Error loading my events:', error);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
   private async handleAccountChangeAndLogin(): Promise<void> {
-    this.destroySwipers();
     this.eventService.resetAllEvents();
     this.eventService.cityCards.set([]);
     await this.loadAllEvents(true);
@@ -294,7 +229,7 @@ export class HomeEvent implements OnInit, OnDestroy {
     }
   }
 
-  private async loadAllEvents(reset: boolean = true): Promise<void> {
+private async loadAllEvents(reset: boolean = true): Promise<void> {
     try {
       this.isLoading.set(true);
       const loggedIn = this.isLoggedIn();
@@ -315,6 +250,14 @@ export class HomeEvent implements OnInit, OnDestroy {
             limit: 3,
             is_public: true,
             append: !reset,
+            start_date: new Date().toString()
+          }),
+          this.eventService.getEvents({
+            limit: 3,
+            append: !reset,
+            roles: 'Host,CoHost,Sponsor',
+            is_my_events: true,
+            user_id: this.currentUser()?.id,
             start_date: new Date().toString()
           })
         ]);
@@ -340,7 +283,6 @@ export class HomeEvent implements OnInit, OnDestroy {
 
   async refresh(): Promise<void> {
     try {
-      this.destroySwipers();
       this.eventService.resetAllEvents();
       this.loadAllEvents(true);
       if (this.isLoggedIn()) {
@@ -352,19 +294,7 @@ export class HomeEvent implements OnInit, OnDestroy {
     }
   }
 
-  private destroySwipers(): void {
-    this.citySwiper?.destroy(true, true);
-    this.eventSwiper?.destroy(true, true);
-    this.recommendationSwiper?.destroy(true, true);
-
-    this.citySwiper = undefined;
-    this.eventSwiper = undefined;
-    this.recommendationSwiper = undefined;
-  }
-
   private async loadTopCities(reset: boolean = false): Promise<void> {
-    this.destroySwipers();
-
     if (!reset && this.eventService.cityCards().length > 0) return;
 
     try {
@@ -406,10 +336,4 @@ export class HomeEvent implements OnInit, OnDestroy {
       this.isLoading.set(false);
     }
   }
-
-  private readonly swiperConfigs: Record<string, SwiperOptions> = {
-    cities: { spaceBetween: 8, slidesPerView: 2.7, allowTouchMove: true, slidesOffsetBefore: 16, slidesOffsetAfter: 16 },
-    events: { spaceBetween: 8, slidesPerView: 1.5, allowTouchMove: true, slidesOffsetBefore: 16, slidesOffsetAfter: 16 },
-    people: { spaceBetween: 8, slidesPerView: 2.2, allowTouchMove: true, slidesOffsetBefore: 16, slidesOffsetAfter: 16 }
-  };
 }

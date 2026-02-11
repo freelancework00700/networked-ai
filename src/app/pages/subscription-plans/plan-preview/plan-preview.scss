@@ -1,22 +1,3 @@
-.swiper-plan-events {
-  width: 100%;
-  overflow: hidden;
-}
-
-.swiper-plan-events .swiper-wrapper {
-  display: flex;
-}
-
-.swiper-plan-events .swiper-slide {
-  width: auto;
-  flex-shrink: 0;
-}
-
-.swiper-plan-events .swiper-slide event-card {
-  display: block;
-  width: 280px;
-}
-
 .ticket-sponsor {
   border: 1px solid var(--sponsor);
 }
