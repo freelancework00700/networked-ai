@@ -2,45 +2,55 @@
   <!-- Media Upload Section -->
   <div>
     @if (mediaItems().length) {
-      <div #swiperEl class="swiper">
-        <div class="swiper-wrapper">
-          @for (item of mediaItems(); track item.id) {
-            <div class="swiper-slide">
-              <div class="slide-content">
-                <div class="slide-image relative">
-                  <!-- IMAGE -->
-                  @if (item.type === 'image' || item.type === 'gif') {
-                    @if (isBlobUrl(item.url)) {
-                      <img [src]="item.url || ''" class="object-cover" (error)="onImageError($event)" />
-                    } @else {
-                      <img
-                        fill
-                        placeholder
-                        class="object-cover"
-                        (error)="onImageError($event)"
-                        [ngSrc]="getImageUrl(item.url || '')"
-                        [loaderParams]="{ thumbnail: item.url || '' }"
-                      />
-                    }
+      <swiper-container
+        #eventMediaSwiper
+        speed="100"
+        pagination="true"
+        space-between="0"
+        slides-per-view="1"
+        allow-touch-move="true"
+        pagination-type="bullets"
+        [modules]="swiperModules"
+        pagination-clickable="true"
+        (swiperslidechange)="onSlideChange($event)"
+      >
+        @for (item of mediaItems(); track item.id) {
+          <swiper-slide>
+            <div class="slide-content">
+              <div class="slide-image relative">
+                <!-- IMAGE -->
+                @if (item.type === 'image' || item.type === 'gif') {
+                  @if (isBlobUrl(item.url)) {
+                    <img [src]="item.url || ''" class="object-cover" (error)="onImageError($event)" />
+                  } @else {
+                    <img
+                      fill
+                      placeholder
+                      class="object-cover"
+                      (error)="onImageError($event)"
+                      [ngSrc]="getImageUrl(item.url || '')"
+                      [loaderParams]="{ thumbnail: item.url || '' }"
+                    />
                   }
+                }
 
-                  <!-- VIDEO -->
-                  @if (item.type === 'video') {
-                    <video [src]="item.url" controls></video>
-                  }
+                <!-- VIDEO -->
+                @if (item.type === 'video') {
+                  <video [src]="item.url" controls></video>
+                }
 
-                  <div
-                    class="absolute top-2 right-2 bg-black/50 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
-                    (click)="deleteMedia($index)"
-                  >
-                    <i class="pi pi-times"></i>
-                  </div>
+                <div
+                  class="absolute top-2 right-2 bg-black/50 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
+                  (click)="deleteMedia($index)"
+                >
+                  <i class="pi pi-times"></i>
                 </div>
               </div>
             </div>
-          }
-        </div>
-      </div>
+          </swiper-slide>
+        }
+      </swiper-container>
+
       <div
         #scrollContainer
         class="thumbnail-container scrollbar-hide"

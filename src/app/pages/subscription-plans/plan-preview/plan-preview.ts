@@ -1,7 +1,6 @@
-import { input, output, OnInit, signal, computed, OnDestroy, Component, ChangeDetectionStrategy, afterEveryRender } from '@angular/core';
-import { Swiper } from 'swiper';
-import { SwiperOptions } from 'swiper/types';
+import { input, output, OnInit, signal, computed, Component, CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IonicSlides } from '@ionic/angular/standalone';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { EventCard } from '@/components/card/event-card';
 import { FormGroup, FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -10,11 +9,12 @@ import { ISubscription, SubscriptionCard } from '@/components/card/subscription-
 @Component({
   selector: 'plan-preview',
   styleUrl: './plan-preview.scss',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './plan-preview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, EventCard, RadioButtonModule, ReactiveFormsModule, SubscriptionCard]
 })
-export class PlanPreview implements OnDestroy, OnInit {
+export class PlanPreview implements OnInit {
   planForm = input.required<FormGroup>();
   benefits = input.required<any[]>();
   selectedEvents = input.required<string[]>();
@@ -28,19 +28,11 @@ export class PlanPreview implements OnDestroy, OnInit {
   // Output to emit selected plan interval
   planSelected = output<'annual' | 'monthly'>();
 
-  private swiper?: Swiper;
   isDescriptionExpanded = signal<boolean>(false);
   selectedPlan = signal<'annual' | 'monthly'>('monthly');
 
+  swiperModules = [IonicSlides];
   planControl = new FormControl<'annual' | 'monthly'>('monthly');
-
-  private readonly swiperConfig: SwiperOptions = {
-    spaceBetween: 12,
-    slidesPerView: 'auto',
-    allowTouchMove: true,
-    slidesOffsetBefore: 20,
-    slidesOffsetAfter: 20
-  };
 
   shouldShowReadMore = computed(() => {
     const description = this.getFieldValue('description');
@@ -136,10 +128,6 @@ export class PlanPreview implements OnDestroy, OnInit {
     return plans;
   });
 
-  constructor() {
-    afterEveryRender(() => this.initSwiper());
-  }
-
   ngOnInit(): void {
     // Sync signal with form control when value changes
     // This handles cases where form control is updated externally
@@ -155,38 +143,6 @@ export class PlanPreview implements OnDestroy, OnInit {
     setTimeout(() => {
       this.planSelected.emit(this.selectedPlan());
     }, 0);
-  }
-
-  private initSwiper(): void {
-    if (!this.hasMultipleEvents() || this.selectedEvents().length === 0) {
-      if (this.swiper) {
-        this.swiper.destroy(true, true);
-        this.swiper = undefined;
-      }
-      return;
-    }
-
-    this.initializeSwiper('.swiper-plan-events', this.swiperConfig);
-  }
-
-  private initializeSwiper(selector: string, config: SwiperOptions): Swiper | undefined {
-    const element = document.querySelector(selector) as HTMLElement;
-    if (!element) return undefined;
-
-    if (this.swiper) {
-      this.swiper.destroy(true, true);
-      this.swiper = undefined;
-    }
-
-    this.swiper = new Swiper(selector, config);
-    return this.swiper;
-  }
-
-  ngOnDestroy(): void {
-    if (this.swiper) {
-      this.swiper.destroy(true, true);
-      this.swiper = undefined;
-    }
   }
 
   getFieldValue(fieldName: string): any {

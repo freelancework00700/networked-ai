@@ -1,13 +1,15 @@
 <div
-  class="flex flex-col rounded-lg overflow-hidden mb-4"
+  class="flex flex-col rounded-3xl overflow-hidden mb-4"
   [class.ticket-early-bird]="ticket().ticket_type === 'Early Bird'"
-  [class.ticket-standard]="ticket().ticket_type === 'Free' || ticket().ticket_type === 'Standard'"
+  [class.ticket-standard]="ticket().ticket_type === 'Standard'"
+  [class.ticket-free]="ticket().ticket_type === 'Free'"
   [class.ticket-sponsor]="ticket().ticket_type === 'Sponsor'"
 >
   <div class="relative w-full">
-    <!-- Ticket Type Image -->
-    <img [src]="ticketChipImage()" [alt]="ticketChipAlt()" class="w-full h-[30px] object-cover" />
-    <!-- Reorder Handle -->
+    <div [ngClass]="ticketBackground()" class="h-[32px] flex items-center">
+      <ion-icon [src]="ticketIcon()" class="h-[20px] w-[20px] pl-5 pr-2"></ion-icon>
+      <span>{{ ticket().ticket_type }} Ticket</span>
+    </div>
     <div class="absolute right-5 top-2">
       <ion-reorder slot="end">
         <i class="pi pi-align-justify text-neutral-07 text-xl"></i>
@@ -33,12 +35,12 @@
 
     <!-- Description -->
     @if (description()) {
-      <div class="body-14R neutral-03 min-h-[2.5rem] py-2 border-t border-[var(--surface-border)] leading-relaxed">
+      <div class="body-14R neutral-03 min-h-10 py-2 border-t border-(--surface-border) leading-relaxed">
         {{ description() }}
       </div>
     }
 
-    <div class="flex flex-col gap-3 pt-3 border-t border-[var(--surface-border)]">
+    <div class="flex flex-col gap-3 pt-3 border-t border-(--surface-border)">
       <div class="flex justify-between items-start gap-4">
         <span class="detail-label body-14R neutral-03">Quantity</span>
         <span class="detail-value body-14M neutral-01 text-right flex-1">{{ formattedQuantity() }}</span>

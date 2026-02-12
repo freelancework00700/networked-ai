@@ -124,7 +124,7 @@ export class EmailInput implements OnInit {
     const existingControl = this.parentFormGroup.get(this.controlName());
     const existingValue = existingControl?.value || '';
     const isDisabled = existingControl?.disabled || false;
-    
+
     // Remove it first to ensure clean state
     if (existingControl) {
       this.parentFormGroup.removeControl(this.controlName());
@@ -136,7 +136,7 @@ export class EmailInput implements OnInit {
       asyncValidators,
       updateOn: 'change'
     });
-    
+
     // If the existing control was disabled, disable the new one too
     if (isDisabled) newControl.disable({ emitEvent: false });
     this.parentFormGroup.addControl(this.controlName(), newControl);

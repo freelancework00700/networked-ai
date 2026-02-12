@@ -14,9 +14,33 @@ import { EmptyState } from '@/components/common/empty-state';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
 import { IonContent, IonToolbar, IonHeader } from '@ionic/angular/standalone';
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from '@angular/core';
-import { IonIcon, IonSpinner, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/angular/standalone';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
+import {
+  IonIcon,
+  IonSpinner,
+  IonRefresher,
+  IonRefresherContent,
+  RefresherCustomEvent,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent
+} from '@ionic/angular/standalone';
 import { IUser } from '@/interfaces/IUser';
+import { IEventAttendee, IEventAttendeesCounts, IEventAttendeesPagination, IGetEventAttendeesParams } from '@/interfaces/IEventAttendee';
+import { Button } from '@/components/form/button';
+
+type GuestFilter = {
+  attending: boolean;
+  maybe: boolean;
+  notAttending: boolean;
+  checkedIn: boolean;
+  notCheckedIn: boolean;
+  myNetwork: boolean;
+  notMyNetwork: boolean;
+  earlyBird: boolean;
+  standard: boolean;
+  free: boolean;
+  sponsor: boolean;
+};
 
 @Component({
   selector: 'guest-list',
@@ -30,14 +54,17 @@ import { IUser } from '@/interfaces/IUser';
     IonContent,
     IonRefresher,
     IonRefresherContent,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
     Searchbar,
     IonIcon,
     ButtonModule,
     EmptyState,
-    NgOptimizedImage
+    NgOptimizedImage,
+    Button
   ]
 })
-export class GuestList implements OnInit {
+export class GuestList implements OnInit, OnDestroy {
   private popoverService = inject(PopoverService);
   modalService = inject(ModalService);
   route = inject(ActivatedRoute);
@@ -51,73 +78,84 @@ export class GuestList implements OnInit {
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
   selectedGuestId = signal<string>('');
-  selectedGuest = signal<any>('');
+  selectedGuest = signal<IEventAttendee | null>(null);
   searchQuery = signal('');
   isDownloading = signal<boolean>(false);
   isLoading = signal<boolean>(false);
   isChecking = signal<boolean>(false);
   eventId = signal<string | null>(null);
-  eventData = signal<any>(null);
+  eventData = signal<{ id: string } | null>(null);
 
-  filter = signal<any>({
-    attending: false,
-    maybe: false,
+  private readonly DEFAULT_FILTER: GuestFilter = {
+    attending: true,
+    maybe: true,
     notAttending: true,
     checkedIn: true,
     notCheckedIn: true,
-    myNetwork: false,
+    myNetwork: true,
     notMyNetwork: true,
-    inApp: true,
-    onTheSpot: false,
-    earlyBird: false,
-    standard: false,
-    premium: true,
+    earlyBird: true,
+    standard: true,
+    free: true,
     sponsor: true
+  };
+
+  filter = signal<GuestFilter>({ ...this.DEFAULT_FILTER });
+
+  private readonly PAGE_SIZE = 15;
+  attendees = signal<IEventAttendee[]>([]);
+  pagination = signal<IEventAttendeesPagination | null>(null);
+  counts = signal<IEventAttendeesCounts | null>(null);
+  isLoadingMore = signal<boolean>(false);
+  private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  hasMore = computed(() => {
+    const p = this.pagination();
+    if (!p) return false;
+    return p.currentPage < p.totalPages;
   });
 
-  attendees = signal<any[]>([]);
+  isFilterActive = computed(() => {
+    const f = this.filter();
+    return (Object.keys(this.DEFAULT_FILTER) as Array<keyof GuestFilter>).some((key) => f[key] !== this.DEFAULT_FILTER[key]);
+  });
+
+  constructor() {
+    effect(() => {
+      const evId = this.eventId();
+      this.filter();
+      this.searchQuery();
+      if (!evId) return;
+
+      if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
+      this.searchDebounceTimer = setTimeout(() => {
+        this.loadAttendeesOnly();
+        this.searchDebounceTimer = null;
+      }, 300);
+    });
+  }
   menuItems: MenuItem[] = [];
 
   stats = computed(() => {
-    const allAttendees = this.attendees();
-    const total = allAttendees.length;
-    const attending = allAttendees.filter((a: any) => a.rsvp_status === 'Yes').length;
-    const maybe = allAttendees.filter((a: any) => a.rsvp_status === 'Maybe').length;
-    const notAttending = allAttendees.filter((a: any) => a.rsvp_status === 'No').length;
-
-    return [
-      {
-        key: 'total',
-        label: 'Total',
-        value: total,
-        class: 'stat-total'
-      },
-      {
-        key: 'attending',
-        label: 'Attending',
-        value: attending,
-        class: 'stat-attending'
-      },
-      {
-        key: 'maybe',
-        label: 'Maybe',
-        value: maybe,
-        class: 'stat-maybe'
-      },
-      {
-        key: 'not',
-        label: 'Not',
-        value: notAttending,
-        class: 'stat-not'
-      }
-    ];
+    const c = this.counts();
+    if (c) {
+      return [
+        { key: 'total', label: 'Total', value: c.total_guest, class: 'stat-total' },
+        { key: 'attending', label: 'Attending', value: c.total_attending_guest, class: 'stat-attending' },
+        { key: 'maybe', label: 'Maybe', value: c.total_maybe_guest, class: 'stat-maybe' },
+        { key: 'not', label: 'Not', value: c.total_no_guest, class: 'stat-not' }
+      ];
+    }
+    return [];
   });
 
   checkedInCount = computed(() => {
-    return this.attendees().filter((a: any) => a.is_checked_in === true).length;
+    const c = this.counts();
+    if (c) return c.total_checkedin_guest;
+    return 0;
   });
 
-  getMenuItems(guest: any): MenuItem[] {
+  getMenuItems(guest: IEventAttendee): MenuItem[] {
     const items: MenuItem[] = [];
     // Only show for guests without parent_user_id
     if (guest?.parent_user_id == null) {
@@ -167,7 +205,7 @@ export class GuestList implements OnInit {
     console.log('Check-in Guest');
   }
 
-  openPopover(event: Event, user: any): void {
+  openPopover(event: Event, user: IEventAttendee): void {
     this.popoverService.openCommonPopover(event, this.getMenuItems(user));
     this.selectedGuest.set(user);
     this.selectedGuestId.set(user.id);
@@ -176,7 +214,7 @@ export class GuestList implements OnInit {
   async addAsNetwork(): Promise<void> {
     this.closePopover();
     this.isChecking.set(true);
-    const guestId = this.selectedGuest().user.id;
+    const guestId = this.selectedGuest()?.user?.id;
     if (!guestId) return;
 
     try {
@@ -193,7 +231,7 @@ export class GuestList implements OnInit {
   sendMessage() {
     this.closePopover();
 
-    const guestId = this.selectedGuest().user.id;
+    const guestId = this.selectedGuest()?.user?.id;
     if (!guestId) return;
     const currentUserId = this.authService.currentUser()?.id;
     if (currentUserId && guestId) {
@@ -223,12 +261,7 @@ export class GuestList implements OnInit {
     }
   }
 
-  filteredGuestList = computed(() => {
-    const search = this.searchQuery().toLowerCase().trim();
-    const guests = this.attendees();
-    if (!search) return guests;
-    return guests.filter((s) => s.name.toLowerCase().includes(search));
-  });
+  filteredGuestList = computed(() => this.attendees());
 
   async ngOnInit(): Promise<void> {
     if (!this.isLoggedIn()) {
@@ -255,17 +288,13 @@ export class GuestList implements OnInit {
       this.isLoading.set(true);
       const eventData = await this.eventService.getEventById(eventId);
       if (eventData) {
-        // Check if user is host or cohost
         if (!this.eventService.checkHostOrCoHostAccess(eventData)) {
           this.toasterService.showError('You do not have permission to view this page');
           this.navigationService.navigateForward(`/event/${eventId}`, true);
           return;
         }
-
         this.eventData.set(eventData);
-        if (eventData.attendees) {
-          this.attendees.set(eventData.attendees);
-        }
+        await this.loadAttendeesOnly();
       }
     } catch (error) {
       console.error('Error loading attendees:', error);
@@ -273,6 +302,64 @@ export class GuestList implements OnInit {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  async loadAttendeesOnly(): Promise<void> {
+    const eventId = this.eventId();
+    if (!eventId) return;
+    const apiParams = this.buildAttendeeParams(1);
+    const { data, pagination, counts } = await this.eventService.getEventAttendees(eventId, apiParams);
+    this.attendees.set(data);
+    this.pagination.set(pagination);
+    if (counts) this.counts.set(counts);
+  }
+
+  async loadMoreAttendees(): Promise<void> {
+    const eventId = this.eventId();
+    const pag = this.pagination();
+    if (!eventId || !pag || !this.hasMore() || this.isLoadingMore()) return;
+
+    const nextPage = pag.currentPage + 1;
+    try {
+      this.isLoadingMore.set(true);
+      const apiParams = this.buildAttendeeParams(nextPage);
+      const { data, pagination, counts } = await this.eventService.getEventAttendees(eventId, apiParams);
+      this.attendees.update((list) => [...list, ...data]);
+      this.pagination.set(pagination);
+      if (counts) this.counts.set(counts);
+    } catch (error) {
+      console.error('Error loading more attendees:', error);
+    } finally {
+      this.isLoadingMore.set(false);
+    }
+  }
+
+  private buildAttendeeParams(page: number): IGetEventAttendeesParams {
+    const f = this.filter();
+    const params: IGetEventAttendeesParams = { page, limit: this.PAGE_SIZE };
+
+    if (this.searchQuery()?.trim()) params['search'] = this.searchQuery().trim();
+
+    const rsvpParts: string[] = [];
+    if (f.attending) rsvpParts.push('Yes');
+    if (f.maybe) rsvpParts.push('Maybe');
+    if (f.notAttending) rsvpParts.push('No');
+    if (rsvpParts.length > 0 && rsvpParts.length < 3) params['rsvp_status'] = rsvpParts.join(',');
+
+    if (f.checkedIn && !f.notCheckedIn) params['is_checked_in'] = true;
+    else if (f.notCheckedIn && !f.checkedIn) params['is_checked_in'] = false;
+
+    if (f.myNetwork && !f.notMyNetwork) params['is_connected'] = true;
+    else if (f.notMyNetwork && !f.myNetwork) params['is_connected'] = false;
+
+    const ticketParts: string[] = [];
+    if (f.earlyBird) ticketParts.push('Early Bird');
+    if (f.standard) ticketParts.push('Standard');
+    if (f.sponsor) ticketParts.push('Sponsor');
+    if (f.free) ticketParts.push('Free');
+    if (ticketParts.length > 0 && ticketParts.length < 4) params['ticket_type'] = ticketParts.join(',');
+
+    return params;
   }
 
   getImageUrl(imageUrl?: string): string {
@@ -283,7 +370,7 @@ export class GuestList implements OnInit {
     onImageError(event);
   }
 
-  getDiamondPath(points: number) {
+  getDiamondPath(points = 0) {
     if (points >= 50000) {
       return '/assets/svg/gamification/diamond-50k.svg';
     } else if (points >= 40000) {
@@ -321,13 +408,18 @@ export class GuestList implements OnInit {
     try {
       this.selectedGuestId.set(id);
       this.isChecking.set(true);
+      const event = this.eventData();
+      if (!event?.id) return;
       let payload = {
-        event_id: this.eventData().id,
+        event_id: event.id,
         attendee_id: id,
         is_checked_in: true
       };
       await this.eventService.changeCheckInStatus(payload);
       this.attendees.update((list) => list.map((a) => (a.id === id ? { ...a, is_checked_in: true } : a)));
+      this.counts.update((counts: any) =>
+        counts ? { ...counts, total_checkedin_guest: counts.total_checkedin_guest + 1 } : { total_checkedin_guest: 1 }
+      );
       this.toasterService.showSuccess('Check-in successfully');
     } catch (error) {
       console.error(error);
@@ -346,13 +438,18 @@ export class GuestList implements OnInit {
     try {
       this.selectedGuestId.set(guestId);
       this.isChecking.set(true);
+      const event = this.eventData();
+      if (!event?.id) return;
       let payload = {
-        event_id: this.eventData().id,
+        event_id: event.id,
         attendee_id: guestId,
         is_checked_in: false
       };
       await this.eventService.changeCheckInStatus(payload);
       this.attendees.update((list) => list.map((a) => (a.id === guestId ? { ...a, is_checked_in: false } : a)));
+      this.counts.update((counts: any) =>
+        counts ? { ...counts, total_checkedin_guest: counts.total_checkedin_guest - 1 } : { total_checkedin_guest: 0 }
+      );
       this.toasterService.showSuccess('Check-in successfully');
     } catch (error) {
       console.error(error);
@@ -362,7 +459,7 @@ export class GuestList implements OnInit {
     }
   }
 
-  onCardClick(user: any) {
+  onCardClick(user: IEventAttendee) {
     if (user?.parent_user_id) {
       return;
     }
@@ -400,6 +497,7 @@ export class GuestList implements OnInit {
   };
 
   ngOnDestroy(): void {
+    if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
     this.socketService.off('network:connection:update', this.networkConnectionHandler);
   }
 
@@ -414,6 +512,15 @@ export class GuestList implements OnInit {
       console.error('Error refreshing:', error);
     } finally {
       event.target.complete();
+    }
+  }
+
+  async onInfiniteScroll(event: Event): Promise<void> {
+    const infiniteScroll = (event as CustomEvent).target as HTMLIonInfiniteScrollElement;
+    try {
+      await this.loadMoreAttendees();
+    } finally {
+      infiniteScroll.complete();
     }
   }
 }

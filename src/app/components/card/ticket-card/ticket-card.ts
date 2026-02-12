@@ -1,6 +1,6 @@
 import { Ticket } from '@/interfaces/event';
 import { CommonModule } from '@angular/common';
-import { IonReorder } from '@ionic/angular/standalone';
+import { IonIcon, IonReorder } from '@ionic/angular/standalone';
 import { input, output, Inject, computed, DOCUMENT, Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
@@ -8,7 +8,7 @@ import { input, output, Inject, computed, DOCUMENT, Component, ChangeDetectionSt
   templateUrl: './ticket-card.html',
   styleUrl: './ticket-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonReorder, CommonModule]
+  imports: [IonReorder, CommonModule, IonIcon]
 })
 export class TicketCard {
   ticket = input.required<Ticket>();
@@ -45,45 +45,31 @@ export class TicketCard {
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase();
   }
 
-  ticketChipImage = computed(() => {
+  ticketIcon = computed(() => {
     const ticketType = this.ticket().ticket_type;
     switch (ticketType) {
       case 'Early Bird':
-        return 'assets/svg/ticket/early-bird-card-chip.svg';
+        return 'assets/svg/ticket/early-bird-icon.svg';
       case 'Sponsor':
-        return 'assets/svg/ticket/sponsor-card-chip.svg';
+        return 'assets/svg/crown-white.svg';
       case 'Free':
-        return 'assets/svg/ticket/free-card-chip.svg';
+        return 'assets/svg/ticket/free-ticket-icon.svg';
       default:
-        return 'assets/svg/ticket/standard-card-chip.svg';
+        return 'assets/svg/ticket/standard-ticket-icon.svg';
     }
   });
 
-  ticketChipAlt = computed(() => {
+  ticketBackground = computed(() => {
     const ticketType = this.ticket().ticket_type;
     switch (ticketType) {
       case 'Early Bird':
-        return 'Early Bird Ticket';
+        return 'bg-early-bird';
       case 'Sponsor':
-        return 'Sponsor Ticket';
+        return 'bg-sponsor';
       case 'Free':
-        return 'Free Ticket';
+        return 'bg-free';
       default:
-        return 'Standard Ticket';
-    }
-  });
-
-  ticketTypeClass = computed(() => {
-    const ticketType = this.ticket().ticket_type;
-    switch (ticketType) {
-      case 'Early Bird':
-        return 'ticket-early-bird';
-      case 'Sponsor':
-        return 'ticket-sponsor';
-      case 'Standard':
-        return 'ticket-standard';
-      default:
-        return '';
+        return 'bg-standard';
     }
   });
 

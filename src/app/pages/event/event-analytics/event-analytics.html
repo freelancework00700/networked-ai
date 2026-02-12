@@ -18,17 +18,20 @@
     <div class="w-full max-w-[672px] mx-auto">
       <div class="flex flex-col -mt-[65px]">
         <div class="h-[260px] relative">
-          <div class="w-full h-[361px] overflow-hidden">
-            <img
-              fill
-              placeholder
-              [alt]="eventData()?.title || 'Event image'"
-              class="object-cover"
-              (error)="onImageError($event)"
-              [ngSrc]="getImageUrl(eventData()?.thumbnail_url || '')"
-            />
-          </div>
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent">
+          @if (eventData()) {
+            <div class="w-full h-[361px] overflow-hidden">
+              <img
+                fill
+                placeholder
+                [alt]="eventData()?.title || 'Event image'"
+                class="object-cover"
+                (error)="onImageError($event)"
+                [ngSrc]="getImageUrl(eventData()?.image_url || '')"
+                [loaderParams]="{ thumbnail: eventData()?.thumbnail_url }"
+              />
+            </div>
+          }
+          <div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent">
             <div class="p-4 flex flex-col justify-end h-full pb-20 gap-y-2">
               <div class="heading-h2 text-white">
                 {{ eventData()?.title }}

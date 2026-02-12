@@ -11,10 +11,19 @@
     @for (user of users(); track user.id) {
       <div class="flex items-center justify-between border border-surface-300 rounded-lg px-3 py-2 w-full">
         <div class="flex items-center gap-3">
-          <img [src]="getImageUrl(user.thumbnail_url)" [alt]="user.name" class="w-10 h-10 rounded-full object-cover" />
+          <div class="relative w-10 h-10 overflow-hidden rounded-full">
+            <img
+              fill
+              placeholder 
+              [ngSrc]="getImageUrl(user.thumbnail_url)"
+              (error)="onImageError($event)"
+              [alt]="user.name"
+              class="rounded-full object-cover"
+            />
+          </div>
           <span class="body-regular-14">{{ user.name }}</span>
         </div>
-        <button type="button" class="p-0 m-0 bg-transparent border-none cursor-pointer flex-shrink-0" (click)="onRemoveUser(user.id!)">
+        <button type="button" class="p-0 m-0 bg-transparent border-none cursor-pointer shrink-0" (click)="onRemoveUser(user.id!)">
           <i class="pi pi-times text-lg text-neutral-04"></i>
         </button>
       </div>

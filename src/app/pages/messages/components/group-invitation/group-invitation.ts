@@ -8,6 +8,8 @@ import { MessagesService } from '@/services/messages.service';
 import { NavigationService } from '@/services/navigation.service';
 import { Component, signal, inject, ChangeDetectionStrategy, input, Input, computed } from '@angular/core';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { BaseApiService } from '@/services/base-api.service';
+import { ToasterService } from '@/services/toaster.service';
 
 @Component({
   imports: [Button, NgOptimizedImage],
@@ -22,6 +24,7 @@ export class GroupInvitation {
   private authService = inject(AuthService);
   private messagesService = inject(MessagesService);
   private navigationService = inject(NavigationService);
+  private toasterService = inject(ToasterService);
 
   @Input() room!: ChatRoom;
   group = computed(() => {
@@ -56,14 +59,19 @@ export class GroupInvitation {
   }
 
   async joinRoom(): Promise<void> {
-    const userId = this.authService.currentUser()?.id;
-    const roomId = this.group()?.id;
-
-    if (userId && roomId) {
-      this.isJoining.set(true);
-      await this.messagesService.joinRoom(roomId, [userId]);
-      this.isJoining.set(false);
-      this.close();
+    try {
+      const userId = this.authService.currentUser()?.id;
+      const roomId = this.group()?.id;
+  
+      if (userId && roomId) {
+        this.isJoining.set(true);
+        await this.messagesService.joinRoom(roomId, [userId]);
+        this.isJoining.set(false);
+        this.close();
+      }
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to join group.');
+      this.toasterService.showError(message);
     }
   }
 

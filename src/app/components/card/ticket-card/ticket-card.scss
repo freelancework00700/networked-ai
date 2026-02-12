@@ -6,6 +6,29 @@
   border: 1px solid var(--brand-05);
 }
 
+.ticket-free {
+  border: 1px solid var(--brand-04);
+}
+
 .ticket-sponsor {
   border: 1px solid var(--sponsor);
+}
+
+.bg-free {
+  background: var(--brand-04);
+}
+
+.bg-standard {
+  background: var(--brand-05);
+}
+
+.bg-early-bird {
+  background: var(--early-bird);
+  color: var(--neutral-07);
+}
+
+.bg-sponsor {
+  background: var(--Gold-Flat, linear-gradient(90deg, #9E8F76 0%, #7A6A50 14.28%, #F6D9AB 24.09%, #9D7F4E 40.5%, #C9A770 60.46%, #796A52 86.52%));
+  color: var(--neutral-07);
+  justify-content: center;
 }

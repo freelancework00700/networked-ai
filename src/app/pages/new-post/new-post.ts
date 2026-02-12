@@ -1,4 +1,3 @@
-import { Swiper } from 'swiper';
 import { Pagination } from 'swiper/modules';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { Chip } from '@/components/common/chip';
@@ -14,17 +13,30 @@ import { Mentions } from '@/components/common/mentions';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Component, inject, signal, viewChild, ElementRef, ViewChild, ChangeDetectorRef, computed, DestroyRef, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  viewChild,
+  ElementRef,
+  ViewChild,
+  ChangeDetectorRef,
+  computed,
+  OnInit,
+  CUSTOM_ELEMENTS_SCHEMA
+} from '@angular/core';
 import { Router } from '@angular/router';
-import { IonToolbar, IonHeader, IonContent, NavController, IonFooter, IonIcon } from '@ionic/angular/standalone';
-import { FeedPost, FeedMention } from '@/interfaces/IFeed';
+import { IonToolbar, IonHeader, IonContent, NavController, IonFooter, IonIcon, IonicSlides } from '@ionic/angular/standalone';
+import { FeedPost } from '@/interfaces/IFeed';
 import { IUser } from '@/interfaces/IUser';
+import { SwiperContainer } from 'swiper/element';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 
 @Component({
   selector: 'new-post',
   styleUrl: './new-post.scss',
   templateUrl: './new-post.html',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [
     Chip,
     Button,
@@ -43,7 +55,6 @@ import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
   ]
 })
 export class NewPost implements OnInit {
-  @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
   @ViewChild('textareaEl') textareaRef!: ElementRef<HTMLTextAreaElement>;
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
@@ -59,7 +70,8 @@ export class NewPost implements OnInit {
   userService = inject(UserService);
 
   text = '';
-  swiper?: Swiper;
+  swiperModules = [IonicSlides, Pagination];
+  postMediaSwiperEl = viewChild<ElementRef<SwiperContainer>>('postMediaSwiper');
   textCtrl: FormControl = new FormControl('');
 
   // Track mentioned users: username -> user ID
@@ -109,7 +121,11 @@ export class NewPost implements OnInit {
 
   ngOnInit() {
     const navigationState: any = this.router.currentNavigation()?.extras?.state;
-    console.log('navigationState:', navigationState);
+    if (navigationState?.defaultVisibility === 'networked') {
+      this.visibility.set('private');
+    } else {
+      this.visibility.set('public');
+    }
     if (navigationState?.postId && navigationState?.post) {
       this.postId.set(navigationState.postId);
       this.loadPostData(navigationState.post);
@@ -175,32 +191,16 @@ export class NewPost implements OnInit {
 
     this.cd.detectChanges();
   }
-  ngAfterViewChecked() {
-    if (this.swiper) return;
-    if (!this.swiperEl?.nativeElement) return;
-    if (!this.mediaItems().length) return;
 
-    this.swiper = new Swiper(this.swiperEl.nativeElement, {
-      modules: [Pagination],
-      slidesPerView: 1,
-      spaceBetween: 0,
-      allowTouchMove: true,
-      observer: true,
-      pagination: {
-        el: '.swiper-pagination',
-        clickable: true
-      },
-      on: {
-        slideChange: (swiper) => {
-          this.currentSlide.set(swiper.activeIndex);
-        }
-      }
-    });
+  onSlideChange(event: Event) {
+    const { activeIndex } = (event.target as SwiperContainer).swiper;
+    this.currentSlide.set(activeIndex);
   }
 
   setVisibility(type: 'public' | 'private') {
     this.visibility.set(type);
   }
+
   drop(event: CdkDragDrop<any[]>) {
     moveItemInArray(this.mediaItems(), event.previousIndex, event.currentIndex);
   }
@@ -237,7 +237,7 @@ export class NewPost implements OnInit {
     this.mediaItems.update((list) => [...list, ...newItems]);
     input.value = '';
 
-    this.refreshSwiperAndGoToLast();
+    this.goToLastSlide();
   }
 
   async openEventModal() {
@@ -271,7 +271,7 @@ export class NewPost implements OnInit {
     }));
 
     this.mediaItems.update((list) => [...list, ...items]);
-    this.refreshSwiperAndGoToLast();
+    this.goToLastSlide();
   }
 
   toArray(value: string | string[]): string[] {
@@ -284,42 +284,26 @@ export class NewPost implements OnInit {
       return [...items];
     });
 
-    this.refreshSwiper(index - 1);
+    this.goToSlide(index - 1);
   }
 
   goToSlide(index: number) {
-    if (!this.swiper) return;
+    const swiper = this.postMediaSwiperEl()?.nativeElement?.swiper;
+    if (!swiper || index < 0) return;
 
-    this.refreshSwiper(index);
+    this.currentSlide.set(index);
+    swiper.slideTo(index, 100);
   }
 
-  private refreshSwiperAndGoToLast() {
-    if (!this.swiper) return;
+  goToLastSlide() {
+    const swiper = this.postMediaSwiperEl()?.nativeElement?.swiper;
+    if (!swiper) return;
 
-    requestAnimationFrame(() => {
-      this.swiper!.update();
+    const lastIndex = swiper.slides.length - 1;
+    if (lastIndex < 0) return;
 
-      const lastIndex = this.swiper!.slides.length - 1;
-      if (lastIndex >= 0) {
-        this.currentSlide.set(lastIndex);
-        this.swiper!.slideTo(lastIndex, 0);
-      }
-    });
-  }
-
-  private refreshSwiper(targetIndex?: number) {
-    if (!this.swiper) return;
-
-    requestAnimationFrame(() => {
-      this.swiper!.update();
-
-      if (targetIndex !== undefined) {
-        const safeIndex = Math.min(targetIndex, this.swiper!.slides.length - 1);
-
-        this.currentSlide.set(safeIndex);
-        this.swiper!.slideTo(safeIndex, 0);
-      }
-    });
+    this.currentSlide.set(lastIndex);
+    swiper.slideTo(lastIndex, 0);
   }
 
   get eventsArray(): () => FormArray {
@@ -464,12 +448,5 @@ export class NewPost implements OnInit {
 
   onImageError(event: Event): void {
     onImageError(event, 'assets/images/profile.jpeg');
-  }
-
-  ngOnDestroy() {
-    if (this.swiper) {
-      this.swiper.destroy(true, true);
-      this.swiper = null!;
-    }
   }
 }

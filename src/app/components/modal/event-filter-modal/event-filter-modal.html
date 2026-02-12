@@ -35,9 +35,18 @@
 
   <div class="body-regular-14 mt-6">Show events that are within:</div>
 
-  <ion-icon src="assets/svg/mapFilterChart.svg" class="h-32 w-full mt-2" />
+  <div class="distance-chart">
+    @for (bar of barHeights; track $index) {
+      <div
+        class="distance-chart-bar"
+        [style.height.%]="bar"
+        [class.distance-chart-bar-active]="isBarActive($index)"
+        [class.distance-chart-bar-inactive]="!isBarActive($index)"
+      ></div>
+    }
+  </div>
 
-  <ion-range min="0" max="50" (ionChange)="onRangeChange($event)" [value]="distanceSignal()"></ion-range>
+  <ion-range min="0" max="50" [value]="distanceSignal()" (ionInput)="onRangeChange($event)" (ionChange)="onRangeChange($event)"></ion-range>
 
   <div class="body-medium-16 mt-2">{{ distanceSignal() }} miles</div>
 </div>

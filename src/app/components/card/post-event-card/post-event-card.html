@@ -12,12 +12,19 @@
       class="absolute top-2 right-2 flex h-5 w-5 items-center justify-center text-surface-500 rounded-full"
       (click)="onRemove.emit(event()); $event.stopPropagation()"
     >
-      <div class="pi pi-times !text-[12px]"></div>
+      <div class="pi pi-times text-[12px]!"></div>
     </button>
   }
 
-  <div class="relative h-22 w-22 flex-shrink-0">
-    <img fill placeholder class="rounded-xl object-cover" [ngSrc]="eventImage()" [alt]="event()?.title || 'event image'" />
+  <div class="relative h-22 w-22 shrink-0 overflow-hidden rounded-xl">
+    <img
+      fill
+      placeholder
+      class="rounded-xl object-cover"
+      [ngSrc]="eventImage()"
+      (error)="onImageError($event)"
+      [alt]="event()?.title || 'event image'"
+    />
   </div>
 
   <div class="flex flex-col gap-2">
@@ -28,14 +35,14 @@
     <div class="flex flex-col gap-1">
       @if (event()?.address) {
         <div class="flex items-center gap-2 body-12 neutral-02">
-          <i class="pi pi-map-marker !text-[14px]"></i>
+          <i class="pi pi-map-marker text-[14px]!"></i>
           <span>{{ event()?.address }}</span>
         </div>
       }
 
       @if (eventDate()) {
         <div class="flex items-center gap-2 body-12 neutral-02">
-          <i class="pi pi-calendar !text-[14px]"></i>
+          <i class="pi pi-calendar text-[14px]!"></i>
           <span>{{ event()?.start_date | date: 'EEE MMM d' }}</span>
         </div>
       }

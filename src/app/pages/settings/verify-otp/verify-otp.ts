@@ -124,7 +124,7 @@ export class VerifyOtp implements OnInit {
         } else if (this.updateType() === 'phone' && this.mobile()) {
           payload.mobile = this.mobile();
         }
-        
+
         if (Object.keys(payload).length > 0) {
           const userPayload = this.userService.generateUserPayload(payload);
           await this.userService.updateCurrentUser(userPayload);
@@ -134,7 +134,7 @@ export class VerifyOtp implements OnInit {
       // Show success modal if config is provided
       if (this.successTitle()) {
         const shouldNavigateToAccount = this.updateType() === 'email' || this.updateType() === 'phone';
-        
+
         await this.modalService.openSuccessModal({
           title: this.successTitle(),
           description: this.successDescription() || '',

@@ -84,9 +84,7 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
 
   get menuItems(): MenuItem[] {
     if (this.isEventRoom()) {
-      return this.fullMenuItems.filter(
-        (item) => item.action !== 'addMembers' && item.action !== 'changeGroupName'
-      );
+      return this.fullMenuItems.filter((item) => item.action !== 'addMembers' && item.action !== 'changeGroupName');
     }
     return this.fullMenuItems;
   }

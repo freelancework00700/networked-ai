@@ -1,7 +1,7 @@
 import { CommonModule, NgOptimizedImage, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output, computed } from '@angular/core';
 import { IEvent } from '@/interfaces/event';
-import { getImageUrlOrDefault } from '@/utils/helper';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 
 @Component({
   imports: [CommonModule, NgOptimizedImage, DatePipe],
@@ -23,13 +23,10 @@ export class PostEventCard {
 
   eventImage = computed(() => {
     const evt = this.event();
-    if (evt?.medias && evt.medias.length > 0) {
-      return getImageUrlOrDefault(evt.medias[0].media_url);
-    }
-    return getImageUrlOrDefault('');
+    return getImageUrlOrDefault(evt?.thumbnail_url || '');
   });
 
-  getImageUrl(imageUrl = ''): string {
-    return getImageUrlOrDefault(imageUrl);
+  onImageError(event: Event): void {
+    onImageError(event);
   }
 }

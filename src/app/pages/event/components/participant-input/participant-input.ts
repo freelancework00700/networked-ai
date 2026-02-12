@@ -111,11 +111,11 @@ export class ParticipantInput implements OnDestroy {
   }
 
   onImageError(event: Event): void {
-    onImageError(event, 'assets/images/profile.jpeg');
+    onImageError(event);
   }
 
   getImageUrl(imageUrl = ''): string {
-    return getImageUrlOrDefault(imageUrl, 'assets/images/profile.jpeg');
+    return getImageUrlOrDefault(imageUrl);
   }
 
   ngOnDestroy(): void {

@@ -98,80 +98,87 @@
     @if (userNotFound() && userName()) {
       <app-empty-state [title]="'No User Found'" [message]="''" [icon]="'/assets/svg/noUserIcon.svg'" [showClearButton]="false" />
     } @else if (isLoggedIn() || userName()) {
-    <div class="w-full px-4 max-w-[672px] mx-auto">
-      <div class="flex flex-col items-start gap-6 bg-neutral-07">
-        <div class="flex flex-col items-start gap-4 bg-neutral-07 w-full">
-          <div class="flex items-center w-full">
-            <!-- Profile image -->
-            <div class="w-[72px] min-w-[72px] h-[72px] rounded-full overflow-hidden relative cursor-pointer" (click)="onProfileImageClick()">
-              <img
-                fill
-                placeholder
-                [alt]="currentUser()?.name"
-                (error)="onImageError($event)"
-                [ngSrc]="profileImage()"
-                class="object-cover rounded-full"
-              />
-            </div>
-
-            <!-- Stats -->
+      <div class="w-full px-4 max-w-[672px] mx-auto">
+        <div class="flex flex-col items-start gap-6 bg-neutral-07">
+          <div class="flex flex-col items-start gap-4 bg-neutral-07 w-full">
             <div class="flex items-center w-full">
-              <div class="flex flex-col items-center w-full cursor-pointer" (click)="currentUser()?.total_networks > 0 && isLoggedIn() && navigateToNetworks()">
-                <div class="heading-h3 neutral-01">{{ currentUser()?.total_networks || 0 }}</div>
-                <div class="body-12 neutral-03">Networks</div>
+              <!-- Profile image -->
+              <div class="w-[72px] min-w-[72px] h-[72px] rounded-full overflow-hidden relative cursor-pointer" (click)="onProfileImageClick()">
+                <img
+                  fill
+                  placeholder
+                  [alt]="currentUser()?.name"
+                  (error)="onImageError($event)"
+                  [ngSrc]="profileImage()"
+                  class="object-cover rounded-full"
+                />
               </div>
-              <div class="flex flex-col items-center w-full cursor-pointer" (click)="eventsCount() > 0 && isLoggedIn() && navigateToHostedEvents()">
-                <div class="heading-h3 neutral-01">{{ eventsCount() }}</div>
-                <div class="body-12 neutral-03">Events</div>
-              </div>
-              <div
-                class="flex flex-col items-center w-full cursor-pointer"
-                (click)="currentUser()?.total_events_attended > 0 && isLoggedIn() && navigateToAttendedEvents()"
-              >
-                <div class="heading-h3 neutral-01">{{ currentUser()?.total_events_attended || 0 }}</div>
-                <div class="body-12 neutral-03">Attended</div>
+
+              <!-- Stats -->
+              <div class="flex items-center w-full">
+                <div
+                  class="flex flex-col items-center w-full cursor-pointer"
+                  (click)="currentUser()?.total_networks > 0 && isLoggedIn() && navigateToNetworks()"
+                >
+                  <div class="heading-h3 neutral-01">{{ currentUser()?.total_networks || 0 }}</div>
+                  <div class="body-12 neutral-03">Networks</div>
+                </div>
+                <div class="flex flex-col items-center w-full cursor-pointer" (click)="eventsCount() > 0 && isLoggedIn() && navigateToHostedEvents()">
+                  <div class="heading-h3 neutral-01">{{ eventsCount() }}</div>
+                  <div class="body-12 neutral-03">Events</div>
+                </div>
+                <div
+                  class="flex flex-col items-center w-full cursor-pointer"
+                  (click)="currentUser()?.total_events_attended > 0 && isLoggedIn() && navigateToAttendedEvents()"
+                >
+                  <div class="heading-h3 neutral-01">{{ currentUser()?.total_events_attended || 0 }}</div>
+                  <div class="body-12 neutral-03">Attended</div>
+                </div>
               </div>
             </div>
+            <div class="flex flex-col gap-3">
+              <!-- Name -->
+              <div class="flex items-center gap-2">
+                <div class="heading-h3 neutral-01">{{ currentUser()?.name || currentUser()?.username }}</div>
+                @if (isViewingOtherProfile()) {
+                  <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full py-0 h-[20px]">
+                    <img [src]="achievementDiamondPath()" alt="diamond" class="h-4 w-auto ml-1.5" />
+                    <span class="text-sm font-medium pr-2">{{ currentUser()?.total_gamification_points || 0 }}</span>
+                  </div>
+                }
+              </div>
+              <div>
+                <!-- Location -->
+                @if (currentUser()?.address) {
+                  <div class="flex items-center gap-2 body-14R neutral-03">
+                    <ion-icon src="/assets/svg/location-icon.svg" class="text-[16px]"></ion-icon>
+                    <span>{{ currentUser()?.address }}</span>
+                  </div>
+                }
+
+                <!-- Title -->
+                @if (currentUser()?.company_name) {
+                  <div class="flex items-center gap-2 body-14R neutral-03">
+                    <ion-icon src="/assets/svg/briefcase.svg" class="text-[16px]"></ion-icon>
+                    <span>{{ currentUser()?.company_name }}</span>
+                  </div>
+                }
+              </div>
+
+              <!-- description -->
+              <div class="w-full flex flex-col gap-1 body-14R neutral-01">
+                <div class="whitespace-pre-line">{{ visibleDescription() }}</div>
+                @if (showDescriptionToggle()) {
+                  <button type="button" class="self-start body-14SB accent-blue" (click)="toggleDescription()">
+                    {{ isDescriptionExpanded() ? 'Show less' : 'Show more' }}
+                  </button>
+                }
+              </div>
+            </div>
+            <!-- Links -->
+            <profile-link [currentUser]="currentUser()" class="w-full" />
           </div>
-          <div class="flex flex-col gap-3">
-            <!-- Name -->
-            <div class="flex items-center gap-2">
-              <div class="heading-h3 neutral-01">{{ currentUser()?.name || currentUser()?.username }}</div>
-              @if (isViewingOtherProfile()) {
-                <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full py-0 h-[20px]">
-                  <img [src]="achievementDiamondPath()" alt="diamond" class="h-4 w-auto ml-1.5" />
-                  <span class="text-sm font-medium pr-2">{{ currentUser()?.total_gamification_points || 0 }}</span>
-                </div>
-              }
-            </div>
-            <div>
-              <!-- Location -->
-              @if (currentUser()?.address) {
-                <div class="flex items-center gap-2 body-14R neutral-03">
-                  <ion-icon src="/assets/svg/location-icon.svg" class="text-[16px]"></ion-icon>
-                  <span>{{ currentUser()?.address }}</span>
-                </div>
-              }
 
-              <!-- Title -->
-              @if (currentUser()?.company_name) {
-                <div class="flex items-center gap-2 body-14R neutral-03">
-                  <ion-icon src="/assets/svg/briefcase.svg" class="text-[16px]"></ion-icon>
-                  <span>{{ currentUser()?.company_name }}</span>
-                </div>
-              }
-            </div>
-
-            <!-- description -->
-            <div class="w-full flex flex-col gap-1 body-14R neutral-01">
-              <div class="whitespace-pre-line">{{ currentUser()?.description }}</div>
-            </div>
-          </div>
-          <!-- Links -->
-          <profile-link [currentUser]="currentUser()" class="w-full" />
-        </div>
-
-        @if (isLoggedIn()) {
           @if (isViewingOtherProfile()) {
             <!-- Action Buttons for Other User -->
             <div class="w-full flex items-center gap-3">
@@ -187,7 +194,7 @@
                   class="flex-1"
                 />
               }
-  
+
               @if (hasSubscriptionPlan()) {
                 @if (isSubscribedToUser()) {
                   <app-button
@@ -221,7 +228,7 @@
               }
             </div>
           }
-  
+
           @if (!isViewingOtherProfile()) {
             <!-- Action Buttons -->
             <div class="w-full flex flex-col gap-3">
@@ -254,51 +261,75 @@
                 class="w-full"
               />
             </div>
-  
+
             <!-- Networking Score Card -->
             <div class="w-full">
               <networking-score-card [score]="currentUser()?.total_gamification_points || 0" />
             </div>
-  
+
             @if (shouldShowCreateCard()) {
               <div class="w-full">
                 <business-card [user]="currentUser()" />
               </div>
             }
           }
-        }
 
-        <div class="bg-neutral-07 w-full">
-          <div class="w-full flex items-center min-h-[48px]">
-            @for (slide of slides; track slide.value) {
-              <div class="flex-1 flex items-center justify-center cursor-pointer" (click)="changeTab(slide.value)">
-                <ion-icon [src]="currentSlide() === slide.value ? slide.iconActive : slide.icon" class="text-[20px]" />
-              </div>
-            }
-          </div>
-          <div class="swiper swiper-profile">
-            <div class="swiper-wrapper">
-              <div class="swiper-slide">
-                <profile-hosted-events [userId]="currentUser()?.id || null" />
-              </div>
-              <div class="swiper-slide">
-                <profile-attended-events [userId]="currentUser()?.id || null" />
-              </div>
-              <div class="swiper-slide">
-                <profile-upcoming-events [userId]="currentUser()?.id || null" />
-              </div>
-              <div class="swiper-slide">
-                <profile-posts [userId]="currentUser()?.id || null" />
-              </div>
-              <div class="swiper-slide">
-                <profile-achievement [user]="currentUser()" />
-              </div>
+          <div class="bg-neutral-07 w-full">
+            <div class="w-full flex items-center min-h-[48px]">
+              @for (slide of slides; track slide.value) {
+                <div class="flex-1 flex items-center justify-center cursor-pointer" (click)="changeTab(slide.value)">
+                  <ion-icon [src]="currentSlide() === slide.value ? slide.iconActive : slide.icon" class="text-[20px]" />
+                </div>
+              }
             </div>
-            <div class="swiper-scrollbar"></div>
+
+            <!-- profile swiper -->
+            <swiper-container
+              #profileSwiper
+              speed="100"
+              scrollbar="true"
+              space-between="0"
+              auto-height="true"
+              slides-per-view="1"
+              scrollbar-hide="false"
+              allow-touch-move="true"
+              [modules]="swiperModules"
+              scrollbar-draggable="true"
+              (swiperslidechange)="onSlideChange($event)"
+            >
+              <!-- hosted events slide -->
+              <swiper-slide>
+                <profile-hosted-events [userId]="currentUser()?.id || null" />
+              </swiper-slide>
+
+              <!-- attended events slide -->
+              <swiper-slide>
+                <profile-attended-events [userId]="currentUser()?.id || null" />
+              </swiper-slide>
+
+              <!-- upcomming events slide -->
+              <swiper-slide>
+                <profile-upcoming-events [userId]="currentUser()?.id || null" />
+              </swiper-slide>
+
+              <!-- profile posts slide -->
+              <swiper-slide>
+                <profile-posts [userId]="currentUser()?.id || null" />
+              </swiper-slide>
+
+              <!-- profile gamification achivement -->
+              <swiper-slide>
+                <profile-achievement [user]="currentUser()" />
+              </swiper-slide>
+            </swiper-container>
           </div>
         </div>
       </div>
-    </div>
+      @if (showFabButton()) {
+        <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="fab">
+          <app-button (click)="onCreatePost()" [icon]="'assets/svg/editIconBlack.svg'" radius="50%" />
+        </ion-fab>
+      }
     } @else {
       <auth-empty-state type="profile" />
     }
@@ -306,10 +337,6 @@
 
   <!-- Profile Image Preview Overlay -->
   @if (showImagePreview()) {
-    <profile-image-preview-overlay
-      [user]="currentUser()"
-      [isViewingOtherProfile]="isViewingOtherProfile()"
-      (closeOverlay)="onCloseImagePreview()"
-    />
+    <profile-image-preview-overlay [user]="currentUser()" [isViewingOtherProfile]="isViewingOtherProfile()" (closeOverlay)="onCloseImagePreview()" />
   }
 }

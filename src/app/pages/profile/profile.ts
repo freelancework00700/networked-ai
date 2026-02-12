@@ -1,9 +1,10 @@
-import Swiper from 'swiper';
 import { Scrollbar } from 'swiper/modules';
 import { Button } from '@/components/form/button';
-import { isPlatformBrowser } from '@angular/common';
+import type { SwiperContainer } from 'swiper/element';
 import { AuthService } from '@/services/auth.service';
+import { IonicSlides } from '@ionic/angular/standalone';
 import { BusinessCard } from '@/components/card/business-card';
+import { CUSTOM_ELEMENTS_SCHEMA, ElementRef } from '@angular/core';
 import { ProfileLink } from '@/pages/profile/components/profile-link';
 import { AuthEmptyState } from '@/components/common/auth-empty-state';
 import { EmptyState } from '@/components/common/empty-state';
@@ -15,6 +16,7 @@ import { ProfileHostedEvents } from '@/pages/profile/components/profile-hosted-e
 import { ProfileUpcomingEvents } from '@/pages/profile/components/profile-upcoming-events';
 import { ProfileAttendedEvents } from '@/pages/profile/components/profile-attended-events';
 import {
+  IonFab,
   IonIcon,
   IonHeader,
   IonToolbar,
@@ -25,7 +27,7 @@ import {
   IonRefresherContent,
   RefresherCustomEvent
 } from '@ionic/angular/standalone';
-import { inject, Component, OnDestroy, signal, computed, ChangeDetectionStrategy, PLATFORM_ID, effect, input, viewChild } from '@angular/core';
+import { inject, Component, OnDestroy, signal, computed, ChangeDetectionStrategy, effect, input, viewChild } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { onImageError } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
@@ -34,7 +36,7 @@ import { NetworkService } from '@/services/network.service';
 import { ProfileImagePreviewOverlay } from '@/components/modal/profile-image-preview-overlay';
 import { PopoverService } from '@/services/popover.service';
 import { ModalService } from '@/services/modal.service';
-import { ScrollHandlerDirective } from '@/directives/scroll-handler.directive';
+import { ScrollHandlerDirective, showFooter } from '@/directives/scroll-handler.directive';
 import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { ToasterService } from '@/services/toaster.service';
 import { SocketService } from '@/services/socket.service';
@@ -43,6 +45,8 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { OgService } from '@/services/og.service';
 import { IUser } from '@/interfaces/IUser';
+import { Browser } from '@capacitor/browser';
+import { BaseApiService } from '@/services/base-api.service';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
@@ -56,8 +60,10 @@ interface TabConfig {
   selector: 'profile',
   styleUrl: './profile.scss',
   templateUrl: './profile.html',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    IonFab,
     Button,
     IonIcon,
     IonHeader,
@@ -87,7 +93,6 @@ export class Profile implements OnDestroy {
   username = input<string>();
   // services
   navigationService = inject(NavigationService);
-  private platformId = inject(PLATFORM_ID);
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private networkService = inject(NetworkService);
@@ -100,11 +105,14 @@ export class Profile implements OnDestroy {
   private route = inject(ActivatedRoute);
   ogService = inject(OgService);
 
+  // variables
+  swiperModules = [IonicSlides, Scrollbar];
   private routeParamSubscription?: Subscription;
 
   profileHostedEvents = viewChild(ProfileHostedEvents);
   profileAttendedEvents = viewChild(ProfileAttendedEvents);
   profileUpcomingEvents = viewChild(ProfileUpcomingEvents);
+  profileSwiperEl = viewChild<ElementRef<SwiperContainer>>('profileSwiper');
   profilePosts = viewChild(ProfilePosts);
 
   // computed & signals
@@ -117,8 +125,8 @@ export class Profile implements OnDestroy {
   isViewingOtherProfile = computed(() => {
     const loggedInUser = this.authService.currentUser();
     const viewedUser = this.currentUser();
-    if (!loggedInUser || !viewedUser) return false;
-    return viewedUser.id && viewedUser.id !== loggedInUser.id;
+    // if (!loggedInUser || !viewedUser) return false;
+    return viewedUser.id && viewedUser.id !== loggedInUser?.id;
   });
 
   // Connection status computed properties
@@ -153,7 +161,10 @@ export class Profile implements OnDestroy {
   isAddingToNetwork = signal<boolean>(false);
   isAcceptingRequest = signal<boolean>(false);
   isWithdrawingInvitation = signal<boolean>(false);
-
+  showFab = showFooter;
+  showFabButton(): boolean {
+    return this.currentSlide() === 'user-posts' && this.showFab() && !this.isViewingOtherProfile();
+  }
   // Get primary action button config based on connection status
   getPrimaryActionButton = computed(() => {
     if (this.isConnected()) {
@@ -201,6 +212,20 @@ export class Profile implements OnDestroy {
     return (user?.total_events_hosted || 0) + (user?.total_events_cohosted || 0) + (user?.total_events_sponsored || 0);
   });
 
+  private readonly DESCRIPTION_MAX_LENGTH = 220;
+  private readonly DEFAULT_DESCRIPTION = '';
+
+  userDescription = computed(() => this.currentUser()?.description?.toString() ?? this.DEFAULT_DESCRIPTION);
+  isDescriptionExpanded = signal(false);
+  showDescriptionToggle = computed(() => this.userDescription().length > this.DESCRIPTION_MAX_LENGTH);
+  visibleDescription = computed(() => {
+    const desc = this.userDescription();
+    if (!this.showDescriptionToggle() || this.isDescriptionExpanded()) {
+      return desc;
+    }
+    return desc.slice(0, this.DESCRIPTION_MAX_LENGTH).trimEnd() + '...';
+  });
+
   achievementDiamondPath = computed(() => {
     const points = this.currentUser()?.total_gamification_points || 0;
 
@@ -220,6 +245,10 @@ export class Profile implements OnDestroy {
       return '/assets/svg/gamification/diamond-1k.svg';
     }
   });
+
+  toggleDescription(): void {
+    this.isDescriptionExpanded.update((value) => !value);
+  }
 
   shouldShowCreateCard = computed(() => {
     const user = this.currentUser();
@@ -261,15 +290,6 @@ export class Profile implements OnDestroy {
 
       if (!loading && user) {
         this.ogService.setOgTagInProfile(user);
-      }
-    });
-
-    effect(() => {
-      const user = this.currentUser()?.id;
-      const loading = this.isLoading();
-
-      if (!loading && user && isPlatformBrowser(this.platformId)) {
-        setTimeout(() => this.initializeSwiper());
       }
     });
 
@@ -350,9 +370,6 @@ export class Profile implements OnDestroy {
     }
   }
 
-  // variables
-  swiper?: Swiper;
-
   readonly tabs: ProfileTabs[] = ['hosted-events', 'attended-events', 'upcoming-events', 'user-posts', 'user-achievement'];
 
   readonly slides: TabConfig[] = [
@@ -366,18 +383,7 @@ export class Profile implements OnDestroy {
   changeTab(value: ProfileTabs): void {
     this.currentSlide.set(value);
     const slideIndex = this.tabs.indexOf(value);
-    this.getActiveSwiper()?.slideTo(slideIndex);
-  }
-
-  private getActiveSwiper(): Swiper | null {
-    if (!this.swiper) return null;
-
-    // if swiper is an array, use the last one
-    if (Array.isArray(this.swiper)) {
-      return this.swiper[this.swiper.length - 1] ?? null;
-    }
-
-    return this.swiper;
+    this.profileSwiperEl()?.nativeElement?.swiper?.slideTo(slideIndex, 100);
   }
 
   goToCreateEvent(): void {
@@ -432,11 +438,11 @@ export class Profile implements OnDestroy {
 
   async handleStripeAccountCreation(): Promise<void> {
     try {
-      const accountResponse = await this.stripeService.createStripeAccount();
+      const accountResponse: any = await this.stripeService.createStripeAccount();
       if (accountResponse?.url) {
-        window.location.href = accountResponse.url;
+        await Browser.open({ url: accountResponse.url });
       } else {
-        this.toasterService.showError('Failed to get Stripe account URL. Please try again.');
+        this.toasterService.showError(accountResponse?.message || 'Failed to get Stripe account URL. Please try again.');
       }
     } catch (error) {
       console.error('Error creating Stripe account:', error);
@@ -451,30 +457,10 @@ export class Profile implements OnDestroy {
     }
   }
 
-  private initializeSwiper(): void {
-    // Destroy existing Swiper instance if it exists
-    if (this.getActiveSwiper()) {
-      this.getActiveSwiper()?.destroy(true, true);
-    }
-
-    const initialSlide = this.tabs.indexOf(this.currentSlide());
-
-    this.swiper = new Swiper('.swiper-profile', {
-      initialSlide,
-      spaceBetween: 0,
-      slidesPerView: 1,
-      autoHeight: true,
-      modules: [Scrollbar],
-      scrollbar: {
-        el: '.swiper-scrollbar'
-      },
-      on: {
-        slideChange: (swiper) => {
-          const newTab = this.tabs[swiper.activeIndex];
-          if (newTab) this.currentSlide.set(newTab);
-        }
-      }
-    });
+  onSlideChange(event: Event) {
+    const swiper = (event.target as SwiperContainer).swiper;
+    const newTab = this.tabs[swiper.activeIndex];
+    if (newTab) this.currentSlide.set(newTab);
   }
 
   onImageError(event: Event): void {
@@ -546,6 +532,7 @@ export class Profile implements OnDestroy {
   }
 
   async addToNetwork(): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     const user = this.currentUser();
     const userId = user?.id;
     if (!userId) return;
@@ -556,10 +543,17 @@ export class Profile implements OnDestroy {
       this.toasterService.showSuccess('Network request sent successfully');
     } catch (error) {
       console.error('Error sending network request:', error);
-      this.toasterService.showError('Failed to send network request');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to send network request');
+      this.toasterService.showError(message);
     } finally {
       this.isAddingToNetwork.set(false);
     }
+  }
+
+  private async ensureLoggedIn(): Promise<boolean> {
+    if (this.authService.getCurrentToken()) return true;
+    const result = await this.modalService.openLoginModal();
+    return result?.success ?? false;
   }
 
   async acceptNetworkRequest(): Promise<void> {
@@ -641,5 +635,9 @@ export class Profile implements OnDestroy {
         }
       }
     });
+  }
+
+  onCreatePost() {
+    this.navigationService.navigateForward('/new-post');
   }
 }

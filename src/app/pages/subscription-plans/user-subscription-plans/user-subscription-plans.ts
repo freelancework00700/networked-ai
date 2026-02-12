@@ -3,7 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { PlanData } from '@/interfaces/ISubscripton';
 import { ModalService } from '@/services/modal.service';
 import { EventService } from '@/services/event.service';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, isPlatformBrowser } from '@angular/common';
 import { ToasterService } from '@/services/toaster.service';
 import { NavigationService } from '@/services/navigation.service';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -21,7 +21,7 @@ import {
   IonRefresherContent,
   ModalController
 } from '@ionic/angular/standalone';
-import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy, Input, DOCUMENT, PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'user-subscription-plans',
@@ -50,6 +50,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private modalService = inject(ModalService);
   modalCtrl = inject(ModalController);
+  private document = inject(DOCUMENT);
   private navigationService = inject(NavigationService);
   private datePipe = new DatePipe('en-US');
   isFromMySubscriptions = signal<boolean>(false);
@@ -61,6 +62,10 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   planTypeFilter = signal<'event' | 'sponsor'>('event');
   isDropdownOpen = signal<boolean>(false);
   @Input() id = '';
+
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
 
   // Computed properties
   filteredPlans = computed(() => {
@@ -74,11 +79,11 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   goToTerms() {
     this.navigationService.navigateForward('/terms');
   }
-  
+
   goToPolicy() {
     this.navigationService.navigateForward('/policy');
   }
-  
+
   currentPlan = computed(() => {
     const plansList = this.filteredPlans();
     const index = this.selectedPlanIndex();
@@ -345,6 +350,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   });
 
   async ngOnInit(): Promise<void> {
+    if (!this.isBrowser) return;
     const state = window.history.state;
     const fromValue = state?.from;
     this.isFromMySubscriptions.set(fromValue === 'my-subscriptions');
@@ -352,7 +358,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
     await this.loadPlanOrPlansBasedOnState();
 
     // Close dropdown when clicking outside
-    document.addEventListener('click', this.handleClickOutside.bind(this));
+    this.document.addEventListener('click', this.handleClickOutside.bind(this));
   }
 
   private async loadPlanOrPlansBasedOnState(): Promise<void> {
@@ -378,7 +384,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   };
 
   ngOnDestroy(): void {
-    document.removeEventListener('click', this.handleClickOutside);
+    this.document.removeEventListener('click', this.handleClickOutside);
   }
 
   async loadPlanById(planId: string): Promise<void> {

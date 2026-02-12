@@ -1,16 +1,18 @@
 import { HomeFeed } from '@/pages/home/home-feed';
 import { HomeEvent } from '@/pages/home/home-event';
+import { Button } from '@/components/form/button';
 import { AuthService } from '@/services/auth.service';
+import { NavigationService } from '@/services/navigation.service';
 import { ProfileHeaderToolbar } from '@/components/common/profile-header-toolbar';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { signal, inject, computed, Component, ChangeDetectionStrategy, OnDestroy, viewChild } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, NavController, RefresherCustomEvent } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, NavController, RefresherCustomEvent, IonFab } from '@ionic/angular/standalone';
 import { NgOptimizedImage } from '@angular/common';
 import { IonRefresher, IonRefresherContent } from '@ionic/angular/standalone';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ViewWillEnter } from '@ionic/angular/standalone';
-import { ScrollHandlerDirective } from '@/directives/scroll-handler.directive';
+import { ScrollHandlerDirective, showFooter } from '@/directives/scroll-handler.directive';
 
 type Tab = 'events' | 'feed';
 
@@ -20,6 +22,7 @@ type Tab = 'events' | 'feed';
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    IonFab,
     HomeFeed,
     IonHeader,
     HomeEvent,
@@ -30,7 +33,8 @@ type Tab = 'events' | 'feed';
     IonRefresher,
     IonRefresherContent,
     NgOptimizedImage,
-    ScrollHandlerDirective
+    ScrollHandlerDirective,
+    Button
   ]
 })
 export class Home implements OnDestroy, ViewWillEnter {
@@ -39,7 +43,11 @@ export class Home implements OnDestroy, ViewWillEnter {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-
+  navigationService = inject(NavigationService);
+  showFab = showFooter;
+  showFabButton(): boolean {
+    return this.tab() === 'feed' && this.showFab();
+  }
   homeFeedRefSignal = viewChild<HomeFeed>('homeFeedRef');
   homeEventRefSignal = viewChild<HomeEvent>('homeEventRef');
 
@@ -124,5 +132,9 @@ export class Home implements OnDestroy, ViewWillEnter {
 
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
+  }
+
+  onCreatePost() {
+    this.navigationService.navigateForward('/new-post');
   }
 }

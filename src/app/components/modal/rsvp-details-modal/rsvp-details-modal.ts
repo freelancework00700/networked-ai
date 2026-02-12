@@ -54,8 +54,8 @@ export interface RsvpDetailsData {
 export class RsvpDetailsModal extends BaseApiService implements OnInit {
   @ViewChild(StripePaymentComponent) paymentComponent!: StripePaymentComponent;
   @Input() eventTitle: string = '';
-  @Input() eventDate: string = '';
-  @Input() eventLocation: string = '';
+  @Input() date: string = '';
+  @Input() location: string = '';
   @Input() eventId: string = '';
   @Input() rsvpData: RsvpDetailsData | null = null;
   @Input() hostPaysFees: boolean = false;

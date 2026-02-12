@@ -48,7 +48,14 @@
                 [ngSrc]="homeFeed.currentUserImage()"
               />
             </div>
-            <div class="flex-1 flex flex-col" (click)="navCtrl.navigateForward('/new-post')">
+            <div
+              class="flex-1 flex flex-col"
+              (click)="
+                navCtrl.navigateForward('/new-post', {
+                  state: { defaultVisibility: homeFeed.feedFilter() }
+                })
+              "
+            >
               <div class="post-composer-name body-14SB neutral-01">{{ homeFeed.currentUserName() }}</div>
               <div class="body-12M neutral-03">Start a new post...</div>
             </div>
@@ -72,4 +79,9 @@
       <home-feed [currentUser]="currentUser()" #homeFeedRef />
     </div>
   </div>
+  @if (showFabButton()) {
+    <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="fab">
+      <app-button (click)="onCreatePost()" [icon]="'assets/svg/editIconBlack.svg'" radius="50%" />
+    </ion-fab>
+  }
 </ion-content>

@@ -80,10 +80,7 @@ export class AllEvents implements OnInit, OnDestroy {
 
   // Helper methods
   private formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return this.eventService.datePipe.transform(date, 'yyyy-MM-dd') ?? '';
   }
 
   private getQueryParams(): { eventFilter: string | null; userId: string | null } {
@@ -100,28 +97,30 @@ export class AllEvents implements OnInit, OnDestroy {
     longitude: string | undefined;
     radius: number | undefined;
     startDate: string | undefined;
-    todayDate: string;
+    endDate: string | undefined;
   } {
     const search = this.searchQuery().trim() || undefined;
     const latitude = this.latitude() || undefined;
     const longitude = this.longitude() || undefined;
     const radius = this.selectedDistance() || undefined;
-    const todayDate = this.formatDate(new Date());
 
     let startDate: string | undefined = undefined;
+    let endDate: string | undefined = undefined;
     if (this.selectedDate()) {
       const date = new Date(this.selectedDate());
       if (!isNaN(date.getTime())) {
-        startDate = this.formatDate(date);
+        const datePart = this.formatDate(date);
+        startDate = `${datePart}T00:00:00`;
+        endDate = `${datePart}T23:59:59`;
       }
     }
 
-    return { search, latitude, longitude, radius, startDate, todayDate };
+    return { search, latitude, longitude, radius, startDate, endDate };
   }
 
   private async fetchEvents(page: number, useTodayAsDefault: boolean = false): Promise<any> {
     const { eventFilter, userId } = this.getQueryParams();
-    const { search, latitude, longitude, radius, startDate, todayDate } = this.getFilterParams();
+    const { search, latitude, longitude, radius, startDate, endDate } = this.getFilterParams();
 
     const isPublicEvents = eventFilter === 'public';
     const isRecommendedEvents = eventFilter === 'recommended';
@@ -136,8 +135,7 @@ export class AllEvents implements OnInit, OnDestroy {
       search,
       radius,
       start_date: startDate,
-      order_by: 'start_date' as const,
-      order_direction: 'ASC' as const
+      end_date: endDate
     };
 
     // Only add latitude/longitude if location is selected (not city)
@@ -181,13 +179,15 @@ export class AllEvents implements OnInit, OnDestroy {
     if (isRecommendedEvents) {
       return await this.eventService.getEvents({
         ...baseParams,
-        is_recommended: true
+        is_recommended: true,
+        start_date: new Date()
       });
     }
 
     return await this.eventService.getEvents({
       ...baseParams,
-      ...(isPublicEvents ? { is_public: true } : { is_my_events: false, is_included_me_event: true })
+      is_public: true,
+      start_date: new Date()
     });
   }
 

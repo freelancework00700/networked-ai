@@ -7,7 +7,7 @@ import { MenuItem } from '@/components/modal/menu-modal';
 import { CreateEvent } from '@/pages/event/create-event';
 import { RsvpModal } from '@/components/modal/rsvp-modal';
 import { MenuModal } from '@/components/modal/menu-modal';
-import { inject, Injectable, Signal } from '@angular/core';
+import { DOCUMENT, inject, Injectable, Signal } from '@angular/core';
 import { TitleModal } from '@/components/modal/title-modal';
 import { TicketsModal } from '@/components/modal/tickets-modal';
 import { LoadingModal } from '@/components/modal/loading-modal';
@@ -65,6 +65,7 @@ export class ModalService {
   private modalCtrl = inject(ModalController);
   platform = inject(Platform);
   navCtrl = inject(NavController);
+  private document = inject(DOCUMENT);
 
   async openLoadingModal(message: string): Promise<any> {
     const modal = await this.modalCtrl.create({
@@ -657,7 +658,7 @@ export class ModalService {
       initialBreakpoint: 1,
       component: GuestFilterModal,
       cssClass: 'auto-hight-modal',
-      componentProps: { filter }
+      componentProps: { initialFilter: filter }
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();
@@ -691,7 +692,7 @@ export class ModalService {
     });
     await modal.present();
     const height = this.platform.height() - 180;
-    const innerContent = document.getElementsByClassName('inner-content')[0];
+    const innerContent = this.document.getElementsByClassName('inner-content')[0];
     if (innerContent && innerContent instanceof HTMLElement) {
       innerContent.style.maxHeight = `${height}px`;
     }
@@ -803,7 +804,9 @@ export class ModalService {
     hasPlans?: boolean,
     hasSubscribed?: boolean,
     isSubscriberExclusive?: boolean,
-    plans?:any[]
+    plans?: any[],
+    date?: string,
+    location?: string
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -825,7 +828,9 @@ export class ModalService {
         hasPlans,
         hasSubscribed,
         isSubscriberExclusive,
-        plans
+        plans,
+        date,
+        location
       }
     });
     await modal.present();
@@ -833,16 +838,7 @@ export class ModalService {
     return data || null;
   }
 
-  async openQuestionnairePreviewModal(
-    questions: any[],
-    isPreviewMode: boolean = false,
-    rsvpData?: RsvpDetailsData,
-    eventTitle?: string,
-    eventDate?: string,
-    eventLocation?: string,
-    initialType?: 'pre-event' | 'post-event',
-    allQuestions?: { preEvent: any[]; postEvent: any[] }
-  ): Promise<any> {
+  async openQuestionnairePreviewModal(questions: any[], isPreviewMode: boolean = false): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -852,13 +848,7 @@ export class ModalService {
       component: QuestionnairePreviewModal,
       componentProps: {
         questions,
-        isPreviewMode,
-        rsvpData,
-        eventTitle,
-        eventDate,
-        eventLocation,
-        initialType,
-        allQuestions
+        isPreviewMode
       }
     });
     await modal.present();
@@ -868,8 +858,8 @@ export class ModalService {
 
   async openRsvpDetailsModal(
     eventTitle: string,
-    eventDate: string,
-    eventLocation: string,
+    date: string,
+    location: string,
     eventId: string,
     rsvpData: RsvpDetailsData,
     hostPaysFees?: boolean,
@@ -883,7 +873,7 @@ export class ModalService {
       initialBreakpoint: 1,
       cssClass: 'modal-600px-height',
       component: RsvpDetailsModal,
-      componentProps: { eventTitle, eventDate, eventLocation, eventId, rsvpData, hostPaysFees, additionalFees, hostName }
+      componentProps: { eventTitle, date, location, eventId, rsvpData, hostPaysFees, additionalFees, hostName }
     });
     await modal.present();
     const { data } = await modal.onDidDismiss();
@@ -1143,6 +1133,4 @@ export class ModalService {
     const { data } = await modal.onWillDismiss();
     return data || null;
   }
-
-  
 }

@@ -47,12 +47,7 @@
           @if (showCurrentValue()) {
             <div class="mb-4">
               @if (isEmail()) {
-                <email-input
-                  [controlName]="'currentValue'"
-                  [isSubmitted]="isSubmitted()"
-                  [required]="false"
-                  [label]="currentLabel()"
-                />
+                <email-input [controlName]="'currentValue'" [isSubmitted]="isSubmitted()" [required]="false" [label]="currentLabel()" />
               } @else if (isPhone()) {
                 <mobile-input [controlName]="'currentValue'" [isSubmitted]="isSubmitted()" [required]="false" [label]="currentLabel()" />
               } @else {
@@ -62,7 +57,7 @@
                   [required]="false"
                   [readonly]="true"
                   [label]="currentLabel()"
-                />  
+                />
               }
             </div>
           }
@@ -70,13 +65,20 @@
           <!-- New Value -->
           <div class="mb-4">
             @if (isEmail()) {
-              <email-input #newEmailInput [checkIfTaken]="true" [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [placeholder]="'Enter new email'" [label]="newLabel()" />
+              <email-input
+                #newEmailInput
+                [checkIfTaken]="true"
+                [controlName]="'newValue'"
+                [isSubmitted]="isSubmitted()"
+                [placeholder]="'Enter new email'"
+                [label]="newLabel()"
+              />
             } @else if (isPhone()) {
               <mobile-input [checkIfTaken]="true" #newPhoneInput [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [label]="newLabel()" />
             } @else {
               <username-input #newUsernameInput [checkIfTaken]="true" [controlName]="'newValue'" [isSubmitted]="isSubmitted()" [label]="newLabel()" />
             }
-          </div>  
+          </div>
         }
       </div>
 

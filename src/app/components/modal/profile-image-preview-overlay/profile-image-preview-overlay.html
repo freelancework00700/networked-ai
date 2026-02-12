@@ -28,14 +28,14 @@
       />
     } @else if (showRequestSentOnly()) {
       <app-button
-          [label]="'Pending'"
-          [iconName]="'pi-clock'"
-          [disabled]="isWithdrawingInvitation()"
-          (click)="onWithdrawInvitation()"
-          [isLoading]="isWithdrawingInvitation()"
-          color="primary"
-          class="w-full"
-        />
+        [label]="'Pending'"
+        [iconName]="'pi-clock'"
+        [disabled]="isWithdrawingInvitation()"
+        (click)="onWithdrawInvitation()"
+        [isLoading]="isWithdrawingInvitation()"
+        color="primary"
+        class="w-full"
+      />
     } @else if (isViewingOtherProfile() && isOtherUserConnected()) {
       <!-- Other user, connected: My Network, Copy Link, Share, Business Card -->
       <button type="button" class="action-button" (click)="onMyNetwork()">

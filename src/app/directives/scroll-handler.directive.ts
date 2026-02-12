@@ -1,4 +1,4 @@
-import { Directive, ElementRef, inject, AfterViewInit, OnDestroy, PLATFORM_ID } from '@angular/core';
+import { Directive, ElementRef, inject, AfterViewInit, OnDestroy, PLATFORM_ID, DOCUMENT, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
@@ -11,6 +11,7 @@ const SCROLL_UP_STEP = 0.4;
 const SCROLLING_DOWN_THRESHOLD = 0.8;
 const SCROLL_TOP_THRESHOLD = 50;
 
+export const showFooter = signal<boolean>(true);
 @Directive({
   selector: 'ion-content',
   standalone: true
@@ -20,6 +21,7 @@ export class ScrollHandlerDirective implements AfterViewInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
   private elementRef = inject(ElementRef);
   private routerSubscription?: Subscription;
+  private readonly document = inject(DOCUMENT);
   private scrollListener?: (event: CustomEvent) => void;
 
   // Cached DOM references
@@ -43,7 +45,7 @@ export class ScrollHandlerDirective implements AfterViewInit, OnDestroy {
 
     // Cache DOM references
     this.ionContent = this.elementRef.nativeElement as HTMLElement;
-    this.bodyElement = document.body;
+    this.bodyElement = this.document.body;
 
     // Enable scroll events
     if (!(this.ionContent as any).scrollEvents) {
@@ -151,8 +153,10 @@ export class ScrollHandlerDirective implements AfterViewInit, OnDestroy {
 
     if (shouldAddClass) {
       this.bodyElement.classList.add('scrolling-down');
+      showFooter.set(false);
     } else {
       this.bodyElement.classList.remove('scrolling-down');
+      showFooter.set(true);
     }
   }
 
@@ -171,7 +175,7 @@ export class ScrollHandlerDirective implements AfterViewInit, OnDestroy {
     }
 
     // Fallback to document query (for edge cases)
-    this.headerElement = (document.querySelector('ion-header') as HTMLElement) || undefined;
+    this.headerElement = (this.document.querySelector('ion-header') as HTMLElement) || undefined;
   }
 
   private reset(): void {

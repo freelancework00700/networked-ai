@@ -21,8 +21,8 @@ export class RsvpModal implements OnInit, OnDestroy {
   @Input() questionnaire: any = null;
   @Input() promo_codes: any[] = [];
   @Input() plans: any[] = [];
-  @Input() eventDate: string = '';
-  @Input() eventLocation: string = '';
+  @Input() date: string = '';
+  @Input() location: string = '';
   @Input() hostPaysFees: boolean = false;
   @Input() additionalFees: string | number | null = null;
   @Input() maxAttendeesPerUser: number = 0;
@@ -69,7 +69,7 @@ export class RsvpModal implements OnInit, OnDestroy {
   discountAmountsByTier = signal<{ [key: string]: number }>({});
 
   SPONSOR_GRADIENT =
-  'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
+    'radial-gradient(161.73% 107.14% at 9.38% -7.14%, #F9F2E6 13.46%, #F4D7A9 38.63%, rgba(201, 164, 105, 0.94) 69.52%, #BF9E69 88.87%, rgba(195, 167, 121, 0.9) 100%)';
 
   // Track the first paid ticket ID that was selected (for free subscription benefit)
   firstSelectedPaidTicketId = signal<string | null>(null);
@@ -1117,16 +1117,7 @@ export class RsvpModal implements OnInit, OnDestroy {
       const preEventQuestionnaire = this.questionnaire.filter((q: any) => !q.event_phase || q.event_phase === 'PreEvent');
 
       if (preEventQuestionnaire.length > 0) {
-        this.questionnaireResult.set(
-          await this.modalService.openQuestionnairePreviewModal(
-            preEventQuestionnaire,
-            false,
-            rsvpData,
-            this.eventTitle,
-            this.eventDate,
-            this.eventLocation
-          )
-        );
+        this.questionnaireResult.set(await this.modalService.openQuestionnairePreviewModal(preEventQuestionnaire, false));
 
         if (!this.questionnaireResult()) {
           return;
@@ -1136,8 +1127,8 @@ export class RsvpModal implements OnInit, OnDestroy {
 
     const rsvpConfirmData = await this.modalService.openRsvpDetailsModal(
       this.eventTitle,
-      this.eventDate,
-      this.eventLocation,
+      this.date,
+      this.location,
       this.eventId,
       rsvpData,
       this.hostPaysFees,

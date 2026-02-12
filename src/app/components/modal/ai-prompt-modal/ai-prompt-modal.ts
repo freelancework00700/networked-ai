@@ -1,6 +1,5 @@
-import { Capacitor } from '@capacitor/core';
-import { CommonModule } from '@angular/common';
 import { Clipboard } from '@capacitor/clipboard';
+import { ToasterService } from '@/services/toaster.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { ModalController, IonSpinner, ToastController, IonToolbar, IonHeader, IonFooter, IonContent } from '@ionic/angular/standalone';
@@ -16,12 +15,12 @@ interface Message {
   styleUrl: './ai-prompt-modal.scss',
   templateUrl: './ai-prompt-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonContent, IonFooter, IonHeader, IonToolbar, CommonModule, IonSpinner]
+  imports: [IonContent, IonFooter, IonHeader, IonToolbar, IonSpinner]
 })
 export class AIPromptModal implements OnInit, AfterViewInit {
-  modalCtrl = inject(ModalController);
-  http = inject(HttpClient);
-  toastCtrl = inject(ToastController);
+  private http = inject(HttpClient);
+  private modalCtrl = inject(ModalController);
+  private toasterService = inject(ToasterService);
 
   @Input() conversation: any[] = [];
   @Input() isEvent: boolean = false;
@@ -101,13 +100,7 @@ export class AIPromptModal implements OnInit, AfterViewInit {
       this.autoGrowTextArea();
     } catch (error) {
       console.error('Error sending prompt:', error);
-      const toast = await this.toastCtrl.create({
-        message: 'Error sending prompt. Please try again.',
-        duration: 2000,
-        position: 'bottom',
-        color: 'danger'
-      });
-      await toast.present();
+      await this.toasterService.showError('Error sending prompt. Please try again.');
     } finally {
       this.loading.set(false);
     }
@@ -145,55 +138,15 @@ export class AIPromptModal implements OnInit, AfterViewInit {
 
   async handleCopyText(html: string): Promise<void> {
     try {
-      const isCapacitor = Capacitor.isNativePlatform();
-
-      if (isCapacitor) {
-        try {
-          const plainText = new DOMParser().parseFromString(html, 'text/html').body.textContent || '';
-          await Clipboard.write({
-            string: plainText
-          });
-          const toast = await this.toastCtrl.create({
-            message: 'Text copied to clipboard!',
-            duration: 1500,
-            position: 'bottom',
-            color: 'success'
-          });
-          await toast.present();
-        } catch (error) {
-          console.error('Failed to copy text:', error);
-          await this.copyToWebClipboard(html);
-        }
-      } else {
-        await this.copyToWebClipboard(html);
+      try {
+        const plainText = new DOMParser().parseFromString(html, 'text/html').body.textContent || '';
+        await Clipboard.write({ string: plainText });
+        await this.toasterService.showSuccess('Text copied to clipboard!');
+      } catch (error) {
+        console.error('Failed to copy text:', error);
       }
     } catch (error) {
       console.error('Failed to copy text:', error);
-    }
-  }
-
-  async copyToWebClipboard(html: string): Promise<void> {
-    try {
-      const blob = new Blob([html], { type: 'text/html' });
-      const clipboardItem = new ClipboardItem({ 'text/html': blob });
-      await navigator.clipboard.write([clipboardItem]);
-      const toast = await this.toastCtrl.create({
-        message: 'Text copied to clipboard!',
-        duration: 1500,
-        position: 'bottom',
-        color: 'success'
-      });
-      await toast.present();
-    } catch (error) {
-      const plainText = new DOMParser().parseFromString(html, 'text/html').body.textContent || '';
-      await navigator.clipboard.writeText(plainText);
-      const toast = await this.toastCtrl.create({
-        message: 'Text copied to clipboard!',
-        duration: 1500,
-        position: 'bottom',
-        color: 'success'
-      });
-      await toast.present();
     }
   }
 

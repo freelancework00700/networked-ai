@@ -1,5 +1,6 @@
 import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { NotificationType, RSVPRequestStatus } from '@/enums/enums';
+import { ChatRoom } from './IChat';
 
 export interface INotificationPagination {
   limit: number;
@@ -71,6 +72,7 @@ export interface INotification {
   event?: INotificationEvent | null;
   comment?: INotificationComment | null;
   related_user?: INotificationUser | null;
+  chat_room?: ChatRoom | null;
 }
 
 export interface INotificationsResponse {

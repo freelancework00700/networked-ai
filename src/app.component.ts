@@ -81,6 +81,8 @@ export class AppComponent {
   }
 
   setupDeepLinking() {
+    if (!Capacitor.isNativePlatform()) return;
+
     App.addListener('appUrlOpen', ({ url }: URLOpenListenerEvent) => {
       if (!url) return;
 

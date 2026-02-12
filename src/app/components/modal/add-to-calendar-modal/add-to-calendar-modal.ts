@@ -1,7 +1,7 @@
 import { Browser } from '@capacitor/browser';
 import { environment } from 'src/environments/environment';
 import { Calendar } from '@awesome-cordova-plugins/calendar/ngx';
-import { Component, Input, inject, OnInit } from '@angular/core';
+import { Component, Input, inject, OnInit, DOCUMENT } from '@angular/core';
 import { IonHeader, IonToolbar, IonButton, IonIcon, ModalController, isPlatform } from '@ionic/angular/standalone';
 
 import { Capacitor } from '@capacitor/core';
@@ -18,6 +18,7 @@ import { ToasterService } from '@/services/toaster.service';
 export class AddToCalendarModal implements OnInit {
   private modalCtrl = inject(ModalController);
   private calendar = inject(Calendar);
+  private document = inject(DOCUMENT);
   private toasterService = inject(ToasterService);
   isNative = isPlatform('capacitor') && isPlatform('ios');
 
@@ -42,26 +43,26 @@ export class AddToCalendarModal implements OnInit {
   // 🔹 Build calendar links
   private getCalendarLinks() {
     if (!this.eventData?.start_date || !this.eventData?.end_date) return null;
-  
+
     const start = this.formatGoogleDate(this.eventData.start_date);
     const end = this.formatGoogleDate(this.eventData.end_date);
-  
+
     const title = encodeURIComponent(this.eventData.title || '');
     const description = encodeURIComponent(
       `${this.eventData.description || this.eventData.desc || ''}\n\n${environment.frontendUrl}/event/${this.eventData.slug}`
     );
     const location = encodeURIComponent(this.eventData.location || '');
-  
+
     return {
       Google:
         `https://www.google.com/calendar/render?action=TEMPLATE` +
         `&text=${title}` +
-        `&dates=${start}/${end}` +  
+        `&dates=${start}/${end}` +
         `&details=${description}` +
         `&location=${location}`
     };
   }
-  
+
   async iosCreateEvent() {
     console.log(this.eventData);
     if (Capacitor.getPlatform() !== 'ios') return;
@@ -75,7 +76,7 @@ export class AddToCalendarModal implements OnInit {
           .replace(/\n{2,}/g, '\n')
           .trim();
 
-        const textarea = document.createElement('textarea');
+        const textarea = this.document.createElement('textarea');
         textarea.innerHTML = text;
         return textarea.value;
       };

@@ -49,7 +49,7 @@ export class MessagesService extends BaseApiService {
     } = {}
   ): Promise<{ rooms: ChatRoom[]; pagination: ChatRoomsPagination }> {
     try {
-      if(!params.append && !params.skipClear) this.chatRooms.set([]);
+      if (!params.append && !params.skipClear) this.chatRooms.set([]);
       this.isLoading.set(true);
       const currentUser = this.authService.currentUser();
       if (!currentUser?.id) {
@@ -119,9 +119,7 @@ export class MessagesService extends BaseApiService {
 
   async fetchUnreadCount(): Promise<void> {
     try {
-      const response = await this.get<{ data: { count: number; by_room?: { room_id: string; unread_count: number }[] } }>(
-        '/chat-rooms/unread-count'
-      );
+      const response = await this.get<{ data: { count: number; by_room?: { room_id: string; unread_count: number }[] } }>('/chat-rooms/unread-count');
       this.unreadCount.set(response?.data?.count ?? 0);
     } catch (error) {
       console.error('Error fetching unread message count:', error);
@@ -418,15 +416,22 @@ export class MessagesService extends BaseApiService {
     return [...rooms].sort((a, b) => {
       const timeA = a.lastMessageTime || a.created_at;
       const timeB = b.lastMessageTime || b.created_at;
-      
+
       const dateA = new Date(timeA).getTime();
       const dateB = new Date(timeB).getTime();
-      
+
       return dateB - dateA;
     });
   }
 
-  async shareInChat(payload: { event_id?: string; peer_ids?: string[]; send_entire_network?: boolean; type?: string; feed_id?: string; message?: string }): Promise<any> {
+  async shareInChat(payload: {
+    event_id?: string;
+    peer_ids?: string[];
+    send_entire_network?: boolean;
+    type?: string;
+    feed_id?: string;
+    message?: string;
+  }): Promise<any> {
     try {
       const response = await this.post<any>('/chat-rooms/share', payload);
       return response;

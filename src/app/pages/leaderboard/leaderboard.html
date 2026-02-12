@@ -46,13 +46,7 @@
                     </div>
                   } @else {
                     <div class="w-15 h-15 rounded-full object-cover overflow-hidden relative border-2 border-white shadow-md">
-                    <img
-                      fill
-                      placeholder
-                      [ngSrc]="getUserImage(user)"
-                      [alt]="user.name"
-                      (error)="onImageError($event)"
-                      />
+                      <img fill placeholder [ngSrc]="getUserImage(user)" [alt]="user.name" (error)="onImageError($event)" />
                     </div>
                   }
 

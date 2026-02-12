@@ -20,7 +20,7 @@
 <ion-content #content [fullscreen]="true" mode="md" (click)="revertEditMode()">
   @if (showEventAnalytics()) {
     <div class="sticky top-0 z-50 bg-white cursor-pointer" (click)="navigateToNetwork()">
-      <div class="w-full max-w-[672px] mx-auto p-4 pt-0">
+      <div class="w-full max-w-[672px] mx-auto p-4">
         <div class="flex items-center justify-between gap-4 rounded-xl border border-surface-300 bg-white p-2 shadow-sm">
           <div class="flex items-center gap-2">
             <img src="assets/svg/users-verify.svg" class="h-9 w-9" />
@@ -103,7 +103,12 @@
                   <app-chat-event-card [event]="msg.event" />
                 }
                 @if (msg.message) {
-                  <div class="px-4 py-2 whitespace-pre-line" [class.pt-2]="msg.media_url" [innerHTML]="renderMessageText(msg.message)" (click)="onProfileLinkClick($event)"></div>
+                  <div
+                    class="px-4 py-2 whitespace-pre-line"
+                    [class.pt-2]="msg.media_url"
+                    [innerHTML]="renderMessageText(msg.message)"
+                    (click)="onProfileLinkClick($event)"
+                  ></div>
                 }
                 @if (msg.is_edited && !msg.is_deleted) {
                   <div class="px-4 pb-2 text-xs opacity-70">(edited)</div>
@@ -192,7 +197,12 @@
                   }
                   <!-- Text (with or without media) -->
                   @if (msg.message) {
-                    <div class="px-4 py-2" [class.pt-2]="msg.media_url" [innerHTML]="renderMessageText(msg.message)" (click)="onProfileLinkClick($event)"></div>
+                    <div
+                      class="px-4 py-2"
+                      [class.pt-2]="msg.media_url"
+                      [innerHTML]="renderMessageText(msg.message)"
+                      (click)="onProfileLinkClick($event)"
+                    ></div>
                   }
                   @if (msg.is_edited && !msg.is_deleted) {
                     <div class="px-4 pb-2 text-xs opacity-70">(edited)</div>

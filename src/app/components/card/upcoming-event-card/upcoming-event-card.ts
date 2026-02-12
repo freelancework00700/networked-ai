@@ -34,7 +34,6 @@ export class UpcomingEventCard {
     return getImageUrlOrDefault(imageUrl);
   });
 
-  
   isHostOrCoHost = computed(() => {
     const currentEvent = this.event();
     const isHostOrCoHost = this.eventService.checkHostOrCoHostAccess(currentEvent);

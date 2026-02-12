@@ -1,12 +1,4 @@
-import {
-  Component,
-  inject,
-  ChangeDetectionStrategy,
-  input,
-  output,
-  computed,
-  signal
-} from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, input, output, computed, signal } from '@angular/core';
 import { IonIcon } from '@ionic/angular/standalone';
 import { NgOptimizedImage } from '@angular/common';
 import { ToasterService } from '@/services/toaster.service';
@@ -18,6 +10,7 @@ import { NavigationService } from '@/services/navigation.service';
 import { NetworkService } from '@/services/network.service';
 import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { Button } from '@/components/form/button';
+import { Clipboard } from '@capacitor/clipboard';
 
 const DEFAULT_FRONTEND_URL = 'https://dev.app.net-worked.ai';
 const CONFIRM_DANGER_OPTIONS = {
@@ -53,21 +46,15 @@ export class ProfileImagePreviewOverlay {
     return this.user()?.connection_status as ConnectionStatus | undefined;
   });
 
-  isOtherUserConnected = computed(
-    () => this.connectionStatus() === ConnectionStatus.CONNECTED
-  );
-  isRequestSent = computed(
-    () => this.connectionStatus() === ConnectionStatus.REQUEST_SENT
-  );
+  isOtherUserConnected = computed(() => this.connectionStatus() === ConnectionStatus.CONNECTED);
+  isRequestSent = computed(() => this.connectionStatus() === ConnectionStatus.REQUEST_SENT);
   showAddAsNetworkOnly = computed(
     () =>
       this.isViewingOtherProfile() &&
       this.connectionStatus() !== ConnectionStatus.CONNECTED &&
       this.connectionStatus() !== ConnectionStatus.REQUEST_SENT
   );
-  showRequestSentOnly = computed(
-    () => this.isViewingOtherProfile() && this.isRequestSent()
-  );
+  showRequestSentOnly = computed(() => this.isViewingOtherProfile() && this.isRequestSent());
 
   close(): void {
     this.closeOverlay.emit();
@@ -78,7 +65,7 @@ export class ProfileImagePreviewOverlay {
     if (!user) return;
     try {
       const url = environment.frontendUrl ?? DEFAULT_FRONTEND_URL;
-      await navigator.clipboard.writeText(`${url}/${user.username ?? ''}`);
+      await Clipboard.write({ string: `${url}/${user.username ?? ''}` });
       this.toasterService.showSuccess('Link copied to clipboard');
     } catch (error) {
       console.error('Error copying link:', error);

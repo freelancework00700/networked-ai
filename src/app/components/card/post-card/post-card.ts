@@ -1,6 +1,5 @@
-import { Swiper } from 'swiper';
 import { Pagination } from 'swiper/modules';
-import { NavController } from '@ionic/angular';
+import { IonicSlides, NavController } from '@ionic/angular/standalone';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
@@ -9,22 +8,9 @@ import { FeedService } from '@/services/feed.service';
 import { NavigationService } from '@/services/navigation.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
-import { DatePipe, NgOptimizedImage, isPlatformBrowser } from '@angular/common';
+import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  inject,
-  input,
-  output,
-  signal,
-  ViewChild,
-  computed,
-  PLATFORM_ID,
-  Input,
-  effect
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal, computed, effect, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { FeedPost } from '@/interfaces/IFeed';
 import { Router } from '@angular/router';
 import { NetworkService } from '@/services/network.service';
@@ -32,16 +18,17 @@ import { SocketService } from '@/services/socket.service';
 import { IUser } from '@/interfaces/IUser';
 
 @Component({
-  imports: [Button, NgOptimizedImage],
   selector: 'post-card',
   styleUrl: './post-card.scss',
   templateUrl: './post-card.html',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [Button, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PostCard {
+  postLiked = output<string>();
   postRemoved = output<string>();
 
-  @ViewChild('swiperEl', { static: false }) swiperEl!: ElementRef<HTMLDivElement>;
   post = input.required<FeedPost>();
   postPreview = signal<FeedPost | null>(null);
 
@@ -55,14 +42,14 @@ export class PostCard {
   router = inject(Router);
   private socketService = inject(SocketService);
 
-  private platformId = inject(PLATFORM_ID);
   private networkService = inject(NetworkService);
 
   private datePipe = new DatePipe('en-US');
 
   onMore = output<void>();
 
-  swiper?: Swiper;
+  // variables
+  swiperModules = [IonicSlides, Pagination];
 
   currentSlide = signal(0);
   isLoading = signal(false);
@@ -149,32 +136,6 @@ export class PostCard {
       this.postPreview.set(this.post());
     });
     this.setupNetworkConnectionListener();
-  }
-  ngAfterViewChecked() {
-    // Only initialize Swiper in browser environment (not during SSR)
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    if (this.swiper) return;
-    if (!this.swiperEl?.nativeElement) return;
-    if (!this.sortedMedias().length) return;
-
-    this.swiper = new Swiper(this.swiperEl.nativeElement, {
-      modules: [Pagination],
-      slidesPerView: 1,
-      spaceBetween: 0,
-      allowTouchMove: true,
-      observer: true,
-      nested: true,
-      pagination: {
-        el: '.swiper-pagination'
-      },
-
-      on: {
-        slideChange: (swiper) => {
-          this.currentSlide.set(swiper.activeIndex);
-        }
-      }
-    });
   }
 
   formatEventDate(dateString: string): string {
@@ -453,10 +414,13 @@ export class PostCard {
   async toggleLike(): Promise<void> {
     if (!(await this.ensureLoggedIn())) return;
     const postId = this.post().id;
+    this.feedService.optimisticToggleLike(postId!);
+    this.postLiked.emit(postId!);
     try {
       await this.feedService.toggleLike(postId!);
     } catch (error) {
       console.error('Error toggling like:', error);
+      this.feedService.optimisticToggleLike(postId!);
     }
   }
 

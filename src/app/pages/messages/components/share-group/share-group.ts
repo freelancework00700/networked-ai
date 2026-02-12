@@ -2,14 +2,16 @@ import { Capacitor } from '@capacitor/core';
 import { QrCodeComponent } from 'ng-qrcode';
 import { Share } from '@capacitor/share';
 import * as htmlToImage from 'html-to-image';
+import { Clipboard } from '@capacitor/clipboard';
 import { Button } from '@/components/form/button';
+import { isPlatformBrowser } from '@angular/common';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
 import { MessagesService } from '@/services/messages.service';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { IonFooter, IonToolbar } from '@ionic/angular/standalone';
 import { CommonShareFooter } from '@/components/common/common-share-footer';
-import { Input, signal, inject, Inject, DOCUMENT, Component, ElementRef, ViewChild } from '@angular/core';
+import { Input, signal, inject, DOCUMENT, Component, ElementRef, ViewChild, PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'share-group',
@@ -21,10 +23,15 @@ export class ShareGroup {
   @ViewChild('downloadableSection', { static: false, read: ElementRef }) downloadableSection?: ElementRef<HTMLDivElement>;
 
   @Input() data: any;
+  private document = inject(DOCUMENT);
   private modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
   private messagesService = inject(MessagesService);
-  @Inject(DOCUMENT) private document = inject(DOCUMENT);
+
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+
   group = signal<any | null>(null);
   isDownloading = signal(false);
 
@@ -36,8 +43,8 @@ export class ShareGroup {
     this.modalService.close();
   }
 
-  copyLink() {
-    navigator.clipboard.writeText(this.group()?.inviteLink || '');
+  async copyLink() {
+    await Clipboard.write({ string: this.group()?.inviteLink || '' });
     this.toasterService.showSuccess('Link copied to clipboard');
   }
 
@@ -65,7 +72,7 @@ export class ShareGroup {
 
       // WEB
       if (Capacitor.getPlatform() === 'web') {
-        const link = document.createElement('a');
+        const link = this.document.createElement('a');
         link.href = dataUrl;
         link.download = fileName;
         link.click();
@@ -114,7 +121,7 @@ export class ShareGroup {
     }
 
     const message = encodeURIComponent(`Join my group "${this.getGroupName()}": ${link}`);
-    window.open(`sms:?body=${message}`, '_self');
+    if (this.isBrowser) window.open(`sms:?body=${message}`, '_self');
   }
 
   async onCopyLink(): Promise<void> {
@@ -147,7 +154,7 @@ export class ShareGroup {
       confirmButtonColor: 'primary',
       onConfirm: async () => {
         const link = this.getInviteLink();
-        
+
         if (!link) {
           this.toasterService.showError('Group invite link not available');
           return;
@@ -183,8 +190,8 @@ export class ShareGroup {
 
     const subject = encodeURIComponent(`Join my group - ${this.getGroupName()}`);
     const body = encodeURIComponent(`Hi,\n\nJoin my group "${this.getGroupName()}": ${link}`);
-    
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+
+    if (this.isBrowser) window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
   }
 
   onWhatsapp(): void {
@@ -196,7 +203,7 @@ export class ShareGroup {
 
     const message = encodeURIComponent(`Join my group "${this.getGroupName()}": ${link}`);
     const whatsappUrl = `https://wa.me/?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+    if (this.isBrowser) window.open(whatsappUrl, '_blank');
   }
 
   onShareToX(): void {
@@ -205,7 +212,7 @@ export class ShareGroup {
 
     const text = encodeURIComponent(link);
     const twitterUrl = `https://x.com/intent/tweet?text=${text}`;
-    window.open(twitterUrl, '_blank');
+    if (this.isBrowser) window.open(twitterUrl, '_blank');
   }
 
   onShareToThreads(): void {
@@ -214,6 +221,6 @@ export class ShareGroup {
 
     const text = encodeURIComponent(link);
     const threadsUrl = `https://threads.net/intent/post?text=${text}`;
-    window.open(threadsUrl, '_blank');
+    if (this.isBrowser) window.open(threadsUrl, '_blank');
   }
 }

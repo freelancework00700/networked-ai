@@ -3,7 +3,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ModalService } from '@/services/modal.service';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { IonFooter, IonHeader, IonToolbar } from '@ionic/angular/standalone';
-import { Input, signal, inject, Component, ChangeDetectionStrategy } from '@angular/core';
+import { signal, inject, Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 
 @Component({
   selector: 'guest-filter-modal',
@@ -12,13 +12,11 @@ import { Input, signal, inject, Component, ChangeDetectionStrategy } from '@angu
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Button, IonHeader, IonFooter, IonToolbar, CheckboxModule, ReactiveFormsModule]
 })
-export class GuestFilterModal {
-  // services
+export class GuestFilterModal implements OnInit {
   private fb = inject(FormBuilder);
   private modalService = inject(ModalService);
 
-  // inputs
-  @Input() filter: any;
+  initialFilter: Record<string, boolean> = {};
 
   // signals
   form = signal<FormGroup<any>>(
@@ -30,11 +28,9 @@ export class GuestFilterModal {
       notCheckedIn: false,
       myNetwork: false,
       notMyNetwork: false,
-      inApp: false,
-      onTheSpot: false,
       earlyBird: false,
       standard: false,
-      premium: false,
+      free: false,
       sponsor: false
     })
   );
@@ -62,32 +58,43 @@ export class GuestFilterModal {
       ]
     },
     {
-      title: 'Purchase Method',
-      options: [
-        { control: 'inApp', label: 'In-App' },
-        { control: 'onTheSpot', label: 'On the spot' }
-      ]
-    },
-    {
       title: 'Ticket Type(s)',
       options: [
         { control: 'earlyBird', label: 'Early Bird' },
         { control: 'standard', label: 'Standard' },
-        { control: 'premium', label: 'Premium' },
-        { control: 'sponsor', label: 'Sponsor' }
+        { control: 'sponsor', label: 'Sponsor' },
+        { control: 'free', label: 'Free' }
       ]
     }
   ]);
 
-  ionViewWillEnter() {
-    this.form().patchValue({ ...this.filter });
+  ngOnInit(): void {
+    this.form().patchValue({ ...this.initialFilter });
   }
 
-  apply() {
+  readonly resetValues = {
+    attending: true,
+    maybe: true,
+    notAttending: true,
+    checkedIn: true,
+    notCheckedIn: true,
+    myNetwork: true,
+    notMyNetwork: true,
+    earlyBird: true,
+    standard: true,
+    free: true,
+    sponsor: true
+  };
+
+  reset(): void {
+    this.form().patchValue(this.resetValues);
+  }
+
+  apply(): void {
     this.modalService.close(this.form().value);
   }
 
-  close() {
+  close(): void {
     this.modalService.close();
   }
 }

@@ -19,6 +19,7 @@ import {
   IonHeader,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
+  IonSpinner,
   IonToolbar,
   NavController
 } from '@ionic/angular/standalone';
@@ -28,6 +29,7 @@ import { MenuItem } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
+import { Clipboard } from '@capacitor/clipboard';
 import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { environment } from 'src/environments/environment';
 @Component({
@@ -46,7 +48,8 @@ import { environment } from 'src/environments/environment';
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     NgOptimizedImage,
-    MenuModule
+    MenuModule,
+    IonSpinner
   ]
 })
 export class CreateGroup {
@@ -89,6 +92,8 @@ export class CreateGroup {
   groupImageFile = signal<File | null>(null);
   groupImageUrl = signal<string | null>(null);
   groupName = signal<string>('');
+
+  isCreatingOrJoining = signal<boolean>(false);
 
   groupImageMenuItems(): MenuItem[] {
     return [
@@ -151,13 +156,13 @@ export class CreateGroup {
   async ngOnInit(): Promise<void> {
     const roomIdParam = this.route.snapshot.queryParamMap.get('roomId');
     const fromParam = this.route.snapshot.queryParamMap.get('from');
-    
+
     const navigation = this.router.currentNavigation();
     const state: any = navigation?.extras?.state;
-    
+
     const roomId = roomIdParam || state?.roomId;
     const from = fromParam || state?.from;
-    
+
     if (roomId) {
       this.roomId.set(roomId);
       this.from.set(from === 'chat-info' ? 'chat-info' : 'new-chat');
@@ -320,6 +325,7 @@ export class CreateGroup {
     const memberIds = this.selectedMembers().map((u) => u.id);
     const user_ids = Array.from(new Set([currentUserId, ...memberIds]));
 
+    this.isCreatingOrJoining.set(true);
     try {
       let profileImageUrl: string | null = this.groupImageUrl() ?? null;
       if (!profileImageUrl) {
@@ -355,6 +361,8 @@ export class CreateGroup {
       this.navCtrl.navigateRoot('/messages');
     } catch (error) {
       console.error('Error creating group:', error);
+    } finally {
+      this.isCreatingOrJoining.set(false);
     }
   }
 
@@ -365,9 +373,9 @@ export class CreateGroup {
     }
 
     // if (this.from() === 'chat-info') {
-      this.navCtrl.back();
-  //     return;
-  // }
+    this.navCtrl.back();
+    //     return;
+    // }
 
     // this.navCtrl.navigateBack('/messages');
   }
@@ -428,6 +436,8 @@ export class CreateGroup {
       return;
     }
 
+    this.isCreatingOrJoining.set(true);
+
     try {
       await this.messagesService.joinRoom(roomId, selectedIds);
 
@@ -435,6 +445,8 @@ export class CreateGroup {
       this.navCtrl.back();
     } catch (error) {
       console.error('Error adding members to group:', error);
+    } finally {
+      this.isCreatingOrJoining.set(false);
     }
   }
 
@@ -447,7 +459,7 @@ export class CreateGroup {
 
     try {
       const inviteLink = `${environment.frontendUrl}/group-invitation/${roomId}`;
-      await navigator.clipboard.writeText(inviteLink);
+      await Clipboard.write({ string: inviteLink });
       this.toasterService.showSuccess('Invite link copied to clipboard');
     } catch (error) {
       console.error('Error copying invite link:', error);

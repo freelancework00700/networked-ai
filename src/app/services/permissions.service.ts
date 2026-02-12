@@ -74,19 +74,6 @@ export class PermissionsService {
   }
 
   async requestLocationPermission(): Promise<PermissionResult> {
-    if (!this.isNativePlatform()) {
-      // Web platform
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        });
-        console.log('position', position);
-        return { granted: true, status: 'granted' };
-      } catch (error: any) {
-        return { granted: false, status: 'denied' };
-      }
-    }
-
     try {
       // First check current permission status
       let currentStatus;
@@ -134,22 +121,6 @@ export class PermissionsService {
   }
 
   async checkLocationPermission(): Promise<PermissionResult> {
-    if (!this.isNativePlatform()) {
-      try {
-        if (navigator.permissions) {
-          const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-          console.log('status', status);
-          return {
-            granted: status.state === 'granted',
-            status: status.state as PermissionStatus
-          };
-        }
-        return { granted: false, status: 'denied' };
-      } catch {
-        return { granted: false, status: 'denied' };
-      }
-    }
-
     try {
       const result = await Geolocation.checkPermissions();
 
@@ -183,25 +154,9 @@ export class PermissionsService {
    * @returns Promise with latitude and longitude, or null if unavailable
    */
   async getCurrentLocation(): Promise<{ latitude: string; longitude: string } | null> {
+    if (!isPlatformBrowser(this.platformId)) return null;
+
     const defaultOptions = { maximumAge: 0, timeout: 10000, enableHighAccuracy: false };
-
-    if (!this.isNativePlatform()) {
-      if (!isPlatformBrowser(this.platformId)) return null;
-
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, defaultOptions);
-        });
-
-        return {
-          latitude: position.coords.latitude.toString(),
-          longitude: position.coords.longitude.toString()
-        };
-      } catch (error: any) {
-        console.error('Error getting location on web:', error);
-        return null;
-      }
-    }
 
     // Native platform
     try {

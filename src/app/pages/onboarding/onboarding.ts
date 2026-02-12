@@ -1,60 +1,53 @@
-import { Swiper } from 'swiper';
 import { Button } from '@/components/form/button';
-import { isPlatformBrowser } from '@angular/common';
+import type { SwiperContainer } from 'swiper/element';
 import { PermissionsService } from '@/services/permissions.service';
-import { IonContent, NavController } from '@ionic/angular/standalone';
 import { KEYS, LocalStorageService } from '@/services/localstorage.service';
-import { signal, inject, Component, OnDestroy, PLATFORM_ID, AfterViewInit } from '@angular/core';
+import { IonContent, IonicSlides, NavController } from '@ionic/angular/standalone';
+import { signal, inject, Component, viewChild, ElementRef, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 @Component({
   selector: 'onboarding',
   imports: [IonContent, Button],
   styleUrl: './onboarding.scss',
-  templateUrl: './onboarding.html'
+  templateUrl: './onboarding.html',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class Onboarding implements AfterViewInit, OnDestroy {
+export class Onboarding {
   // services
   navCtrl = inject(NavController);
-  private platformId = inject(PLATFORM_ID);
   private permissionsService = inject(PermissionsService);
   private localStorageService = inject(LocalStorageService);
 
   // signals
   currentSlide = signal(0);
 
-  // swiper instance
-  swiper?: Swiper;
+  // viewChilds
+  profileSwiperEl = viewChild<ElementRef<SwiperContainer>>('onboardingSwiper');
 
-  ngAfterViewInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      this.swiper = new Swiper('.swiper-onboarding', {
-        spaceBetween: 0,
-        slidesPerView: 1,
-        allowTouchMove: true,
-        on: {
-          slideChange: (swiper) => {
-            this.currentSlide.set(swiper.activeIndex);
+  // variables
+  swiperModules = [IonicSlides];
 
-            // request permissions for the current slide
-            if (swiper.activeIndex === 0) {
-              this.permissionsService.requestCameraPermission();
-            } else if (swiper.activeIndex === 1) {
-              this.permissionsService.requestLocationPermission();
-            } else if (swiper.activeIndex === 2) {
-              this.permissionsService.requestContactsPermission();
-            }
-          }
-        }
-      });
+  onSlideChange(event: Event) {
+    const { activeIndex } = (event.target as SwiperContainer).swiper;
+    this.currentSlide.set(activeIndex);
 
-      // request camera permission for the initial slide
+    // request permissions for the current slide
+    if (activeIndex === 0) {
       this.permissionsService.requestCameraPermission();
+    } else if (activeIndex === 1) {
+      this.permissionsService.requestLocationPermission();
+    } else if (activeIndex === 2) {
+      this.permissionsService.requestContactsPermission();
     }
+
+    // request camera permission for the initial slide
+    this.permissionsService.requestCameraPermission();
   }
 
   goToSlide(index: number) {
-    if (this.swiper && index >= 0 && index <= 2) {
-      this.swiper.slideTo(index);
+    const swiper = this.profileSwiperEl()?.nativeElement?.swiper;
+    if (swiper && index >= 0 && index <= 2) {
+      swiper.slideTo(index, 100);
     }
   }
 
@@ -63,11 +56,5 @@ export class Onboarding implements AfterViewInit, OnDestroy {
 
     // navigate to login page
     this.navCtrl.navigateForward('/login');
-  }
-
-  ngOnDestroy() {
-    if (this.swiper) {
-      this.swiper.destroy(true, true);
-    }
   }
 }

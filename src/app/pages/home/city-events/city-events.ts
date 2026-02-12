@@ -14,7 +14,7 @@ import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit, O
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'scity-events',
+  selector: 'city-events',
   styleUrl: './city-events.scss',
   templateUrl: './city-events.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -153,8 +153,7 @@ export class CityEvents implements OnInit, OnDestroy {
       const params: any = {
         page: page,
         limit: this.pageLimit,
-        order_by: 'start_date',
-        order_direction: 'ASC'
+        start_date: new Date()
       };
 
       if (search && search.trim()) {
