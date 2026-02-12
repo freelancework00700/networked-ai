@@ -92,7 +92,7 @@
             'border border-white/10': !(isSubscriberExclusive() && !currentEvent().has_subscribed && !isHost())
           }"
         >
-          <div class="flex flex-col gap-0.5">
+          <div class="flex flex-col gap-0.5 w-full">
             <div class="body-16SB neutral-07 line-clamp-1">{{ currentEvent().title || 'Untitled Event' }}</div>
             <div class="flex justify-between items-center py-2">
               <div class="body-12 neutral-05 absolute left-3 z-10">{{ eventOrganization() }}</div>

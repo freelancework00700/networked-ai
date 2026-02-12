@@ -345,8 +345,11 @@ export class ChatRoom implements OnInit, OnDestroy {
     const roomId = this.chatId();
 
     if (userId && roomId) {
-      await this.messagesService.joinRoom(roomId, [userId]);
-
+      try {
+        await this.messagesService.joinRoom(roomId, [userId]);
+      } catch (error) {
+        console.error(error);
+      }
       this.socketService.onAfterRegistration(() => {
         this.socketService.emit('joinRoom', { userId, roomId });
       });
@@ -370,6 +373,8 @@ export class ChatRoom implements OnInit, OnDestroy {
    */
   private setupMessageListener(): void {
     const currentRoomId = this.chatId();
+
+    console.log('setupMessageListener:', currentRoomId);
 
     // Handler for message:created
     this.messageCreatedHandler = (payload: { message: ChatMessage }) => {

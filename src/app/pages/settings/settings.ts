@@ -177,11 +177,11 @@ export class Settings implements OnInit {
 
   async handleStripeAccountCreation(): Promise<void> {
     try {
-      const accountResponse = await this.stripeService.createStripeAccount();
+      const accountResponse: any = await this.stripeService.createStripeAccount();
       if (accountResponse?.url) {
         await Browser.open({ url: accountResponse.url });
       } else {
-        this.toasterService.showError('Failed to get Stripe account URL. Please try again.');
+        this.toasterService.showError(accountResponse?.message || 'Failed to get Stripe account URL. Please try again.');
       }
     } catch (error) {
       console.error('Error creating Stripe account:', error);

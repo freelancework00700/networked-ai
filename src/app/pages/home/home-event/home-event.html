@@ -80,35 +80,37 @@
     </div>
   }
 
-  <!-- city swiper -->
-  <swiper-container
-    speed="100"
-    space-between="8"
-    slides-per-view="2.2"
-    allow-touch-move="true"
-    slides-offset-after="16"
-    slides-offset-before="16"
-    [modules]="swiperModules"
-    [breakpoints]="{ '768': { slidesPerView: 3 } }"
-  >
-    @if (isLoadingCities()) {
-      <!-- Skeleton for cities -->
-      @for (i of [1, 2, 3, 4]; track i) {
-        <swiper-slide>
-          <div class="relative h-[120px] shrink-0 rounded-[12px] overflow-hidden">
-            <ion-skeleton-text animated class="w-full h-full" />
-          </div>
-        </swiper-slide>
+  @if (isLoadingCities() || cityCards().length > 0) {
+    <!-- city swiper -->
+    <swiper-container
+      speed="100"
+      space-between="8"
+      slides-per-view="2.2"
+      allow-touch-move="true"
+      slides-offset-after="16"
+      slides-offset-before="16"
+      [modules]="swiperModules"
+      [breakpoints]="{ '768': { slidesPerView: 3 } }"
+    >
+      @if (isLoadingCities()) {
+        <!-- Skeleton for cities -->
+        @for (i of [1, 2, 3, 4]; track i) {
+          <swiper-slide>
+            <div class="relative h-[120px] shrink-0 rounded-[12px] overflow-hidden">
+              <ion-skeleton-text animated class="w-full h-full" />
+            </div>
+          </swiper-slide>
+        }
+      } @else {
+        <!-- cities -->
+        @for (city of cityCards(); track city.city) {
+          <swiper-slide (click)="onCityClick(city)">
+            <city-card [city]="city" />
+          </swiper-slide>
+        }
       }
-    } @else {
-      <!-- cities -->
-      @for (city of cityCards(); track city.city) {
-        <swiper-slide (click)="onCityClick(city)">
-          <city-card [city]="city" />
-        </swiper-slide>
-      }
-    }
-  </swiper-container>
+    </swiper-container>
+  }
 
   <!-- events for you -->
   @if (isLoggedIn()) {

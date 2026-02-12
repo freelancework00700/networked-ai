@@ -25,6 +25,12 @@
     </div>
   }
 
+  @if (posts().length <= 1) {
+    <div class="w-full max-w-[672px] mx-auto mb-4">
+      <user-recommendations />
+    </div>
+  }
+
   <!-- Infinite scroll -->
   <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreFeeds($event)">
     <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more posts..." />
