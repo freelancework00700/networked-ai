@@ -12,7 +12,6 @@ import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { Button } from '@/components/form/button';
 import { Clipboard } from '@capacitor/clipboard';
 
-const DEFAULT_FRONTEND_URL = 'https://dev.app.net-worked.ai';
 const CONFIRM_DANGER_OPTIONS = {
   icon: 'assets/svg/alert-white.svg',
   cancelButtonLabel: 'Cancel' as const,
@@ -64,7 +63,7 @@ export class ProfileImagePreviewOverlay {
     const user = this.user();
     if (!user) return;
     try {
-      const url = environment.frontendUrl ?? DEFAULT_FRONTEND_URL;
+      const url = environment.frontendUrl;
       await Clipboard.write({ string: `${url}/${user.username ?? ''}` });
       this.toasterService.showSuccess('Link copied to clipboard');
     } catch (error) {

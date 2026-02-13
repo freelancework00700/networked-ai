@@ -77,7 +77,7 @@
             <div class="relative flex items-center justify-between">
               <ion-icon name="arrow-back" class="text-[20px] cursor-pointer neutral-03" (click)="navCtrl.back()"></ion-icon>
               <div class="body-14SB neutral-01 absolute left-1/2 -translate-x-1/2">{{ currentUser()?.username || currentUser()?.name }}</div>
-              @if (isLoggedIn()) {
+              @if (isLoggedIn() && currentUser()) {
                 <ion-icon src="/assets/svg/menu-dot.svg" (click)="openProfileOptionsPopover($event)" class="text-[20px] cursor-pointer" />
               } @else {
                 <div class="w-[20px]"></div>

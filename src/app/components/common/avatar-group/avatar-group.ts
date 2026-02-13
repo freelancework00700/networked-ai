@@ -1,13 +1,14 @@
 import { Avatar } from 'primeng/avatar';
 import { IUser } from '@/interfaces/IUser';
 import { AvatarGroup } from 'primeng/avatargroup';
-import { getImageUrlOrDefault } from '@/utils/helper';
+import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
 import { Component, input, ChangeDetectionStrategy, inject } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'avatar-group',
-  imports: [Avatar, AvatarGroup],
+  imports: [Avatar, AvatarGroup, NgOptimizedImage],
   styleUrl: './avatar-group.scss',
   templateUrl: './avatar-group.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -65,5 +66,13 @@ export class AvatarGroupComponent {
     if (username) {
       this.navigationService.navigateForward(`/${username}`);
     }
+  }
+
+  onImageError(event: Event): void {
+    onImageError(event);
+  }
+
+  getImageUrl(imageUrl = ''): string {
+    return getImageUrlOrDefault(imageUrl);
   }
 }

@@ -374,8 +374,6 @@ export class ChatRoom implements OnInit, OnDestroy {
   private setupMessageListener(): void {
     const currentRoomId = this.chatId();
 
-    console.log('setupMessageListener:', currentRoomId);
-
     // Handler for message:created
     this.messageCreatedHandler = (payload: { message: ChatMessage }) => {
       const newMessage = payload.message;
