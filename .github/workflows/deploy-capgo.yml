@@ -1,4 +1,4 @@
-name: Build & Create ZIP
+name: Deploy On Capgo
 
 on:
   push:
