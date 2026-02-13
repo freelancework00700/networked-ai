@@ -296,6 +296,13 @@ export class RsvpModal implements OnInit, OnDestroy {
     this.startTimeUpdate();
   }
 
+  private async ensureLoggedIn(): Promise<boolean> {
+    if (this.authService.getCurrentToken()) return true;
+    const result = await this.modalService.openLoginModal();
+    return result?.success ?? false;
+  }
+
+
   calculateAmountsForAllTiers(): void {
     const tickets = this.ticketsData();
     if (!tickets || tickets.length === 0) return;
@@ -1081,10 +1088,12 @@ export class RsvpModal implements OnInit, OnDestroy {
   }
 
   async dismiss(): Promise<void> {
-    if (!this.isLoggedIn()) {
-      await this.modalService.openSignupModal();
-      return;
-    }
+    // if (!this.isLoggedIn()) {
+    //   await this.modalService.openSignupModal();
+    //   return;
+    // }
+
+    if (!(await this.ensureLoggedIn())) return;
 
     if (this.hasSponsorPlan() && !this.hasSubscribed && this.isSelectedSponsorTicket() && !this.hasShownSponsorPrompt()) {
       this.hasShownSponsorPrompt.set(true);

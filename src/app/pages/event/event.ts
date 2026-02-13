@@ -491,6 +491,9 @@ export class Event implements OnInit, OnDestroy {
   }
 
   async sendRsvpRequest(): Promise<void> {
+    const isLoggedIn = await this.eventService.checkIsLoggin();
+    if (!isLoggedIn) return;
+    
     const eventId = this.eventIdFromData();
     if (!eventId) {
       console.error('Event ID not found');
