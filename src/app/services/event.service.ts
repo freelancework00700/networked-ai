@@ -1148,6 +1148,7 @@ export class EventService extends BaseApiService {
 
   // Reset all events (similar to resetAllFeeds in FeedService)
   resetAllEvents(): void {
+    this.myEvents.set([]);
     this.recommendedEvents.set([]);
     this.publicEvents.set([]);
     this.upcomingEvents.set([]);
