@@ -1,0 +1,113 @@
+name: Deploy On Capgo
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: production
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create .env for build
+        run: |
+          set -e
+          echo "🧪 Creating .env from GitHub Environment secrets..."
+
+          cat > .env << EOF
+          NODE_ENV=production
+          PORT=${{ secrets.PORT }}
+
+          API_URL=${{ secrets.API_URL }}
+          SOCKET_URL=${{ secrets.SOCKET_URL }}
+          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          DASHBOARD_URL=${{ secrets.DASHBOARD_URL }}
+
+          TENOR_API_KEY=${{ secrets.TENOR_API_KEY }}
+          OPEN_AI_API_KEY=${{ secrets.OPEN_AI_API_KEY }}
+
+          FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+
+          MAPTILER_API_KEY=${{ secrets.MAPTILER_API_KEY }}
+          UNSPLASH_API_KEY=${{ secrets.UNSPLASH_API_KEY }}
+
+          STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          EOF
+
+          echo "✅ .env created successfully"
+
+      - name: Build app
+        run: |
+          set -e
+          echo "🏗️ Building application..."
+          npm run build
+          echo "✅ Build completed"
+
+      - name: Create ZIP
+        run: |
+          set -e
+          echo "📦 Creating build.zip..."
+          cd dist/browser
+          zip -r ../../build.zip .
+          echo "✅ ZIP created"
+
+      - name: Get version
+        id: version
+        run: |
+          set -e
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "📌 Version: $VERSION"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}-${{ github.run_number }}
+          name: Release v${{ steps.version.outputs.VERSION }}-${{ github.run_number }}
+          files: build.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------------------------------------------
+      # CLEANUP
+      # ---------------------------------------------
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          set -e
+          echo "🧹 Starting cleanup process..."
+
+          if [ -f ".env" ]; then
+            rm -f .env
+            echo "🗑️ Removed .env"
+          fi
+
+          if [ -f "build.zip" ]; then
+            rm -f build.zip
+            echo "🗑️ Removed build.zip"
+          fi
+
+          echo "✅ Cleanup completed successfully"
