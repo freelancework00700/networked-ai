@@ -50,4 +50,8 @@
     .iti__selected-country-primary {
       background-color: transparent !important;
     }
+
+    .iti--container {
+      z-index: 99999 !important;
+    }
   }

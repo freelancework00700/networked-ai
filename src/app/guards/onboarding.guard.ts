@@ -1,17 +1,38 @@
-import { CanActivateFn } from '@angular/router';
+import { ActivatedRoute, CanActivateFn, Router } from '@angular/router';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { NavController } from '@ionic/angular/standalone';
 import { KEYS, LocalStorageService } from '@/services/localstorage.service';
+import { AuthService } from '@/services/auth.service';
+import { ModalService } from '@/services/modal.service';
 
-export const onboardingGuard: CanActivateFn = (route, state) => {
+export const onboardingGuard: CanActivateFn = async (route, state) => {
   const navCtrl = inject(NavController);
   const platformId = inject(PLATFORM_ID);
   const localStorageService = inject(LocalStorageService);
+  const authService = inject(AuthService);
+  const modalService = inject(ModalService);
 
   // on the server, localStorage is not available, so allow access
   // the guard will run again on the client where localStorage is available
   if (!isPlatformBrowser(platformId)) return true;
+
+  const tokenFromQuery = route.queryParams?.['token'];
+  if (tokenFromQuery) {
+    try {
+      await modalService.openLoadingModal('Signing you in...');
+      const response = await authService.login({ bearer_token: tokenFromQuery });
+      if (response?.data?.token) {
+        localStorageService.setItem(KEYS.ONBOARDED, 'true');
+        navCtrl.navigateRoot('/');
+        return true;
+      }
+    } catch (error) {
+      console.error('Token login failed:', error);
+    } finally {
+      await modalService.close();
+    }
+  }
 
   // check if user has completed onboarding
   const onboarded = localStorageService.getItem(KEYS.ONBOARDED);
