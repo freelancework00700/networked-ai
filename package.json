@@ -47,6 +47,7 @@
     "@capacitor/share": "^7.0.3",
     "@capacitor/splash-screen": "^7.0.3",
     "@capacitor/status-bar": "^7.0.2",
+    "@capawesome/capacitor-app-update": "^7.2.0",
     "@capgo/capacitor-updater": "^7.42.3",
     "@ctrl/ngx-emoji-mart": "^9.3.0",
     "@ionic/angular": "^8.7.2",

@@ -80,8 +80,10 @@
 		<string>fbauth2</string>
 		<string>fbshareextension</string>
 	</array>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>This identifier will be used to request permission to track the user's activity.</string>
+
+	<!-- not needed (facebook) -->
+	<!-- <key>NSUserTrackingUsageDescription</key> -->
+	<!-- <string>This identifier will be used to request permission to track the user's activity.</string> -->
 
 	<!-- camera permissions -->
 	<key>NSPhotoLibraryUsageDescription</key>
