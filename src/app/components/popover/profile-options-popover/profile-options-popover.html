@@ -2,15 +2,22 @@
   @if (isViewingOtherProfile) {
     <div (click)="openReportUser()" class="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg">
       <div class="w-10 h-10 rounded-full bg-neutral-06 flex items-center justify-center">
-        <div class="pi pi-flag neutral-02 !text-[16px] p-1"></div>
+        <div class="pi pi-flag neutral-02 text-[16px]! p-1"></div>
       </div>
 
       <span class="body-14M neutral-01">Report</span>
     </div>
   } @else {
+    <div (click)="goToDashboard()" class="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg">
+      <div class="w-10 h-10 rounded-full bg-neutral-06 flex items-center justify-center">
+        <div class="pi pi-th-large neutral-02 text-[16px]! p-1"></div>
+      </div>
+
+      <span class="body-14M neutral-01">Dashboard View</span>
+    </div>
     <div (click)="openLikedEvents()" class="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg">
       <div class="w-10 h-10 rounded-full bg-neutral-06 flex items-center justify-center">
-        <div class="pi pi-heart neutral-02 !text-[16px] p-1"></div>
+        <div class="pi pi-heart neutral-02 text-[16px]! p-1"></div>
       </div>
 
       <span class="body-14M neutral-01">Favorites</span>
@@ -18,7 +25,7 @@
 
     <div (click)="openSetting()" class="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg">
       <div class="w-10 h-10 rounded-full bg-neutral-06 flex items-center justify-center">
-        <div class="pi pi-cog neutral-02 !text-[16px] p-1"></div>
+        <div class="pi pi-cog neutral-02 text-[16px]! p-1"></div>
       </div>
 
       <span class="body-14M neutral-01">Settings</span>

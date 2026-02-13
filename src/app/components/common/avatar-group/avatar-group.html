@@ -1,11 +1,20 @@
 <div class="flex" [class.avatar-blur]="disabled()">
   <p-avatar-group>
     @for (user of getVisibleUsers(); track trackByUser($index, user)) {
-      <p-avatar [image]="getUserImage(user)" [size]="size()" [shape]="shape()" (click)="onUserClick(user)" />
+      <div class="w-[42px] h-[42px] rounded-full overflow-hidden relative cursor-pointer" (click)="onUserClick(user)">
+        <img
+          fill
+          placeholder 
+          [ngSrc]="getImageUrl(user.thumbnail_url)"
+          (error)="onImageError($event)"
+          [alt]="user.name"
+          class="rounded-full object-cover"
+        />
+      </div>
     }
 
     @if (shouldShowOverflow()) {
-      <p-avatar [label]="'+' + getRemainingCount()" [shape]="shape()" [size]="size()" class="!bg-neutral-02 !text-neutral-07" />
+      <p-avatar [label]="'+' + getRemainingCount()" [shape]="shape()" [size]="size()" class="bg-neutral-02! text-neutral-07! z-50" />
     }
   </p-avatar-group>
 </div>

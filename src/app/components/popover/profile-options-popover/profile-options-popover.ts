@@ -3,6 +3,9 @@ import { NavigationService } from '@/services/navigation.service';
 import { ModalService } from '@/services/modal.service';
 import { Input, inject, Component, ChangeDetectionStrategy } from '@angular/core';
 import { IUser } from '@/interfaces/IUser';
+import { AuthService } from '@/services/auth.service';
+import { environment } from 'src/environments/environment';
+import { Browser } from '@capacitor/browser';
 
 @Component({
   selector: 'profile-options-popover',
@@ -19,6 +22,7 @@ export class ProfileOptionsPopover {
   private popoverCtrl = inject(PopoverController);
   private navigationService = inject(NavigationService);
   private modalService = inject(ModalService);
+  private authService = inject(AuthService);
 
   async openLikedEvents(): Promise<void> {
     this.navigationService.navigateForward('/event/all?eventFilter=liked');
@@ -34,5 +38,11 @@ export class ProfileOptionsPopover {
     await this.popoverCtrl.dismiss();
     if (!this.user) return;
     await this.modalService.openReportModal('User', this.user);
+  }
+
+  async goToDashboard() {
+    const token = this.authService.getCurrentToken();
+    const url = `${environment.dashboardUrl}?token=${token}`;
+    await Browser.open({ url });
   }
 }

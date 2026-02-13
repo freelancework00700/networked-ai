@@ -126,7 +126,7 @@ export class Profile implements OnDestroy {
     const loggedInUser = this.authService.currentUser();
     const viewedUser = this.currentUser();
     // if (!loggedInUser || !viewedUser) return false;
-    return viewedUser.id && viewedUser.id !== loggedInUser?.id;
+    return viewedUser?.id && viewedUser?.id !== loggedInUser?.id;
   });
 
   // Connection status computed properties

@@ -17,6 +17,7 @@ const setEnv = () => {
     apiUrl: '${process.env['API_URL']}',
     socketUrl: '${process.env['SOCKET_URL']}',
     frontendUrl: '${process.env['FRONTEND_URL']}',
+    dashboardUrl: '${process.env['DASHBOARD_URL']}',
     openaiKey: '${process.env['OPEN_AI_API_KEY']}',
     tenorApiKey: '${process.env['TENOR_API_KEY']}',
     maptilerApiKey: '${process.env['MAPTILER_API_KEY']}',

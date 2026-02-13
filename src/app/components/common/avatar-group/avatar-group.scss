@@ -1,6 +1,18 @@
 .avatar-blur {
-    filter: blur(4px);
-    opacity: 0.9;
-    pointer-events: none;
-  }
-  
+  filter: blur(4px);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+:host ::ng-deep .p-avatar-group {
+  display: flex;
+  align-items: center;
+}
+
+:host ::ng-deep .p-avatar-group>* {
+  margin-left: -12px;
+}
+
+:host ::ng-deep .p-avatar-group>*:first-child {
+  margin-left: 0;
+}
