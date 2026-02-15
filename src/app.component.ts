@@ -12,6 +12,7 @@ import { LiveUpdateService } from '@/services/live-update.service';
 import { PermissionsService } from '@/services/permissions.service';
 import { inject, effect, Component, viewChild } from '@angular/core';
 import { PushNotificationService } from '@/services/push-notification.service';
+import { AppUpdate, AppUpdateAvailability, AppUpdateResultCode } from '@capawesome/capacitor-app-update';
 
 @Component({
   selector: 'app-root',
@@ -60,11 +61,37 @@ export class AppComponent {
       this.pushNotificationService.initialize();
     }
 
-    // initialize live updates (native only)
-    void this.liveUpdateService.init();
+    // initialize live updates and app updates (native only)
+    void this.initUpdates();
 
     // setup deep linking (native only)
     this.setupDeepLinking();
+  }
+
+  private async initUpdates(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+
+    try {
+      const info = await AppUpdate.getAppUpdateInfo();
+      const updateAvailable =
+        info.updateAvailability === AppUpdateAvailability.UPDATE_AVAILABLE || info.updateAvailability === AppUpdateAvailability.UPDATE_IN_PROGRESS;
+
+      if (updateAvailable) {
+        if (Capacitor.getPlatform() === 'android' && info.immediateUpdateAllowed) {
+          const result = await AppUpdate.performImmediateUpdate();
+          if (result.code === AppUpdateResultCode.OK) {
+            return;
+          }
+        }
+
+        await AppUpdate.openAppStore();
+        return;
+      }
+    } catch (error) {
+      console.error('Store update check failed:', error);
+    }
+
+    await this.liveUpdateService.init();
   }
 
   private async updateCurrentLocation(): Promise<void> {
